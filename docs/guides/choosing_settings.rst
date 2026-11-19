@@ -1,11 +1,17 @@
 Choosing Settings
 =================
 
-Three settings decide most of what a study's particles say: which
-meteorology, how long the particles run (``n_hours``), and how many there
-are (``numpar``). The right value of each depends on your site and your
-question. Here is how we choose each one, and a quick check that tells you
-whether the choice was good enough.
+Four choices decide most of what a study's particles say: which
+meteorology, how long the particles run (``n_hours``), how many there are
+(``numpar``), and how their random numbers are drawn. The right value of
+each depends on your site and your question. Here is how we choose each
+one, a quick check that tells you whether the choice was good enough, and
+what HYSPLIT chooses for you when you set nothing.
+
+The examples on this page that run use a small sample project: four
+releases an hour apart on the morning of 15 January 2021 at one site in Salt
+Lake City, 24-hour backward runs with 200 particles, and one variant,
+``hrrr``.
 
 .. This page runs when the docs are built, on the sample project of
    docs/_ext/docs_examples.py (four releases on 15 January 2021).
@@ -22,12 +28,12 @@ whether the choice was good enough.
 Meteorology
 -----------
 
-Use the finest product that covers your place and years, because the
-valleys, coastlines and mixed-layer depth that steer air near the ground
-are smoothed away on a coarse grid. In the contiguous US since mid-2015 that
-is HRRR at 3 km. :doc:`meteorology` has a table of the products and when to
-use each. To see how much the choice matters for your site, run the same
-releases with a second met as a second variant and compare the particles.
+Use the finest product that covers your place and years.
+:doc:`meteorology` ("Which weather product") says which that is and why. The
+grid of the met files sets the smallest scale the particles resolve: a
+valley narrower than a few grid cells is not in the winds. To see how much
+the choice matters for your site, run the same releases with a second met as
+a second variant and compare them (`Comparing two variants`_).
 
 How long to run
 ---------------
@@ -61,11 +67,13 @@ region, a longer run would follow them further, so raise ``n_hours``.
 How many particles
 ------------------
 
-More particles sample the turbulence better, and the far end of a run, where
-the particles have spread out, needs the most. 200 particles show where the
-air went. For results we use 1000. To check a value for your site, run a few
-releases with three times as many particles as a second variant and
-compare:
+More particles sample the turbulence better. The far end of a run, where
+the particles have spread out and few are in any one place, converges last.
+200 particles show where the air went. For results we use 1000, below the
+default of 2500, because it is enough for a tower and a project of
+thousands of releases runs in less than half the time. To check a value for
+your site, run a few releases with three times as many particles as a
+second variant:
 
 .. code-block:: yaml
 
@@ -73,19 +81,21 @@ compare:
      hrrr: {}
      hrrr-np3k: {numpar: 3000}
 
-Compare what your study computes from the particles, not the particles
-themselves. If the two counts give results that differ by much less than
-the other errors in your study, the lower count is enough. The variant with
-more particles has its own settings folder, so the check leaves your results
-as they are.
+Compare what your study computes from the particles, such as a value at the
+endpoints, and look hardest at the parts that depend on the far end of the
+run. If the two counts give results that differ by much less than the other
+errors in your study, the lower count is enough. The variant with more
+particles has its own settings folder, so the check leaves your results as
+they are.
 
 Random numbers
 --------------
 
-HYSPLIT draws random numbers for the turbulence that moves each particle.
-By default it seeds them from the clock, so every run gives other particles.
-``krand: 2`` with a ``seed`` makes the draws the same on every run, so a
-rerun or a colleague's run gives the same particles:
+HYSPLIT draws random numbers for the turbulence that moves each particle,
+and ``krand`` says how. Left unset, HYSPLIT picks a mode for you (2 for up
+to 5000 particles). We set ``krand: 2`` and a ``seed`` in every study, so
+the particles depend on a number written in ``config.yaml`` and a rerun or
+a colleague's run gives the same particles:
 
 .. code-block:: yaml
 
@@ -96,22 +106,84 @@ rerun or a colleague's run gives the same particles:
        krand: 2
        seed: 42
 
-We set both for any study we may have to reproduce. An ensemble
-(``realizations: N``, :doc:`projects`) needs them, so that each realization
-gets its own draws (``seed + k``).
+With them, two variants start from the same random numbers, so the
+difference between ``hrrr`` and ``hrrr-zi08`` comes from ``ziscale`` and
+not from a different draw. An ensemble (``realizations: N``,
+:doc:`projects`) runs realization ``k`` with ``seed + k``, so each gets its
+own draws. ``krand: 4`` seeds each run from the clock instead, so every run
+differs and cannot be made again. ``krand`` in
+:doc:`../reference/configuration` lists every mode.
+
+What HYSPLIT chooses for you
+----------------------------
+
+Every setting you leave out takes a default, and some of them shape the
+particles. These are the ones we would look at before trusting a
+sensitivity result. Unset, the mixing and turbulence choices are HYSPLIT's
+own for its particle output mode (``ICHEM=8``), which runtraj always uses.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 22 60
+
+   * - Setting
+     - Default
+     - What it means
+   * - ``kmixd``
+     - unset: 3
+     - The mixed-layer depth, the layer next to the ground that turbulence
+       mixes, is computed by HYSPLIT from a Richardson number. ``0`` takes
+       it from the met files instead. ``ziscale`` multiplies whichever is
+       used.
+   * - ``kmix0``
+     - ``150``
+     - The mixed layer is never shallower than 150 m, after ``ziscale``.
+   * - ``kblt``
+     - unset: 5
+     - The Hanna boundary-layer turbulence scheme.
+   * - ``capemin``
+     - unset: -2
+     - The Grell convection scheme is on.
+   * - ``emisshrs``
+     - ``0.01``
+     - The particles are released over 0.01 hours (36 seconds), close to
+       an instant. For a source that emits over a period, set it in hours.
+   * - ``outdt``
+     - ``0``
+     - A row is written every time step.
+   * - ``z_top``
+     - ``25000``
+     - The top of the model domain, in meters above ground.
+
+The particles carry no mass: they follow the air, with no settling,
+deposition, or chemistry. :doc:`hysplit_users` maps every setting to its
+line in HYSPLIT's ``CONTROL`` and ``SETUP.CFG``, and
+:doc:`../reference/configuration` describes each one.
+
+Comparing two variants
+----------------------
+
+To see what one setting does, run it as a second variant and load both into
+one table. ``project.particles`` adds a ``variant`` column, so pandas can
+summarize each:
+
+.. code-block:: python
+
+   sims = project.simulations
+   both = project.particles(sims[sims.variant.isin(["hrrr", "hrrr-zi08"])])
+
+   # where each particle of each simulation ended
+   last = both.groupby(["variant", "release", "particle"]).age.transform(
+       lambda age: age.abs() == age.abs().max()
+   )
+   both[last].groupby("variant")[["zagl", "lon", "lat"]].describe()
+
+With ``krand: 2`` and a ``seed`` set, the two variants start from the same
+random numbers, so a difference between them comes from the setting.
 
 .. ipython:: python
    :suppress:
 
    os.chdir(docs_cwd)
-
-What else to set
-----------------
-
-Most projects leave the other HYSPLIT settings at HYSPLIT's own defaults.
-:doc:`hysplit_users` lists them under HYSPLIT's names, and
-:doc:`../reference/configuration` describes each one. A setting changed in a
-variant makes its own settings folder, so you can try one beside your
-defaults without losing a result.
 
 When a result looks wrong, :doc:`checking` lists what to check, in order.

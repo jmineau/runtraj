@@ -7,6 +7,11 @@ mistakes in the inputs in seconds, and ``runtraj status`` after, because it
 says which simulations need another look and why. When a run finishes but
 its particles look wrong, the last section lists what to check, in order.
 
+The examples on this page that run use a small sample project: four
+releases an hour apart on the morning of 15 January 2021 at one site in Salt
+Lake City, 24-hour backward runs with 200 particles, and one variant,
+``hrrr``. It was made as in :doc:`projects`, "The same project in Python".
+
 .. This page runs when the docs are built, on the sample project of
    docs/_ext/docs_examples.py (four releases, all complete).
 
@@ -111,7 +116,8 @@ runs need:
    import runtraj
 
    project = runtraj.Project("./my_project")
-   project.check()
+   problems = project.check()
+   problems
 
 The table is a pandas DataFrame, so ``problems[problems.check ==
 "met_files"]`` selects the releases that lack met files.
@@ -128,7 +134,7 @@ lines look like this:
 
    $ runtraj status ./my_project
    Project: /data/my_project  total=1200  complete=1150  failed=42  interrupted=0  pending=8
-   failed: MET_COVERAGE 34, TIMEOUT 8  (why: each one's .failure.yaml, under /data/output/logs)
+   failed: MET_COVERAGE 34, TIMEOUT 8  (why: each one's .failure.yaml, under /data/my_project/output/logs)
 
 In Python, ``project.status()`` has one row per simulation, so you can
 select the failures and read why:
@@ -179,7 +185,8 @@ record beside the run's log and goes on, and ``sim.failure`` reads it:
 
 .. code-block:: pycon
 
-   >>> sim = project.simulation(release_id, "hrrr")
+   >>> failed = status[status.state == "failed"]
+   >>> sim = project.simulation(failed.release.iloc[0], "hrrr")
    >>> sim.failure
    {'stage': 'particles', 'reason': 'MET_COVERAGE',
     'message': 'HYSPLIT: start point not within (x,y,t) any data file',
@@ -205,7 +212,7 @@ reasons cover most failures:
    The run took longer than ``timeout`` under ``execution:``. Raise it, or
    look for a slow node or a met file read over a slow filesystem.
 
-Every reason, with what to do, is in :doc:`../reference/hysplit` ("Failure
+The other reasons are rarer. Every reason, with what to do, is in :doc:`../reference/hysplit` ("Failure
 reasons"). An error that is not a known reason is recorded by its class,
 such as ``ValueError``, with its traceback. That is usually a bug, and worth
 reporting.

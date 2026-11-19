@@ -8,6 +8,11 @@ without runtraj. We plot a few simulations first, because a map shows at a
 glance whether the air went where you expect, and only then load many for
 analysis.
 
+The examples on this page that run use a small sample project: four
+releases an hour apart on the morning of 15 January 2021 at one site in Salt
+Lake City, 24-hour backward runs with 200 particles, and one variant,
+``hrrr``.
+
 .. This page runs when the docs are built, on a small sample project: four
    releases an hour apart on the morning of 15 January 2021, run on the met
    files the tests cache (docs/_ext/docs_examples.py).
@@ -58,8 +63,10 @@ step. The columns you are most likely to use:
      - Longitude and latitude (HYSPLIT's ``long`` / ``lati``)
    * - ``zagl``
      - Height above ground, m
-   * - ``mlht``, ``foot``, ...
-     - The variables in ``varsiwant``, under HYSPLIT's names
+   * - ``mlht``, ``sigw``, ...
+     - The met variables HYSPLIT writes beside each position, the ones
+       listed in its ``varsiwant`` setting, under HYSPLIT's names
+       (``mlht`` is the mixed-layer height)
 
 :doc:`../reference/particles` lists every column with its units.
 
@@ -102,9 +109,11 @@ National Map. cartopy downloads them when the map is drawn, and
 Where the particles ended
 -------------------------
 
-``particles.runtraj.endpoints()`` gives the last row of each particle. For a
-backward run that is where the air came from, which is where to sample a
-background value; for a forward run it is where the air went:
+``particles.runtraj.endpoints()`` gives the last row of each particle: for
+a backward run, where the air was at the start of the run; for a forward
+run, where it went. A study that samples a background value there needs a
+run long enough for the particles to leave the region of its sources
+(:doc:`choosing_settings`):
 
 .. ipython:: python
 
@@ -112,7 +121,7 @@ background value; for a forward run it is where the air went:
    ends[["particle", "age", "lon", "lat", "zagl"]].describe()
 
 ``particles.runtraj.grid_exits(grid)`` gives where each particle first left a
-:class:`~runtraj.Grid`, for a value sampled at a domain's edge.
+:class:`~runtraj.Grid`, such as the edge of your study area.
 
 Many simulations at once
 ------------------------
@@ -120,7 +129,8 @@ Many simulations at once
 ``project.simulations`` is a table with one row per release under each
 variant. Its columns are ``release`` and ``variant``, ``realization`` (``0``
 to ``N - 1`` for a variant with ``realizations: N``, empty for one that runs
-once), ``model``, and then every column of ``releases.csv``:
+once), ``model``, the release's ``time``, ``kind`` and ``location``, and any
+columns of your own in ``releases.csv``, such as a site name:
 
 .. ipython:: python
 
@@ -139,6 +149,9 @@ project:
    both = project.particles(morning)   # one table, with release and variant columns
    both.groupby("release")["particle"].nunique()
 
+   @savefig particles_two_releases.png width=6in
+   both.runtraj.plot.map(color_by="zagl");   # every position of both
+
 Leave the selection out to load every simulation. Any table with
 ``release`` and ``variant`` columns works as a selection, such as your
 observations merged with ``sims``, and so does a boolean mask over
@@ -146,12 +159,13 @@ observations merged with ``sims``, and so does a boolean mask over
 left out. ``columns=["particle", "age", "lon", "lat"]`` reads only those
 columns, which is faster and takes less memory.
 
-The extra columns of ``releases.csv`` select one site or one campaign:
+Your own columns of ``releases.csv`` select one site or one campaign. With
+a ``site`` column and an ensemble variant named ``hrrr-ens``:
 
 .. code-block:: python
 
-   site = sims[(sims.variant == "hrrr") & (sims.site == "WBB")]
-   ensemble = sims[sims.variant == "hrrr-err"]   # every realization of every release
+   site = sims[(sims.variant == "hrrr") & (sims.site == "tower-1")]
+   ensemble = sims[sims.variant == "hrrr-ens"]   # every realization of every release
 
 To work with each simulation of a selection, look it up by its row:
 
@@ -171,14 +185,17 @@ pyarrow (below). ``sim.particles_path`` is where one file is.
 
    os.chdir(docs_cwd)
 
-In DuckDB and other tools
--------------------------
+In other tools
+--------------
+
+DuckDB, R and other languages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The output directory is a set of Parquet files in folders named
 ``settings=...`` and ``date=...``, which pyarrow, polars, R's ``arrow`` and
-`DuckDB <https://duckdb.org>`_ read as columns. Each file also has a
-``release`` column. With DuckDB, from Python, R, or its own shell, a
-question about thousands of simulations is one query:
+DuckDB read as columns. Each file also has a
+``release`` column. With `DuckDB <https://duckdb.org>`_, from Python, R,
+or its own shell, a question about thousands of simulations is one query:
 
 .. code-block:: sql
 
@@ -193,8 +210,19 @@ question about thousands of simulations is one query:
    FROM read_parquet('output/particles/settings=hrrr-a3f9c2/date=2021-01-15/*.parquet', hive_partitioning = true)
    GROUP BY release, particle;
 
+   -- the time of each row, UTC: the release id starts with the release time
+   SELECT *, strptime(left(release, 12), '%Y%m%d%H%M') + to_minutes(age::INTEGER) AS time
+   FROM read_parquet('output/particles/settings=hrrr-a3f9c2/date=2021-01-15/*.parquet');
+
+In R, the ``arrow`` package opens the same tree:
+
+.. code-block:: r
+
+   library(arrow)
+   particles <- open_dataset("output/particles")   # settings and date are columns
+
 A file stores no ``time``; ``age`` is minutes from the release time, which
-the file's metadata holds. An ensemble's folders have a ``realization=k``
+the release id begins with and the file's metadata holds. An ensemble's folders have a ``realization=k``
 level as well, so its files are one folder deeper (``*/*/*/*.parquet``)
 and ``realization`` is a column. :doc:`../reference/layout` describes every
 file and metadata key, for a reader in another language.

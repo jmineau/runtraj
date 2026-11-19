@@ -49,30 +49,39 @@ Glossary
 
    ARL
       The file format for meteorology that HYSPLIT reads, named after
-      NOAA's Air Resources Laboratory. NOAA publishes HRRR, NAM, GDAS, and
-      other products in this format.
+      NOAA's Air Resources Laboratory. NOAA publishes several weather
+      models in this format, such as :term:`HRRR`, NAM (12 km, North
+      America) and GDAS (global); :doc:`../guides/meteorology` has the
+      table.
+
+   HRRR
+      The High-Resolution Rapid Refresh, NOAA's 3 km weather model of the
+      contiguous United States, archived in :term:`ARL` format since 2015.
+      The examples in these docs use it, and name their met ``hrrr``.
 
    met
-      One named set of meteorology files in your settings, such as
+      Short for :term:`meteorology`, and also one named set of meteorology
+      files in your settings, such as
       ``hrrr``, written under ``mets`` in ``config.yaml``. Each
       :term:`variant` names the met it runs on, so the same release can run
       with several mets side by side.
 
    defaults
-      The settings written in the blocks of ``config.yaml``: the transport
-      model's under ``models`` and each stage's under ``stages``. Every
-      :term:`variant` starts from them and overrides what it changes. A
-      variant with no overrides runs them as they are.
+      In a project, the settings written in the blocks of ``config.yaml``:
+      the transport model's under ``models`` and each stage's under
+      ``stages``. Every :term:`variant` starts from them and overrides what
+      it changes. A setting written in neither takes the transport model's
+      own default (:doc:`../guides/choosing_settings`).
 
    variant
       A named set of settings that every release runs under: a :term:`met`
       plus any settings that differ from the :term:`defaults`, such as
-      another ``ziscale`` or more particles. See :doc:`../guides/projects`.
+      another :term:`ziscale` or more particles. See :doc:`../guides/projects`.
 
    realization
       One member of a variant declared with ``realizations: N``. The same
       settings run ``N`` times, as realizations ``0`` to ``N - 1``, each
-      with its own random numbers (``seed + k``). Their results share the
+      with its own random numbers (``seed + k`` with ``krand: 2``). Their results share the
       variant's folder, a ``realization=k`` partition each.
 
    stage
@@ -82,8 +91,8 @@ Glossary
       :doc:`../guides/projects`.
 
    simulation
-      One release run under one :term:`variant`, and one realization of an
-      ensemble. A project with 100 releases and 3 variants has 300
+      One release run under one :term:`variant` (and, in an ensemble, one
+      :term:`realization`). A project with 100 releases and 3 variants has 300
       simulations.
 
    release id
@@ -106,7 +115,8 @@ Glossary
       (``output`` in the project folder by default, or a URL such as
       ``s3://bucket/output``). It holds one :term:`settings folder` per set
       of settings under ``particles/`` and each stage's tree, and
-      ``logs/``. Several projects can share it.
+      ``logs/``. Several projects can share it. See
+      :doc:`../guides/output`.
 
    settings folder
       One folder of results in the :term:`output directory`: everything made
@@ -127,6 +137,34 @@ Glossary
       ``--compute-root`` option, else ``RUNTRAJ_COMPUTE_ROOT``, else
       ``$TMPDIR/runtraj/<project>``. Projects can share one.
 
+   mixed layer
+      The layer next to the ground that turbulence keeps mixed, from about
+      100 m deep at night to 1 to 2 km on a summer afternoon. Particles in
+      it feel the surface. Its depth is often called the boundary-layer
+      height (PBLH in a weather model); HYSPLIT computes its own by
+      default (:doc:`../guides/choosing_settings`).
+
+   ziscale
+      A HYSPLIT setting that multiplies the :term:`mixed layer` depth:
+      ``ziscale: 0.8`` makes it 20% shallower. A common sensitivity
+      variant.
+
+   varsiwant
+      The HYSPLIT setting that lists the met variables written beside each
+      particle position, such as ``mlht``, the mixed-layer height. They
+      become columns of the :term:`particles`
+      (:doc:`../reference/particles`).
+
+   Parquet
+      A column-based file format for tables, which pandas, pyarrow, polars,
+      DuckDB and R's ``arrow`` read. Each simulation's particles are one
+      Parquet file.
+
+   Slurm
+      The job scheduler of many HPC clusters. runtraj can submit a project
+      as a Slurm job array, one task per share of the releases
+      (:doc:`../guides/slurm`).
+
    backend
       Where the simulations run: ``local`` (your computer) or ``slurm`` (an
       HPC cluster). Set it in the ``execution`` block of ``config.yaml``,
@@ -134,9 +172,9 @@ Glossary
       :doc:`../guides/running`.
 
    numpar
-      The number of particles released per simulation. More particles
-      sample the turbulence better and take longer. 200 to 1000 is
-      typical.
+      The number of particles released per simulation, 2500 unless set.
+      More particles sample the turbulence better and take longer. We use
+      1000 for a tower.
 
    n_hours
       How many hours to follow the particles. Negative values run backward

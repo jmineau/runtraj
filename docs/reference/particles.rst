@@ -91,8 +91,7 @@ Some of them:
      - Pressure.
    * - ``zsfc``
      - m
-     - Terrain height above sea level. It is not in the default
-       ``varsiwant``.
+     - Terrain height above sea level.
    * - ``zcfx``
      - m
      - Vertical displacement by convective flux along the trajectory,

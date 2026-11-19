@@ -160,8 +160,9 @@ found, so an empty table means nothing is in the way:
 
    project.check()
 
-The check looks for files, not inside them, so a run that passes it can
-still fail later, if a met file is damaged.
+The check reads only the headers of the met files, so a run that passes it
+can still fail later, if a met file is damaged in the middle
+(:doc:`../guides/checking`).
 
 .. ipython:: python
 

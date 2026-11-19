@@ -14,6 +14,12 @@ built in. Another model, and what is made from the particles after a run
 (a stage), plug in by the import path of a class. The footprints of
 `PYSTILT <https://jmineau.github.io/PYSTILT/>`_ are made by such a stage.
 
+The particles follow the air, backward from a measurement or forward from
+a source, over hours to days, at the resolution of the meteorology you give
+it. They carry no mass, so settling, deposition and chemistry are left to
+what you do with them, and runtraj writes particle positions, not
+concentration grids.
+
 .. note::
 
    runtraj is alpha software. Names and options may still change between

@@ -60,8 +60,9 @@ HYSPLIT
 The keys of the ``hysplit`` block under ``models:``, the transport model's
 settings (:doc:`hysplit`). They are the defaults of every variant that runs
 HYSPLIT, and a variant may override any of them by writing the key itself.
-Left out, the block is HYSPLIT with the defaults below, which are HYSPLIT's
-own. ``n_hours`` has no default, and ``capemin``, ``kblt``, ``kmixd``,
+Every key but ``n_hours`` has the default below, so a block may be as
+short as ``hysplit: {n_hours: -24}``; ``n_hours`` has no default, and a
+config without it is refused. ``capemin``, ``kblt``, ``kmixd``,
 ``krand`` and ``vscales`` are unset unless given: HYSPLIT chooses them when
 it runs.
 

@@ -7,24 +7,26 @@ word in the :doc:`../getting_started/glossary`.
 
 **Setting up a project**
 
-- :doc:`projects`: the project folder, ``config.yaml``, variants, and the
-  output directory; how reruns and changed settings work
+- :doc:`projects`: the project folder, ``config.yaml``, and variants; how
+  reruns and changed settings work
 - :doc:`releases`: releases, the times and places particles start from
   (a point, a vertical column, or many points at once)
 - :doc:`meteorology`: use your own ARL files or download them from NOAA
-- :doc:`choosing_settings`: which meteorology, how long to run, and how
-  many particles
+- :doc:`choosing_settings`: how long to run, how many particles, random
+  numbers, and what HYSPLIT chooses for you
 
 **Running**
 
 - :doc:`running`: run on your computer, and the commands
-- :doc:`slurm`: run thousands of simulations on an HPC cluster
-- :doc:`containers`: run with Kubernetes or another scheduler
 - :doc:`checking`: find problems before a run, see where each simulation
   stands, and find out why one failed
+- :doc:`slurm`: run thousands of simulations on an HPC cluster
+- :doc:`containers`: run with Kubernetes or another scheduler
 
 **Results**
 
+- :doc:`output`: what is in the output directory, and putting it on an
+  object store
 - :doc:`particles`: read and plot the particles of one simulation or
   many, and open them in DuckDB, R, or CF trajectory tools
 
@@ -49,14 +51,15 @@ word in the :doc:`../getting_started/glossary`.
    :caption: Running
 
    running
+   checking
    slurm
    containers
-   checking
 
 .. toctree::
    :hidden:
    :caption: Results
 
+   output
    particles
 
 .. toctree::
