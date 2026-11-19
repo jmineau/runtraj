@@ -57,6 +57,12 @@ from runtraj.stages import Stage, get_stage, ordered, reads
 #: Pattern for variant and met names, which become directory names.
 VARIANT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
+#: The pattern above in words, for error messages.
+_NAME_RULE = (
+    "may hold only lowercase letters, digits and hyphens, "
+    "and must start with a letter or digit"
+)
+
 #: Writes a block of settings given in Python (a path, a config object) as YAML can hold it.
 _JSON = TypeAdapter(dict[str, Any])
 
@@ -485,9 +491,7 @@ class ProjectConfig(BaseModel):
             )
         bad = [k for k in self.mets if not VARIANT_NAME_RE.fullmatch(k)]
         if bad:
-            raise ValueError(
-                f"Met names must match {VARIANT_NAME_RE.pattern}, got: {bad}"
-            )
+            raise ValueError(f"Met names {_NAME_RULE}, got: {bad}")
         return self
 
     @model_validator(mode="after")
@@ -577,9 +581,7 @@ class ProjectConfig(BaseModel):
             block, or a stage set to null that another of its stages reads.
         """
         if not VARIANT_NAME_RE.fullmatch(group):
-            raise ValueError(
-                f"Variant name {group!r} must match {VARIANT_NAME_RE.pattern}"
-            )
+            raise ValueError(f"Variant name {group!r} {_NAME_RULE}")
         where = f"Variant {group!r}"
         spec = dict(self.variants[group] or {})
         if "from" in spec:
@@ -852,9 +854,7 @@ def _model_blocks(
     block_of: dict[str, str] = {}
     for name, block in models.items():
         if not VARIANT_NAME_RE.fullmatch(name):
-            raise ValueError(
-                f"Model name {name!r} must match {VARIANT_NAME_RE.pattern}"
-            )
+            raise ValueError(f"Model name {name!r} {_NAME_RULE}")
         where = f"models: {name}"
         settings = dict(block or {})
         model = settings.pop("class", name)

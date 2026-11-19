@@ -48,7 +48,10 @@ def test_a_models_wrong_value_is_reported_for_its_block(tmp_path):
 
 def test_a_models_block_name_is_plain_as_a_variants_is(tmp_path):
     """A model's block name is what a variant writes, so it follows the variants' rule."""
-    with pytest.raises(ValueError, match="Model name 'Not_Plain' must match"):
+    with pytest.raises(
+        ValueError,
+        match="Model name 'Not_Plain' may hold only lowercase letters, digits and hyphens",
+    ):
         ProjectConfig(
             mets=_met_config(tmp_path),
             variants={"hrrr": {}},
@@ -91,7 +94,7 @@ def test_model_config_requires_nonempty_mets():
 
 def test_model_config_rejects_met_keys_that_cannot_name_a_variant(tmp_path):
     mc = make_met_config(directory=tmp_path / "met")
-    with pytest.raises(Exception, match="must match"):
+    with pytest.raises(Exception, match="Met names may hold only lowercase letters"):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
             mets={"hrrr_v2": mc},
@@ -405,8 +408,13 @@ def test_variant_must_name_its_met_when_there_are_several(tmp_path):
 
 @pytest.mark.parametrize("name", ["Hrrr", "hrrr_v2", "-x", "a b"])
 def test_variant_names_are_plain(tmp_path, name):
-    with pytest.raises(ValueError, match="must match"):
+    with pytest.raises(ValueError) as err:
         _variant_config(tmp_path, variants={name: {}})
+    assert (
+        f"Variant name {name!r} may hold only lowercase letters, digits and hyphens, "
+        "and must start with a letter or digit"
+    ) in str(err.value)
+    assert "^[" not in str(err.value)
 
 
 def test_an_ensemble_is_one_variant_whose_realizations_have_their_own_seed(tmp_path):
