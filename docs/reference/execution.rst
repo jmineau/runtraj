@@ -214,6 +214,8 @@ the tests of a model of your own.
    runtraj.models.MetConfig
    runtraj.models.check_model
    runtraj.models.hysplit.HysplitModel
+   runtraj.models.flexpart.FlexpartModel
+   runtraj.models.flexpart.read_partoutput
 
 Stages
 ------

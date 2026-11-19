@@ -489,11 +489,20 @@ def _hysplit() -> TransportModel:
     return HysplitModel()
 
 
+def _flexpart() -> TransportModel:
+    """Return FLEXPART, importing its package only when it is asked for."""
+    from runtraj.models.flexpart import FlexpartModel
+
+    return FlexpartModel()
+
+
 #: The transport models built in, by the name of their block under
-#: ``models:`` in ``config.yaml``: ``hysplit``. Any other model is named
+#: ``models:`` in ``config.yaml``: ``hysplit``, and ``flexpart``, which runs
+#: a FLEXPART 11 checkout you built. Any other model is named
 #: by its import path instead, the ``class`` of its block.
 MODELS: dict[str, Callable[[], TransportModel]] = {
     "hysplit": _hysplit,
+    "flexpart": _flexpart,
 }
 
 
