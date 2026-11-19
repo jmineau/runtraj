@@ -349,7 +349,9 @@ def sample_met(
     - ``mlht`` is ``PBLH``, the met model's boundary-layer height, in m
       above ground.
     - ``dens`` is 100 ``PRES`` / (R ``TEMP`` (1 + 0.61 ``SPHU``)), the
-      density of moist air in kg m⁻³, with R = 287.04 J kg⁻¹ K⁻¹.
+      density of moist air in kg m⁻³, with R = 287.04 J kg⁻¹ K⁻¹. Met
+      without ``SPHU`` gives the density of dry air, up to about 1 %
+      higher, as :func:`calc_pbl_height` uses.
     - ``pres`` is ``PRES``, the pressure, in hPa. Met without a ``PRES``
       field, such as GFS on pressure levels or ERA5 on model levels, gives
       the pressure of its vertical axis instead.
@@ -446,10 +448,11 @@ def sample_met(
     variables = list(dict.fromkeys(v for c in columns for v in _MET_VARIABLES[c]))
 
     with _opened(met) as sources:
+        available = _met_variables(sources)
+        if "SPHU" not in available:
+            variables = [v for v in variables if v != "SPHU"]
         pressure = (
-            _pressure_variable(sources, _met_variables(sources))
-            if "PRES" in variables
-            else "PRES"
+            _pressure_variable(sources, available) if "PRES" in variables else "PRES"
         )
         names = [pressure if v == "PRES" else v for v in variables]
         met_times = _met_times(sources)
@@ -479,7 +482,8 @@ def sample_met(
     out = particles.copy()
     for column in columns:
         if column == "dens":
-            virtual_temperature = values_at["TEMP"] * (1.0 + 0.61 * values_at["SPHU"])
+            sphu = values_at.get("SPHU", 0.0)
+            virtual_temperature = values_at["TEMP"] * (1.0 + 0.61 * sphu)
             out[column] = 100.0 * values_at["PRES"] / (_R_DRY * virtual_temperature)
         else:
             out[column] = values_at[_MET_VARIABLES[column][0]]
@@ -496,6 +500,9 @@ def _bracket(
     """
     if len(met_times) == 0:
         raise ValueError("The met files hold no time steps.")
+    # In nanoseconds both: a particle's time need not be a whole microsecond.
+    met_times = met_times.as_unit("ns")
+    times = pd.DatetimeIndex(times).as_unit("ns")
     after = met_times.searchsorted(times, side="left")
     outside = (after == len(met_times)) | np.asarray(times < met_times[0])
     if outside.any():
