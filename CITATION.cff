@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "runtraj"
+abstract: "Run particle dispersion models at scale."
+authors:
+  - family-names: Mineau
+    given-names: James K.
+    email: jameskmineau@gmail.com
+    orcid: "https://orcid.org/0000-0002-2289-2252"
+    affiliation: "University of Utah"
+license: MIT
+repository-code: "https://github.com/jmineau/runtraj"
+url: "https://jmineau.github.io/runtraj/"
+keywords:
+  - hysplit
+  - particle-dispersion
+  - atmospheric-transport
+  - lagrangian
+  - trajectories
+  - meteorology

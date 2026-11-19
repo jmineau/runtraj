@@ -1,0 +1,14 @@
+{
+  "title": "runtraj",
+  "description": "Run particle dispersion models at scale.",
+  "creators": [
+    {
+      "name": "Mineau, James K.",
+      "affiliation": "University of Utah",
+      "orcid": "0000-0002-2289-2252"
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "keywords": ["hysplit", "particle-dispersion", "atmospheric-transport", "lagrangian", "trajectories", "meteorology"]
+}
