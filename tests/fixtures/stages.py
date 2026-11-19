@@ -12,13 +12,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from runtraj import Simulation
-from runtraj.stages import Location
+
+if TYPE_CHECKING:
+    from upath import UPath
 
 COUNT = "tests.fixtures.stages.CountStage"
 DOUBLE = "tests.fixtures.stages.DoubleStage"
@@ -77,7 +79,7 @@ class CountStage:
             ("count", str(rid), "is south of the equator") for rid in south["release"]
         ]
 
-    def run(self, config: CountConfig, sim: Simulation, path: Location) -> None:
+    def run(self, config: CountConfig, sim: Simulation, path: Path | UPath) -> None:
         """
         Write the count of *sim*'s particle rows to *path*.
 
@@ -133,7 +135,7 @@ class DoubleStage:
         """Find nothing."""
         return []
 
-    def run(self, config: DoubleConfig, sim: Simulation, path: Location) -> None:
+    def run(self, config: DoubleConfig, sim: Simulation, path: Path | UPath) -> None:
         """Write twice what the ``count`` stage wrote for *sim*, plus ``add``, to *path*."""
         RUNS.append((self.name, sim.release.id, sim.variant.name))
         path.write_text(str(2 * int(sim.path("count").read_text()) + config.add))
@@ -174,7 +176,7 @@ class EchoStage:
         """Find nothing."""
         return []
 
-    def run(self, config: EchoConfig, sim: Simulation, path: Location) -> None:
+    def run(self, config: EchoConfig, sim: Simulation, path: Path | UPath) -> None:
         """Write *sim*'s release id to *path*, or raise with ``fail``."""
         RUNS.append((self.name, sim.release.id, sim.variant.name))
         if config.fail:
