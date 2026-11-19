@@ -1,11 +1,17 @@
-"""Tests for runtraj.sampling: a gridded field read at points."""
+"""Tests for runtraj.sampling: a gridded field and met files read at points."""
 
+from pathlib import Path
+from unittest.mock import patch
+
+import arlmet
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
 
-from runtraj.sampling import nearest_cell, sample_field, vertical_dim
+from runtraj import sampling
+from runtraj.models.hysplit import HysplitConfig
+from runtraj.sampling import nearest_cell, sample_field, sample_met, vertical_dim
 
 
 def _flux(values=None, lons=(-112.0, -111.0, -110.0), lats=(40.0, 41.0)):
@@ -246,3 +252,227 @@ def test_nearest_cell_reaches_halfway_and_flags_outside():
         -1,
     ]
     assert nearest_cell(centers[::-1], np.array([0.0, 2.0])).tolist() == [2, 0]
+
+
+# ---------------------------------------------------------------------------
+# sample_met: met columns at particle positions
+# ---------------------------------------------------------------------------
+
+#: Met times of the synthetic file, an hour apart.
+_T0 = pd.Timestamp("2021-01-15 00:00")
+_T1 = pd.Timestamp("2021-01-15 01:00")
+#: Heights of its levels above ground; level 0 is the surface.
+_LEVELS = [0.0, 50.0, 500.0, 2000.0]
+
+
+def _met_file(path: Path) -> Path:
+    """
+    Write an ARL file with two times of uniform fields, and return its path.
+
+    A 1 degree lat-lon grid from 20 E, 10 S, with terrain-following levels
+    at the heights in ``_LEVELS``. Every field is uniform across the grid.
+    From the first time to the second, PBLH goes from 500 to 800 m and each
+    level's PRES rises by 10 hPa; the rest stay the same. SPHU stays above
+    1/254, the smallest value ARL packing keeps in a uniform field.
+    """
+    from arlmet import File, Projection
+    from arlmet import Grid as ArlGrid
+    from arlmet.vertical import TerrainAxis
+
+    grid = ArlGrid(
+        projection=Projection(
+            pole_lat=90.0,
+            pole_lon=0.0,
+            tangent_lat=1.0,
+            tangent_lon=1.0,
+            grid_size=0.0,
+            orientation=0.0,
+            cone_angle=0.0,
+            sync_x=1.0,
+            sync_y=1.0,
+            sync_lat=-10.0,
+            sync_lon=20.0,
+        ),
+        nx=20,
+        ny=20,
+    )
+    ones = np.ones((20, 20), np.float32)
+    with File(
+        path, mode="w", source="TEST", grid=grid, vertical_axis=TerrainAxis(_LEVELS)
+    ) as f:
+        for time, pblh, dp in ((_T0, 500.0, 0.0), (_T1, 800.0, 10.0)):
+            rs = f.create_recordset(time)
+            rs.create_datarecord("SHGT", level=0, forecast=0, data=ones * 1500)
+            rs.create_datarecord("PBLH", level=0, forecast=0, data=ones * pblh)
+            for level, (pres, temp, sphu) in enumerate(
+                [(850.0, 280.0, 0.010), (800.0, 275.0, 0.008), (650.0, 265.0, 0.006)],
+                start=1,
+            ):
+                rs.create_datarecord(
+                    "PRES", level=level, forecast=0, data=ones * (pres + dp)
+                )
+                rs.create_datarecord("TEMP", level=level, forecast=0, data=ones * temp)
+                rs.create_datarecord("SPHU", level=level, forecast=0, data=ones * sphu)
+    return path
+
+
+def _particles_at(times, zagl):
+    """Return particles at 25.5 E, 5 S, at the given times and heights."""
+    return pd.DataFrame(
+        {
+            "particle": np.arange(1, len(times) + 1),
+            "lon": 25.5,
+            "lat": -5.0,
+            "zagl": zagl,
+            "time": pd.to_datetime(times),
+        }
+    )
+
+
+def test_sample_met_interpolates_linearly_in_time_and_height(tmp_path):
+    """The file's levels are 46.25, 462.5 and 1850 m above its 1500 m ground (Z* (1 - 1500 / 20000))."""
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at(
+        [_T0, _T0 + pd.Timedelta(minutes=20), _T1], [100.0, 200.0, 300.0]
+    )
+
+    sampled = sample_met(particles, [met])
+
+    np.testing.assert_allclose(sampled["mlht"], [500.0, 600.0, 800.0], rtol=1e-6)
+    np.testing.assert_allclose(sampled["zsfc"], 1500.0, rtol=1e-6)
+    # Between the first two levels every field is linear in height; a third of
+    # the way to the next hour for the second row.
+    up = (np.array([100.0, 200.0, 300.0]) - 46.25) / (462.5 - 46.25)
+    pres = 850.0 - 50.0 * up + np.array([0.0, 10.0 / 3.0, 10.0])
+    np.testing.assert_allclose(sampled["pres"], pres, rtol=1e-6)
+    temp = 280.0 - 5.0 * up
+    sphu = 0.010 - 0.002 * up
+    dens = 100.0 * pres / (287.04 * temp * (1.0 + 0.61 * sphu))
+    np.testing.assert_allclose(sampled["dens"], dens, rtol=1e-6)
+    pd.testing.assert_frame_equal(sampled[particles.columns], particles)
+
+
+def test_sample_met_samples_only_the_columns_asked_for(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0], [100.0])
+
+    sampled = sample_met(particles, [met], columns=["zsfc"])
+
+    assert list(sampled.columns) == [*particles.columns, "zsfc"]
+
+
+def test_sample_met_is_nan_below_the_ground_and_off_the_grid(tmp_path):
+    """A column starts at the ground, so a height of zero or more has a value."""
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0, _T0, _T0], [10.0, -5.0, 100.0])
+    particles.loc[2, "lon"] = 60.0  # east of the grid
+
+    sampled = sample_met(particles, [met], columns=["pres", "zsfc"])
+
+    assert np.isfinite(sampled["pres"].iloc[0])
+    assert np.isnan(sampled["pres"].iloc[[1, 2]]).all()
+    assert sampled["zsfc"].iloc[0] == pytest.approx(1500.0)
+    assert np.isnan(sampled["zsfc"].iloc[2])
+
+
+def test_sample_mets_default_top_is_a_runs_default_top():
+    """runtraj.sampling does not import HYSPLIT's package, so a test keeps the two equal."""
+    assert HysplitConfig.model_fields["z_top"].default == sampling._DEFAULT_Z_TOP
+
+
+@pytest.mark.parametrize("z_top", [sampling._DEFAULT_Z_TOP, 10000.0, None])
+def test_a_terrain_following_file_is_read_with_the_runs_top(tmp_path, z_top):
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0], [100.0])
+
+    with patch("arlmet.sample_points", wraps=arlmet.sample_points) as sample_points:
+        sampled = sample_met(particles, [met], columns=["pres"], z_top=z_top)
+
+    assert sample_points.call_args.kwargs["model_top"] == z_top
+    assert np.isfinite(sampled["pres"]).all()
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        (lambda p: p.assign(pres=1.0), "already have"),
+        (lambda p: p.drop(columns="time"), "'time' column"),
+        (lambda p: p.assign(time=_T1 + pd.Timedelta(minutes=1)), "outside the met"),
+        (lambda p: p.assign(time=_T0 - pd.Timedelta(minutes=1)), "outside the met"),
+    ],
+    ids=["column-present", "no-time", "after-the-met", "before-the-met"],
+)
+def test_sample_met_rejects(tmp_path, change, message):
+    met = _met_file(tmp_path / "met.arl")
+    particles = change(_particles_at([_T0], [100.0]))
+
+    with pytest.raises(ValueError, match=message):
+        sample_met(particles, [met], columns=["pres"])
+
+
+def test_sample_met_rejects_a_column_it_cannot_sample(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+
+    with pytest.raises(ValueError, match="cannot sample"):
+        sample_met(_particles_at([_T0], [100.0]), [met], columns=["foot"])
+
+
+def _richardson_column(heat: float, theta_top: float | None = None):
+    """
+    One column on 10 m levels: neutral air to 1000 m, stable above, and 5 m/s of shear above the lowest level.
+
+    Without the temperature excess, the bulk Richardson number from the
+    lowest level (10 m) is g (θ − θ₁)(z − 10) / (θ₁ · 25), which passes 0.25
+    at about 1019 m.
+    """
+    from runtraj.sampling import _richardson_mixed_layer
+
+    zz = np.arange(10.0, 3001.0, 10.0)[None, :]
+    theta = 300.0 + 0.01 * np.clip(zz - 1000.0, 0.0, None)
+    if theta_top is not None:
+        theta = np.full_like(zz, theta_top)
+    uu = np.where(zz > 10.0, 5.0, 0.0)
+    return _richardson_mixed_layer(
+        zz,
+        theta,
+        uu,
+        np.zeros_like(zz),
+        np.ones_like(zz),
+        np.array([0.3]),
+        np.array([heat]),
+        ks=6,
+    )
+
+
+def test_richardson_mixed_layer_ends_where_the_bulk_richardson_number_passes_a_quarter():
+    stable = _richardson_column(heat=-20.0)
+
+    g = 9.80616
+    expected = (
+        1010 + np.sqrt(1010**2 + 4 * (0.25 * 300 * 25 / (g * 0.01) - 10000))
+    ) / 2
+    assert stable[0] == pytest.approx(expected, rel=0.005)
+
+
+def test_richardson_mixed_layer_is_deeper_in_unstable_air():
+    # Upward heat flux gives the rising air a temperature excess.
+    assert _richardson_column(heat=200.0)[0] > _richardson_column(heat=-20.0)[0] + 20
+
+
+def test_richardson_mixed_layer_without_a_crossing_is_the_second_highest_level():
+    assert _richardson_column(heat=-20.0, theta_top=300.0)[0] == pytest.approx(2990.0)
+
+
+def test_calc_pbl_height_names_the_variables_the_files_lack(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+
+    with pytest.raises(KeyError, match="UWND"):
+        sampling.calc_pbl_height(_particles_at([_T0], [100.0]), [met])
+
+
+def test_calc_pbl_height_needs_a_time_column(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0], [100.0]).drop(columns="time")
+
+    with pytest.raises(ValueError, match="'time' column"):
+        sampling.calc_pbl_height(particles, [met])
