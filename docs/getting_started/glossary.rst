@@ -137,6 +137,12 @@ Glossary
       ``--compute-root`` option, else ``RUNTRAJ_COMPUTE_ROOT``, else
       ``$TMPDIR/runtraj/<project>``. Projects can share one.
 
+   transform
+      A step that weights each row of the :term:`particles`, in a
+      ``weight`` column: for a column measurement, or for a species lost on
+      the way to a lifetime, deposition, or oxidation. See
+      :doc:`../guides/particles`.
+
    mixed layer
       The layer next to the ground that turbulence keeps mixed, from about
       100 m deep at night to 1 to 2 km on a summer afternoon. Particles in

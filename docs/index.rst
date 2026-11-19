@@ -16,9 +16,10 @@ built in. Another model, and what is made from the particles after a run
 
 The particles follow the air, backward from a measurement or forward from
 a source, over hours to days, at the resolution of the meteorology you give
-it. They carry no mass, so settling, deposition and chemistry are left to
-what you do with them, and runtraj writes particle positions, not
-concentration grids.
+it. They carry no mass and do not settle. A transform weights each
+particle's rows for a species lost on the way (to a lifetime, deposition,
+or oxidation) or for a column measurement, and runtraj writes particle
+positions, not concentration grids.
 
 .. note::
 

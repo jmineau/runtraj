@@ -155,8 +155,9 @@ own for its particle output mode (``ICHEM=8``), which runtraj always uses.
      - ``25000``
      - The top of the model domain, in meters above ground.
 
-The particles carry no mass: they follow the air, with no settling,
-deposition, or chemistry. :doc:`hysplit_users` maps every setting to its
+The particles carry no mass and follow the air without settling. A species
+lost on the way is counted by weighting the particles' rows afterward
+(:doc:`particles`, "Weighting the particles"). :doc:`hysplit_users` maps every setting to its
 line in HYSPLIT's ``CONTROL`` and ``SETUP.CFG``, and
 :doc:`../reference/configuration` describes each one.
 

@@ -123,6 +123,28 @@ run long enough for the particles to leave the region of its sources
 ``particles.runtraj.grid_exits(grid)`` gives where each particle first left a
 :class:`~runtraj.Grid`, such as the edge of your study area.
 
+Weighting the particles
+-----------------------
+
+A particle carries no mass, so a species that is lost on the way, or a
+column measurement that counts some heights more than others, is handled by
+weighting each row of the particles. A transform multiplies the ``weight``
+column, which starts at 1, by the fraction that counts: here, the fraction
+of a tracer with a 24-hour lifetime that survives to the release.
+
+.. ipython:: python
+
+   from runtraj.transforms import FirstOrderLifetime, apply_transforms
+
+   weighted = apply_transforms(particles, [FirstOrderLifetime(lifetime_hours=24)])
+   weighted.groupby(weighted.age // 60)["weight"].mean().tail()
+
+The built-in transforms are an averaging kernel and pressure weighting for
+a column measurement, a first-order lifetime, dry deposition, and
+oxidation; :doc:`../reference/transforms` lists their settings. A stage
+applies the transforms its settings list when it reads the particles, so
+the weights are not stored in a particle file.
+
 Many simulations at once
 ------------------------
 
