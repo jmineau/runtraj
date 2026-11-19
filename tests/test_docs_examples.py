@@ -16,7 +16,7 @@ import yaml
 from pydantic import RootModel
 
 from runtraj.execution.config import ExecutionConfig
-from runtraj.transport import TransportConfig
+from runtraj.models import TransportConfig
 
 DOCS = Path(__file__).parent.parent / "docs"
 README = DOCS.parent / "README.md"

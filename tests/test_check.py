@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from runtraj import Project, transport
+from runtraj import Project, models
 from runtraj.releases import (
     PointRelease,
 )
@@ -379,7 +379,7 @@ class _NoFilesModel:
     """A transport model with no ``check_met``."""
 
     name = "toy"
-    config_class = transport.TransportConfig
+    config_class = models.TransportConfig
     met_config_class = _NoFilesMet
 
     def sha256(self, config):
@@ -396,7 +396,7 @@ class _NoFilesModel:
 
 
 def test_a_model_with_no_files_to_check_has_no_met_findings(tmp_path, monkeypatch):
-    monkeypatch.setitem(transport.MODELS, "toy", _NoFilesModel)
+    monkeypatch.setitem(models.MODELS, "toy", _NoFilesModel)
     project = _project(
         tmp_path,
         [_release(20)],

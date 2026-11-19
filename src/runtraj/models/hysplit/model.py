@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from runtraj.exceptions import SimulationError
-from runtraj.transport import ModelRun
+from runtraj.models import ModelRun
 
 from .config import HysplitConfig
 from .driver import (
@@ -118,9 +118,9 @@ class HysplitModel:
     HYSPLIT as a transport model, the object ``get_model("hysplit")`` returns.
 
     :meth:`run` picks the met files a release needs, writes HYSPLIT's input
-    files (:func:`~runtraj.transport.hysplit.write_inputs`), runs ``hycs_std``,
+    files (:func:`~runtraj.models.hysplit.write_inputs`), runs ``hycs_std``,
     and reads the particles it writes
-    (:func:`~runtraj.transport.hysplit.read_particle_dat`). HYSPLIT reads the
+    (:func:`~runtraj.models.hysplit.read_particle_dat`). HYSPLIT reads the
     met where it is (the cropped copies when the met is cropped), so nothing
     is staged per run.
     """
@@ -156,7 +156,7 @@ class HysplitModel:
         """
         Return the SHA-256 of each data table a run uses, by name.
 
-        The tables of :func:`~runtraj.transport.hysplit.data_tables`, as the
+        The tables of :func:`~runtraj.models.hysplit.data_tables`, as the
         run gets them: ``ASCDATA.CFG`` with its line of where the tables are
         set to the workdir, so where a HYSPLIT folder keeps them changes
         nothing.
@@ -256,7 +256,7 @@ class HysplitModel:
         is. Its output is ``hysplit.log`` in *workdir*, returned as the run's
         log. Without *workdir* it runs in a temporary directory. The release
         heights are added by the caller, as for any model
-        (:func:`runtraj.transport.run_model`).
+        (:func:`runtraj.models.run_model`).
 
         Raises
         ------

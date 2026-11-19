@@ -11,10 +11,10 @@ from __future__ import annotations
 import datetime as dt
 from typing import get_args
 
+from runtraj.models import run_model
+from runtraj.models.hysplit import HysplitConfig
+from runtraj.models.hysplit.driver import PARTICLE_COLUMNS
 from runtraj.releases import PointRelease
-from runtraj.transport import run_model
-from runtraj.transport.hysplit import HysplitConfig
-from runtraj.transport.hysplit.driver import PARTICLE_COLUMNS
 
 from ..conftest import integration
 from .conftest import reference_met

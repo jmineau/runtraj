@@ -8,7 +8,7 @@ import yaml
 from pydantic import ValidationError
 
 from runtraj.config import ProjectConfig
-from runtraj.transport.hysplit.driver import winderrtf
+from runtraj.models.hysplit.driver import winderrtf
 from tests.fixtures.factories import blocks
 
 from .fixtures.factories import make_met_config, write_arl_file

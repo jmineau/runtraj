@@ -8,12 +8,12 @@ import pytest
 from runtraj.config import ProjectConfig
 from runtraj.execution.worker import run_particles
 from runtraj.meteorology import run_window
+from runtraj.models import ModelRun, get_model
+from runtraj.models.hysplit import HysplitConfig, HysplitModel, Met, MetConfig
+from runtraj.models.hysplit.driver import PARTICLE_FILE
 from runtraj.output import Output
 from runtraj.particles import particles_metadata
 from runtraj.simulation import Simulation
-from runtraj.transport import ModelRun, get_model
-from runtraj.transport.hysplit import HysplitConfig, HysplitModel, Met, MetConfig
-from runtraj.transport.hysplit.driver import PARTICLE_FILE
 from tests.fixtures.factories import blocks
 
 from ..fixtures.factories import make_met_config, make_met_files, make_variant
@@ -25,7 +25,7 @@ def test_get_model_returns_hysplit_by_name():
 
 
 def test_get_model_imports_a_model_by_its_path():
-    model = get_model("runtraj.transport.hysplit.HysplitModel")
+    model = get_model("runtraj.models.hysplit.HysplitModel")
     assert isinstance(model, HysplitModel)
     with pytest.raises(
         ImportError,
@@ -45,7 +45,7 @@ def test_get_model_names_the_models_it_knows():
 def test_hysplit_model_build_is_the_hycs_std_on_path_or_in_directory(tmp_path):
     import hashlib
 
-    from runtraj.transport.hysplit import find_hycs_std
+    from runtraj.models.hysplit import find_hycs_std
 
     from ..fixtures.factories import make_hysplit_dir
 
@@ -74,7 +74,7 @@ def test_the_settings_record_the_model_that_makes_the_particles(tmp_path):
 
 def _fake_hysplit(monkeypatch) -> dict:
     """Stand in for writing the inputs, running hycs_std, and reading its particles; return what they were given."""
-    from runtraj.transport.hysplit import model as model_module
+    from runtraj.models.hysplit import model as model_module
 
     seen: dict = {}
 
@@ -148,7 +148,7 @@ def test_run_particles_goes_through_the_model_the_settings_name(
 
     asked: list[str] = []
     monkeypatch.setattr(
-        "runtraj.transport.get_model", lambda name: asked.append(name) or _Model()
+        "runtraj.models.get_model", lambda name: asked.append(name) or _Model()
     )
     met_config = make_met_config(tmp_path)
     variant = make_variant(met_config=met_config, n_hours=-1, numpar=1)
@@ -205,9 +205,9 @@ class _EchoModel:
 
 @pytest.fixture
 def echo(monkeypatch):
-    from runtraj import transport
+    from runtraj import models
 
-    monkeypatch.setitem(transport.MODELS, "echo", _EchoModel)
+    monkeypatch.setitem(models.MODELS, "echo", _EchoModel)
     return _EchoModel
 
 

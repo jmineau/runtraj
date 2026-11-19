@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
-from runtraj.transport.hysplit import (
+from runtraj.models.hysplit import (
     FailureReason,
     HysplitConfig,
     HysplitModel,
@@ -16,9 +16,9 @@ from runtraj.transport.hysplit import (
     read_particle_dat,
     write_inputs,
 )
-from runtraj.transport.hysplit.config import FIXED_SETUP, HYSPLIT_VARSIWANT
-from runtraj.transport.hysplit.control import ControlFile
-from runtraj.transport.hysplit.driver import (
+from runtraj.models.hysplit.config import FIXED_SETUP, HYSPLIT_VARSIWANT
+from runtraj.models.hysplit.control import ControlFile
+from runtraj.models.hysplit.driver import (
     PARTICLE_FILE,
     cells_from_edge,
     setup_entries,
@@ -545,7 +545,7 @@ def test_a_run_whose_particles_left_the_domain_early_is_complete(
     tmp_path, point_release, monkeypatch
 ):
     """Particles that stop short with no met failure are a domain exit, kept for any model."""
-    from runtraj.transport import run_model
+    from runtraj.models import run_model
 
     _fake_hysplit(monkeypatch, log="", rows=_ending_at(13 * 60))
     make_met_files(tmp_path / "met", point_release.time, -24)
@@ -594,7 +594,7 @@ def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
     tmp_path, point_release, monkeypatch
 ):
     """`zcfx` is a column of the particles under that name."""
-    from runtraj.transport import run_model
+    from runtraj.models import run_model
 
     rows = [[*row, 2.5] for row in _ending_at(24 * 60)]
     _fake_hysplit(monkeypatch, log="", rows=rows)
@@ -803,7 +803,7 @@ def test_setup_cfg_takes_kmsl_from_an_msl_release(tmp_path, point_release):
 
 
 def test_read_namelist_reads_the_setup_cfg_written(tmp_path, point_release):
-    from runtraj.transport.hysplit.namelist import read_namelist
+    from runtraj.models.hysplit.namelist import read_namelist
 
     config = HysplitConfig(n_hours=-24, numpar=150, wvert=True)
     entries = read_namelist(_inputs(tmp_path, point_release, config) / "SETUP.CFG")
@@ -816,7 +816,7 @@ def test_read_namelist_reads_the_setup_cfg_written(tmp_path, point_release):
 
 
 def test_read_namelist_rejects_a_file_that_is_not_one(tmp_path):
-    from runtraj.transport.hysplit.namelist import read_namelist
+    from runtraj.models.hysplit.namelist import read_namelist
 
     path = tmp_path / "SETUP.CFG"
     path.write_text("NUMPAR=10,\n")
@@ -1276,7 +1276,7 @@ def test_the_driver_names_only_real_settings_outside_setup_cfg():
     test_hysplit_setup_types_cover_every_setup_entry catches one HYSPLIT
     does not know.
     """
-    from runtraj.transport.hysplit.driver import NOT_IN_SETUP
+    from runtraj.models.hysplit.driver import NOT_IN_SETUP
 
     assert set(HysplitConfig.model_fields) >= NOT_IN_SETUP
     entries = setup_entries(HysplitConfig(n_hours=-24))

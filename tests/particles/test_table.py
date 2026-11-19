@@ -11,6 +11,8 @@ import pyarrow.parquet as pq
 import pytest
 
 from runtraj.identity import run_settings, transport_from_settings
+from runtraj.models import ModelInfo
+from runtraj.models.hysplit import HysplitConfig
 from runtraj.particles import (
     particles_from_table,
     particles_metadata,
@@ -19,8 +21,6 @@ from runtraj.particles import (
 )
 from runtraj.particles.table import add_release_heights, needs_height_to_match
 from runtraj.releases import ColumnRelease, MultiPointRelease
-from runtraj.transport import ModelInfo
-from runtraj.transport.hysplit import HysplitConfig
 
 from ..fixtures.particles import finished
 

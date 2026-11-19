@@ -126,7 +126,7 @@ jobs:
           RUNTRAJ_TEST_FETCH_MET: "1"
         run: |
           uv run pytest \
-            tests/transport/hysplit/test_release_assignment.py::test_hysplit_multipoint_release_points_follow_control_order \
+            tests/models/hysplit/test_release_assignment.py::test_hysplit_multipoint_release_points_follow_control_order \
             --setup-only -q
 
       - name: Save HRRR met cache
@@ -197,7 +197,7 @@ jobs:
         run: |
           .pkgtest/bin/python - <<'PY'
           from runtraj.exceptions import HYSPLITNotFoundError
-          from runtraj.transport.hysplit import find_hycs_std
+          from runtraj.models.hysplit import find_hycs_std
 
           try:
               find_hycs_std()

@@ -90,14 +90,14 @@ of the run are a complete run.
    :toctree: _api
    :nosignatures:
 
-   runtraj.transport.TransportModel
-   runtraj.transport.BatchedTransportModel
-   runtraj.transport.TransportConfig
-   runtraj.transport.ModelRun
-   runtraj.transport.get_model
-   runtraj.transport.run_model
-   runtraj.transport.run_model_many
-   runtraj.transport.hysplit.HysplitModel
+   runtraj.models.TransportModel
+   runtraj.models.BatchedTransportModel
+   runtraj.models.TransportConfig
+   runtraj.models.ModelRun
+   runtraj.models.get_model
+   runtraj.models.run_model
+   runtraj.models.run_model_many
+   runtraj.models.hysplit.HysplitModel
 
 Stages
 ------

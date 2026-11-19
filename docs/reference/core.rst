@@ -87,7 +87,7 @@ a default, still matches.
    identity.stage_hash
    identity.settings_hash
    identity.file_stamp
-   transport.ModelInfo
+   models.ModelInfo
 
 Particles
 ---------

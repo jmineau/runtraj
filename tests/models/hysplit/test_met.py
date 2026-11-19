@@ -1,4 +1,4 @@
-"""Tests for HYSPLIT's met config and its files (runtraj.transport.hysplit.met)."""
+"""Tests for HYSPLIT's met config and its files (runtraj.models.hysplit.met)."""
 
 import datetime as dt
 import logging
@@ -10,8 +10,8 @@ import pytest
 
 from runtraj.exceptions import MeteorologyError
 from runtraj.meteorology import run_window
+from runtraj.models.hysplit import Met, MetConfig
 from runtraj.spatial import Bounds
-from runtraj.transport.hysplit import Met, MetConfig
 
 from ...fixtures.factories import write_arl_file
 
@@ -586,7 +586,7 @@ def test_nothing_is_missing_for_a_download(tmp_path):
 
 def test_checking_releases_lists_the_folder_once(tmp_path, monkeypatch):
     """Releases an hour apart, some missing their files, cost one listing of the folder."""
-    from runtraj.transport.hysplit import catalog as catalog_module
+    from runtraj.models.hysplit import catalog as catalog_module
 
     _hrrr_files(tmp_path, ["20230101_06-11_hrrr"])
     walks = []
@@ -787,7 +787,7 @@ def test_a_link_to_a_missing_file_or_a_folder_is_no_met_file(tmp_path):
 
 def test_the_walk_lists_links_without_following_them(tmp_path):
     """Links are listed as names, and a link to a folder is not walked into."""
-    from runtraj.transport.hysplit.catalog import walk
+    from runtraj.models.hysplit.catalog import walk
 
     _linked_archive(tmp_path)
 
@@ -807,7 +807,7 @@ def test_the_walk_lists_links_without_following_them(tmp_path):
 
 def test_the_walk_skips_a_folder_it_cannot_read(tmp_path):
     """As os.walk does: a missing directory lists nothing, and raises nothing."""
-    from runtraj.transport.hysplit.catalog import walk
+    from runtraj.models.hysplit.catalog import walk
 
     assert list(walk(tmp_path / "missing")) == []
 

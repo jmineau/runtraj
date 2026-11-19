@@ -79,8 +79,8 @@ from pathlib import Path
 
 import pandas as pd
 from pydantic import BaseModel
-from runtraj.transport import ModelRun, TransportConfig
-from runtraj.transport.hysplit.driver import run_hycs_std
+from runtraj.models import ModelRun, TransportConfig
+from runtraj.models.hysplit.driver import run_hycs_std
 
 class SlowConfig(TransportConfig):
     pass

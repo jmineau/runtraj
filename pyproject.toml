@@ -121,7 +121,7 @@ exclude_type_checking_imports = true
 # below it, never those above. Modules that import each other share a layer
 # (joined by ":"); "|" joins modules that must not. Releases and the raster
 # layer import nothing above them; a transport model's package, in the
-# transport layer, does not import the project config. Exhaustive, so a new
+# models layer, does not import the project config. Exhaustive, so a new
 # module has to be placed. Imports inside functions count.
 [[tool.importlinter.contracts]]
 name = "The package's layers"
@@ -136,7 +136,7 @@ layers = [
     "simulation",
     "output",
     "stages",
-    "identity : meteorology : transport",
+    "identity : meteorology : models",
     "particles",
     "releases : visualization",
     "spatial",
@@ -144,17 +144,17 @@ layers = [
     "_paths | exceptions | _transient",
 ]
 
-# HYSPLIT is one transport model, reached through runtraj.transport.get_model.
+# HYSPLIT is one transport model, reached through runtraj.models.get_model.
 # Its package is the only place that knows HYSPLIT's files and behaviour, so
 # a second model does not have to touch the core.
 [[tool.importlinter.contracts]]
-name = "Only the transport registry imports HYSPLIT's package"
+name = "Only runtraj.models imports HYSPLIT's package"
 type = "forbidden"
 source_modules = ["runtraj.*"]
-forbidden_modules = ["runtraj.transport.hysplit"]
+forbidden_modules = ["runtraj.models.hysplit"]
 # get_model imports a model's package when asked for it; that is the boundary.
 ignore_imports = [
-    "runtraj.transport -> runtraj.transport.hysplit",
+    "runtraj.models -> runtraj.models.hysplit",
 ]
 allow_indirect_imports = true
 
@@ -174,7 +174,7 @@ forbidden_modules = [
     "runtraj.output",
     "runtraj.project",
     "runtraj.simulation",
-    "runtraj.transport.hysplit",
+    "runtraj.models.hysplit",
 ]
 allow_indirect_imports = true
 

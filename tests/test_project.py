@@ -8,9 +8,9 @@ import pytest
 
 from runtraj import Project
 from runtraj.config import ProjectConfig
+from runtraj.models.hysplit import MetConfig
 from runtraj.output import Output
 from runtraj.releases import PointRelease
-from runtraj.transport.hysplit import MetConfig
 
 from .fixtures.factories import make_met_config, make_release
 
@@ -76,7 +76,7 @@ def test_init_takes_the_releases_second(tmp_path, point_release):
 def test_init_writes_no_hysplit_values_for_another_model(tmp_path):
     config = ProjectConfig(
         mets={"hrrr": _met(tmp_path)},
-        models={"mine": {"class": "tests.transport.test_models.ToyModel"}},
+        models={"mine": {"class": "tests.models.test_models.ToyModel"}},
         variants={"hrrr": {"n_hours": -24}},
     )
 

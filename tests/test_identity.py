@@ -8,10 +8,10 @@ import runtraj
 from runtraj.config import ProjectConfig, Variant
 from runtraj.exceptions import HYSPLITNotFoundError
 from runtraj.identity import read_run_settings, run_settings, settings_hash
+from runtraj.models import ModelInfo
+from runtraj.models.hysplit import HysplitConfig, MetConfig
+from runtraj.models.hysplit.model import hysplit_version
 from runtraj.output import Output
-from runtraj.transport import ModelInfo
-from runtraj.transport.hysplit import HysplitConfig, MetConfig
-from runtraj.transport.hysplit.model import hysplit_version
 from tests.fixtures.factories import blocks
 
 from .conftest import STAND_IN_VERSION
@@ -72,7 +72,7 @@ def test_hysplit_version_is_none_for_a_hycs_std_that_cannot_run_here(tmp_path):
 def test_hysplit_version_is_none_for_a_hycs_std_that_does_not_stop(
     tmp_path, monkeypatch
 ):
-    from runtraj.transport.hysplit import model
+    from runtraj.models.hysplit import model
 
     monkeypatch.setattr(model, "_VERSION_TIMEOUT", 0.5)
     folder = make_hysplit_dir(tmp_path / "b", version=None, body="exec sleep 30\n")

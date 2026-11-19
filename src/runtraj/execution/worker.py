@@ -40,9 +40,9 @@ import pandas as pd
 from runtraj._transient import is_transient
 from runtraj.exceptions import SimulationError, WorkerDied
 from runtraj.execution.config import ExecutionConfig
+from runtraj.models import get_model, run_model, run_model_many
 from runtraj.simulation import Simulation
 from runtraj.stages import reads
-from runtraj.transport import get_model, run_model, run_model_many
 
 if TYPE_CHECKING:
     from runtraj._paths import Location
@@ -186,7 +186,7 @@ def run_particles(
     Run the transport model for a simulation and write its particles to the output directory.
 
     The transport model the variant names runs in *workdir*
-    (:func:`runtraj.transport.run_model`), with the variant's met. Its log is written to the output
+    (:func:`runtraj.models.run_model`), with the variant's met. Its log is written to the output
     directory whether the run succeeds or fails. The working directory is
     then removed, unless the run failed or *keep_workdir* is set, in which
     case it is copied under the output directory's ``scratch/`` first.
@@ -286,7 +286,7 @@ def run_particles_batch(
 
     *sims* are simulations of one variant and realization, one per release,
     so they share the transport settings. The model's one call
-    (:func:`runtraj.transport.run_model_many`) gives each release its
+    (:func:`runtraj.models.run_model_many`) gives each release its
     particles or an error: the particles and the log are written, and a
     failure is recorded with its simulation.
 

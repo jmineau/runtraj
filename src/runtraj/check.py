@@ -17,8 +17,8 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
+from runtraj.models import get_model
 from runtraj.particles.table import needs_height_to_match
-from runtraj.transport import get_model
 
 if TYPE_CHECKING:
     from runtraj.config import Variant

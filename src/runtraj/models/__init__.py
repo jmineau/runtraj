@@ -2,7 +2,7 @@
 The transport model interface.
 
 A transport model turns one release and one set of transport settings into
-a particle table. HYSPLIT (:class:`runtraj.transport.hysplit.HysplitModel`)
+a particle table. HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)
 is the one built in; a model in another package is named by its import
 path. The worker reaches
 a model through :func:`get_model` by the name a run's settings record, so
@@ -223,7 +223,7 @@ class TransportModel(Protocol):
         Its ``settings()`` returns what a run records of the met: which
         weather it is, and anything else that changes the particles, but not
         where its files are kept. HYSPLIT's is
-        :class:`runtraj.transport.hysplit.MetConfig`.
+        :class:`runtraj.models.hysplit.MetConfig`.
         """
         ...
 
@@ -331,7 +331,7 @@ class BatchedTransportModel(TransportModel, Protocol):
 
 def _hysplit() -> TransportModel:
     """Return HYSPLIT, importing its package only when it is asked for."""
-    from runtraj.transport.hysplit import HysplitModel
+    from runtraj.models.hysplit import HysplitModel
 
     return HysplitModel()
 
@@ -523,7 +523,7 @@ def run_trajectories(
     met : str, dict or BaseModel
         The meteorology, as one entry under ``mets:`` in ``config.yaml``,
         checked by the model's met config
-        (:class:`runtraj.transport.hysplit.MetConfig` for HYSPLIT). A string is
+        (:class:`runtraj.models.hysplit.MetConfig` for HYSPLIT). A string is
         the folder of its files, and a relative folder starts from the
         working directory.
     model : str, default "hysplit"
@@ -536,7 +536,7 @@ def run_trajectories(
         Time limit in seconds. ``None`` waits indefinitely.
     **params
         The transport model's parameters, such as ``n_hours`` and
-        ``numpar`` (:class:`runtraj.transport.hysplit.HysplitConfig`).
+        ``numpar`` (:class:`runtraj.models.hysplit.HysplitConfig`).
         ``n_hours`` is required; the others default to the model's own
         values.
 

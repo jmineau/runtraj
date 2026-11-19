@@ -13,6 +13,7 @@ from importlib.metadata import version as _version
 from .config import ProjectConfig
 from .exceptions import RuntrajError
 from .execution import ExecutionConfig, task_share
+from .models import run_trajectories
 from .particles import read_particles
 from .project import Project
 from .releases import (
@@ -24,7 +25,6 @@ from .releases import (
 )
 from .simulation import Simulation
 from .spatial import Bounds, Grid
-from .transport import run_trajectories
 
 try:
     __version__ = _version("runtraj")

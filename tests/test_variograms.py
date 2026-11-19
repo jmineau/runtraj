@@ -5,9 +5,9 @@ import pandas as pd
 import pytest
 
 from runtraj.meteorology import VariogramFit, fit_variogram, variogram
+from runtraj.models.hysplit import HysplitConfig
+from runtraj.models.hysplit.driver import winderrtf
 from runtraj.spatial import haversine_km
-from runtraj.transport.hysplit import HysplitConfig
-from runtraj.transport.hysplit.driver import winderrtf
 
 
 def _ar1(n: int, sigma: float, length: float, step: float, rng) -> np.ndarray:

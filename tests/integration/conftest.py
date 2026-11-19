@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 
 from runtraj.config import ProjectConfig
+from runtraj.models.hysplit import MetConfig
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
-from runtraj.transport.hysplit import MetConfig
 from tests.fixtures.factories import blocks, make_met_config
 
 #: A time the test met cache covers, with six hours before it.

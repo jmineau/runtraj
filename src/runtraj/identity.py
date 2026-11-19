@@ -29,7 +29,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from runtraj.transport import ModelInfo, TransportConfig, get_model
+from runtraj.models import ModelInfo, TransportConfig, get_model
 
 
 def canonical(value: Any) -> Any:

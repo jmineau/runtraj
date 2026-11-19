@@ -11,10 +11,10 @@ import pytest
 import yaml
 from pydantic import BaseModel, ConfigDict
 
-from runtraj import transport
+from runtraj import models
 from runtraj.config import ProjectConfig
 from runtraj.identity import read_run_settings, settings_hash
-from runtraj.transport import ModelInfo, TransportConfig
+from runtraj.models import ModelInfo, TransportConfig
 
 from ..fixtures.factories import make_met_config
 
@@ -59,7 +59,7 @@ class ToyModel:
 
 @pytest.fixture
 def toy(monkeypatch):
-    monkeypatch.setitem(transport.MODELS, "toy", ToyModel)
+    monkeypatch.setitem(models.MODELS, "toy", ToyModel)
 
 
 #: The toy model by its import path, as config.yaml names a model in another package.
@@ -281,7 +281,7 @@ def test_a_model_in_its_own_package_runs_from_a_fresh_interpreter(tmp_path):
             """
             import pandas as pd
             from pydantic import BaseModel
-            from runtraj.transport import ModelRun, TransportConfig
+            from runtraj.models import ModelRun, TransportConfig
 
             class ToyConfig(TransportConfig):
                 nparticles: int = 2

@@ -8,15 +8,15 @@ from pathlib import Path
 import numpy as np
 
 from runtraj.meteorology import run_window
-from runtraj.releases import ColumnRelease, MultiPointRelease
-from runtraj.transport.hysplit import (
+from runtraj.models.hysplit import (
     HysplitConfig,
     Met,
     read_particle_dat,
     run_hycs_std,
     write_inputs,
 )
-from runtraj.transport.hysplit.driver import PARTICLE_FILE
+from runtraj.models.hysplit.driver import PARTICLE_FILE
+from runtraj.releases import ColumnRelease, MultiPointRelease
 
 from ...conftest import integration
 from ...fixtures.factories import make_met_config

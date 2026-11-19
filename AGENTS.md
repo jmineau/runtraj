@@ -84,9 +84,9 @@ src/runtraj/
   simulation.py   Simulation: a frozen (release, variant, output) value
   config.py       ProjectConfig and Variant;  identity.py  settings records, hashes
   stages.py       the Stage protocol, get_stage, check_stage;  _plugins.py  a class by import path
-  releases/       release models, releases.csv, shared validation
+  releases/       release classes, releases.csv, shared validation
   particles/      the particle table and files, release heights, the particles.runtraj accessor
-  transport/      TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model
+  models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model
     hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
   execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker
   meteorology.py, spatial.py, visualization.py, exceptions.py, _paths.py
@@ -102,7 +102,7 @@ stage after the ones it `reads` and again when one of those was remade
 
 The import contracts in `pyproject.toml` (`just imports`) hold this shape: an
 exhaustive `layers` contract (a new top-level module fails until placed), only
-`runtraj.transport` imports HYSPLIT's package, and the project config reads no
+`runtraj.models` imports HYSPLIT's package, and the project config reads no
 results and runs nothing. Slurm tasks rebuild the project in another process,
 so anything a worker needs must be in the project or the output directory.
 

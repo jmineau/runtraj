@@ -10,9 +10,9 @@ from runtraj import Project
 from runtraj.config import ProjectConfig
 from runtraj.exceptions import SimulationError
 from runtraj.meteorology import run_window
+from runtraj.models.hysplit import FailureReason, HysplitConfig, HysplitModel
+from runtraj.models.hysplit.driver import PARTICLE_FILE
 from runtraj.releases import PointRelease
-from runtraj.transport.hysplit import FailureReason, HysplitConfig, HysplitModel
-from runtraj.transport.hysplit.driver import PARTICLE_FILE
 from tests.fixtures.factories import blocks
 
 from ...fixtures.factories import make_hysplit_dir, make_met_config, make_met_files

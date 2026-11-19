@@ -19,8 +19,8 @@ import pytest
 from runtraj import Project
 from runtraj.exceptions import SimulationError
 from runtraj.execution.runner import resolve_compute_root
+from runtraj.models.hysplit import FailureReason
 from runtraj.releases import MultiPointRelease
-from runtraj.transport.hysplit import FailureReason
 
 from ..conftest import integration
 from .conftest import REFERENCE_TIME, reference_met

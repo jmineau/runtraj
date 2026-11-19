@@ -3,7 +3,7 @@ HYSPLIT's config: every setting that shapes the particles HYSPLIT makes.
 
 :class:`HysplitConfig` holds them. Most are HYSPLIT's own, under HYSPLIT's
 names; a few are used by runtraj itself. Which input file each goes to is
-the HYSPLIT driver's business (:mod:`runtraj.transport.hysplit.driver`).
+the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from typing import Any, ClassVar, Literal, Self
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from runtraj.transport import TransportConfig
+from runtraj.models import TransportConfig
 
 #: Most hourly ZICONTROL factors HYSPLIT can hold (``ZIPRESC(150)`` in
 #: hymodelc.F); it reads more without a bounds check.

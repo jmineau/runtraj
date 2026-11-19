@@ -62,7 +62,7 @@ def test_hysplit_not_found_is_not_a_failed_run():
 
 
 def test_a_simulation_error_carries_its_reason():
-    from runtraj.transport.hysplit import FailureReason
+    from runtraj.models.hysplit import FailureReason
 
     err = SimulationError(
         "HYSPLIT failed (MET_COVERAGE).", reason=FailureReason.MET_COVERAGE

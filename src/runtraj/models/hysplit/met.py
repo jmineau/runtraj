@@ -220,7 +220,7 @@ class Met:
     The meteorology files of one met, found locally or downloaded.
 
     Without ``download``, files are found under ``directory`` by what their
-    headers say they hold (:class:`~runtraj.transport.hysplit.catalog.Catalog`).
+    headers say they hold (:class:`~runtraj.models.hysplit.catalog.Catalog`).
     With ``download`` set to an ARL archive name, arlmet downloads the files,
     cropping them as it goes when subgridding is on. Local files are cropped with
     ``arlmet.extract_subset`` into :attr:`crop_dir`, which all simulations

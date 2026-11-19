@@ -7,8 +7,8 @@ and ``variants`` the settings every release runs under.
 A model's or a stage's block holds its settings, the defaults of every
 variant that uses it, and no setting sits at the top level. Each part has
 its own config class, next to the code that uses it: the transport model's
-and its met config (such as :class:`~runtraj.transport.hysplit.HysplitConfig`
-and :class:`~runtraj.transport.hysplit.MetConfig`), a stage's, and
+and its met config (such as :class:`~runtraj.models.hysplit.HysplitConfig`
+and :class:`~runtraj.models.hysplit.MetConfig`), a stage's, and
 :class:`~runtraj.execution.ExecutionConfig`. A stage is named by the import
 path of its class (:mod:`runtraj.stages`), so this module imports none.
 :class:`ProjectConfig` reads the file and checks it without reading any
@@ -46,13 +46,13 @@ from pydantic import (
 from runtraj._paths import absolute
 from runtraj.execution.config import ExecutionConfig
 from runtraj.identity import canonical, run_settings, settings_hash, stage_hash
-from runtraj.stages import Stage, get_stage, ordered, reads
-from runtraj.transport import (
+from runtraj.models import (
     MODELS,
     ModelInfo,
     TransportConfig,
     get_model,
 )
+from runtraj.stages import Stage, get_stage, ordered, reads
 
 #: Pattern for variant and met names, which become directory names.
 VARIANT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -90,7 +90,7 @@ class _Declared(NamedTuple):
 
     met: str
     block: str  # the name of its model's block under models:
-    model: str  # the model, as runtraj.transport.get_model names it
+    model: str  # the model, as runtraj.models.get_model names it
     realizations: int | None
     transport: dict[str, Any]
     stages: dict[str, Any]  # each stage's checked settings, by the stage's name
@@ -131,7 +131,7 @@ class Variant:
         with absolute directories when resolved for a project.
     transport : TransportConfig
         The transport model's config, such as a
-        :class:`~runtraj.transport.hysplit.HysplitConfig`, with the base seed.
+        :class:`~runtraj.models.hysplit.HysplitConfig`, with the base seed.
     model : str
         The transport model that runs it, as ``config.yaml`` names it: a
         built-in name such as ``hysplit``, or a model class's import path.
@@ -380,7 +380,7 @@ class ProjectConfig(BaseModel):
             "Meteorology by name, such as ``hrrr``: the folder of its files, or "
             "a mapping of its settings. At least one is required. Each is "
             "checked by the met config of the transport model that reads it "
-            "(:class:`runtraj.transport.hysplit.MetConfig` for HYSPLIT)."
+            "(:class:`runtraj.models.hysplit.MetConfig` for HYSPLIT)."
         ),
     )
     models: dict[str, dict[str, Any] | None] = Field(
@@ -833,7 +833,7 @@ def _model_blocks(
     *stages* is the ``stages`` block as written, to say where a stage's
     setting belongs.
 
-    The model is as :func:`runtraj.transport.get_model` names it: the block's
+    The model is as :func:`runtraj.models.get_model` names it: the block's
     ``class``, or the block's own name for a built-in model. The settings
     are checked by name here, and by value as a variant runs them.
 

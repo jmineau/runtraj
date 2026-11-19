@@ -19,9 +19,9 @@ Configuration
    output: output
 
 ``mets`` names the meteorology (for HYSPLIT,
-:class:`~runtraj.transport.hysplit.MetConfig`). ``models`` names the transport
+:class:`~runtraj.models.hysplit.MetConfig`). ``models`` names the transport
 models, each block with that model's settings
-(:class:`~runtraj.transport.hysplit.HysplitConfig` for ``hysplit``).
+(:class:`~runtraj.models.hysplit.HysplitConfig` for ``hysplit``).
 ``stages`` names what is made from each simulation's particles after the
 model runs, each block with the import path of its stage's class and then
 the stage's settings. A stage's block is named for its stage, which is also
@@ -30,7 +30,7 @@ the name of its folder in the output directory and of its column in
 only.
 ``variants`` says what runs, and ``execution`` where
 (:class:`ExecutionConfig`). Each class lives next to the code that uses it
-(``runtraj.execution.config``, ``runtraj.transport.hysplit``).
+(``runtraj.execution.config``, ``runtraj.models.hysplit``).
 
 No setting sits at the top level. One written there is refused with a
 message that names its block, such as ``'n_hours' is a hysplit setting.
@@ -65,7 +65,7 @@ own. ``n_hours`` has no default, and ``capemin``, ``kblt``, ``kmixd``,
 ``krand`` and ``vscales`` are unset unless given: HYSPLIT chooses them when
 it runs.
 
-.. config-model:: runtraj.transport.hysplit.HysplitConfig
+.. config-model:: runtraj.models.hysplit.HysplitConfig
 
 A model in another package gets a block of any name that gives the model
 class's import path as ``class``, then that model's own settings:
@@ -108,7 +108,7 @@ A met
 The keys of one entry under ``mets:``, for HYSPLIT
 (:doc:`../guides/meteorology`).
 
-.. config-model:: runtraj.transport.hysplit.MetConfig
+.. config-model:: runtraj.models.hysplit.MetConfig
 
 Execution
 ~~~~~~~~~
@@ -179,7 +179,7 @@ Parameters
 The settings that shape a run's particles belong to the transport model,
 and are written in its block under ``models:`` (``hysplit`` when the config
 has no ``models``). HYSPLIT's are in
-:class:`runtraj.transport.hysplit.HysplitConfig`, under HYSPLIT's names (see
+:class:`runtraj.models.hysplit.HysplitConfig`, under HYSPLIT's names (see
 :doc:`hysplit`). Each model's block holds all of its settings, the ones
 runtraj reads itself among them (``n_hours`` and ``seed``): nothing passes
 from one model's block to another's. What a stage does with the particles

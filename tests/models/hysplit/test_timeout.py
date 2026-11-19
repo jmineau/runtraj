@@ -9,7 +9,7 @@ makes that a SimulationError (reason TIMEOUT) the execution loop already handles
 import pytest
 
 from runtraj.execution.config import ExecutionConfig
-from runtraj.transport.hysplit.config import HysplitConfig
+from runtraj.models.hysplit.config import HysplitConfig
 
 from ...fixtures.factories import make_met_config, make_met_files, make_variant
 
@@ -25,9 +25,9 @@ def _stop(workdir, timeout=None):
 @pytest.fixture
 def sim(monkeypatch, tmp_path, point_release):
     """A Simulation with HYSPLIT stubbed out, and a runner for it."""
+    from runtraj.models.hysplit import model
     from runtraj.output import Output
     from runtraj.simulation import Simulation
-    from runtraj.transport.hysplit import model
 
     monkeypatch.setattr(model, "write_inputs", lambda *args, **kwargs: None)
     monkeypatch.setattr(model, "run_hycs_std", _stop)

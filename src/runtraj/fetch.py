@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 
 from runtraj.meteorology import run_window
-from runtraj.transport import get_model
+from runtraj.models import get_model
 
 if TYPE_CHECKING:
     from runtraj.project import Project
@@ -31,7 +31,7 @@ def fetch_project(project: Project, unrun: pd.DataFrame) -> pd.DataFrame:
     ``project.simulations`` with ``release`` and ``variant`` columns). For
     each met they use, the model gets the files for the time each run
     covers, as a run would (``fetch_met`` of the transport model, see
-    :class:`runtraj.transport.TransportModel`). A model without ``fetch_met``
+    :class:`runtraj.models.TransportModel`). A model without ``fetch_met``
     has no files to get and adds no row.
 
     Returns
@@ -65,7 +65,7 @@ def downloads(project: Project, variants: Iterable[str]) -> bool:
     Whether the met of one of *variants* downloads its files.
 
     Each variant's transport model says, with its ``downloads_met`` (see
-    :class:`runtraj.transport.TransportModel`); a model without it downloads
+    :class:`runtraj.models.TransportModel`); a model without it downloads
     nothing. Reads no file, so it is cheap to ask before a listing.
     """
     for name in variants:

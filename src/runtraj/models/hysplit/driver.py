@@ -3,7 +3,7 @@ Write HYSPLIT's input files, run ``hycs_std``, and read the particles it writes.
 
 :func:`write_inputs` fills a working directory with everything
 ``hycs_std`` reads, and :func:`read_particle_dat` reads the particle file
-it writes. :class:`~runtraj.transport.hysplit.HysplitModel` runs the two
+it writes. :class:`~runtraj.models.hysplit.HysplitModel` runs the two
 around ``hycs_std`` in one directory; call them yourself to look at the
 input files of a run, or to read a particle file from elsewhere.
 """
@@ -22,19 +22,19 @@ import numpy as np
 import pandas as pd
 
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
-from runtraj.transport.hysplit.config import (
+from runtraj.models.hysplit.config import (
     FIXED_SETUP,
     WIND_ERROR_SETTINGS,
     ZI_ERROR_SETTINGS,
     HysplitConfig,
 )
-from runtraj.transport.hysplit.control import ControlFile
-from runtraj.transport.hysplit.failures import (
+from runtraj.models.hysplit.control import ControlFile
+from runtraj.models.hysplit.failures import (
     PARTICLE_LIMIT_PHRASE,
     FailureReason,
     failure_in,
 )
-from runtraj.transport.hysplit.namelist import NameList
+from runtraj.models.hysplit.namelist import NameList
 
 if TYPE_CHECKING:
     from arlmet import Grid
@@ -191,7 +191,7 @@ def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
     pandas.DataFrame
         One row per particle per output step, as HYSPLIT wrote them. The
         release heights are added after the run
-        (:func:`runtraj.transport.run_model`).
+        (:func:`runtraj.models.run_model`).
 
     Raises
     ------
@@ -283,7 +283,7 @@ def check_release(
     HYSPLIT fills the locations in order and stops at ``MAXPAR``, writing
     ``exceeding puff limit`` to its ``WARNING`` file, so the last
     locations get fewer particles or none. From one location that is
-    harmless (:data:`~runtraj.transport.hysplit.failures.PARTICLE_LIMIT_PHRASE`).
+    harmless (:data:`~runtraj.models.hysplit.failures.PARTICLE_LIMIT_PHRASE`).
 
     Raises
     ------

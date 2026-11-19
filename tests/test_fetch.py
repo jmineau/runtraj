@@ -9,9 +9,9 @@ import pytest
 from arlmet.archives import HRRRArchive
 from typer.testing import CliRunner
 
-from runtraj import transport
+from runtraj import models
+from runtraj.models.hysplit import Met, MetConfig
 from runtraj.project import Project
-from runtraj.transport.hysplit import Met, MetConfig
 from tests.fixtures.factories import blocks
 
 from .fixtures.factories import (
@@ -96,7 +96,7 @@ def _files_a_run_gets(project: Project, release_ids, monkeypatch, tmp_path):
     """
     Return the met files that runs of *release_ids* ask for.
 
-    Each is run through the transport model (:func:`runtraj.transport.run_model`) up to
+    Each is run through the transport model (:func:`runtraj.models.run_model`) up to
     the point where HYSPLIT would start, and the files :meth:`Met.files_for`
     returns are noted.
     """
@@ -113,11 +113,11 @@ def _files_a_run_gets(project: Project, release_ids, monkeypatch, tmp_path):
 
     monkeypatch.setattr(Met, "files_for", note)
     monkeypatch.setattr(Met, "check", lambda self, files, window: None)
-    monkeypatch.setattr("runtraj.transport.hysplit.model.write_inputs", stop)
+    monkeypatch.setattr("runtraj.models.hysplit.model.write_inputs", stop)
     for rid in release_ids:
         sim = project.simulation(rid, "hrrr")
         with pytest.raises(_Stop):
-            transport.run_model(
+            models.run_model(
                 sim.variant.model,
                 sim.release,
                 sim.transport,
@@ -319,7 +319,7 @@ def test_met_fetch_errors_other_than_a_missing_file_are_not_swallowed(
 def test_a_model_with_no_fetch_adds_no_row(tmp_path, monkeypatch):
     from .test_check import _NoFilesModel
 
-    monkeypatch.setitem(transport.MODELS, "toy", _NoFilesModel)
+    monkeypatch.setitem(models.MODELS, "toy", _NoFilesModel)
     project = Project.init(
         tmp_path / "proj",
         releases=[_release(2, 3)],

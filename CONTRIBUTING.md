@@ -205,7 +205,7 @@ fails when one breaks.
 
   ```bash
   RUNTRAJ_TEST_FETCH_MET=1 uv run pytest \
-    tests/transport/hysplit/test_release_assignment.py::test_hysplit_multipoint_release_points_follow_control_order \
+    tests/models/hysplit/test_release_assignment.py::test_hysplit_multipoint_release_points_follow_control_order \
     --setup-only -q
   ```
 
@@ -240,9 +240,9 @@ and `ziscale` are keys of the `hysplit` block under `models`. Don't add
 nested parameter objects inside a block.
 
 Each HYSPLIT setting is a field of `HysplitConfig`
-(`src/runtraj/transport/hysplit/config.py`): a plain pydantic
+(`src/runtraj/models/hysplit/config.py`): a plain pydantic
 `Field(default, description=...)`. Which input file it goes to is the
-HYSPLIT driver's business (`src/runtraj/transport/hysplit/driver.py`). A
+HYSPLIT driver's business (`src/runtraj/models/hysplit/driver.py`). A
 setting is a `SETUP.CFG` entry unless the driver lists it in
 `NOT_IN_SETUP`: the `CONTROL` settings (which `ControlFile` writes),
 `ziscale` (`ZICONTROL`), the wind- and mixed-layer-error groups (`WINDERR`
@@ -255,7 +255,7 @@ driver; a test fails if it would land in `SETUP.CFG` unknown to HYSPLIT.
 ## Adding a transport model
 
 A transport model owns its config: a subclass of
-`runtraj.transport.TransportConfig` with the model's own parameters. The base
+`runtraj.models.TransportConfig` with the model's own parameters. The base
 gives the parameters runtraj's own code reads whatever the model
 (`n_hours`, `seed`); a parameter goes there only when the core reads it,
 so another model is never handed a setting it would ignore. It also gives
@@ -268,13 +268,13 @@ those two only where the model differs. The model itself names that class as
 the run's settings), `version` (what the build reports, recorded beside
 them), `data_files`, and
 `run(release, config, met, window, workdir=None, timeout=None)`
-(`runtraj.transport.TransportModel`). `sha256` raises `FileNotFoundError` when
+(`runtraj.models.TransportModel`). `sha256` raises `FileNotFoundError` when
 the executable cannot be found; the project still opens, and its status
 compares stored folders without the build. The met config is a pydantic model that
 checks one entry under `mets:`; its `settings()` returns what a run records
 of the met (which weather it is, and anything else that changes the
 particles, never where its files are kept). HYSPLIT's is
-`runtraj.transport.hysplit.MetConfig`, whose settings are the source id in
+`runtraj.models.hysplit.MetConfig`, whose settings are the source id in
 the ARL headers and the crop. A model that reads no files can take any
 keys, with no directory. `met` is that config, its `directory` and
 `subgrid_dir` absolute when it has them, and `window` the `(start, end)`
@@ -283,13 +283,13 @@ columns of `runtraj.particles.PARTICLE_SCHEMA`, `foot` if the model computes
 one, and what a stage reads, with a release row at `age = 0` when the
 model can write one; see `docs/reference/particles.rst`), its log as text,
 and the met files it read. A failed run raises `SimulationError` with its
-log. runtraj adds the release heights itself (`runtraj.transport.run_model`).
+log. runtraj adds the release heights itself (`runtraj.models.run_model`).
 A model that writes no files sets
 `needs_workdir = False` and is handed `workdir=None`. A model that runs
 many releases in one call, such as an emulator on a GPU, sets
 `batched = True` and gives `run_many(releases, config, met, windows,
 workdir=None, timeout=None)`, returning one table with a `release` column
-(`runtraj.transport.BatchedTransportModel`): the worker then hands it every
+(`runtraj.models.BatchedTransportModel`): the worker then hands it every
 release of a variant that needs particles at once, and a release it
 returns no rows for fails alone. A model in a package of its own needs no
 registration: its block under `models:` in `config.yaml` names it by import
@@ -298,7 +298,7 @@ process that opens the project imports it from there. The run settings
 record the `class:` string as written, so the same class named by two
 paths (`mypkg.models.MyModel` and a re-export, `mypkg.MyModel`) gets two
 settings folders. Pick one path and keep it. A model built into
-runtraj goes in `runtraj.transport.MODELS` under a short name instead. Keep
+runtraj goes in `runtraj.models.MODELS` under a short name instead. Keep
 its package out of the core: the import contracts in `pyproject.toml` say
 how.
 

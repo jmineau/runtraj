@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from runtraj.transport.hysplit import HysplitConfig
+from runtraj.models.hysplit import HysplitConfig
 
 
 def test_winderrtf_partial_xy_raises():

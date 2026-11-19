@@ -27,7 +27,7 @@ class SimulationError(RuntrajError, RuntimeError):
         What went wrong.
     reason : str, optional
         A short name for the cause, such as ``"MET_COVERAGE"`` or
-        ``"TIMEOUT"`` (:class:`runtraj.transport.hysplit.FailureReason` lists
+        ``"TIMEOUT"`` (:class:`runtraj.models.hysplit.FailureReason` lists
         HYSPLIT's). ``runtraj status`` counts failures by it.
     log : str, optional
         The transport model's log of the failed run, kept with the

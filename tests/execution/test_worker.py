@@ -14,10 +14,10 @@ from runtraj.exceptions import MeteorologyError, WorkerDied
 from runtraj.execution import worker
 from runtraj.execution.config import ExecutionConfig
 from runtraj.execution.worker import run_release, run_releases
+from runtraj.models.hysplit import HysplitConfig, Met, MetConfig
 from runtraj.output import Output
 from runtraj.releases import PointRelease, Release
 from runtraj.spatial import Grid
-from runtraj.transport.hysplit import HysplitConfig, Met, MetConfig
 
 from ..fixtures.factories import make_met_config, make_project_config
 
@@ -131,7 +131,7 @@ def test_a_release_leaves_no_folders_under_the_compute_root(
             (workdir / "CONTROL").write_text("")
             raise RuntimeError("stop here")
 
-    monkeypatch.setattr("runtraj.transport.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
 
     assert len(_run_release(project, release)) == 2  # both realizations failed
     assert list(compute_root.iterdir()) == []
@@ -161,7 +161,7 @@ def test_runs_that_share_a_compute_root_never_share_a_workdir(
             ended[mine] = control.read_text() if control.exists() else None
             raise RuntimeError("stop here")
 
-    monkeypatch.setattr("runtraj.transport.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     run_release(first, str(release.id), compute_root=compute_root)
 
     # Each run finds its own input in its workdir when it ends.
@@ -547,7 +547,7 @@ def test_run_releases_pool_dead_worker_stops_the_run_and_names_what_was_running(
 _TOY_PACKAGE = """
 import pandas as pd
 from pydantic import BaseModel
-from runtraj.transport import ModelRun, TransportConfig
+from runtraj.models import ModelRun, TransportConfig
 
 class ToyConfig(TransportConfig):
     pass

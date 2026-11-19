@@ -1,13 +1,13 @@
-"""Tests for what a folder's ARL files hold (runtraj.transport.hysplit.catalog)."""
+"""Tests for what a folder's ARL files hold (runtraj.models.hysplit.catalog)."""
 
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from runtraj.transport.hysplit import Met, MetConfig
-from runtraj.transport.hysplit import catalog as catalog_module
-from runtraj.transport.hysplit.catalog import Catalog, catalog_path
+from runtraj.models.hysplit import Met, MetConfig
+from runtraj.models.hysplit import catalog as catalog_module
+from runtraj.models.hysplit.catalog import Catalog, catalog_path
 
 from ...fixtures.factories import write_arl_file
 

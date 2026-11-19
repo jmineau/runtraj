@@ -1,10 +1,10 @@
-"""Tests for runtraj.transport.hysplit.failures: why a HYSPLIT run failed, from its log."""
+"""Tests for runtraj.models.hysplit.failures: why a HYSPLIT run failed, from its log."""
 
 import pytest
 
-from runtraj.transport.hysplit import FailureReason
-from runtraj.transport.hysplit.driver import PARTICLE_FILE
-from runtraj.transport.hysplit.failures import failure_in
+from runtraj.models.hysplit import FailureReason
+from runtraj.models.hysplit.driver import PARTICLE_FILE
+from runtraj.models.hysplit.failures import failure_in
 
 
 def test_failure_reason_is_str():
