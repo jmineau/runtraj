@@ -72,7 +72,9 @@ subpackage's) is the public surface.
 
 **A package that adds a stage may subclass `Project` and `Simulation`** with
 the reads of what its stage makes. Workers and stages get
-runtraj's classes; nothing on disk names a subclass.
+runtraj's classes; nothing on disk names a subclass. A plug-in imports only
+names in runtraj's `__all__`s and copies any helper it wants
+(`tests/test_stages.py` holds the toy stages to it).
 
 ```
 src/runtraj/

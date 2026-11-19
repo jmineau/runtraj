@@ -9,7 +9,6 @@ import pytest
 
 from runtraj.config import ProjectConfig
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
-from runtraj.spatial import Grid
 from tests.fixtures.factories import blocks
 
 from .fixtures.factories import make_hysplit_dir, make_met_config
@@ -239,8 +238,3 @@ def transport_runs(monkeypatch) -> FakeRuns:
     runs = FakeRuns()
     monkeypatch.setattr("runtraj.execution.worker.run_model", runs)
     return runs
-
-
-@pytest.fixture
-def grid():
-    return Grid(xmin=-114.0, xmax=-111.0, ymin=39.0, ymax=42.0, xres=0.01, yres=0.01)

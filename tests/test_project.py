@@ -517,6 +517,39 @@ def test_submit_needs_the_slurm_backend(tmp_path):
         project.submit()
 
 
+def test_run_on_slurm_submits_and_waits(tmp_path, monkeypatch):
+    project = _project(
+        tmp_path,
+        [_release(12)],
+        execution={"backend": "slurm", "slurm": {"time": "01:00:00"}},
+    )
+    submitted, waited, slept = [], [], []
+
+    def submit(project, pending, execution, skip_existing, compute_root):
+        submitted.append(
+            {"pending": pending, "execution": execution, "compute_root": compute_root}
+        )
+        return "777", "kingspeak"
+
+    def wait(job_id, *, cluster=None):
+        waited.append((job_id, cluster))
+
+    monkeypatch.setattr("runtraj.execution.runner._submit", submit)
+    monkeypatch.setattr("runtraj.execution.runner.wait", wait)
+    monkeypatch.setattr("runtraj.execution.runner.time.sleep", slept.append)
+
+    status = project.run(compute_root="/s")
+
+    assert waited == [("777", "kingspeak")]
+    assert slept == [60]  # nothing ran, so it listed once more before saying so
+    assert submitted[0]["pending"] == [_release(12).id]
+    assert submitted[0]["compute_root"] == "/s"
+    assert submitted[0]["execution"].backend == "slurm"
+    # The status of what was submitted; nothing ran here.
+    assert list(status["release"]) == [_release(12).id]
+    assert list(status["state"]) == ["pending"]
+
+
 # ---------------------------------------------------------------------------
 # A selection of simulations
 # ---------------------------------------------------------------------------

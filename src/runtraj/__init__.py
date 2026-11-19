@@ -24,7 +24,7 @@ from .releases import (
     read_releases,
 )
 from .simulation import Simulation
-from .spatial import Bounds, Grid
+from .spatial import Bounds
 
 try:
     __version__ = _version("runtraj")
@@ -44,8 +44,7 @@ __all__ = [
     "read_releases",
     # One simulation of a project
     "Simulation",
-    # Grids and boxes
-    "Grid",
+    # Boxes
     "Bounds",
     # One release, without a project
     "run_trajectories",

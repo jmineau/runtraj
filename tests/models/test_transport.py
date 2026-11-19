@@ -253,3 +253,48 @@ def _release():
     return PointRelease(
         time="2023-01-01 12:00", longitude=-111.9, latitude=40.7, altitude=5.0
     )
+
+
+# ---------------------------------------------------------------------------
+# The particles a run returns: the columns the transport model wrote
+# ---------------------------------------------------------------------------
+
+
+def _positions_only() -> pd.DataFrame:
+    """Particles of a transport model that writes only positions."""
+    return pd.DataFrame(
+        {
+            "particle": [1, 1],
+            "age": [-1.0, -2.0],
+            "lon": [-111.9, -112.0],
+            "lat": [40.7, 40.6],
+            "zagl": [5.0, 900.0],
+        }
+    )
+
+
+def test_a_run_keeps_each_column_the_model_wrote_unchanged():
+    """A stage may read a column the model wrote, so a run passes each one through as it is."""
+    from runtraj.models import TransportConfig, _finish
+
+    particles = _positions_only().assign(
+        foot=[1e-5, 2e-5], dens=1.2, samt=1.0, sigw=0.1, tlgr=10.0, mlht=500.0
+    )
+    run = _finish(
+        ModelRun(particles, met_files=[]), _release(), TransportConfig(n_hours=-24)
+    )
+
+    pd.testing.assert_frame_equal(run.particles, particles)
+
+
+def test_a_run_adds_no_column_the_model_did_not_write(tmp_path):
+    from runtraj.models import TransportConfig, _finish
+
+    run = _finish(
+        ModelRun(_positions_only(), log="model log\n", met_files=[tmp_path / "met"]),
+        _release(),
+        TransportConfig(n_hours=-24),
+    )
+
+    assert list(run.particles.columns) == list(_positions_only().columns)
+    assert run.log == "model log\n"

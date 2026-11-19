@@ -347,3 +347,31 @@ def test_to_yaml_writes_each_stage_block_as_given(tmp_path):
     assert (
         loaded.resolve()["hrrr"].stage_hashes == config.resolve()["hrrr"].stage_hashes
     )
+
+
+def test_the_toy_stages_import_only_public_names():
+    """A stage in another package uses only names runtraj makes public, so the toy stages do too."""
+    import ast
+    import importlib
+    from pathlib import Path
+
+    source = Path(__file__).parent / "fixtures" / "stages.py"
+    private = []
+    for node in ast.walk(ast.parse(source.read_text())):
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
+            "runtraj"
+        ):
+            module = importlib.import_module(node.module)
+            for alias in node.names:
+                public = alias.name in getattr(module, "__all__", ())
+                if any(part.startswith("_") for part in node.module.split(".")):
+                    public = False
+                if not public:
+                    private.append(f"{node.module}.{alias.name}")
+        elif isinstance(node, ast.Import):
+            private += [
+                a.name
+                for a in node.names
+                if a.name.startswith("runtraj") and "._" in a.name
+            ]
+    assert private == []

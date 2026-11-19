@@ -295,8 +295,8 @@ class ReleasePlotAccessor:
             Axes to plot on. By default a new map is made, with cartopy when
             it is installed.
         domain : Bounds, optional
-            Outline a domain, such as a :class:`~runtraj.Grid`, with
-            a dashed line, and fit the map to it.
+            Outline a domain, such as your study area, with a dashed
+            line, and fit the map to it.
         met_bounds : Bounds, optional
             Outline the meteorology domain with a dotted blue line.
         color : str, default "red"

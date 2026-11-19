@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt  # must come after use("Agg")
 from matplotlib.layout_engine import ConstrainedLayoutEngine
 
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
-from runtraj.spatial import Grid
+from runtraj.spatial import Bounds
 from runtraj.visualization import ProjectPlotAccessor, _draw_bounds_box, _make_ax
 
 from .fixtures.factories import make_project_config
@@ -63,8 +63,8 @@ def multi_release():
 
 
 @pytest.fixture
-def grid():
-    return Grid(xmin=-114.0, xmax=-111.0, ymin=39.0, ymax=42.0, xres=1.0, yres=1.0)
+def box():
+    return Bounds(xmin=-114.0, xmax=-111.0, ymin=39.0, ymax=42.0)
 
 
 @pytest.fixture
@@ -126,9 +126,9 @@ def test_make_ax_leaves_the_layout_of_a_given_ax():
 # ---------------------------------------------------------------------------
 
 
-def test_draw_bounds_box_adds_patch(grid):
+def test_draw_bounds_box_adds_patch(box):
     _, ax = plt.subplots()
-    _draw_bounds_box(ax, grid, label="Domain")
+    _draw_bounds_box(ax, box, label="Domain")
     assert len(ax.patches) == 1
 
 
@@ -187,13 +187,13 @@ def test_release_map_multipoint_names_its_height_reference(multi_release):
         plt.close("all")
 
 
-def test_release_map_with_domain(release, grid):
-    ax = release.plot.map(domain=grid)
+def test_release_map_with_domain(release, box):
+    ax = release.plot.map(domain=box)
     assert ax is not None
 
 
-def test_release_map_met_bounds(release, grid):
-    ax = release.plot.map(met_bounds=grid)
+def test_release_map_met_bounds(release, box):
+    ax = release.plot.map(met_bounds=box)
     assert ax is not None
 
 

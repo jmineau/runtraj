@@ -13,7 +13,7 @@ from runtraj import Project, models
 from runtraj.releases import (
     PointRelease,
 )
-from runtraj.spatial import Grid
+from runtraj.spatial import Bounds
 from tests.fixtures.factories import blocks
 
 from .fixtures.factories import (
@@ -24,7 +24,7 @@ from .fixtures.factories import (
 )
 
 NOON = dt.datetime(2023, 1, 1, 12)
-GRID = Grid(xmin=-112.0, xmax=-111.0, ymin=40.0, ymax=41.0, xres=0.1, yres=0.1)
+BOX = Bounds(xmin=-112.0, xmax=-111.0, ymin=40.0, ymax=41.0)
 
 
 # ---------------------------------------------------------------------------
@@ -346,7 +346,7 @@ def test_variants_that_share_a_met_and_a_run_length_share_their_rows(tmp_path):
 
 
 def test_a_release_on_the_edge_of_the_grid_is_inside_it(tmp_path):
-    edge = _release(12, longitude=GRID.xmin, latitude=GRID.ymax)
+    edge = _release(12, longitude=BOX.xmin, latitude=BOX.ymax)
 
     assert _project(tmp_path, [edge]).check().empty
 

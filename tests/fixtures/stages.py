@@ -4,7 +4,8 @@ Two toy stages, for the tests of the stage interface.
 They stand for a stage in another package, which the code that runs stages
 never imports by name. ``count`` reads the particles and ``double`` reads ``count``'s file, so
 the two are the shortest chain there is. A config names them by import path:
-``class: tests.fixtures.stages.CountStage``.
+``class: tests.fixtures.stages.CountStage``. Like a stage in another package,
+they import only runtraj's public names (``tests/test_stages.py`` checks it).
 """
 
 from __future__ import annotations
@@ -15,6 +16,9 @@ from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
+
+from runtraj import Simulation
+from runtraj.stages import Location
 
 COUNT = "tests.fixtures.stages.CountStage"
 DOUBLE = "tests.fixtures.stages.DoubleStage"
@@ -73,7 +77,7 @@ class CountStage:
             ("count", str(rid), "is south of the equator") for rid in south["release"]
         ]
 
-    def run(self, config: CountConfig, sim: Any, path: Any) -> None:
+    def run(self, config: CountConfig, sim: Simulation, path: Location) -> None:
         """
         Write the count of *sim*'s particle rows to *path*.
 
@@ -129,7 +133,7 @@ class DoubleStage:
         """Find nothing."""
         return []
 
-    def run(self, config: DoubleConfig, sim: Any, path: Any) -> None:
+    def run(self, config: DoubleConfig, sim: Simulation, path: Location) -> None:
         """Write twice what the ``count`` stage wrote for *sim*, plus ``add``, to *path*."""
         RUNS.append((self.name, sim.release.id, sim.variant.name))
         path.write_text(str(2 * int(sim.path("count").read_text()) + config.add))
@@ -170,7 +174,7 @@ class EchoStage:
         """Find nothing."""
         return []
 
-    def run(self, config: EchoConfig, sim: Any, path: Any) -> None:
+    def run(self, config: EchoConfig, sim: Simulation, path: Location) -> None:
         """Write *sim*'s release id to *path*, or raise with ``fail``."""
         RUNS.append((self.name, sim.release.id, sim.variant.name))
         if config.fail:

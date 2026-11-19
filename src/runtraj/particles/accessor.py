@@ -14,46 +14,29 @@ import pandas as pd
 import xarray as xr
 
 from runtraj.particles._cf import to_cf_trajectories
-from runtraj.spatial import _grid_cell_starts
 
 if TYPE_CHECKING:
-    from runtraj.spatial import Grid
+    from runtraj.spatial import Bounds
     from runtraj.visualization import ParticlesPlotAccessor
 
-#: The edges of a grid, in the order of the columns of ``_edge_crossings``.
+#: The edges of a box, in the order of the columns of ``crossings`` in :meth:`ParticlesAccessor.grid_exits`.
 _EDGES = np.array(["n", "e", "s", "w"])
 
-#: Rounding allowed when a point lies on a grid edge, in the grid's units.
+#: Rounding allowed when a point lies on an edge, in degrees.
 _EDGE_TOLERANCE = 1e-9
 
 
-def _grid_extent(grid: Grid) -> tuple[float, float, float, float]:
+def _box_edges(bounds: Bounds) -> tuple[float, float, float, float]:
     """
-    Return the outer edges of the grid's cells, ``(west, east, south, north)``, in the grid's units.
+    Return the edges of *bounds*, ``(west, east, south, north)``, in degrees.
 
-    Longitudes are not wrapped: a grid across the dateline has ``east`` above
-    ``west`` (``170, 190`` for a grid from 170 to -170). The edges are those of
-    the cells, which stop short of ``xmax`` and ``ymax`` when a whole number of
-    cells does not fit.
+    Longitudes are read as :meth:`~runtraj.Bounds.contains` reads them,
+    counted east from ``xmin`` and not wrapped: a box from 170 to -170 has
+    ``east`` 190, and a box 360 degrees wide or more goes all the way around.
     """
-    if grid.is_longlat:
-        span = grid.xmax - grid.xmin
-        xmax = grid.xmin + (span if span > 0 else span + 360.0)
-        x_starts = _grid_cell_starts(grid.xmin, xmax, grid.xres)
-        y_starts = _grid_cell_starts(grid.ymin, grid.ymax, grid.yres)
-        return (
-            grid.xmin,
-            float(x_starts[-1] + grid.xres),
-            grid.ymin,
-            float(y_starts[-1] + grid.yres),
-        )
-    x_centers, y_centers = grid.axes
-    return (
-        float(x_centers[0] - grid.xres / 2),
-        float(x_centers[-1] + grid.xres / 2),
-        float(y_centers[0] - grid.yres / 2),
-        float(y_centers[-1] + grid.yres / 2),
-    )
+    span = bounds.xmax - bounds.xmin
+    width = 360.0 if span >= 360.0 else span % 360.0
+    return bounds.xmin, bounds.xmin + width, bounds.ymin, bounds.ymax
 
 
 def _wrap_degrees(difference: np.ndarray) -> np.ndarray:
@@ -73,7 +56,7 @@ class ParticlesAccessor:
     --------
     >>> particles = sim.particles  # doctest: +SKIP
     >>> particles.runtraj.endpoints()  # doctest: +SKIP
-    >>> particles.runtraj.grid_exits(grid)  # doctest: +SKIP
+    >>> particles.runtraj.grid_exits(bounds)  # doctest: +SKIP
     >>> particles.runtraj.to_cf_trajectories()  # doctest: +SKIP
     >>> particles.runtraj.plot.map()  # doctest: +SKIP
     """
@@ -103,59 +86,57 @@ class ParticlesAccessor:
         last = reach.groupby(p["particle"], sort=False).idxmax().to_numpy(dtype=int)
         return p.iloc[last]
 
-    def grid_exits(self, grid: Grid) -> pd.DataFrame:
+    def grid_exits(self, bounds: Bounds) -> pd.DataFrame:
         """
-        Return where each particle first left a grid.
+        Return where each particle first left a longitude/latitude box.
 
         For a backward run these are the points where the air entered the
-        grid's domain, where a field at the domain's edge is sampled.
-        Unlike :meth:`endpoints`, which gives where a particle ended, this
-        gives where it first crossed the edge of the grid, even if it came
-        back later or stayed in the meteorology domain long after.
+        domain, where a field at the domain's edge is sampled. Unlike
+        :meth:`endpoints`, which gives where a particle ended, this gives
+        where it first crossed the edge of the box, even if it came back
+        later or stayed in the meteorology domain long after.
 
-        A particle is outside when it is beyond the outer edge of the grid's
-        cells, in the grid's own coordinates: a projected grid is a
-        rectangle in its projection, not in longitude and latitude. A grid
-        across the dateline or past 180 degrees is read modulo 360, and a
-        grid that goes all the way around the earth has no west or east edge.
-        Rows are read in order of ``abs(age)``, whatever their order in the
-        table, so this works for a backward and a forward run.
+        A particle is outside when it is beyond an edge of the box, in
+        longitude and latitude. Longitudes are read as
+        :meth:`~runtraj.Bounds.contains` reads them: a box across the
+        dateline or past 180 degrees is read modulo 360, and a box 360
+        degrees wide or more has no west or east edge. Rows are read in
+        order of ``abs(age)``, whatever their order in the table, so this
+        works for a backward and a forward run.
 
         The point is on the edge: the exit is the straight line between the
-        particle's last row inside the grid and its first row outside,
+        particle's last row inside the box and its first row outside,
         and ``lon``, ``lat``, ``zagl``, ``age`` and ``time`` are interpolated
         along it to where it crosses. If the line crosses two edges at a
         corner, ``edge`` is the first it crosses. A particle whose first row is
         already outside has no row inside to interpolate from (the
         meteorology HYSPLIT 5.1.0 writes no row at
         the release), so it is reported at that row, on the edge it is
-        farthest beyond, in cells.
+        farthest beyond.
 
         Parameters
         ----------
-        grid : runtraj.Grid
-            The grid.
+        bounds : runtraj.Bounds
+            The box, such as the edge of your study area.
 
         Returns
         -------
         pandas.DataFrame
-            One row per particle that left the grid, ordered by ``particle``;
+            One row per particle that left the box, ordered by ``particle``;
             a particle that stayed inside is not in it. The columns are
             ``particle``, ``edge`` (``"n"``, ``"e"``, ``"s"`` or ``"w"``,
-            the side of the grid it left by), ``lon`` and ``lat`` (degrees),
+            the side of the box it left by), ``lon`` and ``lat`` (degrees),
             ``zagl`` (meters), ``age`` (minutes since release) and, when the
             table has a ``time`` column, ``time`` (UTC). Longitudes are
             wrapped to -180 to 180 where the interpolation crosses 180.
 
         Examples
         --------
-        One particle that leaves a grid by its east edge, between two rows:
+        One particle that leaves a box by its east edge, between two rows:
 
         >>> import pandas as pd
         >>> import runtraj
-        >>> grid = runtraj.Grid(
-        ...     xmin=-112, xmax=-110, ymin=40, ymax=42, xres=0.5, yres=0.5
-        ... )
+        >>> box = runtraj.Bounds(xmin=-112, xmax=-110, ymin=40, ymax=42)
         >>> particles = pd.DataFrame(
         ...     {
         ...         "particle": [1, 1, 1],
@@ -165,7 +146,7 @@ class ParticlesAccessor:
         ...         "zagl": [10.0, 20.0, 30.0],
         ...     }
         ... )
-        >>> particles.runtraj.grid_exits(grid)
+        >>> particles.runtraj.grid_exits(box)
            particle edge    lon   lat  zagl   age
         0         1    e -110.0  41.0  25.0 -90.0
         """
@@ -176,38 +157,28 @@ class ParticlesAccessor:
         lon = p["lon"].to_numpy(dtype=float)
         lat = p["lat"].to_numpy(dtype=float)
 
-        # Positions in the grid's units, measured from the grid's center.
-        west, east, south, north = _grid_extent(grid)
-        x, y = lon, lat
-        if not grid.is_longlat:
-            from pyproj import Transformer
-
-            to_grid = Transformer.from_crs("EPSG:4326", grid.crs, always_xy=True)
-            x, y = to_grid.transform(lon, lat)
-        x = np.asarray(x, dtype=float) - (west + east) / 2
-        y = np.asarray(y, dtype=float) - (south + north) / 2
+        # Positions in degrees, measured from the box's center.
+        west, east, south, north = _box_edges(bounds)
+        x = _wrap_degrees(lon - (west + east) / 2)
+        y = lat - (south + north) / 2
         half_width, half_height = (east - west) / 2, (north - south) / 2
-        if grid.is_longlat:
-            x = _wrap_degrees(x)
-            if east - west >= 360.0 - _EDGE_TOLERANCE:
-                half_width = np.inf  # all the way around: no west or east edge
+        if east - west >= 360.0 - _EDGE_TOLERANCE:
+            half_width = np.inf  # all the way around: no west or east edge
 
-        # The first row of each particle that is beyond the edge of the grid.
+        # The first row of each particle that is beyond the edge of the box.
         outside = (np.abs(x) > half_width + _EDGE_TOLERANCE) | (
             np.abs(y) > half_height + _EDGE_TOLERANCE
         )
         rows = np.flatnonzero(outside)
         rows = rows[np.unique(particle[rows], return_index=True)[1]]
 
-        # The row before it, inside the grid; a particle that starts outside has none.
+        # The row before it, inside the box; a particle that starts outside has none.
         before = np.maximum(rows - 1, 0)
         has_before = (rows > 0) & (particle[before] == particle[rows])
         before = np.where(has_before, before, rows)
 
         # Where the step from `before` to `rows` crosses each edge, as a fraction of it.
-        step_x = x[rows] - x[before]
-        if grid.is_longlat:
-            step_x = _wrap_degrees(step_x)
+        step_x = _wrap_degrees(x[rows] - x[before])
         step_y = y[rows] - y[before]
         end_x, end_y = x[before] + step_x, y[before] + step_y
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -229,12 +200,12 @@ class ParticlesAccessor:
                     ),
                 ]
             )
-            beyond = np.column_stack(  # how far past each edge, in cells
+            beyond = np.column_stack(  # how far past each edge, in degrees
                 [
-                    (end_y - half_height) / grid.yres,
-                    (end_x - half_width) / grid.xres,
-                    (-half_height - end_y) / grid.yres,
-                    (-half_width - end_x) / grid.xres,
+                    end_y - half_height,
+                    end_x - half_width,
+                    -half_height - end_y,
+                    -half_width - end_x,
                 ]
             )
         first = np.argmin(crossings, axis=1)

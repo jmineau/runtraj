@@ -397,6 +397,23 @@ stages:
   the package that wrote it. A variant that sets a
   stage to null while another of its stages reads it is refused.
 
+`path` is a `runtraj.stages.Location`: a `pathlib.Path`, or a `UPath` when
+the output directory is on an object store. Write through `path.open()`,
+which both have, and the stage works with either. A table, for example:
+
+```python
+import pyarrow.parquet as pq
+
+with path.open("wb") as f:
+    pq.write_table(table, f, compression="zstd")
+```
+
+A stage imports only runtraj's public names, those in a module's
+`__all__`, since only those keep their meaning from one version to the
+next. A helper of runtraj's that a stage wants, it copies. The toy stages in
+`tests/fixtures/stages.py` stand for a stage in another package and are held
+to this by a test.
+
 The stage's package must be installed wherever the project is opened, the
 login node that reports status included: a settings folder is named from
 the stage's settings, defaults included, and only its config class knows

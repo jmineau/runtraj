@@ -119,11 +119,11 @@ pandas, then pass the selection to the project's :meth:`~Project.status`,
    wbb = sims[(sims.variant == "hrrr") & (sims.site == "WBB")]
    particles = project.particles(wbb)
 
-Grids and boxes
----------------
+Boxes
+-----
 
-A :class:`Grid` and a :class:`Bounds` are documented under
-:doc:`configuration`. :mod:`runtraj.spatial` has the CRS helpers.
+A :class:`Bounds` is documented under :doc:`configuration`.
+:mod:`runtraj.spatial` has the CRS helpers.
 
 .. autosummary::
    :toctree: _api

@@ -17,15 +17,12 @@ from runtraj.execution.worker import run_release, run_releases
 from runtraj.models.hysplit import HysplitConfig, Met, MetConfig
 from runtraj.output import Output
 from runtraj.releases import PointRelease, Release
-from runtraj.spatial import Grid
 
 from ..fixtures.factories import make_met_config, make_project_config
 
 # ---------------------------------------------------------------------------
 # Fixtures and helpers
 # ---------------------------------------------------------------------------
-
-GRID = Grid(xmin=-114.0, xmax=-111.0, ymin=39.0, ymax=42.0, xres=0.1, yres=0.1)
 
 
 @pytest.fixture

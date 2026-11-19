@@ -120,8 +120,8 @@ run long enough for the particles to leave the region of its sources
    ends = particles.runtraj.endpoints()
    ends[["particle", "age", "lon", "lat", "zagl"]].describe()
 
-``particles.runtraj.grid_exits(grid)`` gives where each particle first left a
-:class:`~runtraj.Grid`, such as the edge of your study area.
+``particles.runtraj.grid_exits(bounds)`` gives where each particle first left
+a :class:`~runtraj.Bounds` box, such as the edge of your study area.
 
 Weighting the particles
 -----------------------

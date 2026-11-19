@@ -15,7 +15,8 @@ stage in another package needs no registration:
        class: stilt.footprint.FootprintStage
        grid: {xmin: -113.0, xmax: -110.5, ymin: 40.0, ymax: 42.0, xres: 0.01, yres: 0.01}
 
-:class:`Stage` is what such a class provides. :func:`get_stage` imports
+:class:`Stage` is what such a class provides, and :data:`Location` the type
+of the path its ``run`` writes to. :func:`get_stage` imports
 one, :func:`ordered` puts the stages of a config in the order they run, and
 :func:`check_stage` is for the tests of a stage of your own.
 """
@@ -27,19 +28,24 @@ import json
 import re
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, TypeAlias
 
 from pydantic import BaseModel
 
+from runtraj._paths import Location as _Location
 from runtraj._plugins import import_class
 from runtraj.identity import canonical
 
 if TYPE_CHECKING:
     import pandas as pd
 
-    from runtraj._paths import Location
     from runtraj.simulation import Simulation
 
+#: Where :meth:`Stage.run` writes its file: a :class:`pathlib.Path` on this
+#: filesystem, or a :class:`upath.UPath` when the output directory is on an
+#: object store. Both have ``open``, so ``with path.open("wb") as f:`` writes
+#: to either.
+Location: TypeAlias = _Location
 
 #: Pattern for a stage's name, which is a folder in the output directory and a column of ``project.status()``.
 STAGE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -191,8 +197,11 @@ class Stage(Protocol):
             The simulation: its release, its variant, its particles, and
             the project directory (``sim.directory``), where a relative file
             name in the settings starts.
-        path : Path or UPath
-            Where to write the file.
+        path : Location
+            Where to write the file: a :class:`pathlib.Path`, or a
+            :class:`upath.UPath` when the output directory is on an object
+            store. Write through ``path.open("wb")`` (or ``"w"``), which
+            both have, and the stage works with either.
 
         Raises
         ------
@@ -339,6 +348,7 @@ def check_stage(stage: Stage, config: Any) -> None:
 
 __all__ = [
     "RESERVED_NAMES",
+    "Location",
     "STAGE_NAME_RE",
     "Stage",
     "check_stage",

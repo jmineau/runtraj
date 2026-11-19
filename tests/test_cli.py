@@ -430,6 +430,30 @@ def test_run_with_a_failed_simulation_exits_1(tmp_path, transport_runs):
     assert "failed: MET_COVERAGE 1" in result.output
 
 
+def test_run_exits_3_after_a_connection_error_and_1_once_it_is_mended(
+    tmp_path, transport_runs, monkeypatch
+):
+    """The rerun runs what did not finish; a simulation that failed for a real reason stays failed."""
+    project = _project(tmp_path)
+    transport_runs.fail[_release(13).id] = "MET_COVERAGE"
+    down = {_release(12).id}
+
+    def run_model(model, release, *args, **kwargs):
+        if release.id in down:
+            raise ConnectionError("down")
+        return transport_runs(model, release, *args, **kwargs)
+
+    monkeypatch.setattr("runtraj.execution.worker.run_model", run_model)
+    first = _run(project)
+    assert first.exit_code == 3, first.output
+    assert "complete=0  failed=1  interrupted=1  pending=0" in first.output
+
+    down.clear()
+    second = _run(project)
+    assert second.exit_code == 1, second.output
+    assert "complete=1  failed=1  interrupted=0  pending=0" in second.output
+
+
 def test_run_skips_what_is_complete_unless_no_skip(tmp_path, transport_runs):
     project = _project(tmp_path)
     _run(project)
