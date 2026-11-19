@@ -1,6 +1,0 @@
-﻿runtraj.stages.Location
-=======================
-
-.. currentmodule:: runtraj.stages
-
-.. autodata:: Location

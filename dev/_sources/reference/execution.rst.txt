@@ -114,7 +114,6 @@ write one. Use :func:`~runtraj.stages.check_stage` in its tests.
    :nosignatures:
 
    runtraj.stages.Stage
-   runtraj.stages.Location
    runtraj.stages.get_stage
    runtraj.stages.ordered
    runtraj.stages.check_stage
