@@ -1,0 +1,6 @@
+runtraj.Grid.is\_longlat
+========================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Grid.is_longlat

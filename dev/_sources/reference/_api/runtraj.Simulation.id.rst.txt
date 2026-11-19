@@ -1,0 +1,6 @@
+runtraj.Simulation.id
+=====================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.id

@@ -1,0 +1,6 @@
+﻿runtraj.spatial.same\_crs
+=========================
+
+.. currentmodule:: runtraj.spatial
+
+.. autofunction:: same_crs

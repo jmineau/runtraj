@@ -1,0 +1,6 @@
+﻿runtraj.particles.particles\_metadata
+=====================================
+
+.. currentmodule:: runtraj.particles
+
+.. autofunction:: particles_metadata

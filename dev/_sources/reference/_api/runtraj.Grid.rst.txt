@@ -1,0 +1,53 @@
+﻿runtraj.Grid
+============
+
+.. currentmodule:: runtraj
+
+
+
+
+
+
+.. class-signature:: runtraj.Grid
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.Grid
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~Grid.axes
+   ~Grid.cells
+   ~Grid.dims
+   ~Grid.index
+   ~Grid.is_longlat
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~Grid.to_xarray
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.Bounds`: :py:obj:`~.Bounds.contains`
+
+

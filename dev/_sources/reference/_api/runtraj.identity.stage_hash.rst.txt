@@ -1,0 +1,6 @@
+﻿runtraj.identity.stage\_hash
+============================
+
+.. currentmodule:: runtraj.identity
+
+.. autofunction:: stage_hash

@@ -1,0 +1,6 @@
+runtraj.config.Variant.met\_settings
+====================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.met_settings

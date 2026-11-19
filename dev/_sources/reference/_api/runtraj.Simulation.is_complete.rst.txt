@@ -1,0 +1,6 @@
+runtraj.Simulation.is\_complete
+===============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.is_complete

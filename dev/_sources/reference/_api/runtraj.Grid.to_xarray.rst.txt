@@ -1,0 +1,5 @@
+runtraj.Grid.to\_xarray
+=======================
+
+.. currentmodule:: runtraj
+.. automethod:: Grid.to_xarray

@@ -1,0 +1,6 @@
+runtraj.Grid.dims
+=================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Grid.dims

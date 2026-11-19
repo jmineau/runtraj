@@ -1,0 +1,21 @@
+﻿runtraj.transport.ModelInfo
+===========================
+
+.. currentmodule:: runtraj.transport
+
+
+
+
+
+
+.. class-signature:: runtraj.transport.ModelInfo
+
+
+.. class-parameters:: runtraj.transport.ModelInfo
+
+
+
+
+
+
+

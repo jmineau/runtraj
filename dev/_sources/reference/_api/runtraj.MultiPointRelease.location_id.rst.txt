@@ -1,0 +1,6 @@
+runtraj.MultiPointRelease.location\_id
+======================================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: MultiPointRelease.location_id

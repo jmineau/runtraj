@@ -1,0 +1,6 @@
+runtraj.Grid.cells
+==================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Grid.cells

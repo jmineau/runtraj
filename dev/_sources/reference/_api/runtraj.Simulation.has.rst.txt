@@ -1,0 +1,5 @@
+runtraj.Simulation.has
+======================
+
+.. currentmodule:: runtraj
+.. automethod:: Simulation.has

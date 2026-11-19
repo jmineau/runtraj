@@ -1,0 +1,6 @@
+runtraj.Grid.axes
+=================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Grid.axes

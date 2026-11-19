@@ -1,0 +1,6 @@
+runtraj.Grid.index
+==================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Grid.index

@@ -1,0 +1,5 @@
+runtraj.particles.ParticlesAccessor.to\_cf\_trajectories
+========================================================
+
+.. currentmodule:: runtraj.particles
+.. automethod:: ParticlesAccessor.to_cf_trajectories

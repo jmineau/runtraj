@@ -1,0 +1,6 @@
+runtraj.Release.id
+==================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Release.id

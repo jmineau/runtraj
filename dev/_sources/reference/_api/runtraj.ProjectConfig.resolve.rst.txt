@@ -1,0 +1,5 @@
+runtraj.ProjectConfig.resolve
+=============================
+
+.. currentmodule:: runtraj
+.. automethod:: ProjectConfig.resolve

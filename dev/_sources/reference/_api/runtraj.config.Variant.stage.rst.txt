@@ -1,0 +1,5 @@
+runtraj.config.Variant.stage
+============================
+
+.. currentmodule:: runtraj.config
+.. automethod:: Variant.stage
