@@ -1,20 +1,32 @@
 User Guide
 ==========
 
-These pages show how to set up a project and run it. If you are new to
-runtraj, start with :doc:`../getting_started/quickstart`.
+Each page covers one task, in the order you meet them. If you are new to
+runtraj, start with :doc:`../getting_started/quickstart`, and look up a
+word in the :doc:`../getting_started/glossary`.
 
 **Setting up a project**
 
+- :doc:`projects`: the project folder, ``config.yaml``, variants, and the
+  output directory; how reruns and changed settings work
 - :doc:`releases`: releases, the times and places particles start from
   (a point, a vertical column, or many points at once)
 - :doc:`meteorology`: use your own ARL files or download them from NOAA
+- :doc:`choosing_settings`: which meteorology, how long to run, and how
+  many particles
 
 **Running**
 
 - :doc:`running`: run on your computer, and the commands
 - :doc:`slurm`: run thousands of simulations on an HPC cluster
 - :doc:`containers`: run with Kubernetes or another scheduler
+- :doc:`checking`: find problems before a run, see where each simulation
+  stands, and find out why one failed
+
+**Results**
+
+- :doc:`particles`: read and plot the particles of one simulation or
+  many, and open them in DuckDB, R, or CF trajectory tools
 
 **HYSPLIT**
 
@@ -23,17 +35,14 @@ runtraj, start with :doc:`../getting_started/quickstart`.
 - :doc:`hysplit_build`: run another HYSPLIT build, or your own land-use
   and terrain tables
 
-The pages on a project's settings and variants, checking a run, choosing
-settings, and reading and plotting the particles have not been written
-yet. Until they are, :doc:`../reference/configuration` lists every
-``config.yaml`` option, and the :doc:`../reference/index` has every method.
-
 .. toctree::
    :hidden:
    :caption: Setting up a project
 
+   projects
    releases
    meteorology
+   choosing_settings
 
 .. toctree::
    :hidden:
@@ -42,6 +51,13 @@ yet. Until they are, :doc:`../reference/configuration` lists every
    running
    slurm
    containers
+   checking
+
+.. toctree::
+   :hidden:
+   :caption: Results
+
+   particles
 
 .. toctree::
    :hidden:

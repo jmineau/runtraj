@@ -262,7 +262,7 @@ prints ``No problems found.`` and exits with 0.
 Next steps
 ----------
 
+- Set up a project of your own, with variants: :doc:`../guides/projects`
 - Understand the different release types: :doc:`../guides/releases`
-- Every ``config.yaml`` option, and running a release under several
-  variants: :doc:`../reference/configuration`
+- Read and plot the particles of many simulations: :doc:`../guides/particles`
 - Run thousands of simulations on a cluster: :doc:`../guides/slurm`

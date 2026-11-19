@@ -32,8 +32,8 @@ built in. Another model, and what is made from the particles after a run
       :link: guides/index
       :link-type: doc
 
-      How to describe releases, set up meteorology, and run on a
-      cluster.
+      Set up a project, choose its settings, run it on a cluster, check
+      the runs, and read the particles.
 
    .. grid-item-card:: :fas:`code` API Reference
       :link: reference/index

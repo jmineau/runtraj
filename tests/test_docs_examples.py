@@ -128,8 +128,8 @@ EXECUTION = [
 
 
 def test_the_docs_show_examples():
-    assert len(PYTHON) >= 15
-    assert len(CONFIGS) >= 15
+    assert len(PYTHON) >= 25
+    assert len(CONFIGS) >= 25
     assert len(EXECUTION) >= 3
     assert len(BASH) >= 10
 

@@ -186,7 +186,8 @@ When a simulation fails
 A failed simulation doesn't stop the others. The worker records why it
 failed and goes on, and the next ``runtraj run`` tries it again.
 ``runtraj status`` counts the failures by reason, and ``sim.failure`` and
-``sim.log`` say what went wrong in one.
+``sim.log`` say what went wrong in one. :doc:`checking` explains each
+reason and what to do about it.
 
 .. toctree::
    :maxdepth: 1
