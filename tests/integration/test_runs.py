@@ -200,3 +200,17 @@ def test_cli_tasks_split_the_releases(tmp_path, traj_only_config):
 # ---------------------------------------------------------------------------
 # Forward run (n_hours > 0)
 # ---------------------------------------------------------------------------
+
+
+@integration
+def test_delt_has_no_effect(tmp_path, wbb_release, met_dir):
+    """HYSPLIT steps 1 minute with ICHEM=8 whatever delt is."""
+    import runtraj
+
+    def run(name, **settings):
+        return runtraj.run_trajectories(
+            wbb_release, reference_met(met_dir), workdir=tmp_path / name,
+            n_hours=-1, numpar=100, krand=2, seed=7, **settings,
+        )  # fmt: skip
+
+    pd.testing.assert_frame_equal(run("delt", delt=5.0), run("default"))

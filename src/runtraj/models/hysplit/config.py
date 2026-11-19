@@ -25,16 +25,6 @@ WIND_ERROR_SETTINGS = ("siguverr", "tluverr", "zcoruverr", "horcoruverr")
 #: The mixed-layer error settings, in the order of the lines of HYSPLIT's ZIERR file.
 ZI_ERROR_SETTINGS = ("sigzierr", "tlzierr", "horcorzierr")
 
-#: ``SETUP.CFG`` entries written with the same value in every run, which no
-#: setting changes. None of them can change the particle file: they are
-#: read only for HYSPLIT's concentration grids and deposition (``CMASS`` to
-#: ``KWET``), for puffs, which ``INITD=0`` turns off (``CONAGE`` to ``INITD``),
-#: by other HYSPLIT programs (``TOUT`` to ``DZF``), or for dump and restart
-#: files runtraj neither supplies nor reads (``NDUMP`` to ``KHINP``), or
-#: ``ICHEM=8`` overrides them (``DELT`` to ``IDSP``). Some break a run when changed:
-#: ``ICHEM=0`` and ``IDSP=1`` write no particle file, and ``INITD`` 1 or 4
-#: releases puffs.
-
 #: The particle variables ``hycs_std`` writes when ``SETUP.CFG`` names none,
 #: its own default ``VARSIWANT``, in its order.
 HYSPLIT_VARSIWANT = (
@@ -60,49 +50,12 @@ HYSPLIT_VARSIWANT = (
     "pres",
 )
 
-FIXED_SETUP: dict[str, Any] = {
-    "cmass": 0,
-    "cpack": 1,
-    "maxdim": 1,
-    "nbptyp": 1,
-    "p10f": 1.0,
-    "rhb": 80,
-    "rht": 60,
-    "efile": "",
-    "kwet": 1,
-    "conage": 48,
-    "frhmax": 3.0,
-    "frhs": 1.0,
-    "frme": 0.1,
-    "frmr": 0.0,
-    "frts": 0.1,
-    "frvs": 0.01,
-    "kpuff": 0,
-    "krnd": 6,
-    "kspl": 1,
-    "splitf": 1.0,
-    "initd": 0,
-    "tout": 0,
-    "nstr": 0,
-    "mhrs": 9999,
-    "nver": 0,
-    "kagl": 1,
-    "dxf": 1.0,
-    "dyf": 1.0,
-    "dzf": 0.01,
-    "ndump": 0,
-    "ncycl": 0,
-    "poutf": "",
-    "pinpf": "",
-    "pinbc": "",
-    "ninit": 1,
-    "khinp": 0,
-    "delt": 1.0,
-    "tratio": 0.75,
-    "khmax": 9999,
-    "ichem": 8,
-    "idsp": 2,
-}
+#: ``SETUP.CFG`` entries written with the same value in every run, which no
+#: setting changes. ``ICHEM=8`` is HYSPLIT's particle output mode, the only
+#: mode in which ``hycs_std`` opens the particle file runtraj reads, and
+#: ``IDSP=2`` is the dispersion scheme that writes its rows: with ``IDSP=1``
+#: the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).
+FIXED_SETUP: dict[str, Any] = {"ichem": 8, "idsp": 2}
 
 
 class HysplitConfig(TransportConfig):
@@ -118,15 +71,21 @@ class HysplitConfig(TransportConfig):
     ``foot`` by a random mixed-layer height error. Each group is set in full
     or not at all.
 
-    ``SETUP.CFG`` entries that cannot change the particles, such as ``delt``
-    and ``ichem``, are not settings: runtraj writes the same value in every
-    run (:data:`FIXED_SETUP`), and a config that sets one is refused.
+    ``ichem`` and ``idsp`` are not settings: runtraj always writes
+    ``ICHEM=8`` and ``IDSP=2`` (:data:`FIXED_SETUP`), the only values with
+    which HYSPLIT writes particles, and a config that sets one is refused. Some settings act only together with
+    another: the puff settings (``conage``, ``kpuff``, ``kspl``, ``krnd``,
+    ``splitf`` and the ``fr`` group) when ``initd`` releases puffs, and
+    ``khinp`` and ``pinpf`` when ``ninit`` reads particles from a file. A few
+    are read only for HYSPLIT's concentration grid or deposition, which
+    runtraj does not read, and ``delt`` is overridden in this mode.
 
-    The defaults are HYSPLIT's own, in the mode those fixed entries set
-    (``ICHEM=8``). HYSPLIT decides ``capemin``, ``kblt``, ``kmixd``, ``krand`` and
-    ``vscales`` only after it has read ``SETUP.CFG``, from the mode and
-    ``numpar``, so they are unset by default: an unset setting is not
-    written, and HYSPLIT chooses. ``n_hours`` has no default.
+    The defaults are HYSPLIT's own for a dispersion run in this mode
+    (``ICHEM=8``). HYSPLIT decides ``capemin``, ``cpack``, ``kblt``,
+    ``kmixd``, ``krand`` and ``vscales`` only after it has read
+    ``SETUP.CFG``, from the mode and ``numpar``, so they are unset by
+    default: an unset setting is not written, and HYSPLIT chooses.
+    ``n_hours`` has no default.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -208,20 +167,130 @@ class HysplitConfig(TransportConfig):
             "it, in J/kg. Unset, HYSPLIT chooses -2 with ``ICHEM=8``."
         ),
     )
+    cmass: int = Field(
+        0,
+        description=(
+            "Compute grid concentrations (0) or grid mass (1). "
+            "Read only for HYSPLIT's concentration grid, which runtraj does not read."
+        ),
+    )
+    conage: int = Field(
+        24,
+        description=(
+            "Particle age at which particles and puffs convert, in hours, "
+            "when ``initd`` is 3 or 4."
+        ),
+    )
+    cpack: int | None = Field(
+        None,
+        description=(
+            "Packing of the binary concentration grid: 0 every point, 1 only "
+            "nonzero points. Unset, HYSPLIT chooses. "
+            "Read only for HYSPLIT's concentration grid, which runtraj does not read."
+        ),
+    )
+    delt: float = Field(
+        0.0,
+        description=(
+            "Integration time step, in minutes. 0 lets HYSPLIT choose; a "
+            "negative value sets the minimum step. With ``ICHEM=8`` HYSPLIT "
+            "always steps 1 minute, so this setting has no effect."
+        ),
+    )
+    dxf: float = Field(
+        1.0,
+        description=(
+            "Horizontal x offset factor for HYSPLIT's meteorological ensemble."
+        ),
+    )
+    dyf: float = Field(
+        1.0,
+        description=(
+            "Horizontal y offset factor for HYSPLIT's meteorological ensemble."
+        ),
+    )
+    dzf: float = Field(
+        0.01,
+        description=(
+            "Vertical offset factor for HYSPLIT's meteorological ensemble "
+            "(0.01 is about 250 m)."
+        ),
+    )
+    efile: str = Field(
+        "",
+        description=("Name of a time-varying emissions file. Blank uses none."),
+    )
     emisshrs: float = Field(
         0.01,
         ge=0,
         description="Duration of the particle release, in hours.",
     )
+    frhmax: float = Field(
+        3.0,
+        description=(
+            "Maximum horizontal puff-rounding parameter. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
+    frhs: float = Field(
+        1.0,
+        description=(
+            "Horizontal puff-rounding fraction for merging. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
+    frme: float = Field(
+        0.1,
+        description=(
+            "Mass-rounding fraction for enhanced puff merging. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
+    frmr: float = Field(
+        0.0,
+        description=(
+            "Mass-removal fraction for enhanced puff merging. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
+    frts: float = Field(
+        0.1,
+        description=(
+            "Temporal puff-rounding fraction. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
+    frvs: float = Field(
+        0.01,
+        description=(
+            "Vertical puff-rounding fraction. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
     hscale: float = Field(
         10800.0,
         description="Horizontal Lagrangian timescale, in seconds.",
+    )
+    initd: int = Field(
+        0,
+        description=(
+            "Initial distribution: 0 3D particles, 1 and 2 3D puffs, 3 and "
+            "4 puffs horizontally and particles vertically. Other values are "
+            "HYSPLIT's conversions and special modes."
+        ),
     )
     k10m: int = Field(
         1,
         description=(
             "Use the 10 m winds and 2 m temperature as the lowest meteorology "
             "level (1) or skip them (0)."
+        ),
+    )
+    kagl: int = Field(
+        0,
+        description=(
+            "Trajectory heights above ground (1) or above sea level (0). "
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
         ),
     )
     kbls: int = Field(
@@ -243,6 +312,19 @@ class HysplitConfig(TransportConfig):
         0,
         description="Horizontal turbulence from vertical mixing (0) or wind deformation (1).",
     )
+    khinp: int = Field(
+        0,
+        description=(
+            "Age, in hours, given to particles read from ``pinpf``. 0 keeps "
+            "their own age."
+        ),
+    )
+    khmax: int = Field(
+        9999,
+        description=(
+            "Maximum particle age, in hours. HYSPLIT drops a particle older than this."
+        ),
+    )
     kmix0: int = Field(
         150,
         description="Minimum mixed-layer depth, in meters.",
@@ -253,6 +335,13 @@ class HysplitConfig(TransportConfig):
             "Mixed-layer depth source: 0 from the meteorology, 1 from the "
             "temperature profile, 2 from the TKE profile, 3 from a modified "
             "Richardson number. Unset, HYSPLIT chooses 3 with ``ICHEM=8``."
+        ),
+    )
+    kpuff: int = Field(
+        0,
+        description=(
+            "Horizontal puff growth: linear (0) or empirical (1). "
+            "Used only for puffs, when ``initd`` is not 0."
         ),
     )
     krand: Literal[0, 1, 2, 3, 4, 10, 11, 12, 13] | None = Field(
@@ -283,12 +372,38 @@ class HysplitConfig(TransportConfig):
             "seed."
         ),
     )
+    krnd: int = Field(
+        6,
+        description=(
+            "Enhanced puff-merging interval, in hours. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
+    kspl: int = Field(
+        1,
+        description=(
+            "Standard puff-splitting interval, in hours. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
+    )
+    kwet: int = Field(
+        1,
+        description=(
+            "Precipitation for wet removal from the meteorology (1) or from "
+            "an external file (2). Read only for deposition, which runtraj's "
+            "``CONTROL`` turns off."
+        ),
+    )
     kzmix: int = Field(
         0,
         description=(
             "Vertical mixing adjustment: 0 none, 1 a single PBL-average value, "
             "2 scale by ``tvmix``."
         ),
+    )
+    maxdim: int = Field(
+        1,
+        description=("Maximum number of pollutants carried on one particle."),
     )
     maxpar: int | None = Field(
         None,
@@ -303,9 +418,53 @@ class HysplitConfig(TransportConfig):
         10,
         description="Minimum meteorological subgrid size, in grid points.",
     )
+    mhrs: int = Field(
+        0,
+        description=(
+            "Trajectory restart duration limit, in hours. "
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+        ),
+    )
+    nbptyp: int = Field(
+        1,
+        description=("Number of particle-size bins per pollutant type."),
+    )
+    ncycl: int = Field(
+        0,
+        description=("Cycle time of the particle dump file, in hours."),
+    )
+    ndump: int = Field(
+        0,
+        description=(
+            "Interval between particle dumps to ``poutf``, in hours. 0 "
+            "writes none. runtraj does not keep the dump file."
+        ),
+    )
+    ninit: int = Field(
+        1,
+        description=(
+            "Particle initialization from ``pinpf``: 0 none, 1 once at the "
+            "start, 2 add every hour, 3 replace every hour. A file that does "
+            "not exist is skipped."
+        ),
+    )
+    nstr: int = Field(
+        0,
+        description=(
+            "Trajectory restart interval, in hours. "
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+        ),
+    )
     nturb: int = Field(
         0,
         description="Turbulence on (0) or off (1).",
+    )
+    nver: int = Field(
+        0,
+        description=(
+            "Trajectory vertical split number. "
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+        ),
     )
     outdt: int = Field(
         0,
@@ -319,9 +478,48 @@ class HysplitConfig(TransportConfig):
             "left the met's domain."
         ),
     )
+    p10f: float = Field(
+        1.0,
+        description=(
+            "Dust threshold velocity sensitivity factor, read only by "
+            "HYSPLIT's dust emission module."
+        ),
+    )
+    pinbc: str = Field(
+        "PARINBC",
+        description=("Particle input file for time-varying boundary conditions."),
+    )
+    pinpf: str = Field(
+        "PARINIT",
+        description=("Particle input file read at initialization (``ninit``)."),
+    )
+    poutf: str = Field(
+        "PARDUMP",
+        description=("Particle dump output file (``ndump``)."),
+    )
     qcycle: float = Field(
         0.0,
         description="Emission cycling period, in hours. 0 turns cycling off.",
+    )
+    rhb: int = Field(
+        80,
+        description=(
+            "Relative humidity that defines a cloud base, in percent, for wet removal."
+        ),
+    )
+    rht: int = Field(
+        60,
+        description=(
+            "Relative humidity that defines a cloud top, in percent, for wet removal."
+        ),
+    )
+    splitf: float = Field(
+        1.0,
+        description=(
+            "Factor for the automatic horizontal splitting size. A negative "
+            "value turns the automatic sizing off. "
+            "Used only for puffs, when ``initd`` is not 0."
+        ),
     )
     tkerd: float = Field(
         0.18,
@@ -336,6 +534,20 @@ class HysplitConfig(TransportConfig):
         description=(
             "Fraction of the vertical Lagrangian timescale used as the time "
             "step of the dispersion scheme."
+        ),
+    )
+    tout: int = Field(
+        0,
+        description=(
+            "Trajectory output interval, in minutes. "
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+        ),
+    )
+    tratio: float = Field(
+        0.75,
+        description=(
+            "Advection stability ratio: the fraction of a grid cell a "
+            "particle may move in one time step."
         ),
     )
     tvmix: float = Field(

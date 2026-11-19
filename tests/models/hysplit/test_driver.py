@@ -1167,6 +1167,7 @@ def test_hysplit_setup_types_cover_every_setup_entry():
         kblt=5,
         kmixd=3,
         vscales=-1,
+        cpack=1,
         seed=1,
         krand=2,
         maxpar=1000,
@@ -1178,7 +1179,7 @@ def test_settings_hysplit_chooses_are_unset_and_left_out_of_setup_cfg():
     # HYSPLIT sets these after reading SETUP.CFG, from its mode and numpar.
     entries = setup_entries(HysplitConfig(n_hours=-24))
 
-    assert not {"capemin", "kblt", "kmixd", "krand", "vscales"} & set(entries)
+    assert not {"capemin", "cpack", "kblt", "kmixd", "krand", "vscales"} & set(entries)
     assert (entries["numpar"], entries["wvert"]) == (2500, True)
     assert entries["varsiwant"] == list(HYSPLIT_VARSIWANT)
 
@@ -1217,15 +1218,33 @@ def test_fixed_setup_entries_are_written_and_are_no_settings():
         assert entries[name] == value
 
 
-@pytest.mark.parametrize("name", ["delt", "ichem", "cmass", "khinp"])
-def test_a_fixed_setup_entry_is_refused_as_a_setting(name):
+@pytest.mark.parametrize("name", ["ichem", "idsp"])
+def test_ichem_and_idsp_are_refused_as_settings(name):
+    # Only ICHEM=8 with IDSP=2 writes particles.
+    assert FIXED_SETUP == {"ichem": 8, "idsp": 2}
     with pytest.raises(ValidationError, match=name):
         HysplitConfig(n_hours=-24, **{name: FIXED_SETUP[name]})
 
 
-def test_setup_cfg_holds_the_entries_it_held_when_they_were_settings():
-    # Every SETUP.CFG entry and value from before the fixed ones stopped
-    # being settings: the default config of then, with a seed and maxpar.
+def test_setup_entries_default_to_hysplits_own():
+    # SETUP_INIDSP in HYSPLIT's hysetup.f: the defaults of a dispersion run.
+    hysplit = {
+        "cmass": 0, "conage": 24, "delt": 0.0, "dxf": 1.0, "dyf": 1.0,
+        "dzf": 0.01, "efile": "", "frhmax": 3.0, "frhs": 1.0, "frme": 0.1,
+        "frmr": 0.0, "frts": 0.1, "frvs": 0.01, "initd": 0, "kagl": 0,
+        "khinp": 0, "khmax": 9999, "kpuff": 0, "krnd": 6, "kspl": 1,
+        "kwet": 1, "maxdim": 1, "mhrs": 0, "nbptyp": 1, "ncycl": 0,
+        "ndump": 0, "ninit": 1, "nstr": 0, "nver": 0, "p10f": 1.0,
+        "pinbc": "PARINBC", "pinpf": "PARINIT", "poutf": "PARDUMP",
+        "rhb": 80, "rht": 60, "splitf": 1.0, "tout": 0, "tratio": 0.75,
+    }  # fmt: skip
+    entries = setup_entries(HysplitConfig(n_hours=-24))
+    assert {name: entries[name] for name in hysplit} == hysplit
+
+
+def test_setup_cfg_can_hold_the_entries_it_held_when_they_were_fixed():
+    # Every SETUP.CFG entry and value from when most of them were fixed,
+    # given as settings, with a seed and maxpar.
     before = {
         "veght": 0.5, "numpar": 200, "capemin": -1, "cmass": 0, "conage": 48,
         "cpack": 1, "delt": 1, "dxf": 1, "dyf": 1, "dzf": 0.01, "efile": "",
@@ -1253,6 +1272,14 @@ def test_setup_cfg_holds_the_entries_it_held_when_they_were_settings():
         seed=3,
         krand=2,
         maxpar=1000,
+        conage=48,
+        cpack=1,
+        delt=1.0,
+        kagl=1,
+        mhrs=9999,
+        pinbc="",
+        pinpf="",
+        poutf="",
     )
     entries = setup_entries(config)
     entries.pop("varsiwant")
