@@ -10,17 +10,21 @@ oxidant along each trajectory (:class:`~runtraj.transforms.Oxidation`), a
 mole fraction where each particle ends, or a surface flux under each
 particle. Units are not converted.
 
-:func:`sample_met` reads ARL met files at particle positions as HYSPLIT
-does, for the columns HYSPLIT writes from the met (``mlht``, ``dens``,
-``pres``, ``zsfc``), which a transport model that writes only positions
-leaves out. :func:`calc_pbl_height` finds the mixed-layer height from the
-met's profile, as HYSPLIT does by default.
+:func:`sample_met` reads met at particle positions as HYSPLIT does, for
+the columns HYSPLIT writes from the met (``mlht``, ``dens``, ``pres``,
+``zsfc``), which a transport model that writes only positions leaves out.
+:func:`calc_pbl_height` finds the mixed-layer height from the met's
+profile, as HYSPLIT does by default. Both read ARL files, or met in another
+format converted by arlmet (:func:`runtraj.models.open_met` opens a run's
+met files the way its transport model reads them).
 """
 
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -233,8 +237,8 @@ def _nearest_level(levels: xr.DataArray, z: np.ndarray) -> np.ndarray:
 
 
 #: The ARL variables each particle column is computed from, by :func:`sample_met`.
-#: ``pres`` is the ``PRES`` field, not arlmet's virtual ``"pressure"``, which
-#: is NaN at a height on sigma files (jmineau/arl-met#65).
+#: ``PRES`` stands for the pressure: the met's ``PRES`` field where it has
+#: one (:func:`_pressure_variable`).
 _MET_VARIABLES: dict[str, tuple[str, ...]] = {
     "mlht": ("PBLH",),
     "dens": ("PRES", "TEMP", "SPHU"),
@@ -250,16 +254,89 @@ _R_DRY = 287.04
 #: not import HYSPLIT's package).
 _DEFAULT_Z_TOP = 25000.0
 
+#: Met to sample: the paths of ARL files, or one Dataset in
+#: :func:`arlmet.open_dataset`'s layout, such as a converter's output.
+Met = Iterable[str | os.PathLike[str]] | xr.Dataset
+
+
+@contextmanager
+def _opened(met: Met) -> Iterator[list[Any]]:
+    """Yield *met* as :func:`arlmet.sample_points` reads it: the files opened (and closed afterwards), or the Dataset."""
+    import arlmet
+
+    if isinstance(met, xr.Dataset):
+        yield [met]
+        return
+    handles = [arlmet.File(path) for path in met]
+    try:
+        yield handles
+    finally:
+        for handle in handles:
+            handle.close()
+
+
+def _met_times(sources: list[Any]) -> pd.DatetimeIndex:
+    """Return the met times of the opened met, in order, in UTC without a time zone."""
+    times: set[pd.Timestamp] = set()
+    for source in sources:
+        if isinstance(source, xr.Dataset):
+            index = pd.DatetimeIndex(source.indexes["time"])
+        else:
+            index = pd.DatetimeIndex(source.times)
+        if index.tz is not None:
+            index = index.tz_convert("UTC").tz_localize(None)
+        times.update(index)
+    return pd.DatetimeIndex(sorted(times))
+
+
+def _met_variables(sources: list[Any]) -> set[str]:
+    """Return the names of the variables the opened met holds."""
+    names: set[str] = set()
+    for source in sources:
+        if isinstance(source, xr.Dataset):
+            names.update(str(name) for name in source.data_vars)
+        else:
+            names.update(record.variable for record in source.records)
+    return names
+
+
+def _pressure_variable(sources: list[Any], names: set[str]) -> str:
+    """
+    Return what to sample for the pressure: the met's ``PRES`` field, or arlmet's ``"pressure"``.
+
+    A file with ``PRES`` on its levels, such as HRRR's, gives the pressure
+    HYSPLIT reads. A file on pressure levels (GFS) or hybrid levels (ERA5)
+    has none: its pressure comes from its vertical axis, which arlmet's
+    virtual ``"pressure"`` reads. Terrain-following levels give no pressure
+    without ``PRES``.
+    """
+    import arlmet
+
+    if "PRES" in names:
+        return "PRES"
+    first = sources[0]
+    axis = (
+        first.arl.vertical_axis
+        if isinstance(first, xr.Dataset)
+        else first.vertical_axis
+    )
+    if isinstance(axis, arlmet.TerrainAxis):
+        raise KeyError(
+            "Met on terrain-following levels needs a PRES field for the pressure, "
+            "which it lacks."
+        )
+    return "pressure"
+
 
 def sample_met(
     particles: pd.DataFrame,
-    files: Iterable[str | os.PathLike[str]],
+    met: Met,
     columns: Iterable[str] = ("mlht", "dens", "pres", "zsfc"),
     *,
     z_top: float | None = _DEFAULT_Z_TOP,
 ) -> pd.DataFrame:
     """
-    Return the particles with met columns sampled from ARL files at each particle's position.
+    Return the particles with met columns sampled at each particle's position.
 
     A transport model that writes only positions can get the columns
     HYSPLIT writes from the met this way. Each row is sampled at its
@@ -273,7 +350,9 @@ def sample_met(
       above ground.
     - ``dens`` is 100 ``PRES`` / (R ``TEMP`` (1 + 0.61 ``SPHU``)), the
       density of moist air in kg m⁻³, with R = 287.04 J kg⁻¹ K⁻¹.
-    - ``pres`` is ``PRES``, the pressure, in hPa.
+    - ``pres`` is ``PRES``, the pressure, in hPa. Met without a ``PRES``
+      field, such as GFS on pressure levels or ERA5 on model levels, gives
+      the pressure of its vertical axis instead.
     - ``zsfc`` is ``SHGT``, the terrain height, in m above sea level.
 
     ``pres`` and ``dens`` follow what HYSPLIT reads, to the differences
@@ -288,10 +367,12 @@ def sample_met(
         A particle table with ``lon``, ``lat``, ``zagl``, and ``time``.
         ``sim.particles`` has ``time``. For a table a transport model
         returned, add it: the release time plus ``age`` minutes.
-    files : iterable of path-like
+    met : iterable of path-like, or xarray.Dataset
         ARL met files that cover the particles' times, such as the files the
         run read (``met_files`` of :class:`runtraj.models.ModelRun` or of
-        :func:`runtraj.particles.particles_metadata`).
+        :func:`runtraj.particles.particles_metadata`), or met in another
+        format as one Dataset in :func:`arlmet.open_dataset`'s layout
+        (:func:`runtraj.models.open_met`, or an arlmet converter's output).
     columns : iterable of str, default ("mlht", "dens", "pres", "zsfc")
         The columns to add.
     z_top : float or None, default 25000
@@ -315,7 +396,7 @@ def sample_met(
         (drop it first), *particles* has no ``time`` column, a row is outside
         the files' times, or *z_top* is not positive.
     KeyError
-        If the files lack a variable a column needs.
+        If the met lacks a variable a column needs.
 
     Notes
     -----
@@ -364,9 +445,14 @@ def sample_met(
         )
     variables = list(dict.fromkeys(v for c in columns for v in _MET_VARIABLES[c]))
 
-    handles = [arlmet.File(path) for path in files]
-    try:
-        met_times = pd.DatetimeIndex(sorted({t for h in handles for t in h.times}))
+    with _opened(met) as sources:
+        pressure = (
+            _pressure_variable(sources, _met_variables(sources))
+            if "PRES" in variables
+            else "PRES"
+        )
+        names = [pressure if v == "PRES" else v for v in variables]
+        met_times = _met_times(sources)
         times = pd.DatetimeIndex(particles["time"])
         before, after, weight = _bracket(met_times, times)
         # Each row is sampled at the met time before it and, unless it is on
@@ -378,28 +464,25 @@ def sample_met(
         )
         points["time"] = np.concatenate([before, after[later]])
         sampled = arlmet.sample_points(
-            handles, points, variables, z_kind="agl", model_top=z_top
+            sources, points, names, z_kind="agl", model_top=z_top
         )
-    finally:
-        for handle in handles:
-            handle.close()
 
     n = len(particles)
     w = weight[later]
-    met: dict[str, np.ndarray] = {}
-    for name in variables:
+    values_at: dict[str, np.ndarray] = {}
+    for variable, name in zip(variables, names, strict=True):
         values = sampled[name].to_numpy(dtype=float)
         at_rows = values[:n].copy()
         at_rows[later] = (1.0 - w) * at_rows[later] + w * values[n:]
-        met[name] = at_rows
+        values_at[variable] = at_rows
 
     out = particles.copy()
     for column in columns:
         if column == "dens":
-            virtual_temperature = met["TEMP"] * (1.0 + 0.61 * met["SPHU"])
-            out[column] = 100.0 * met["PRES"] / (_R_DRY * virtual_temperature)
+            virtual_temperature = values_at["TEMP"] * (1.0 + 0.61 * values_at["SPHU"])
+            out[column] = 100.0 * values_at["PRES"] / (_R_DRY * virtual_temperature)
         else:
-            out[column] = met[_MET_VARIABLES[column][0]]
+            out[column] = values_at[_MET_VARIABLES[column][0]]
     return out
 
 
@@ -443,7 +526,7 @@ _CRITICAL_RICHARDSON = 0.25
 
 def calc_pbl_height(
     particles: pd.DataFrame,
-    files: Iterable[str | os.PathLike[str]],
+    met: Met,
     *,
     z_top: float = _DEFAULT_Z_TOP,
 ) -> np.ndarray:
@@ -481,11 +564,13 @@ def calc_pbl_height(
     ----------
     particles : pandas.DataFrame
         A particle table with ``lon``, ``lat``, and ``time``.
-    files : iterable of path-like
-        ARL met files that cover the particles' times, with ``TEMP``,
-        ``PRES``, ``UWND``, ``VWND`` and ``SHGT``, the sensible heat flux
-        ``SHTF``, and the friction velocity ``USTR`` or the momentum fluxes
-        ``UMOF`` and ``VMOF``.
+    met : iterable of path-like, or xarray.Dataset
+        ARL met files that cover the particles' times, or met in another
+        format as one Dataset in :func:`arlmet.open_dataset`'s layout, as
+        :func:`sample_met` takes. It needs ``TEMP``, ``UWND``, ``VWND`` and
+        ``SHGT``, the sensible heat flux ``SHTF``, the friction velocity
+        ``USTR`` or the momentum fluxes ``UMOF`` and ``VMOF``, and the
+        pressure: ``PRES``, or a vertical axis it follows from.
     z_top : float, default 25000
         The top of the domain in meters, which sets HYSPLIT's internal
         levels (``z_top`` of :class:`runtraj.models.hysplit.HysplitConfig`).
@@ -502,7 +587,7 @@ def calc_pbl_height(
         If *particles* has no ``time`` column or a row is outside the
         files' times.
     KeyError
-        If the files lack a variable it needs.
+        If the met lacks a variable it needs.
 
     Examples
     --------
@@ -519,24 +604,25 @@ def calc_pbl_height(
         raise ValueError(
             "calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."
         )
-    handles = [arlmet.File(path) for path in files]
-    try:
-        first = handles[0]
-        names = {r.variable for h in handles for r in h.records}
+    with _opened(met) as sources:
+        first = sources[0]
+        dataset = isinstance(first, xr.Dataset)
+        names = _met_variables(sources)
+        pressure = _pressure_variable(sources, names)
         momentum = ["USTR"] if "USTR" in names else ["UMOF", "VMOF"]
-        missing = sorted(
-            {"TEMP", "PRES", "UWND", "VWND", "SHGT", "SHTF", *momentum} - names
-        )
+        missing = sorted({"TEMP", "UWND", "VWND", "SHGT", "SHTF", *momentum} - names)
         if missing:
             raise KeyError(
                 f"calc_pbl_height needs the met variables {missing}, which the "
-                "files lack."
+                "met lacks."
             )
-        met_times = pd.DatetimeIndex(sorted({t for h in handles for t in h.times}))
+        met_times = _met_times(sources)
         before, after, weight = _bracket(met_times, pd.DatetimeIndex(particles["time"]))
 
         # One column per met grid point and met time, at the nearest grid point.
-        x, y = first.grid.fractional_indices(
+        met_grid = first.arl.grid if dataset else first.grid
+        source = first.arl.source if dataset else first.source
+        x, y = met_grid.fractional_indices(
             particles["lon"].to_numpy(dtype=float),
             particles["lat"].to_numpy(dtype=float),
         )
@@ -560,7 +646,7 @@ def calc_pbl_height(
         levels = arlmet.internal_levels(first, model_top=z_top)
         heights = levels.heights
         ground = arlmet.sample_points(
-            handles,
+            sources,
             columns[["lon", "lat", "time"]].assign(z=0.0),
             ["SHGT", "SHTF", *momentum],
             z_kind="agl",
@@ -578,25 +664,22 @@ def calc_pbl_height(
                 "z": zz.ravel(),
             }
         )
-        profile_variables = ["TEMP", "PRES", "UWND", "VWND"]
+        profile_variables = ["TEMP", pressure, "UWND", "VWND"]
         if "SPHU" in names:
             profile_variables.append("SPHU")
         profile = arlmet.sample_points(
-            handles,
+            sources,
             at_levels,
             profile_variables,
             z_kind="agl",
             method="nearest",
             model_top=z_top,
         )
-    finally:
-        for handle in handles:
-            handle.close()
 
     def grid(name: str) -> np.ndarray:
         return profile[name].to_numpy(dtype=float).reshape(n_col, n_lev)
 
-    temp, pres, uu, vv = grid("TEMP"), grid("PRES"), grid("UWND"), grid("VWND")
+    temp, pres, uu, vv = grid("TEMP"), grid(pressure), grid("UWND"), grid("VWND")
     sphu = grid("SPHU") if "SPHU" in profile_variables else np.zeros_like(temp)
     theta = temp * (1000.0 / pres) ** 0.286
     density = 100.0 * pres / (_R_DRY * temp * (1.0 + 0.61 * sphu))
@@ -613,7 +696,7 @@ def calc_pbl_height(
 
         ustar = np.hypot(component("UMOF"), component("VMOF"))
     heat = ground["SHTF"].to_numpy(dtype=float)
-    if first.source.strip() == "ETA":
+    if source.strip() == "ETA":
         heat = -heat  # NAM's (ETA's) flux is positive downward (prfcom.f)
     zmix = _richardson_mixed_layer(zz, theta, uu, vv, density, ustar, heat, ks)
 

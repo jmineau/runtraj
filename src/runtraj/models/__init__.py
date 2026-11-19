@@ -12,12 +12,14 @@ another model needs no change to the worker.
 from __future__ import annotations
 
 import datetime as dt
-from collections.abc import Callable, Mapping
+import os
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self
 
 import pandas as pd
+import xarray as xr
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from runtraj._plugins import import_class
@@ -27,6 +29,7 @@ from runtraj.particles import add_release_heights, check_particles
 
 if TYPE_CHECKING:
     from runtraj.releases import Release
+    from runtraj.spatial import Bounds
 
 
 @dataclass(frozen=True)
@@ -206,6 +209,15 @@ class TransportModel(Protocol):
         each run from downloading its own. ``runtraj submit`` submits a fetch
         job before the job array only when it is true for a met the
         unfinished simulations use. A model without it downloads nothing.
+    open_met : callable, optional
+        ``open_met(met, files, bounds)``, for a model whose met files are
+        not ARL files: returns *files*, the met files a run read, as one
+        :class:`xarray.Dataset` in :func:`arlmet.open_dataset`'s layout,
+        such as an arlmet converter's output, cropped to *bounds* (a
+        :class:`runtraj.Bounds`, or ``None`` for the whole grid).
+        :func:`open_met` calls it, so that the met is read at particles
+        (:mod:`runtraj.sampling`) without guessing its format from the
+        files. A model without it reads ARL files.
     """
 
     name: str
@@ -372,6 +384,57 @@ def get_model(name: str) -> TransportModel:
             "mypkg.models.MyModel."
         )
     return factory()
+
+
+def open_met(
+    name: str,
+    met: Any,
+    files: Iterable[str | os.PathLike[str]],
+    bounds: Bounds | None = None,
+) -> list[Path] | xr.Dataset:
+    """
+    Return the met files of a run of the transport model *name* as :mod:`runtraj.sampling` reads them.
+
+    A model whose met files are not ARL files opens them itself, with its
+    met config *met*, as one Dataset in :func:`arlmet.open_dataset`'s
+    layout (its ``open_met``, :class:`TransportModel`); for any other model,
+    HYSPLIT included, the files are ARL files and are returned as paths.
+    Either can be passed to :func:`runtraj.sampling.sample_met` and
+    :func:`runtraj.sampling.calc_pbl_height`.
+
+    Parameters
+    ----------
+    name : str
+        The transport model the run used (:func:`get_model`).
+    met : BaseModel
+        The run's met, of the model's ``met_config_class``.
+    files : iterable of path-like
+        The met files the run read (``met_files`` of :class:`ModelRun` or
+        of :func:`runtraj.particles.particles_metadata`).
+    bounds : Bounds, optional
+        Where the particles are. A model that opens its files reads only
+        this part of the grid, plus a margin of its own. ``None`` reads the
+        whole grid.
+
+    Returns
+    -------
+    list of Path or xarray.Dataset
+        The files, or the Dataset the model opened.
+
+    Examples
+    --------
+    >>> meta = runtraj.particles.particles_metadata(
+    ...     sim.particles_path
+    ... )  # doctest: +SKIP
+    >>> met = runtraj.models.open_met(
+    ...     "hysplit", variant.met_config, meta.met_files
+    ... )  # doctest: +SKIP
+    >>> runtraj.sampling.sample_met(sim.particles, met)  # doctest: +SKIP
+    """
+    hook = getattr(get_model(name), "open_met", None)
+    if hook is None:
+        return [Path(f) for f in files]
+    return hook(met, list(files), bounds)
 
 
 def run_model(
@@ -595,6 +658,7 @@ __all__ = [
     "TransportConfig",
     "TransportModel",
     "get_model",
+    "open_met",
     "run_model",
     "run_model_many",
     "run_trajectories",
