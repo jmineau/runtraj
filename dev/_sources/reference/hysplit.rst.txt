@@ -47,8 +47,9 @@ Running HYSPLIT
 :func:`~runtraj.models.hysplit.write_inputs` writes everything
 ``hycs_std`` reads into a folder: ``CONTROL``, ``SETUP.CFG``, and the error
 and mixed-layer files when the settings call for them. It takes what
-``CONTROL`` starts from: a release time and release locations (latitude,
-longitude and height, in ``CONTROL``'s order), with ``kmsl`` 0 for heights
+``CONTROL`` starts from: a release time and release locations (longitude,
+latitude and height, like ``release.coords()``; the ``CONTROL`` file lists
+each latitude first, and the writer swaps them), with ``kmsl`` 0 for heights
 above ground and 1 above sea level, as ``SETUP.CFG``'s ``KMSL``.
 :class:`~runtraj.models.hysplit.HysplitModel` passes a release's time,
 release points (``release.coords()``) and ``altitude_ref``.

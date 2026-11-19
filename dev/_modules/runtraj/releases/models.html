@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=e08ca04e"></script>
+    <script src="../../../_static/documentation_options.js?v=909e4efc"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev712+g989e9661c" />
+  <meta name="docsearch:version" content="0.0.1.dev713+ge45b58750" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -714,8 +714,8 @@
 <span class="sd">    Base class of the release types.</span>
 
 <span class="sd">    A release is a frozen value: its release time, its release points, and</span>
-<span class="sd">    the vertical reference of their heights. Iterating one yields</span>
-<span class="sd">    ``(lat, lon, alt)`` for each release point. Two releases are equal when</span>
+<span class="sd">    the vertical reference of their heights. ``coords()`` gives</span>
+<span class="sd">    ``(lon, lat, alt)`` for each release point. Two releases are equal when</span>
 <span class="sd">    their type, time, points, and ``altitude_ref`` match; ``attrs`` do not</span>
 <span class="sd">    count.</span>
 <span class="sd">    """</span>
@@ -775,7 +775,7 @@
 <div class="viewcode-block" id="Release.coords">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.Release.coords.html#runtraj.Release.coords">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">coords</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Return ``(lat, lon, alt)`` of each release point."""</span>
+<span class="w">        </span><span class="sd">"""Return ``(lon, lat, alt)`` of each release point, the order ``from_points`` takes."""</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 
@@ -814,7 +814,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Point</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Release points as shapely ``Point(lon, lat, alt)`` objects."""</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span><span class="p">)</span> <span class="k">for</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">alt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span><span class="p">)</span> <span class="k">for</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">()]</span>
 
 <div class="viewcode-block" id="Release.plot">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.Release.plot.html#runtraj.Release.plot">[docs]</a>
@@ -981,8 +981,8 @@
 <div class="viewcode-block" id="PointRelease.coords">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.PointRelease.coords.html#runtraj.PointRelease.coords">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">coords</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Return ``(lat, lon, alt)`` of the release point."""</span>
-        <span class="k">return</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">)]</span></div>
+<span class="w">        </span><span class="sd">"""Return ``(lon, lat, alt)`` of the release point."""</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">)]</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1038,10 +1038,10 @@
 <div class="viewcode-block" id="ColumnRelease.coords">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.ColumnRelease.coords.html#runtraj.ColumnRelease.coords">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">coords</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Return ``(lat, lon, alt)`` of the bottom and the top of the column."""</span>
+<span class="w">        </span><span class="sd">"""Return ``(lon, lat, alt)`` of the bottom and the top of the column."""</span>
         <span class="k">return</span> <span class="p">[</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">),</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">),</span>
         <span class="p">]</span></div>
 
 
@@ -1133,8 +1133,8 @@
 <div class="viewcode-block" id="MultiPointRelease.coords">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.MultiPointRelease.coords.html#runtraj.MultiPointRelease.coords">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">coords</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Return ``(lat, lon, alt)`` of each release point."""</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">latitudes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">longitudes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitudes</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+<span class="w">        </span><span class="sd">"""Return ``(lon, lat, alt)`` of each release point."""</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitudes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitudes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitudes</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>

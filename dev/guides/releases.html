@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=e08ca04e"></script>
+    <script src="../_static/documentation_options.js?v=909e4efc"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev712+g989e9661c" />
+  <meta name="docsearch:version" content="0.0.1.dev713+ge45b58750" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -769,7 +769,9 @@ timezone attached.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">release.attrs</span></code></dt><dd><p>A dictionary of extra labels, such as the extra columns of
 <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>. They are not part of the release’s ID.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">release.coords()</span></code></dt><dd><p>The release’s points as a list of <code class="docutils literal notranslate"><span class="pre">(latitude,</span> <span class="pre">longitude,</span> <span class="pre">altitude)</span></code>.
+<dt><code class="docutils literal notranslate"><span class="pre">release.coords()</span></code></dt><dd><p>The release’s points as a list of <code class="docutils literal notranslate"><span class="pre">(longitude,</span> <span class="pre">latitude,</span> <span class="pre">altitude)</span></code>,
+the order <a class="reference internal" href="../reference/_api/runtraj.Release.from_points.html#runtraj.Release.from_points" title="runtraj.Release.from_points"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Release.from_points()</span></code></a> takes, so
+<code class="docutils literal notranslate"><span class="pre">Release.from_points(release.time,</span> <span class="pre">release.coords())</span></code> gives the same release.
 A <a class="reference internal" href="../reference/_api/runtraj.PointRelease.html#runtraj.PointRelease" title="runtraj.PointRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointRelease</span></code></a> has one point, a <a class="reference internal" href="../reference/_api/runtraj.ColumnRelease.html#runtraj.ColumnRelease" title="runtraj.ColumnRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnRelease</span></code></a> two
 (bottom and top), and a <a class="reference internal" href="../reference/_api/runtraj.MultiPointRelease.html#runtraj.MultiPointRelease" title="runtraj.MultiPointRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPointRelease</span></code></a> one per location.
 This lets code read coordinates without checking the type.</p>

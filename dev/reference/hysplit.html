@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=e08ca04e"></script>
+    <script src="../_static/documentation_options.js?v=909e4efc"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev712+g989e9661c" />
+  <meta name="docsearch:version" content="0.0.1.dev713+ge45b58750" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -862,8 +862,9 @@ run uses, from the <code class="docutils literal notranslate"><span class="pre">
 <p><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html#runtraj.models.hysplit.write_inputs" title="runtraj.models.hysplit.write_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_inputs()</span></code></a> writes everything
 <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> reads into a folder: <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>, <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code>, and the error
 and mixed-layer files when the settings call for them. It takes what
-<code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> starts from: a release time and release locations (latitude,
-longitude and height, in <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>’s order), with <code class="docutils literal notranslate"><span class="pre">kmsl</span></code> 0 for heights
+<code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> starts from: a release time and release locations (longitude,
+latitude and height, like <code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>; the <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file lists
+each latitude first, and the writer swaps them), with <code class="docutils literal notranslate"><span class="pre">kmsl</span></code> 0 for heights
 above ground and 1 above sea level, as <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code>’s <code class="docutils literal notranslate"><span class="pre">KMSL</span></code>.
 <a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html#runtraj.models.hysplit.HysplitModel" title="runtraj.models.hysplit.HysplitModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">HysplitModel</span></code></a> passes a release’s time,
 release points (<code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>) and <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>.

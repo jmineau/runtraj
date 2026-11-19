@@ -312,7 +312,9 @@ All three classes have these members:
    ``releases.csv``. They are not part of the release's ID.
 
 ``release.coords()``
-   The release's points as a list of ``(latitude, longitude, altitude)``.
+   The release's points as a list of ``(longitude, latitude, altitude)``,
+   the order :meth:`Release.from_points` takes, so
+   ``Release.from_points(release.time, release.coords())`` gives the same release.
    A :class:`PointRelease` has one point, a :class:`ColumnRelease` two
    (bottom and top), and a :class:`MultiPointRelease` one per location.
    This lets code read coordinates without checking the type.
