@@ -53,6 +53,7 @@ concentration = [
     "netcdf4>=1.6.5",  # a concentration result is a NetCDF file, a group per grid
 ]
 flexpart = [
+    "cfgrib>=0.9.14",  # opens GRIB met for the particles, with arlmet's converters
     "eccodes>=2.39",
     # eccodes' pure-Python wheel does not name its C library, so uv leaves it out.
     "eccodeslib>=2.39; platform_system != 'Windows'",
