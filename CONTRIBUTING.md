@@ -397,9 +397,9 @@ stages:
   the package that wrote it. A variant that sets a
   stage to null while another of its stages reads it is refused.
 
-`path` is a `runtraj.stages.Location`: a `pathlib.Path`, or a `UPath` when
-the output directory is on an object store. Write through `path.open()`,
-which both have, and the stage works with either. A table, for example:
+`path` is a `pathlib.Path`, or a `upath.UPath` when the output directory
+is on an object store. Write through `path.open()`, which both have, and
+the stage works with either. A table, for example:
 
 ```python
 import pyarrow.parquet as pq

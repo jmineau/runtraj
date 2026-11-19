@@ -19,17 +19,15 @@ import os
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any, TypeAlias, TypeVar, Union
+from typing import IO, TYPE_CHECKING, Any, TypeVar
 from uuid import uuid4
 
 if TYPE_CHECKING:
     import pyarrow as pa
     from upath import UPath
 
-#: A place on this filesystem (a :class:`pathlib.Path`) or on an object
-#: store (a :class:`upath.UPath`). ``UPath`` is named as a string so that
-#: importing runtraj does not import fsspec.
-Location: TypeAlias = Union[Path, "UPath"]
+    #: A place on this filesystem or on an object store.
+    Location = Path | UPath
 
 #: A path on this filesystem, or a universal path on an object store.
 P = TypeVar("P", bound="Path | UPath")
