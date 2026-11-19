@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=ae679e60"></script>
+    <script src="../_static/documentation_options.js?v=6fce01d4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,13 +59,13 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="On An HPC Cluster (Slurm)" href="slurm.html" />
-    <link rel="prev" title="Meteorology" href="meteorology.html" />
+    <link rel="next" title="Checking A Run" href="checking.html" />
+    <link rel="prev" title="Choosing Settings" href="choosing_settings.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev707+g82016a6ee" />
+  <meta name="docsearch:version" content="0.0.1.dev710+g22c06ef19" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -403,18 +403,22 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Setting up a project</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Projects And Variants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="meteorology.html">Meteorology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="choosing_settings.html">Choosing Settings</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">Running</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
-</ul>
-</details></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Running</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="output.html">The Output Directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particles.html">Reading And Plotting Particles</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">HYSPLIT</span></p>
 <ul class="nav bd-sidenav">
@@ -653,9 +657,8 @@ every code).</p>
 <p>A failed simulation doesn’t stop the others. The worker records why it
 failed and goes on, and the next <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> tries it again.
 <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> counts the failures by reason, and <code class="docutils literal notranslate"><span class="pre">sim.failure</span></code> and
-<code class="docutils literal notranslate"><span class="pre">sim.log</span></code> say what went wrong in one.</p>
-<div class="toctree-wrapper compound">
-</div>
+<code class="docutils literal notranslate"><span class="pre">sim.log</span></code> say what went wrong in one. <a class="reference internal" href="checking.html"><span class="doc">Checking A Run</span></a> explains each
+reason and what to do about it.</p>
 </section>
 </section>
 
@@ -670,20 +673,20 @@ failed and goes on, and the next <code class="docutils literal notranslate"><spa
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="meteorology.html"
+       href="choosing_settings.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Meteorology</p>
+        <p class="prev-next-title">Choosing Settings</p>
       </div>
     </a>
     <a class="right-next"
-       href="slurm.html"
+       href="checking.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">On An HPC Cluster (Slurm)</p>
+        <p class="prev-next-title">Checking A Run</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

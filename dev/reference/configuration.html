@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=ae679e60"></script>
+    <script src="../_static/documentation_options.js?v=6fce01d4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev707+g82016a6ee" />
+  <meta name="docsearch:version" content="0.0.1.dev710+g22c06ef19" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -891,8 +891,9 @@ installed version.</p>
 <p>The keys of the <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> block under <code class="docutils literal notranslate"><span class="pre">models:</span></code>, the transport model’s
 settings (<a class="reference internal" href="hysplit.html"><span class="doc">HYSPLIT Integration</span></a>). They are the defaults of every variant that runs
 HYSPLIT, and a variant may override any of them by writing the key itself.
-Left out, the block is HYSPLIT with the defaults below, which are HYSPLIT’s
-own. <code class="docutils literal notranslate"><span class="pre">n_hours</span></code> has no default, and <code class="docutils literal notranslate"><span class="pre">capemin</span></code>, <code class="docutils literal notranslate"><span class="pre">kblt</span></code>, <code class="docutils literal notranslate"><span class="pre">kmixd</span></code>,
+Every key but <code class="docutils literal notranslate"><span class="pre">n_hours</span></code> has the default below, so a block may be as
+short as <code class="docutils literal notranslate"><span class="pre">hysplit:</span> <span class="pre">{n_hours:</span> <span class="pre">-24}</span></code>; <code class="docutils literal notranslate"><span class="pre">n_hours</span></code> has no default, and a
+config without it is refused. <code class="docutils literal notranslate"><span class="pre">capemin</span></code>, <code class="docutils literal notranslate"><span class="pre">kblt</span></code>, <code class="docutils literal notranslate"><span class="pre">kmixd</span></code>,
 <code class="docutils literal notranslate"><span class="pre">krand</span></code> and <code class="docutils literal notranslate"><span class="pre">vscales</span></code> are unset unless given: HYSPLIT chooses them when
 it runs.</p>
 <div class="pst-scrollable-table-container"><table class="table">

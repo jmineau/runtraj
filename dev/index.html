@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=ae679e60"></script>
+    <script src="_static/documentation_options.js?v=6fce01d4"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -64,7 +64,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev707+g82016a6ee" />
+  <meta name="docsearch:version" content="0.0.1.dev710+g22c06ef19" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -428,6 +428,12 @@ again.</p>
 built in. Another model, and what is made from the particles after a run
 (a stage), plug in by the import path of a class. The footprints of
 <a class="reference external" href="https://jmineau.github.io/PYSTILT/">PYSTILT</a> are made by such a stage.</p>
+<p>The particles follow the air, backward from a measurement or forward from
+a source, over hours to days, at the resolution of the meteorology you give
+it. They carry no mass and do not settle. A transform weights each
+particle’s rows for a species lost on the way (to a lifetime, deposition,
+or oxidation) or for a column measurement, and runtraj writes particle
+positions, not concentration grids.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>runtraj is alpha software. Names and options may still change between
@@ -449,8 +455,8 @@ releases.</p>
 <div class="sd-card-body docutils">
 <div class="sd-card-title sd-font-weight-bold docutils">
 <span class="fas fa-book"></span> User Guide</div>
-<p class="sd-card-text">How to describe releases, set up meteorology, and run on a
-cluster.</p>
+<p class="sd-card-text">Set up a project, choose its settings, run it on a cluster, check
+the runs, and read the particles.</p>
 </div>
 <a class="sd-stretched-link sd-hide-link-text reference internal" href="guides/index.html"><span class="doc">User Guide</span></a></div>
 </div>

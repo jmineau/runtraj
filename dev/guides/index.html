@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=ae679e60"></script>
+    <script src="../_static/documentation_options.js?v=6fce01d4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,13 +59,13 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Releases" href="releases.html" />
-    <link rel="prev" title="Your First Run" href="../getting_started/quickstart.html" />
+    <link rel="next" title="Projects And Variants" href="projects.html" />
+    <link rel="prev" title="Glossary" href="../getting_started/glossary.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev707+g82016a6ee" />
+  <meta name="docsearch:version" content="0.0.1.dev710+g22c06ef19" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -403,18 +403,22 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Setting up a project</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Projects And Variants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="meteorology.html">Meteorology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="choosing_settings.html">Choosing Settings</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Running</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="running.html">Running</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
-</ul>
-</details></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="output.html">The Output Directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particles.html">Reading And Plotting Particles</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">HYSPLIT</span></p>
 <ul class="nav bd-sidenav">
@@ -479,19 +483,33 @@
                   
   <section id="user-guide">
 <h1>User Guide<a class="headerlink" href="#user-guide" title="Link to this heading">#</a></h1>
-<p>These pages show how to set up a project and run it. If you are new to
-runtraj, start with <a class="reference internal" href="../getting_started/quickstart.html"><span class="doc">Your First Run</span></a>.</p>
+<p>Each page covers one task, in the order you meet them. If you are new to
+runtraj, start with <a class="reference internal" href="../getting_started/quickstart.html"><span class="doc">Your First Run</span></a>, and look up a
+word in the <a class="reference internal" href="../getting_started/glossary.html"><span class="doc">Glossary</span></a>.</p>
 <p><strong>Setting up a project</strong></p>
 <ul class="simple">
+<li><p><a class="reference internal" href="projects.html"><span class="doc">Projects And Variants</span></a>: the project folder, <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, and variants; how
+reruns and changed settings work</p></li>
 <li><p><a class="reference internal" href="releases.html"><span class="doc">Releases</span></a>: releases, the times and places particles start from
 (a point, a vertical column, or many points at once)</p></li>
 <li><p><a class="reference internal" href="meteorology.html"><span class="doc">Meteorology</span></a>: use your own ARL files or download them from NOAA</p></li>
+<li><p><a class="reference internal" href="choosing_settings.html"><span class="doc">Choosing Settings</span></a>: how long to run, how many particles, random
+numbers, and what HYSPLIT chooses for you</p></li>
 </ul>
 <p><strong>Running</strong></p>
 <ul class="simple">
 <li><p><a class="reference internal" href="running.html"><span class="doc">Running</span></a>: run on your computer, and the commands</p></li>
+<li><p><a class="reference internal" href="checking.html"><span class="doc">Checking A Run</span></a>: find problems before a run, see where each simulation
+stands, and find out why one failed</p></li>
 <li><p><a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>: run thousands of simulations on an HPC cluster</p></li>
 <li><p><a class="reference internal" href="containers.html"><span class="doc">In Containers (Kubernetes)</span></a>: run with Kubernetes or another scheduler</p></li>
+</ul>
+<p><strong>Results</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="output.html"><span class="doc">The Output Directory</span></a>: what is in the output directory, and putting it on an
+object store</p></li>
+<li><p><a class="reference internal" href="particles.html"><span class="doc">Reading And Plotting Particles</span></a>: read and plot the particles of one simulation or
+many, and open them in DuckDB, R, or CF trajectory tools</p></li>
 </ul>
 <p><strong>HYSPLIT</strong></p>
 <ul class="simple">
@@ -500,10 +518,8 @@ output in runtraj, a single trajectory, and many runs as a project</p></li>
 <li><p><a class="reference internal" href="hysplit_build.html"><span class="doc">Your Own HYSPLIT Build And Data Tables</span></a>: run another HYSPLIT build, or your own land-use
 and terrain tables</p></li>
 </ul>
-<p>The pages on a project’s settings and variants, checking a run, choosing
-settings, and reading and plotting the particles have not been written
-yet. Until they are, <a class="reference internal" href="../reference/configuration.html"><span class="doc">Configuration</span></a> lists every
-<code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> option, and the <a class="reference internal" href="../reference/index.html"><span class="doc">API Reference</span></a> has every method.</p>
+<div class="toctree-wrapper compound">
+</div>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
@@ -523,20 +539,20 @@ yet. Until they are, <a class="reference internal" href="../reference/configurat
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../getting_started/quickstart.html"
+       href="../getting_started/glossary.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Your First Run</p>
+        <p class="prev-next-title">Glossary</p>
       </div>
     </a>
     <a class="right-next"
-       href="releases.html"
+       href="projects.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Releases</p>
+        <p class="prev-next-title">Projects And Variants</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

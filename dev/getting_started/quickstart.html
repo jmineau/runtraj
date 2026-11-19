@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=ae679e60"></script>
+    <script src="../_static/documentation_options.js?v=6fce01d4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,13 +59,13 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="User Guide" href="../guides/index.html" />
+    <link rel="next" title="Glossary" href="glossary.html" />
     <link rel="prev" title="Installation" href="installation.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev707+g82016a6ee" />
+  <meta name="docsearch:version" content="0.0.1.dev710+g22c06ef19" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -404,6 +404,7 @@
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Your First Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 </ul>
 </div>
 </nav></div>
@@ -606,8 +607,9 @@ found, so an empty table means nothing is in the way:</p>
 <span class="go">Index: []</span>
 </pre></div>
 </div>
-<p>The check looks for files, not inside them, so a run that passes it can
-still fail later, if a met file is damaged.</p>
+<p>The check reads only the headers of the met files, so a run that passes it
+can still fail later, if a met file is damaged in the middle
+(<a class="reference internal" href="../guides/checking.html"><span class="doc">Checking A Run</span></a>).</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">project</span><span class="o">.</span><span class="n">run</span><span class="p">();</span>
 </pre></div>
 </div>
@@ -695,9 +697,9 @@ prints <code class="docutils literal notranslate"><span class="pre">No</span> <s
 <section id="next-steps">
 <h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
 <ul class="simple">
+<li><p>Set up a project of your own, with variants: <a class="reference internal" href="../guides/projects.html"><span class="doc">Projects And Variants</span></a></p></li>
 <li><p>Understand the different release types: <a class="reference internal" href="../guides/releases.html"><span class="doc">Releases</span></a></p></li>
-<li><p>Every <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> option, and running a release under several
-variants: <a class="reference internal" href="../reference/configuration.html"><span class="doc">Configuration</span></a></p></li>
+<li><p>Read and plot the particles of many simulations: <a class="reference internal" href="../guides/particles.html"><span class="doc">Reading And Plotting Particles</span></a></p></li>
 <li><p>Run thousands of simulations on a cluster: <a class="reference internal" href="../guides/slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a></p></li>
 </ul>
 </section>
@@ -723,11 +725,11 @@ variants: <a class="reference internal" href="../reference/configuration.html"><
       </div>
     </a>
     <a class="right-next"
-       href="../guides/index.html"
+       href="glossary.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">User Guide</p>
+        <p class="prev-next-title">Glossary</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
