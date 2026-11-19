@@ -1,14 +1,27 @@
 """
-The GRIB files of a FLEXPART met: their valid times, and the ones a run needs.
+The GRIB files of a FLEXPART met: their valid times, the ones a run needs, and the fields in them.
 """
 
 from __future__ import annotations
 
 import datetime as dt
 import functools
+import os
+from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+import numpy as np
+import xarray as xr
 
 from runtraj.exceptions import MeteorologyError
+
+if TYPE_CHECKING:
+    from runtraj.spatial import Bounds
+
+#: Grid cells of met kept around the particles when GRIB files are opened for
+#: them: interpolation at a particle near the edge reads the cells beyond it.
+MARGIN_CELLS = 3
 
 
 def _first_message_keys(path: str | Path, keys: tuple[str, ...]) -> list:
@@ -129,4 +142,93 @@ def files_for(
     return {t: available[t] for t in chosen}
 
 
-__all__ = ["catalog", "files_for", "grib_grid", "grib_valid_time", "nxshift"]
+def open_gfs(
+    files: Iterable[str | os.PathLike[str]], bounds: Bounds | None = None
+) -> xr.Dataset:
+    """
+    Return GFS GRIB2 *files* as one Dataset in :func:`arlmet.open_dataset`'s layout, cropped to *bounds*.
+
+    Each file is opened with cfgrib and converted by
+    :func:`arlmet.converters.from_gfs`, which reads only the cells inside
+    *bounds* plus :data:`MARGIN_CELLS` cells on each side, so a global
+    0.25 degree file costs memory only for the region the particles are
+    in. ``None`` keeps the whole grid. The planetary boundary layer height
+    (``HPBL``, NCEP's own parameter) is opened from each file on its own
+    and comes through as ``PBLH``; a file without it has no ``PBLH``.
+
+    Notes
+    -----
+    cfgrib writes an index file (``.idx``) beside each GRIB file the first
+    time it opens it, and reads it on later opens; without it, every open
+    reads the whole file again. Where the directory is not writable cfgrib
+    warns and goes on without one.
+
+    Raises
+    ------
+    ImportError
+        If cfgrib is not installed (the ``flexpart`` extra).
+    ValueError
+        If *bounds* holds no cell of the files' grid.
+    """
+    try:
+        import cfgrib
+        from arlmet.converters import GFS_HPBL, from_gfs
+    except ImportError as err:
+        raise ImportError(
+            "Opening GRIB met for the particles needs cfgrib: "
+            'pip install "runtraj[flexpart]"'
+        ) from err
+    hpbl = {"filter_by_keys": GFS_HPBL, "read_keys": list(GFS_HPBL)}
+    datasets = []
+    for path in files:
+        datasets.extend(cfgrib.open_datasets(str(path)))
+        # HPBL opened on its own: in a forecast file it shares a level with
+        # another field ecCodes has no name for, and open_datasets keeps one.
+        boundary_layer = xr.open_dataset(path, engine="cfgrib", backend_kwargs=hpbl)
+        if boundary_layer.data_vars:
+            datasets.append(boundary_layer)
+    if not datasets:
+        raise ValueError("No GRIB files to open.")
+    bbox = None
+    if bounds is not None:
+        bbox = _bbox(bounds, _cell_size(datasets[0]))
+    return from_gfs(datasets, bbox=bbox)
+
+
+def _cell_size(ds: xr.Dataset) -> float:
+    """Return the larger of the grid's latitude and longitude spacings, in degrees."""
+    steps = [
+        float(np.abs(np.diff(ds[name].values[:2])).max(initial=0.0))
+        for name in ("latitude", "longitude")
+        if ds[name].size > 1
+    ]
+    return max(steps, default=0.0)
+
+
+def _bbox(bounds: Bounds, cell: float) -> tuple[float, float, float, float]:
+    """
+    Return *bounds* widened by :data:`MARGIN_CELLS` cells of size *cell*, as ``(west, south, east, north)``.
+
+    A box that would go round the earth is the whole circle of longitudes,
+    and the latitudes stop at the poles.
+    """
+    margin = MARGIN_CELLS * cell
+    width = (bounds.xmax - bounds.xmin) % 360.0
+    if bounds.xmax - bounds.xmin >= 360.0 or width + 2 * margin >= 360.0:
+        west, east = 0.0, 360.0
+    else:
+        west, east = bounds.xmin - margin, bounds.xmax + margin
+    south = max(bounds.ymin - margin, -90.0)
+    north = min(bounds.ymax + margin, 90.0)
+    return (west, south, east, north)
+
+
+__all__ = [
+    "MARGIN_CELLS",
+    "catalog",
+    "files_for",
+    "grib_grid",
+    "grib_valid_time",
+    "nxshift",
+    "open_gfs",
+]
