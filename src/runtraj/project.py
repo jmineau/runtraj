@@ -109,27 +109,6 @@ def _groups(frame: pd.DataFrame) -> Iterator[tuple[str, int | None, pd.DataFrame
         yield str(name), _realization(k), rows
 
 
-def _one_group(frame: pd.DataFrame, what: str) -> tuple[str, int | None]:
-    """Return the one ``(variant, realization)`` of a selection, or raise."""
-    groups = list(dict.fromkeys((v, k) for _, v, k in _rows(frame)))
-    variants = list(dict.fromkeys(v for v, _ in groups))
-    if len(variants) == 1 and len(groups) > 1:
-        realizations = [k for _, k in groups]
-        raise ValueError(
-            f"{what} is made from one realization of an ensemble; this "
-            f"selection holds realizations {realizations} of {variants[0]!r}. "
-            "Pick one with the realization column, as in "
-            f"ens[ens.realization == {realizations[0]}]."
-        )
-    if len(groups) != 1:
-        raise ValueError(
-            f"{what} is made from one variant (and one realization of an "
-            f"ensemble); this selection has {groups}. Select one first, as in "
-            "sims[sims.variant == 'hrrr']."
-        )
-    return groups[0]
-
-
 def _is_mask(sel: Any) -> bool:
     """Return whether *sel* is a boolean mask (a Series, an array, or a list of booleans)."""
     if isinstance(sel, (pd.Series, np.ndarray)):
