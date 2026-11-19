@@ -13,6 +13,7 @@ from runtraj.spatial import Grid
 from tests.fixtures.factories import blocks
 
 from .fixtures.factories import make_hysplit_dir, make_met_config
+from .fixtures.runs import FakeRuns
 
 # ---------------------------------------------------------------------------
 # Marker - apply to every test that needs real met + HYSPLIT
@@ -230,6 +231,14 @@ def model_config(tmp_path, met_config):
             n_hours=-24, numpar=100, mets={"hrrr": met_config}, variants={"hrrr": {}}
         )
     )
+
+
+@pytest.fixture
+def transport_runs(monkeypatch) -> FakeRuns:
+    """Replace the transport model run with :class:`~tests.fixtures.runs.FakeRuns`, and return it."""
+    runs = FakeRuns()
+    monkeypatch.setattr("runtraj.execution.worker.run_model", runs)
+    return runs
 
 
 @pytest.fixture

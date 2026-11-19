@@ -1,8 +1,10 @@
 """Tests for runtraj.cli - Typer command-line interface."""
 
+import datetime as dt
 import errno
 import ftplib
 import io
+import json
 import os
 import socket
 import subprocess
@@ -13,10 +15,18 @@ import pandas as pd
 import pytest
 from typer.testing import CliRunner
 
+from runtraj import Project
 from runtraj._transient import is_transient
-from runtraj.cli import _resolve_project
+from runtraj.cli import _resolve_project, app
+from runtraj.exceptions import WorkerDied
 
-from .fixtures.factories import make_project_config
+from .fixtures.factories import (
+    make_met_config,
+    make_met_files,
+    make_project_config,
+    make_release,
+)
+from .fixtures.stages import chain
 
 runner = CliRunner()
 
@@ -41,6 +51,49 @@ def _write_minimal_config(tmp_path):
     (tmp_path / "releases.csv").write_text(
         "time,longitude,latitude,altitude\n2023-01-01 12:00:00,-111.85,40.77,5.0\n"
     )
+
+
+NOON = dt.datetime(2023, 1, 1, 12)
+
+
+def _release(hour: int = 12):
+    return make_release(NOON.replace(hour=hour))
+
+
+def _project(
+    tmp_path, releases=None, *, met_files: bool = False, **settings
+) -> Project:
+    """
+    Make a project of particles only, of runs of 3 h, with its output in ``tmp_path / "out"``.
+
+    With *met_files*, the met holds the files a run from noon needs.
+    """
+    met_dir = tmp_path / "met"
+    met = make_met_config(met_dir)
+    if met_files:
+        make_met_files(met_dir, NOON, -3)
+    settings.setdefault("variants", {"hrrr": {}})
+    return Project.init(
+        tmp_path / "proj",
+        [_release(12), _release(13)] if releases is None else releases,
+        mets={"hrrr": met},
+        models={"hysplit": {"n_hours": -3}},
+        output=str(tmp_path / "out"),
+        execution={"slurm": {"time": "01:00:00"}},
+        **settings,
+    )
+
+
+def _invoke(*args, project: Project | None = None):
+    """Run ``runtraj <command> [<project>] <options>`` in this process; *args* are the command, then its options."""
+    where = [] if project is None else [str(project.directory)]
+    return runner.invoke(app, [*map(str, args[:1]), *where, *map(str, args[1:])])
+
+
+def _run(project: Project, *args):
+    """Run ``runtraj run`` on *project*, with a compute root beside it."""
+    root = project.directory.parent / "compute"
+    return _invoke("run", "--compute-root", root, *args, project=project)
 
 
 class _Calls(list):
@@ -94,14 +147,496 @@ def test_resolve_project_returns_path_when_config_exists(tmp_path):
 # ---------------------------------------------------------------------------
 
 
+def test_status_counts_the_simulations_and_lists_no_folders_yet(tmp_path):
+    project = _project(tmp_path)
+
+    result = _invoke("status", project=project)
+
+    assert result.exit_code == 0, result.output
+    lines = result.output.splitlines()
+    assert lines[0] == (
+        f"Project: {project.directory}  total=2  complete=0  failed=0  "
+        "interrupted=0  pending=2"
+    )
+    assert lines[1] == f"Output: {tmp_path / 'out'}"
+    assert lines[2] == "  no settings folders yet"
+
+
+def test_status_counts_each_variant_and_the_failures_by_reason(
+    tmp_path, transport_runs
+):
+    project = _project(tmp_path, variants={"hrrr": {}, "long": {"n_hours": -6}})
+    transport_runs.fail[_release(13).id] = "MET_COVERAGE"
+    _run(project)
+
+    result = _invoke("status", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert "total=4  complete=2  failed=2  interrupted=0  pending=0" in result.output
+    assert "  hrrr: total=2  complete=1  failed=1" in result.output
+    assert "  long: total=2  complete=1  failed=1" in result.output
+    assert "failed: MET_COVERAGE 2  (why: each one's .failure.yaml, under " in (
+        result.output
+    )
+    folders = [line for line in result.output.splitlines() if "settings=" in line]
+    assert len(folders) == 2
+    assert all(line.startswith("  particles  settings=") for line in folders)
+    assert all("1 file" in line for line in folders)
+
+
+def test_status_as_json(tmp_path, transport_runs):
+    project = _project(tmp_path)
+    transport_runs.fail[_release(13).id] = "MET_COVERAGE"
+    _run(project)
+
+    result = _invoke("status", "--json", project=project)
+
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    counts = {"total": 2, "complete": 1, "failed": 1, "interrupted": 0, "pending": 0}
+    assert data["project"] == str(project.directory)
+    assert data["output"] == str(tmp_path / "out")
+    assert data["simulations"] == counts
+    assert data["variants"] == {"hrrr": counts}
+    assert data["failed"] == {"MET_COVERAGE": 1}
+    [folder] = data["folders"]
+    assert folder["kind"] == "particles"
+    assert folder["folder"].startswith("hrrr-")
+    assert folder["name"] == "hrrr"
+    assert folder["files"] == 1
+    assert folder["variants"] == ["hrrr"]
+    assert folder["differs"] == ""
+
+
+def test_status_lists_a_folder_no_variant_uses_apart(tmp_path, transport_runs):
+    project = _project(tmp_path)
+    _run(project)
+    text = project.config_path.read_text().replace("n_hours: -3", "n_hours: -6")
+    project.config_path.write_text(text)
+
+    result = _invoke("status", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert "pending=2" in result.output
+    assert "  Used by this project: none yet" in result.output
+    assert "  Not used by this project (changed settings" in result.output
+    [folder] = [line for line in result.output.splitlines() if "settings=" in line]
+    assert folder.startswith("    particles  settings=hrrr-")
+    assert "n_hours" in folder
+
+
+def test_status_of_a_directory_that_is_not_a_project_exits_2(tmp_path):
+    result = _invoke("status", tmp_path)
+
+    assert result.exit_code == 2
+    assert "does not look like a project directory" in result.output
+
+
+def test_status_of_a_project_with_a_bad_release_row_exits_2(tmp_path):
+    project = _project(tmp_path)
+    project.releases_path.write_text(
+        "time,longitude,latitude,altitude\nnot a time,-111.85,40.77,5\n"
+    )
+
+    result = _invoke("status", project=project)
+
+    assert result.exit_code == 2
+    assert result.output.startswith("Error: ")
+    assert "Traceback" not in result.output
+
+
+def test_status_without_the_met_counts_pending_until_there_are_results(
+    tmp_path, transport_runs
+):
+    project = _project(tmp_path)
+    for path in (tmp_path / "met").iterdir():
+        path.unlink()
+
+    before = _invoke("status", project=project)
+
+    assert before.exit_code == 0, before.output
+    assert "pending=2" in before.output
+
+    make_met_config(tmp_path / "met")
+    _run(project)
+    for path in (tmp_path / "met").iterdir():
+        path.unlink()
+
+    after = _invoke("status", project=project)
+
+    assert after.exit_code == 2
+    assert after.output.startswith("Error: ")
+
+
 # ---------------------------------------------------------------------------
 # check command
 # ---------------------------------------------------------------------------
 
 
+def test_check_with_nothing_to_find_exits_0(tmp_path):
+    project = _project(tmp_path, [_release(12)], met_files=True)
+
+    result = _invoke("check", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines() == [
+        f"Project: {project.directory}  releases=1",
+        "Variants: hrrr (met hrrr, particles only)",
+        "No problems found.",
+    ]
+
+
+def test_check_names_the_stages_of_each_variant(tmp_path):
+    project = _project(tmp_path, [_release(12)], met_files=True, stages=chain())
+
+    result = _invoke("check", project=project)
+
+    assert "Variants: hrrr (met hrrr, count, double)" in result.output
+
+
+def test_check_lists_what_it_finds_as_a_table_and_exits_1(tmp_path):
+    project = _project(tmp_path, [_release(12), _release(16)], met_files=True)
+
+    result = _invoke("check", project=project)
+
+    assert result.exit_code == 1, result.output
+    lines = result.output.splitlines()
+    header = next(line for line in lines if line.startswith("check"))
+    assert header.split() == ["check", "variant", "release", "message"]
+    [row] = [line for line in lines if line.startswith("met_files")]
+    assert row.split()[1:3] == ["hrrr", _release(16).id]
+    assert lines[-1] == "Found 1 problem: met_files 1"
+
+
+def test_check_shows_ten_rows_of_a_check_and_counts_the_rest(tmp_path):
+    # The next day: none has its met files.
+    releases = [make_release(dt.datetime(2023, 1, 2, h)) for h in range(11)]
+    project = _project(tmp_path, releases, met_files=True)
+
+    result = _invoke("check", project=project)
+
+    assert result.exit_code == 1
+    rows = [line for line in result.output.splitlines() if line.startswith("met_files")]
+    assert len(rows) == 11
+    assert rows[-1].endswith("... 1 more (project.check() lists them all)")
+    assert result.output.rstrip().endswith("Found 11 problems: met_files 11")
+
+
+def test_check_of_a_project_with_an_invalid_config_exits_2(tmp_path):
+    project = _project(tmp_path)
+    project.config_path.write_text("mets: [\n")
+
+    result = _invoke("check", project=project)
+
+    assert result.exit_code == 2
+    assert "not valid YAML" in result.output
+
+
+# ---------------------------------------------------------------------------
+# fetch command
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_with_every_met_file_there_exits_0(tmp_path):
+    project = _project(tmp_path, [_release(12)], met_files=True)
+
+    result = _invoke("fetch", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines() == [
+        f"Project: {project.directory}  releases=1",
+        "Met hrrr: 4 files ready",
+    ]
+
+
+def test_fetch_lists_the_times_whose_files_are_missing_and_exits_1(tmp_path):
+    project = _project(tmp_path, [_release(12), _release(18)], met_files=True)
+
+    result = _invoke("fetch", project=project)
+
+    assert result.exit_code == 1, result.output
+    assert "Met hrrr: could not get the files for these times:" in result.output
+    assert "2023-01-01 15:00" in result.output
+
+
+def test_fetch_for_a_project_that_is_done_needs_nothing(tmp_path, transport_runs):
+    project = _project(tmp_path, [_release(18)])
+    _run(project)
+
+    result = _invoke("fetch", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert "No unfinished simulation needs met files." in result.output
+
+
+def test_fetch_for_the_releases_in_a_file(tmp_path):
+    project = _project(tmp_path, [_release(12), _release(18)], met_files=True)
+    ids = tmp_path / "ids.txt"
+    ids.write_text(f"{_release(12).id}\n")
+
+    result = _invoke("fetch", "--releases", ids, project=project)
+
+    assert result.exit_code == 0, result.output
+    assert f"Project: {project.directory}  releases=1" in result.output
+
+
+def test_fetch_for_a_release_the_project_does_not_have_exits_2(tmp_path):
+    project = _project(tmp_path, met_files=True)
+    ids = tmp_path / "ids.txt"
+    ids.write_text("nope\n")
+
+    result = _invoke("fetch", "--releases", ids, project=project)
+
+    assert result.exit_code == 2
+    assert f"Error: {ids}: " in result.output
+
+
 # ---------------------------------------------------------------------------
 # run command
 # ---------------------------------------------------------------------------
+
+
+def test_run_says_what_it_will_do_runs_here_and_exits_0(tmp_path, transport_runs):
+    project = _project(tmp_path)
+
+    result = _run(project)
+
+    assert result.exit_code == 0, result.output
+    assert transport_runs.ran == [_release(12).id, _release(13).id]
+    lines = result.output.splitlines()
+    assert lines[:6] == [
+        f"Starting run: project={project.directory}  backend=local  tasks=1  "
+        "cpus=1  skip=existing",
+        f"Output: {tmp_path / 'out'}",
+        f"Compute root: {tmp_path / 'compute'}",
+        "Releases loaded: 2",
+        "Variants: hrrr",
+        "Running here, one line per release as it finishes",
+    ]
+    assert lines[-1] == (
+        f"Project: {project.directory}  total=2  complete=2  failed=0  "
+        "interrupted=0  pending=0"
+    )
+
+
+def test_run_with_a_failed_simulation_exits_1(tmp_path, transport_runs):
+    project = _project(tmp_path)
+    transport_runs.fail[_release(13).id] = "MET_COVERAGE"
+
+    result = _run(project)
+
+    assert result.exit_code == 1, result.output
+    assert "complete=1  failed=1" in result.output
+    assert "failed: MET_COVERAGE 1" in result.output
+
+
+def test_run_skips_what_is_complete_unless_no_skip(tmp_path, transport_runs):
+    project = _project(tmp_path)
+    _run(project)
+
+    again = _run(project)
+    no_skip = _run(project, "--no-skip")
+
+    assert again.exit_code == 0 and no_skip.exit_code == 0
+    assert "skip=no-skip" in no_skip.output
+    assert len(transport_runs.ran) == 4
+
+
+def test_run_only_the_releases_listed_in_a_file(tmp_path, transport_runs):
+    project = _project(tmp_path)
+    ids = tmp_path / "ids.txt"
+    ids.write_text(f"# the second release\n\n{_release(13).id}\n")
+
+    result = _run(project, "--releases", ids)
+
+    assert result.exit_code == 0, result.output
+    assert transport_runs.ran == [_release(13).id]
+    assert "Releases listed: 1" in result.output
+    assert result.output.splitlines()[-1].startswith("This run:  total=1  complete=1")
+
+
+def test_run_the_releases_of_a_submission(tmp_path, transport_runs):
+    """A Slurm task reads the rows of its submission's releases, not releases.csv."""
+    project = _project(tmp_path)
+    rows = tmp_path / "releases.parquet"
+    project._rows_of([_release(13).id]).to_parquet(rows, index=False)
+    project.releases_path.write_text("not, a, releases file\n")
+
+    result = _run(project, "--releases", rows)
+
+    assert result.exit_code == 0, result.output
+    assert transport_runs.ran == [_release(13).id]
+    assert "Releases loaded: 1" in result.output
+
+
+def test_run_one_task_of_a_job_array(tmp_path, transport_runs):
+    project = _project(tmp_path, [_release(h) for h in (12, 13, 14)])
+
+    result = _run(project, "--task", "1/2", "--backend", "local")
+
+    assert result.exit_code == 0, result.output
+    assert transport_runs.ran == [_release(13).id]
+    assert "task 1 of 2  cpus=1" in result.output
+    assert "Releases of this task: 1, 3, 5, ..." in result.output
+
+
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [
+        (["--task", "two/four"], "--task takes I/N"),
+        (["--task", "2/2"], "--task I/N needs 0 <= I < N"),
+        (["--task", "0/2", "--backend", "slurm"], "drop --backend slurm"),
+        (["--releases", "missing.txt"], "cannot read missing.txt"),
+        (["--execution", "missing.yaml"], "cannot read missing.yaml"),
+        (["--cpus", "0"], "execution.local.cpus: "),
+    ],
+)
+def test_run_with_a_wrong_command_line_exits_2_and_runs_nothing(
+    tmp_path, transport_runs, monkeypatch, args, message
+):
+    project = _project(tmp_path)
+    monkeypatch.chdir(tmp_path)
+
+    result = _run(project, *args)
+
+    assert result.exit_code == 2
+    assert "Error: " in result.output
+    assert message in result.output
+    assert transport_runs.ran == []
+
+
+def test_run_of_a_release_the_project_does_not_have_exits_2(tmp_path, transport_runs):
+    project = _project(tmp_path)
+    ids = tmp_path / "ids.txt"
+    ids.write_text("nope\n")
+
+    result = _run(project, "--releases", ids)
+
+    assert result.exit_code == 2
+    assert result.output.splitlines()[-1].startswith("Error: ")
+    assert transport_runs.ran == []
+
+
+def test_run_takes_its_execution_settings_from_a_file(tmp_path, calls):
+    project = _project(tmp_path)
+    settings = tmp_path / "execution.yaml"
+    settings.write_text("local:\n  cpus: 3\ntimeout: 60\n")
+    calls.states = ["complete"]
+
+    result = _run(project, "--execution", settings)
+
+    assert result.exit_code == 0, result.output
+    [(_, options)] = calls
+    assert options["execution"].local.cpus == 3
+    assert options["execution"].timeout == 60
+    assert "cpus=3" in result.output
+
+
+@pytest.mark.parametrize(
+    ("states", "code"),
+    [
+        (["complete", "complete"], 0),
+        (["complete", "failed"], 1),
+        (["failed", "interrupted"], 3),
+        (["complete", "pending"], 3),
+    ],
+)
+def test_run_exits_with_the_code_of_what_it_ran(tmp_path, calls, states, code):
+    project = _project(tmp_path)
+    calls.states = states
+    ids = tmp_path / "ids.txt"
+    ids.write_text(f"{_release(12).id}\n")
+
+    result = _run(project, "--releases", ids)
+
+    assert result.exit_code == code, result.output
+
+
+def test_run_whose_worker_died_exits_3(tmp_path, monkeypatch):
+    project = _project(tmp_path)
+
+    def died(self, **kwargs):
+        raise WorkerDied("a worker was killed")
+
+    monkeypatch.setattr("runtraj.cli.Project.run", died)
+
+    result = _run(project)
+
+    assert result.exit_code == 3
+    assert "runtraj run stopped: a worker was killed" in result.output
+
+
+@pytest.mark.parametrize(
+    ("error", "code", "said"),
+    [
+        (KeyboardInterrupt(), 3, "Interrupted."),
+        (ConnectionResetError("reset"), 3, "runtraj exits with 3"),
+        (RuntimeError("a bug"), 4, "runtraj exits with 4"),
+    ],
+)
+def test_run_ends_an_error_it_did_not_expect_in_an_exit_code(
+    tmp_path, monkeypatch, error, code, said
+):
+    project = _project(tmp_path)
+
+    def raises(self, **kwargs):
+        raise error
+
+    monkeypatch.setattr("runtraj.cli.Project.run", raises)
+
+    result = _run(project)
+
+    assert result.exit_code == code
+    assert said in result.output
+
+
+def test_run_on_slurm_submits_and_waits(tmp_path, calls):
+    project = _project(tmp_path)
+    calls.states = ["complete", "complete"]
+
+    result = _run(project, "--backend", "slurm", "--n-workers", "4", "--cpus", "2")
+
+    assert result.exit_code == 0, result.output
+    [(_, options)] = calls
+    execution = options["execution"]
+    assert execution.backend == "slurm"
+    assert (execution.slurm.n_workers, execution.slurm.cpus) == (4, 2)
+    assert "backend=slurm  tasks=4  cpus=2" in result.output
+    assert "Submitting to Slurm and waiting for the job to finish" in result.output
+
+
+# ---------------------------------------------------------------------------
+# submit command
+# ---------------------------------------------------------------------------
+
+
+def test_submit_sends_a_job_array_and_returns(tmp_path, calls):
+    project = _project(tmp_path)
+
+    result = _invoke("submit", "--n-workers", "3", project=project)
+
+    assert result.exit_code == 0, result.output
+    [(what, options)] = calls
+    assert what == "submit"
+    assert options["execution"].backend == "slurm"
+    assert options["execution"].slurm.n_workers == 3
+    assert options["compute_root"] is None
+    assert "Compute root: each task's own $TMPDIR (or RUNTRAJ_COMPUTE_ROOT)" in (
+        result.output
+    )
+    assert "Submitting to Slurm and returning" in result.output
+    assert result.output.splitlines()[-1] == "Submitted job: 12345"
+
+
+def test_submit_with_nothing_to_do_prints_the_status(tmp_path, monkeypatch):
+    project = _project(tmp_path)
+    monkeypatch.setattr("runtraj.cli.Project.submit", lambda self, **kwargs: None)
+
+    result = _invoke("submit", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[-1].startswith(f"Project: {project.directory}")
+    assert "Submitted job" not in result.output
 
 
 # ---------------------------------------------------------------------------
