@@ -27,6 +27,7 @@ classifiers = [
 ]
 dependencies = [
     "arlmet>=0.1.0b12",
+    "fsspec>=2024.5.0",  # universal-pathlib's own floor; a Kubernetes Job's inputs are copied with it
     "numpy>=1.26",  # cartopy 0.26 needs it
     "pandas>=2.1",  # xarray 2024.10 needs it
     "pyarrow>=14.0",
@@ -171,6 +172,7 @@ name = "The project config reads no results and runs nothing"
 type = "forbidden"
 source_modules = ["runtraj.config"]
 forbidden_modules = [
+    "runtraj.execution.kubernetes",
     "runtraj.execution.runner",
     "runtraj.execution.worker",
     "runtraj.output",

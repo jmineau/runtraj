@@ -249,8 +249,10 @@ def test_each_backends_settings_are_in_its_own_block():
     [
         (
             {"cpus": 4},
-            "execution: local: or execution: slurm:, for the backend it is for.",
+            "execution: local:, execution: slurm: or execution: kubernetes:, "
+            "for the backend it is for.",
         ),
+        ({"completions": 4}, "execution: kubernetes:."),
         ({"n_workers": 8}, "execution: slurm:."),
         ({"time": "02:00:00"}, "execution: slurm:."),
         ({"partition": "compute"}, "execution: slurm:."),

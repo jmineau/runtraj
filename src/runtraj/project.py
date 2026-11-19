@@ -1068,11 +1068,11 @@ class Project:
         releases: Iterable[str] | None = None,
     ) -> str | None:
         """
-        Submit every simulation that has not finished to Slurm, and return at once.
+        Submit every simulation that has not finished to Slurm or Kubernetes, and return at once.
 
         Shorthand for :func:`runtraj.execution.submit`, which documents the
-        parameters. Returns the Slurm job id, or ``None`` when nothing needs
-        to run.
+        parameters. Returns the Slurm job id or the Kubernetes Job's name,
+        or ``None`` when nothing needs to run.
         """
         from runtraj.execution import submit
 

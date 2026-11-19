@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import re
 from typing import Any, Literal, Self
 
 from pydantic import (
@@ -205,6 +206,187 @@ class SlurmConfig(BaseModel):
         return dict(self.model_extra or {})
 
 
+#: A Kubernetes memory quantity in its binary units: ``512Mi``, ``8Gi``, ``1.5Ti``.
+_K8S_MEMORY = r"\d+(\.\d+)?(Ki|Mi|Gi|Ti|Pi|Ei)"
+
+
+class Volume(BaseModel):
+    """
+    A PersistentVolumeClaim mounted in every pod: one entry of ``volumes`` in the ``kubernetes`` block.
+
+    Examples
+    --------
+    >>> Volume(claim_name="hrrr-arl", mount_path="/met", read_only=True).mount_path
+    '/met'
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    claim_name: str = Field(..., description="Name of the PersistentVolumeClaim.")
+    mount_path: str = Field(
+        ...,
+        pattern=r"^/",
+        description="Where the volume is mounted in each pod, an absolute path.",
+    )
+    read_only: bool = Field(
+        False,
+        description=("Mount it read-only, as for a met archive the pods only read."),
+    )
+
+
+class KubernetesConfig(BaseModel):
+    """
+    The Kubernetes indexed Job a project's releases run as: the ``kubernetes`` block of ``execution``.
+
+    The releases are split among ``completions`` tasks, each a pod that
+    runs ``cpus`` of them at once. The settings use Kubernetes' own names
+    and units. ``image`` is required: runtraj publishes no image, since an
+    image has to carry the transport model (HYSPLIT's ``hycs_std``) and the
+    stages a project names.
+
+    Examples
+    --------
+    >>> config = KubernetesConfig(
+    ...     image="registry.example.org/runtraj-hysplit:1",
+    ...     completions=20,
+    ...     memory="8Gi",
+    ...     volumes=[
+    ...         {"claim_name": "hrrr-arl", "mount_path": "/met", "read_only": True}
+    ...     ],
+    ... )
+    >>> config.completions, config.volumes[0].claim_name
+    (20, 'hrrr-arl')
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    image: str | None = Field(
+        None,
+        description=(
+            "Container image of the pods, with runtraj, the transport model and "
+            "the project's stages. Required with ``backend: kubernetes``."
+        ),
+    )
+    completions: int = Field(
+        1,
+        ge=1,
+        description="Number of tasks (pods to complete), which the releases are split evenly among.",
+    )
+    parallelism: int | None = Field(
+        None,
+        ge=1,
+        description="Most pods running at once. Unset runs every task at once.",
+    )
+    cpus: int = Field(
+        1,
+        ge=1,
+        description="Releases each pod runs at once, and the CPUs each pod requests.",
+    )
+    memory: str | None = Field(
+        None,
+        description=(
+            "Memory each pod requests, and its limit, in Kubernetes' binary "
+            "units such as ``8Gi`` or ``512Mi``."
+        ),
+    )
+    namespace: str | None = Field(
+        None, description="Namespace of the Job. Unset is ``kubectl``'s current one."
+    )
+    inputs: str | None = Field(
+        None,
+        description=(
+            "Bucket URL the project's inputs (``config.yaml``, ``releases.csv``, "
+            "``tables/``) are copied to at submit, such as "
+            "``s3://bucket/projects/my_project``; each pod copies them back. "
+            "Unset, the pods open the project folder at the path it has here, "
+            "so it must be on a volume they mount at that path."
+        ),
+    )
+    volumes: list[Volume] = Field(
+        default_factory=list,
+        description=(
+            "PersistentVolumeClaims mounted in every pod (:class:`Volume`), "
+            "such as the met archive."
+        ),
+    )
+    secrets: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Secrets whose keys become each pod's environment variables, such "
+            "as a bucket's credentials."
+        ),
+    )
+    service_account: str | None = Field(
+        None,
+        description=(
+            "Service account of the pods, on a cluster that grants bucket "
+            "access through one."
+        ),
+    )
+    active_deadline_seconds: int | None = Field(
+        None,
+        ge=1,
+        description=(
+            "Seconds the whole Job may run before Kubernetes stops it. Unset "
+            "lets it run as long as its simulations take."
+        ),
+    )
+
+    @field_validator("memory")
+    @classmethod
+    def _kubernetes_memory(cls, value: str | None) -> str | None:
+        """Refuse a size that is not in Kubernetes' binary units, such as Slurm's ``8G``."""
+        if value is None or re.fullmatch(_K8S_MEMORY, value):
+            return value
+        slurm = re.fullmatch(r"(\d+(\.\d+)?)\s*([KMGT])B?", value, flags=re.I)
+        hint = (
+            f" Did you mean {slurm.group(1)}{slurm.group(3).upper()}i?" if slurm else ""
+        )
+        raise ValueError(
+            f"memory {value!r} is not a Kubernetes size such as 8Gi or 512Mi "
+            f"(Kubernetes reads 8G as 8 * 1000**3 bytes and 8m as 0.008).{hint}"
+        )
+
+    @field_validator("inputs")
+    @classmethod
+    def _a_whole_url(cls, value: str | None) -> str | None:
+        """Refuse a URL typed with one slash, such as ``s3:/bucket``."""
+        if value is not None:
+            check_url(value)
+        return value
+
+
+def check_url(location: str) -> None:
+    """
+    Refuse a URL typed without its two slashes, such as ``s3:/bucket``.
+
+    fsspec reads ``s3:/bucket/projects/my_project`` as a path on this
+    machine, so copying there would make a folder ``s3:`` here and look
+    like it worked. A path and a whole URL pass.
+
+    Raises
+    ------
+    ValueError
+        If *location* starts like a URL (``s3:``, ``gs:``) with fewer than two
+        slashes after the colon.
+
+    Examples
+    --------
+    >>> check_url("s3://bucket/projects/my_project")
+    >>> check_url("s3:/bucket/projects/my_project")
+    Traceback (most recent call last):
+    ...
+    ValueError: 's3:/bucket/projects/my_project' is not a URL; did you mean 's3://bucket/projects/my_project'?
+    """
+    match = re.fullmatch(r"([A-Za-z][A-Za-z0-9+.-]+):(?!//)/?(.*)", location, re.S)
+    if match is None or match.group(1).lower() == "file":
+        return
+    scheme, rest = match.groups()
+    raise ValueError(
+        f"{location!r} is not a URL; did you mean {f'{scheme}://{rest}'!r}?"
+    )
+
+
 class ExecutionConfig(BaseModel):
     """
     Where a project's releases run, and with what resources.
@@ -213,8 +395,10 @@ class ExecutionConfig(BaseModel):
     block of its name. With ``backend: local`` the releases run on this
     machine as one task (:class:`LocalConfig`). With ``backend: slurm``
     they are split among the tasks of one Slurm job array
-    (:class:`SlurmConfig`). Only the block ``backend`` names is read, so a
-    config can hold both and be run either way. ``timeout`` and
+    (:class:`SlurmConfig`), and with ``backend: kubernetes`` among the pods
+    of one indexed Job (:class:`KubernetesConfig`). Only the block
+    ``backend`` names is read, so a config can hold several and be run
+    either way. ``timeout`` and
     ``keep_workdir`` apply wherever a run happens. None of these settings
     change a result.
 
@@ -231,9 +415,12 @@ class ExecutionConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    backend: Literal["local", "slurm"] = Field(
+    backend: Literal["local", "slurm", "kubernetes"] = Field(
         "local",
-        description="Where to run: on this machine (``local``) or as a Slurm job array (``slurm``).",
+        description=(
+            "Where to run: on this machine (``local``), as a Slurm job array "
+            "(``slurm``), or as a Kubernetes indexed Job (``kubernetes``)."
+        ),
     )
     local: LocalConfig = Field(
         default_factory=LocalConfig,
@@ -244,6 +431,13 @@ class ExecutionConfig(BaseModel):
         description=(
             "The job array of a Slurm run (:class:`SlurmConfig`), and any "
             "other ``sbatch`` option by name. Read with ``backend: slurm``."
+        ),
+    )
+    kubernetes: KubernetesConfig = Field(
+        default_factory=KubernetesConfig,
+        description=(
+            "The indexed Job of a Kubernetes run (:class:`KubernetesConfig`). "
+            "Read with ``backend: kubernetes``."
         ),
     )
     timeout: int | None = Field(
@@ -275,11 +469,18 @@ class ExecutionConfig(BaseModel):
                     continue
                 blocks = [
                     name
-                    for name, block in (("local", LocalConfig), ("slurm", SlurmConfig))
+                    for name, block in (
+                        ("local", LocalConfig),
+                        ("slurm", SlurmConfig),
+                        ("kubernetes", KubernetesConfig),
+                    )
                     if key in block.model_fields
                 ]
                 if blocks:
-                    where = " or ".join(f"execution: {name}:" for name in blocks)
+                    names = [f"execution: {name}:" for name in blocks]
+                    where = " or ".join(
+                        [", ".join(names[:-1]), names[-1]] if len(names) > 2 else names
+                    )
                     raise ValueError(
                         f"{key!r} is a setting of a backend. Write it under {where}"
                         + (", for the backend it is for." if len(blocks) > 1 else ".")
@@ -297,14 +498,32 @@ class ExecutionConfig(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def _kubernetes_needs_image(self) -> Self:
+        """Raise when a Kubernetes run names no image."""
+        if self.backend == "kubernetes" and self.kubernetes.image is None:
+            raise ValueError(
+                "execution.kubernetes.image is required with backend: kubernetes: "
+                "an image with runtraj, the transport model and the project's "
+                "stages (runtraj publishes none)."
+            )
+        return self
+
     @property
     def cpus(self) -> int:
         """Releases a task runs at once: ``cpus`` of the block ``backend`` names."""
-        return self.local.cpus if self.backend == "local" else self.slurm.cpus
+        return getattr(self, self.backend).cpus
 
     @property
     def fetch(self) -> bool | FetchConfig:
-        """Whether the met files are got first: ``fetch`` of the block ``backend`` names."""
+        """
+        Whether the met files are got first: ``fetch`` of the block ``backend`` names.
+
+        A Kubernetes Job has no fetch of its own; run ``runtraj fetch``
+        before it (:ref:`fetch-once`).
+        """
+        if self.backend == "kubernetes":
+            return False
         return self.local.fetch if self.backend == "local" else self.slurm.fetch
 
 
@@ -354,7 +573,10 @@ def slurm_minutes(time: str | int) -> int:
 __all__ = [
     "ExecutionConfig",
     "FetchConfig",
+    "KubernetesConfig",
     "LocalConfig",
     "SlurmConfig",
+    "Volume",
+    "check_url",
     "slurm_minutes",
 ]

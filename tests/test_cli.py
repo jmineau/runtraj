@@ -9,10 +9,12 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import urllib.error
 
 import pandas as pd
 import pytest
+import yaml
 from typer.testing import CliRunner
 
 from runtraj import Project
@@ -661,6 +663,96 @@ def test_submit_with_nothing_to_do_prints_the_status(tmp_path, monkeypatch):
     assert result.exit_code == 0, result.output
     assert result.output.splitlines()[-1].startswith(f"Project: {project.directory}")
     assert "Submitted job" not in result.output
+
+
+# ---------------------------------------------------------------------------
+# Kubernetes: submit, and a pod's run of a project on a bucket
+# ---------------------------------------------------------------------------
+
+
+def _on_kubernetes(project: Project) -> Project:
+    """Set *project*'s config.yaml to run on Kubernetes, and open it again."""
+    path = project.directory / "config.yaml"
+    settings = yaml.safe_load(path.read_text())
+    settings["execution"] = {
+        "backend": "kubernetes",
+        "kubernetes": {"image": "registry.example.org/runtraj:1", "completions": 5},
+    }
+    path.write_text(yaml.safe_dump(settings))
+    return Project(project.directory)
+
+
+def test_submit_makes_a_kubernetes_job_when_config_yaml_says_so(tmp_path, calls):
+    project = _on_kubernetes(_project(tmp_path))
+
+    result = _invoke("submit", "--cpus", "2", project=project)
+
+    assert result.exit_code == 0, result.output
+    [(what, options)] = calls
+    execution = options["execution"]
+    assert (what, execution.backend) == ("submit", "kubernetes")
+    assert execution.kubernetes.cpus == 2
+    assert "backend=kubernetes  tasks=5  cpus=2" in result.output
+    assert "Making a Kubernetes indexed Job and returning" in result.output
+
+
+def test_submit_backend_is_slurm_or_kubernetes(tmp_path, calls):
+    result = _invoke("submit", "--backend", "local", project=_project(tmp_path))
+    assert result.exit_code == 2
+    assert "slurm or kubernetes" in result.output
+
+
+def test_a_pod_runs_a_project_whose_inputs_are_on_a_bucket(
+    tmp_path, calls, monkeypatch
+):
+    from runtraj.execution.inputs import hash_inputs, push
+
+    project = _project(tmp_path)
+    url = "memory://cli-bucket/projects/proj"
+    push(project.directory, url)
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "pod-tmp"))
+
+    result = _invoke(
+        "run",
+        url,
+        "--task",
+        "1/2",
+        "--inputs-hash",
+        hash_inputs(project.directory),
+    )
+
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "pod-tmp" / "runtraj-inputs" / "proj" / "releases.csv").exists()
+    [(_, options)] = calls
+    assert options["task"] == (1, 2)
+
+
+def test_a_pod_refuses_inputs_changed_after_submit(tmp_path, calls):
+    project = _project(tmp_path)
+
+    result = _run(project, "--task", "0/1", "--inputs-hash", "not-the-hash")
+
+    assert result.exit_code == 2
+    assert "changed after the Job was submitted" in result.output
+    assert calls == []
+
+
+def test_a_bucket_that_cannot_be_read_exits_with_3(tmp_path, calls, monkeypatch):
+    def refused(url, directory):
+        raise ConnectionRefusedError("connection refused")
+
+    monkeypatch.setattr("runtraj.cli.pull", refused)
+
+    result = _invoke("run", "s3://bucket/projects/proj", "--task", "0/1")
+
+    assert result.exit_code == 3
+    assert "connection refused" in result.output
+
+
+def test_a_bucket_with_no_project_exits_with_2(tmp_path, calls):
+    result = _invoke("run", "memory://no-such-bucket/proj", "--task", "0/1")
+    assert result.exit_code == 2
+    assert "no config.yaml" in result.output
 
 
 # ---------------------------------------------------------------------------

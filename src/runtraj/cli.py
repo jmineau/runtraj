@@ -13,6 +13,7 @@ Examples::
     runtraj run --task 3/10             # run task 3 of 10 here (a job array's task)
     runtraj run --releases ids.txt     # run only the releases listed in ids.txt
     runtraj submit                      # submit a Slurm job array and return
+    runtraj submit --backend kubernetes # make a Kubernetes indexed Job and return
     runtraj status                      # count finished simulations; list the settings folders
 
 ``runtraj run`` exits with 0 when every simulation it ran is complete, 1 when
@@ -47,6 +48,7 @@ import json
 import logging
 import re
 import signal
+import tempfile
 import threading
 import traceback
 from collections import Counter
@@ -60,9 +62,11 @@ import yaml
 from pydantic import ValidationError
 from typer.core import TyperGroup
 
+from runtraj._paths import is_url
 from runtraj._transient import is_transient
 from runtraj.exceptions import MissingClass, WorkerDied
-from runtraj.execution.config import ExecutionConfig
+from runtraj.execution.config import ExecutionConfig, check_url
+from runtraj.execution.inputs import hash_inputs, pull
 from runtraj.execution.runner import pending, resolve_compute_root
 from runtraj.project import STATES, Project
 
@@ -267,7 +271,7 @@ def check(project: str | None = _PROJECT_ARG) -> None:
 _BACKEND = typer.Option(
     None,
     "--backend",
-    help="Where to run: local or slurm. Overrides execution.backend in config.yaml.",
+    help="Where to run: local, slurm or kubernetes. Overrides execution.backend in config.yaml.",
 )
 _N_WORKERS = typer.Option(
     None,
@@ -313,6 +317,43 @@ _TASK = typer.Option(
         "process whatever the backend."
     ),
 )
+
+
+_INPUTS_HASH = typer.Option(
+    None,
+    "--inputs-hash",
+    help=(
+        "Exit with 2 unless config.yaml and releases.csv hash to this, as "
+        "runtraj submit gives each pod of a Kubernetes Job: inputs changed "
+        "after submit would split the releases differently."
+    ),
+)
+
+
+def _local_inputs(project: str | None) -> str | None:
+    """
+    Return the project folder to open: *project*, or a copy of its inputs when it is a URL.
+
+    A URL's inputs (``config.yaml``, ``releases.csv``, ``tables/``) are
+    copied to ``$TMPDIR/runtraj-inputs/<name>``. Exits with 2 when there is
+    no project there, and with 3 when the URL cannot be read, which a retry
+    may get past.
+    """
+    if project is None or not is_url(project):
+        return project
+    try:
+        check_url(project)
+    except ValueError as error:
+        _fail(str(error))
+    name = project.rstrip("/").rsplit("/", 1)[-1]
+    directory = Path(tempfile.gettempdir()) / "runtraj-inputs" / name
+    try:
+        return str(pull(project, directory))
+    except FileNotFoundError as error:
+        _fail(str(error))
+    except OSError as error:
+        typer.echo(f"runtraj exits with 3: cannot copy the inputs: {error}", err=True)
+        raise typer.Exit(code=EXIT_INTERRUPTED) from None
 
 
 def _parse_task(task: str) -> tuple[int, int]:
@@ -532,6 +573,7 @@ def run(
     task: str | None = _TASK,
     execution: Path | None = _EXECUTION,
     output: str | None = _OUTPUT,
+    inputs_hash: str | None = _INPUTS_HASH,
 ) -> None:
     """
     Run every unfinished simulation in a project, and wait until they are done.
@@ -543,7 +585,9 @@ def run(
 
     --releases limits the run to the releases listed in a file. --task
     I/N runs one share of them here, for each task of a job array or a
-    Kubernetes indexed Job.
+    Kubernetes indexed Job. The project can be a URL its inputs were
+    copied to, such as s3://bucket/projects/my_project: they are copied to
+    this machine first, and a URL that cannot be read exits with 3.
 
     Exits with 0 when every simulation that ran is complete, 1 when some
     failed, 3 when some did not finish (the run was stopped, a worker process
@@ -558,6 +602,15 @@ def run(
     """
     release_ids, rows = (None, None) if releases is None else _read_releases(releases)
     share = None if task is None else _parse_task(task)
+    project = _local_inputs(project)
+    if inputs_hash is not None:
+        directory = _resolve_project(project)
+        if hash_inputs(directory) != inputs_hash:
+            _fail(
+                "config.yaml or releases.csv changed after the Job was "
+                "submitted, so this task's share of the releases may not "
+                "match the other tasks'. Submit again."
+            )
     opened, options = _start(
         project,
         backend=backend,
@@ -587,10 +640,31 @@ def run(
     raise typer.Exit(code=_exit_code(table))
 
 
+def _configured_backend(project: str | None) -> str | None:
+    """Return ``execution.backend`` as ``config.yaml`` writes it, or ``None``; the file is checked when the project opens."""
+    path = Path(_resolve_project(project)) / "config.yaml"
+    try:
+        settings = yaml.safe_load(path.read_text()) or {}
+        return settings.get("execution", {}).get("backend")
+    except (OSError, yaml.YAMLError, AttributeError):
+        return None
+
+
+_SUBMIT_BACKEND = typer.Option(
+    None,
+    "--backend",
+    help=(
+        "Where to submit: slurm or kubernetes. Defaults to execution.backend "
+        "in config.yaml when it is one of them, else slurm."
+    ),
+)
+
+
 @app.command()
 def submit(
     project: str | None = _PROJECT_ARG,
     no_skip: bool = _NO_SKIP,
+    backend: str | None = _SUBMIT_BACKEND,
     n_workers: int | None = _N_WORKERS,
     cpus: int | None = _CPUS,
     compute_root: str | None = _COMPUTE_ROOT,
@@ -598,16 +672,23 @@ def submit(
     output: str | None = _OUTPUT,
 ) -> None:
     """
-    Submit every unfinished simulation in a project to Slurm, and return.
+    Submit every unfinished simulation in a project to Slurm or Kubernetes, and return.
 
-    The releases are split among a Slurm job array's tasks, with the
-    resources under execution in config.yaml. --releases limits it to the
-    releases listed in a file. Check on them with runtraj status.
+    The releases are split among a Slurm job array's tasks, or a Kubernetes
+    indexed Job's pods, with the resources under execution in config.yaml.
+    --releases limits a Slurm job array to the releases listed in a file.
+    Check on them with runtraj status.
     """
+    if backend is None:
+        backend = (
+            "kubernetes" if _configured_backend(project) == "kubernetes" else "slurm"
+        )
+    if backend not in ("slurm", "kubernetes"):
+        _fail(f"--backend for submit is slurm or kubernetes, not {backend!r}.")
     release_ids, rows = (None, None) if releases is None else _read_releases(releases)
     opened, options = _start(
         project,
-        backend="slurm",
+        backend=backend,
         n_workers=n_workers,
         cpus=cpus,
         no_skip=no_skip,
@@ -878,7 +959,11 @@ def _print_run_start(
         # the array had not been used.
         where = f"task {task[0]} of {task[1]}"
     else:
-        tasks = 1 if backend == "local" else execution.slurm.n_workers
+        tasks = {
+            "local": 1,
+            "slurm": execution.slurm.n_workers,
+            "kubernetes": execution.kubernetes.completions,
+        }[backend]
         where = f"backend={backend}  tasks={tasks}"
     typer.echo(
         f"Starting run: project={project.directory}  {where}  "
@@ -901,6 +986,10 @@ def _print_run_start(
     elif waits:
         typer.echo(
             "Submitting to Slurm and waiting for the job to finish (squeue shows its tasks)"
+        )
+    elif backend == "kubernetes":
+        typer.echo(
+            "Making a Kubernetes indexed Job and returning (kubectl get jobs shows it)"
         )
     else:
         typer.echo("Submitting to Slurm and returning")

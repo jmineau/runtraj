@@ -316,6 +316,12 @@ def run(
     stopped by ``scancel`` is not requeued.
     """
     execution = execution if execution is not None else project.config.execution
+    if execution.backend == "kubernetes" and task is None:
+        raise ValueError(
+            "run() waits for its runs, and a Kubernetes Job is not waited "
+            "for here. Use submit() (runtraj submit), and runtraj status to "
+            "follow it."
+        )
     todo = pending(project, releases=releases, task=task, skip_existing=skip_existing)
     if not todo:
         logger.info("run: every simulation is complete; nothing to do")
@@ -370,7 +376,7 @@ def submit(
     compute_root: str | Path | None = None,
 ) -> str | None:
     """
-    Submit every simulation of a project that has not finished to Slurm.
+    Submit every simulation of a project that has not finished to Slurm or Kubernetes.
 
     The releases with missing results are split among up to ``n_workers``
     tasks of one job array, and this returns once it is submitted. The
@@ -395,6 +401,13 @@ def submit(
     again. If ``sbatch`` refuses the array, the fetch job is cancelled.
     Set ``execution.slurm.fetch`` to ``false`` for no fetch job.
 
+    With ``backend: kubernetes`` it makes one indexed Job instead, whose
+    pods each run ``runtraj run <project> --task I/N``
+    (:func:`runtraj.execution.kubernetes.submit_job`), and creates it with
+    ``kubectl``. Each task runs its share of every release of the project
+    and skips the complete ones, so *releases* and ``skip_existing=False``
+    are refused there, and *compute_root* is each pod's own.
+
     Parameters
     ----------
     project, releases, execution, skip_existing, compute_root
@@ -403,26 +416,42 @@ def submit(
     Returns
     -------
     str or None
-        The Slurm job id of the array, or ``None`` when nothing needs to
-        run. ``squeue -j <id>`` follows it and ``scancel <id>`` stops it.
-        A fetch job is a job of its own: its id is logged and written to
+        The Slurm job id of the array, or the name of the Kubernetes Job,
+        or ``None`` when nothing needs to run. ``squeue -j <id>`` follows a
+        job array and ``scancel <id>`` stops it; ``kubectl get job <name>``
+        and ``kubectl delete job <name>`` do the same for a Job. A fetch
+        job is a job of its own: its id is logged and written to
         ``fetch.id`` in the submission folder, and ``scancel`` stops it too.
 
     Raises
     ------
     ValueError
-        If the execution backend is not Slurm.
+        If the execution backend is ``local``, or on Kubernetes with
+        *releases* or ``skip_existing=False``.
     """
     execution = execution if execution is not None else project.config.execution
-    if execution.backend != "slurm":
+    if execution.backend == "local":
         raise ValueError(
-            f"submit sends work to Slurm, and this run's backend is "
-            f"{execution.backend!r}. Use run(), or set execution.backend to slurm."
+            "submit sends work to Slurm or Kubernetes, and this run's backend "
+            "is 'local'. Use run(), or set execution.backend to slurm or "
+            "kubernetes."
+        )
+    if execution.backend == "kubernetes" and (
+        releases is not None or not skip_existing
+    ):
+        raise ValueError(
+            "A Kubernetes Job runs every unfinished release of the project and "
+            "skips the complete ones, as a retried pod must: it takes no list "
+            "of releases and no --no-skip."
         )
     todo = pending(project, releases=releases, skip_existing=skip_existing)
     if not todo:
         logger.info("submit: every simulation is complete; nothing to do")
         return None
+    if execution.backend == "kubernetes":
+        from .kubernetes import submit_job
+
+        return submit_job(project, todo, execution)
     job_id, _ = _submit(project, todo, execution, skip_existing, compute_root)
     return job_id
 

@@ -2,8 +2,11 @@ In Containers (Kubernetes)
 ==========================
 
 A project can run in many containers at once, such as the pods of a
-Kubernetes Job, without Slurm. Each container runs one share of the
-releases:
+Kubernetes Job, without Slurm. ``runtraj submit`` makes that Job for you
+(:ref:`kubernetes-submit`); the rest of this page is what each pod does,
+for a Job you write yourself or another scheduler.
+
+Each container runs one share of the releases:
 
 .. code-block:: bash
 
@@ -38,6 +41,70 @@ What every container needs
 - A compute root, where each run gets its workdir. Set
   ``RUNTRAJ_COMPUTE_ROOT`` to a folder on fast local disk, such as an
   ``emptyDir``.
+
+.. _kubernetes-submit:
+
+Submitting to Kubernetes
+------------------------
+
+With ``backend: kubernetes``, ``runtraj submit`` makes one indexed Job and
+creates it with ``kubectl``, on the cluster and namespace ``kubectl``
+points at. Each pod runs ``runtraj run <project> --task I/N``:
+
+.. code-block:: yaml
+
+   execution:
+     backend: kubernetes
+     kubernetes:
+       image: registry.example.org/runtraj-hysplit:1
+       completions: 20           # tasks, N
+       parallelism: 10           # pods running at once
+       cpus: 4                   # releases each pod runs at once
+       memory: 8Gi               # Kubernetes units: 8Gi, not 8G
+       inputs: s3://bucket/projects/my_project
+       secrets: [bucket-keys]    # a Secret holding the bucket's credentials
+       volumes:
+         - {claim_name: hrrr-arl, mount_path: /met, read_only: true}
+   output: s3://bucket/output
+
+.. code-block:: bash
+
+   runtraj submit /project
+
+It prints the Job's name; ``kubectl get job <name>`` follows it and
+``kubectl delete job <name>`` stops it. The manifest is kept in
+``_kubernetes/<date_time>_<id>/job.yaml`` in the project.
+
+We recommend putting the inputs on a bucket (``inputs``): ``runtraj submit``
+copies ``config.yaml``, ``releases.csv`` and ``tables/`` there, and each pod
+copies them to its own disk before it runs, so the pods need no shared
+volume for the project. The output directory must then be on a bucket too,
+or each pod would write its results to its own disk; ``runtraj submit``
+refuses that. Without ``inputs`` the pods open the project folder at the
+path it has where you submit, so it must be on a volume they mount at that
+path.
+
+``image`` is required. runtraj publishes no image: an image needs runtraj,
+HYSPLIT's ``hycs_std`` (downloaded from NOAA ARL; :doc:`../getting_started/installation`)
+and the packages of the stages the project names. Every pod must have the
+same ``hycs_std``, since its checksum is part of each run's settings.
+
+Each pod gets an ``emptyDir`` at ``/scratch`` as its ``TMPDIR``, where its
+copy of the inputs and its workdirs go, and one thread per worker. The Job
+retries a pod from its exit code (:ref:`exit-codes`): 3 is retried up to
+three times per task, 1 and 4 fail that task only, 2 fails the whole Job,
+and a pod evicted or preempted is retried without counting. Each pod is
+given the hash of ``config.yaml`` and ``releases.csv`` as they were
+submitted (``--inputs-hash``) and exits with 2 when what it reads differs:
+a ``releases.csv`` changed after submit would split the releases
+differently among the tasks. Submit again after changing them.
+
+A Job runs every unfinished release of the project and skips the complete
+ones, so ``runtraj submit`` on Kubernetes takes no ``--releases`` and no
+``--no-skip``. It does not fetch the met first: run ``runtraj fetch``
+before it (:ref:`fetch-once`) when the pods share the met volume.
+Afterwards ``runtraj status`` counts the project's simulations, as for any
+run.
 
 .. _fetch-once:
 
