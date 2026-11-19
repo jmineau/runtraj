@@ -102,8 +102,9 @@ src/runtraj/
   particles/      the particle table and files, release heights, the particles.runtraj accessor
   concentration.py  the concentration result: a DataTree of grids, its NetCDF file
   trajectories.py   the trajectory table and its Parquet file
-  models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model, check_model
+  models/         TransportModel/TransportConfig protocols, MODELS (hysplit, flexpart), get_model, run_model, check_model
     hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
+    flexpart/     config, GRIB met catalog, COMMAND/RELEASES/... writers, driver, partoutput reader
   execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
@@ -146,7 +147,7 @@ each stage to read the files its settings name, and the model its version.
   see `runtraj._paths`. A local output must stay as fast: time a large listing.
 - **Identity is content.** runtraj never deletes or overwrites a results folder.
 - **The CLI stays thin.** Orchestration does not belong in `cli.py`.
-- **Meteorology I/O goes through [arlmet](https://github.com/jmineau/arl-met).**
+- **ARL met I/O goes through [arlmet](https://github.com/jmineau/arl-met)**; FLEXPART's GRIB, through eccodes.
 - **runtraj ships no HYSPLIT file**: `directory/exec/hycs_std` and `bdyfiles/`, else `PATH`. The trajectory mode runs `exec/hyts_std`, found and hashed the same way. The SHA-256
   of `hycs_std` is in the particles hash, read on first use (`Variant.build`); its
   printed version is recorded as `model_version`, never hashed. Without `hycs_std` a

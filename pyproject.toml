@@ -52,10 +52,16 @@ download = [
 concentration = [
     "netcdf4>=1.6.5",  # a concentration result is a NetCDF file, a group per grid
 ]
+flexpart = [
+    "eccodes>=2.39",
+    # eccodes' pure-Python wheel does not name its C library, so uv leaves it out.
+    "eccodeslib>=2.39; platform_system != 'Windows'",
+]
 complete = [
     "runtraj[visualization]",
     "runtraj[download]",
     "runtraj[concentration]",
+    "runtraj[flexpart]",
 ]
 
 [dependency-groups]
@@ -64,6 +70,8 @@ dev = [
     # The extras, spelled out: the floors job resolves the group with `uv pip
     # compile`, which would look for `runtraj[complete]` on PyPI.
     "arlmet[archives]>=0.1.0b12,<0.2",
+    "eccodes>=2.39",  # the flexpart extra: GRIB met
+    "eccodeslib>=2.39; platform_system != 'Windows'",
     "cartopy>=0.26",
     "cf-xarray>=0.10",  # the CF trajectory export is read back with it
     "netcdf4>=1.6.5",  # the concentration extra; the CF export's tests write a file with it
