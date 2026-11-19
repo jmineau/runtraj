@@ -37,7 +37,7 @@ dependencies = [
     "shapely>=2.0",
     "typer>=0.15.4",  # older ones fail with click 8.2 and later (make_metavar)
     "universal-pathlib>=0.3.0",  # 0.2.x warns on S3 paths (PendingDeprecationWarning)
-    "xarray>=2024.10.0",  # earlier ones fail to decode the CF trajectory export's time axis (2023.8 and earlier fail Jacobian.to_xarray)
+    "xarray>=2024.10.0",  # earlier ones fail to decode the CF trajectory export's time axis
 ]
 
 [project.optional-dependencies]
