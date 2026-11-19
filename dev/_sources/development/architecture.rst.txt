@@ -30,10 +30,10 @@ DataFrames, and a selection of rows goes back to the project's methods
 ``config.yaml`` names a model in another package, and each stage, by the
 import path of its class, so the config, the settings records, the output
 directory and the worker reach them without importing them by name. A
-model provides :class:`runtraj.transport.TransportModel`; a stage, which
+model provides :class:`runtraj.models.TransportModel`; a stage, which
 makes one file per release after the model runs, provides
 :class:`runtraj.stages.Stage`. HYSPLIT is the model built in, and its
-package (:mod:`runtraj.transport.hysplit`) is the only code that knows
+package (:mod:`runtraj.models.hysplit`) is the only code that knows
 HYSPLIT's files.
 
 Module map
@@ -51,15 +51,15 @@ Module map
      config.py       ProjectConfig and Variant
      identity.py     settings records and hashes
      stages.py       the Stage protocol, get_stage, check_stage
-     releases/       release models, releases.csv, shared validation
+     releases/       release classes, releases.csv, shared validation
      particles/      the particle table and files, release heights, particles.runtraj
-     transport/      the TransportModel and TransportConfig protocols, MODELS, get_model
+     models/         the TransportModel and TransportConfig protocols, MODELS, get_model
        hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
      execution/      ExecutionConfig, the runner (plan, local run, Slurm submit), the worker
      meteorology.py, spatial.py, visualization.py, exceptions.py
 
 The import contracts in ``pyproject.toml`` (``just imports``) hold this
-shape: the modules are in layers, only :mod:`runtraj.transport` imports
+shape: the modules are in layers, only :mod:`runtraj.models` imports
 HYSPLIT's package, and the project config reads no results and runs nothing.
 
 How a run goes
