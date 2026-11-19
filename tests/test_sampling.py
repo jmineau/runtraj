@@ -265,7 +265,7 @@ _T1 = pd.Timestamp("2021-01-15 01:00")
 _LEVELS = [0.0, 50.0, 500.0, 2000.0]
 
 
-def _met_file(path: Path) -> Path:
+def _met_file(path: Path, *, winds: bool = False) -> Path:
     """
     Write an ARL file with two times of uniform fields, and return its path.
 
@@ -273,7 +273,9 @@ def _met_file(path: Path) -> Path:
     at the heights in ``_LEVELS``. Every field is uniform across the grid.
     From the first time to the second, PBLH goes from 500 to 800 m and each
     level's PRES rises by 10 hPa; the rest stay the same. SPHU stays above
-    1/254, the smallest value ARL packing keeps in a uniform field.
+    1/254, the smallest value ARL packing keeps in a uniform field. With
+    *winds*, it also has what :func:`calc_pbl_height` reads: winds that
+    grow with height, an upward heat flux, and a friction velocity.
     """
     from arlmet import File, Projection
     from arlmet import Grid as ArlGrid
@@ -304,6 +306,9 @@ def _met_file(path: Path) -> Path:
             rs = f.create_recordset(time)
             rs.create_datarecord("SHGT", level=0, forecast=0, data=ones * 1500)
             rs.create_datarecord("PBLH", level=0, forecast=0, data=ones * pblh)
+            if winds:
+                rs.create_datarecord("SHTF", level=0, forecast=0, data=ones * 150)
+                rs.create_datarecord("USTR", level=0, forecast=0, data=ones * 0.4)
             for level, (pres, temp, sphu) in enumerate(
                 [(850.0, 280.0, 0.010), (800.0, 275.0, 0.008), (650.0, 265.0, 0.006)],
                 start=1,
@@ -313,6 +318,11 @@ def _met_file(path: Path) -> Path:
                 )
                 rs.create_datarecord("TEMP", level=level, forecast=0, data=ones * temp)
                 rs.create_datarecord("SPHU", level=level, forecast=0, data=ones * sphu)
+                if winds:
+                    for name in ("UWND", "VWND"):
+                        rs.create_datarecord(
+                            name, level=level, forecast=0, data=ones * 3.0 * level
+                        )
     return path
 
 
@@ -476,3 +486,90 @@ def test_calc_pbl_height_needs_a_time_column(tmp_path):
 
     with pytest.raises(ValueError, match="'time' column"):
         sampling.calc_pbl_height(particles, [met])
+
+
+# ---------------------------------------------------------------------------
+# Met as a Dataset: a converter's output, or any format arlmet reads
+# ---------------------------------------------------------------------------
+
+
+def test_sample_met_reads_a_dataset_as_the_file_it_was_read_from(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at(
+        [_T0, _T0 + pd.Timedelta(minutes=20), _T1], [100.0, 200.0, 300.0]
+    )
+
+    from_dataset = sample_met(particles, arlmet.open_dataset(met))
+
+    pd.testing.assert_frame_equal(from_dataset, sample_met(particles, [met]))
+
+
+def test_calc_pbl_height_reads_a_dataset_as_the_file_it_was_read_from(tmp_path):
+    met = _met_file(tmp_path / "met.arl", winds=True)
+    particles = _particles_at([_T0, _T0 + pd.Timedelta(minutes=30)], [100.0, 100.0])
+
+    from_dataset = sampling.calc_pbl_height(particles, arlmet.open_dataset(met))
+
+    from_files = sampling.calc_pbl_height(particles, [met])
+    assert np.isfinite(from_files).all()
+    np.testing.assert_array_equal(from_dataset, from_files)
+
+
+def _pressure_level_file(path: Path) -> Path:
+    """
+    Write an ARL file on pressure levels, as GFS's are, and return its path.
+
+    The levels are 850, 800, 700 and 600 hPa over 1500 m of terrain where
+    the surface pressure is 850 hPa: the pressure is the level, and there
+    is no PRES field.
+    """
+    from arlmet import File, Projection
+    from arlmet import Grid as ArlGrid
+    from arlmet.vertical import PressureAxis
+
+    grid = ArlGrid(
+        projection=Projection(
+            pole_lat=90.0, pole_lon=0.0, tangent_lat=1.0, tangent_lon=1.0,
+            grid_size=0.0, orientation=0.0, cone_angle=0.0, sync_x=1.0,
+            sync_y=1.0, sync_lat=-10.0, sync_lon=20.0,
+        ),
+        nx=20,
+        ny=20,
+    )  # fmt: skip
+    ones = np.ones((20, 20), np.float32)
+    levels = [(850.0, 1500.0, 285.0), (800.0, 1990.0, 282.0), (700.0, 3050.0, 274.0),
+              (600.0, 4250.0, 266.0)]  # fmt: skip
+    axis = PressureAxis(levels=[0.0, *(p for p, _, _ in levels)])
+    with File(path, mode="w", source="TEST", grid=grid, vertical_axis=axis) as f:
+        rs = f.create_recordset(_T0)
+        rs.create_datarecord("SHGT", level=0, forecast=0, data=ones * 1500)
+        rs.create_datarecord("PRSS", level=0, forecast=0, data=ones * 850)
+        for level, (_, height, temp) in enumerate(levels, start=1):
+            rs.create_datarecord("HGTS", level=level, forecast=0, data=ones * height)
+            rs.create_datarecord("TEMP", level=level, forecast=0, data=ones * temp)
+    return path
+
+
+def test_met_without_pres_gives_the_pressure_of_its_levels(tmp_path):
+    """Pressure levels have no PRES field: the pressure is the level."""
+    met = _pressure_level_file(tmp_path / "pressure.arl")
+    particles = _particles_at([_T0] * 3, [100.0, 1000.0, 2000.0])
+
+    with patch("arlmet.sample_points", wraps=arlmet.sample_points) as sample_points:
+        sampled = sample_met(particles, [met], columns=["pres"])
+
+    assert "pressure" in sample_points.call_args.args[2]
+    pres = sampled["pres"].to_numpy()
+    assert np.isfinite(pres).all()
+    assert (np.diff(pres) < 0).all()
+    assert pres.min() > 600.0 and pres.max() < 850.0
+    pd.testing.assert_frame_equal(
+        sample_met(particles, arlmet.open_dataset(met), columns=["pres"]), sampled
+    )
+
+
+def test_terrain_following_met_without_pres_has_no_pressure(tmp_path):
+    met = arlmet.open_dataset(_met_file(tmp_path / "met.arl")).drop_vars("PRES")
+
+    with pytest.raises(KeyError, match="PRES"):
+        sample_met(_particles_at([_T0], [100.0]), met, columns=["pres"])

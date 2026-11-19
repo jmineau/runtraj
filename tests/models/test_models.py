@@ -5,16 +5,19 @@ from __future__ import annotations
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
 from typing import Any, ClassVar
 
 import pytest
+import xarray as xr
 import yaml
 from pydantic import BaseModel, ConfigDict
 
 from runtraj import models
 from runtraj.config import ProjectConfig
 from runtraj.identity import read_run_settings, settings_hash
-from runtraj.models import ModelInfo, TransportConfig
+from runtraj.models import ModelInfo, TransportConfig, open_met
+from runtraj.spatial import Bounds
 
 from ..fixtures.factories import make_met_config
 
@@ -346,3 +349,28 @@ def test_a_model_in_its_own_package_runs_from_a_fresh_interpreter(tmp_path):
     )
     assert done.returncode == 0, done.stderr
     assert done.stdout.strip() == "8 [1, 2, 3, 4]"
+
+
+# -- open_met: a run's met files as runtraj.sampling reads them ---------------
+
+
+class _OpensItsMet:
+    """A transport model whose met files are not ARL files: it opens them itself."""
+
+    def open_met(self, met, files, bounds):
+        return xr.Dataset(attrs={"met": met, "files": files, "bounds": bounds})
+
+
+def test_open_met_returns_the_files_of_a_model_without_the_hook():
+    files = open_met("hysplit", None, ["a.arl", "b.arl"])
+
+    assert files == [Path("a.arl"), Path("b.arl")]
+
+
+def test_open_met_asks_a_model_with_the_hook(monkeypatch):
+    monkeypatch.setattr(models, "get_model", lambda name: _OpensItsMet())
+    bounds = Bounds(xmin=-113, xmax=-111, ymin=40, ymax=41)
+
+    opened = open_met("grib", "gfs", (f for f in ["a.grb2"]), bounds)
+
+    assert opened.attrs == {"met": "gfs", "files": ["a.grb2"], "bounds": bounds}
