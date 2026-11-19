@@ -586,7 +586,9 @@ def calc_pbl_height(
     -------
     numpy.ndarray
         The mixed-layer height at each row, in m above ground. A row off
-        the met's grid is NaN.
+        the met's grid is NaN, and so is a row whose met time lacks the
+        surface fluxes, as a GFS analysis (``f000``) does without the
+        previous cycle's forecast.
 
     Raises
     ------
@@ -706,6 +708,9 @@ def calc_pbl_height(
     if source.strip() == "ETA":
         heat = -heat  # NAM's (ETA's) flux is positive downward (prfcom.f)
     zmix = _richardson_mixed_layer(zz, theta, uu, vv, density, ustar, heat, ks)
+    # Without the fluxes the stability is unknown: no height, rather than
+    # the stable one a missing heat flux would give.
+    zmix[~(np.isfinite(heat) & np.isfinite(ustar))] = np.nan
 
     # Each row takes its grid point's height at the met times around it.
     columns["zmix"] = zmix
