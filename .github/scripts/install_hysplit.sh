@@ -2,10 +2,11 @@
 # Install a Linux HYSPLIT as a HYSPLIT folder: /opt/hysplit/exec/hycs_std and
 # the four data tables in /opt/hysplit/bdyfiles/, with hycs_std on PATH.
 # runtraj includes no HYSPLIT, so the jobs that run it take the v5.1.0 build
-# that the uataq/stilt repository publishes, at the commit below.
+# that the repository below publishes, at the commit below.
 set -euo pipefail
 sha="278b1ef6d542efd21c6ccab2a85b796acd9812a6"
-base="https://raw.githubusercontent.com/uataq/stilt/$sha"
+repo="uataq/stilt"
+base="https://raw.githubusercontent.com/$repo/$sha"
 tmp="$(mktemp -d)"
 mkdir -p "$tmp/exec" "$tmp/bdyfiles"
 curl -fsSL --retry 3 -o "$tmp/exec/hycs_std" "$base/bin/linux_x64/hycs_std"
@@ -16,5 +17,5 @@ chmod +x "$tmp/exec/hycs_std"
 sudo mkdir -p /opt
 sudo mv "$tmp" /opt/hysplit
 sudo ln -sf /opt/hysplit/exec/hycs_std /usr/local/bin/hycs_std
-echo "HYSPLIT of uataq/stilt@$sha in /opt/hysplit:"
+echo "HYSPLIT of $repo@$sha in /opt/hysplit:"
 (cd /opt/hysplit && sha256sum exec/hycs_std bdyfiles/*)

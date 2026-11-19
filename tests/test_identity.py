@@ -151,7 +151,7 @@ def test_run_settings_leave_out_what_changes_no_particle(tmp_path):
     recorded = base.run_settings
     assert "directory" not in recorded
     assert set(recorded["model"]) == {"name", "sha256", "data_files"}
-    # Unset, maxpar depends on the release (PYSTILT#237), so it is recorded unset,
+    # Unset, maxpar depends on the release, so it is recorded unset,
     # and a set maxpar, which can stop a multipoint release, is another run.
     assert recorded["maxpar"] is None
     capped = _variant(tmp_path, numpar=100, maxpar=100)
@@ -168,7 +168,7 @@ def test_where_met_is_downloaded_from_does_not_identify_the_run(tmp_path):
 
 
 def test_nested_and_flat_ziscale_are_one_run(tmp_path):
-    """STILT-R's ``[[0.8, 0.9]]`` and ``[0.8, 0.9]`` are the same factors and the same hash."""
+    """``[[0.8, 0.9]]`` and ``[0.8, 0.9]`` are the same factors and the same hash."""
     flat = _variant(tmp_path, ziscale=[0.8, 0.9])
     nested = _variant(tmp_path, ziscale=[[0.8, 0.9]])
     assert nested.transport.ziscale == [0.8, 0.9]

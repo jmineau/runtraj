@@ -172,7 +172,7 @@ Where each ``CONTROL`` and ``SETUP.CFG`` line comes from
 Every ``SETUP.CFG`` entry that can change the particles is a setting of the
 same name in lowercase, such as ``numpar``, ``kmixd`` or ``tlfrac``
 (:doc:`../reference/configuration` lists them). Each defaults to HYSPLIT's
-own value in STILT mode. A setting HYSPLIT decides only after reading the
+own value with ``ICHEM=8``. A setting HYSPLIT decides only after reading the
 file (``capemin``, ``kblt``, ``kmixd``, ``krand``, ``vscales``) is left out
 unless you give it, so HYSPLIT chooses. runtraj writes the rest itself:
 
@@ -205,7 +205,7 @@ unless you give it, so HYSPLIT chooses. runtraj writes the rest itself:
    * - ``SETUP.CFG`` ``WINDERRTF``, ``ZICONTROLTF``
      - The wind and mixed-layer error settings, and ``ziscale``
    * - ``SETUP.CFG`` ``DELT``, ``ICHEM``, ``KAGL``, ``CMASS`` and 37 more
-     - Fixed: STILT mode overrides them, or only concentration grids, puffs,
+     - Fixed: ``ICHEM=8`` overrides them, or only concentration grids, puffs,
        dump files or other HYSPLIT programs read them
        (:data:`~runtraj.transport.hysplit.config.FIXED_SETUP`)
 
@@ -216,7 +216,7 @@ To read the files of one run, pass ``workdir="run"`` to
 What runtraj leaves to other tools
 ----------------------------------
 
-runtraj runs ``hycs_std`` in its STILT mode (``ICHEM=8``), which writes
+runtraj runs ``hycs_std`` with ``ICHEM=8``, which writes
 particle positions and the met along them. Concentration grids
 (``cdump``), puffs and ``tdump`` trajectory files come from HYSPLIT run on
 its own, and NOAA's `monetio <https://github.com/noaa-oar-arl/monetio>`_

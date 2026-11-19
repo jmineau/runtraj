@@ -77,14 +77,13 @@ def _hycs_std_on_path(request, monkeypatch):
     Put the stand-in ``hycs_std`` first on ``PATH`` for a unit test; skip a real-HYSPLIT test without one.
 
     A test marked ``integration`` or ``fidelity`` runs the first ``hycs_std``
-    on ``PATH``, such as STILT-R's ``bin/linux_x64/hycs_std``, and is
+    on ``PATH``, and is
     skipped when there is none.
     """
     if any(request.node.get_closest_marker(m) for m in _REAL_HYSPLIT):
         if shutil.which("hycs_std") is None:
             pytest.skip(
-                "No hycs_std on PATH. Put the directory of STILT-R's "
-                "bin/linux_x64/hycs_std (or another HYSPLIT build) on PATH."
+                "No hycs_std on PATH. Put the exec/ folder of a HYSPLIT build on PATH."
             )
         return
     stand_in = request.getfixturevalue("stand_in_hycs_std")
@@ -142,7 +141,7 @@ def met_dir() -> Path:
     """
     env = os.environ.get("RUNTRAJ_TEST_MET_DIR")
     if env and Path(env).exists():
-        # Absolute, so STILT-R (which runs in its own working directory)
+        # Absolute, so a program that runs in its own working directory
         # finds the files too when the variable is a relative path.
         return Path(env).resolve()
 

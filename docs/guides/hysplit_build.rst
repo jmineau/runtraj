@@ -71,9 +71,8 @@ read at most 128 met files: 32 days of 6-hour files, or about 5 days of
 hourly ones. A run that needs more stops with ``Numb meteo times exceed
 DEFGRID limit`` in its log.
 
-Listing each file as its own grid instead, as STILT-R does, is limited to
-12 files a run in NOAA's builds (``mgrd``). The particles are the same
-either way.
+Listing each file as its own grid instead is limited to 12 files a run in
+NOAA's builds (``mgrd``). The particles are the same either way.
 
 To rerun a kept workdir by hand, you can edit its ``CONTROL`` file. A
 ``#`` starts a comment on the start time, the starting locations, and the

@@ -53,7 +53,7 @@ class Simulation:
         The output directory.
     directory : Path, optional
         The project directory, where a relative file name in the settings
-        starts, such as an averaging-kernel table. ``None`` starts it from
+        starts. ``None`` starts it from
         the working directory.
     realization : int, optional
         Which realization of an ensemble variant (``realizations: N``),

@@ -69,7 +69,7 @@ def test_sigterm_as_interrupt_leaves_an_existing_handler_alone():
 
 
 # ---------------------------------------------------------------------------
-# runtraj run --cpus N, stopped by SIGTERM (PYSTILT#309)
+# runtraj run --cpus N, stopped by SIGTERM
 # ---------------------------------------------------------------------------
 
 #: A transport model whose run is a fake ``hycs_std`` that sleeps while ``slow`` exists.
@@ -149,7 +149,7 @@ START_METHODS = [
 @pytest.mark.skipif(sys.platform == "win32", reason="needs POSIX signals and sh")
 @pytest.mark.parametrize("method", START_METHODS)
 def test_sigterm_stops_a_run_on_two_cpus_with_exit_3(tmp_path, method):
-    """SIGTERM ends the HYSPLIT runs and the workers, and ``runtraj run`` exits 3 (PYSTILT#309)."""
+    """SIGTERM ends the HYSPLIT runs and the workers, and ``runtraj run`` exits 3."""
     (tmp_path / "slowpool").mkdir()
     (tmp_path / "slowpool" / "__init__.py").write_text(_SLOW_PACKAGE)
     (tmp_path / "launch.py").write_text(_LAUNCH)

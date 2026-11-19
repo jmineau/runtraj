@@ -72,9 +72,8 @@ class ControlFile(BaseModel):
 
         # Met files - directory and filename on separate lines each. (7) is
         # "1 N": one grid with N files in time, at most 128 (mtim in
-        # HYSPLIT's DEFGRID.INC). A bare "N", as STILT-R writes, makes each
-        # file its own grid: at most 12 in NOAA's builds and 99 in the
-        # STILT-R's 5.1.0 build (mgrd). Both give the same particles.
+        # HYSPLIT's DEFGRID.INC). A bare "N" makes each file its own grid:
+        # at most 12 in NOAA's builds (mgrd). Both give the same particles.
         lines.append(f"1 {len(self.met_files)}")
         for met_file in self.met_files:
             lines.append(
@@ -101,7 +100,7 @@ class ControlFile(BaseModel):
         lines.append("./")  # (19) output directory
         lines.append(
             "cdump"
-        )  # (20) output filename (the particles are in PARTICLE_STILT.DAT)
+        )  # (20) output filename (the particles are in their own file)
         lines.append("1")  # (21) number of vertical concentration levels
         lines.append("100")  # (22) height of each level (m)
         lines.append("00 00 00 00 00")  # (23) sampling start

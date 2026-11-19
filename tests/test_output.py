@@ -52,7 +52,7 @@ def test_changed_settings_make_a_new_folder_beside_the_old(tmp_path):
 
 
 def test_an_empty_particle_table_is_not_written(tmp_path):
-    """A particle file makes a simulation complete, so an empty one would hide a failure (PYSTILT#192)."""
+    """A particle file makes a simulation complete, so an empty one would hide a failure."""
     out = Output(tmp_path / "output")
     release = release_at()
     empty = fake_particles(release).iloc[0:0]
@@ -95,7 +95,7 @@ def test_particles_store_time_and_index_as_int32(tmp_path):
 
 
 def test_particle_files_name_their_release_in_a_column(tmp_path):
-    """A scan of the particles tree tells releases apart; one file reads without it (PYSTILT#105)."""
+    """A scan of the particles tree tells releases apart; one file reads without it."""
     from collections import Counter
 
     import pyarrow.dataset as pads

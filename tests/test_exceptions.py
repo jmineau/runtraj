@@ -15,7 +15,7 @@ from runtraj.exceptions import (
     WorkerDied,
 )
 
-#: Each class and the parents it must have (PYSTILT#80).
+#: Each class and the parents it must have.
 PARENTS = {
     RuntrajError: (Exception,),
     SimulationError: (RuntrajError, RuntimeError),

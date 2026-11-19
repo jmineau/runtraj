@@ -487,7 +487,7 @@ def test_run_releases_pool_stops_its_workers_and_says_how_far_it_got(
 def test_a_pool_worker_exits_on_sigterm_and_ignores_ctrl_c(
     tmp_path, release, monkeypatch, fake_pool
 ):
-    """A worker that survived SIGTERM would keep the stop waiting for ever (PYSTILT#309)."""
+    """A worker that survived SIGTERM would keep the stop waiting for ever."""
     import signal
 
     model = _model(tmp_path, [release])
@@ -586,7 +586,7 @@ class ToyModel:
 
 
 def test_a_run_on_two_cpus_writes_to_the_output_it_was_given(tmp_path):
-    """Pool workers open the project again; they must write where the parent looks (PYSTILT#188)."""
+    """Pool workers open the project again; they must write where the parent looks."""
     import os
     import subprocess
     import sys
@@ -640,7 +640,7 @@ class KillingToy(ToyModel):
 
 
 def test_a_worker_killed_outright_stops_the_run_and_a_rerun_finishes_it(tmp_path):
-    """A pool worker that dies without Python's say used to hang the run for ever (PYSTILT#382)."""
+    """A pool worker that dies without Python's say used to hang the run for ever."""
     import os
     import subprocess
     import sys
@@ -698,7 +698,7 @@ def test_a_worker_killed_outright_stops_the_run_and_a_rerun_finishes_it(tmp_path
     [([True, True], False), ([True, False], True), ([False, True], True)],
 )
 def test_a_dead_pool_worker_is_found_by_looking_at_the_workers(alive, died):
-    """The loop looks at the workers itself, since the pool can miss a kill (PYSTILT#400)."""
+    """The loop looks at the workers itself, since the pool can miss a kill."""
     from types import SimpleNamespace
 
     processes = {

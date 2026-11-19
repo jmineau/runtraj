@@ -29,17 +29,15 @@ before v1.0**, so prefer the clean design over a compatibility shim.
 
 - **A stage in another package is only ever an example here.** runtraj
   imports no stage and names none in its code; where the docs need one to
-  show, it is PYSTILT's footprint (`stilt.footprint.FootprintStage`). An
-  issue number written `PYSTILT#123`, and any in the commits before the
-  first that says runtraj, is one of jmineau/PYSTILT's, where that code was
-  written.
+  show, it is PYSTILT's footprint (`stilt.footprint.FootprintStage`),
+  and nothing else of that package is named.
 - **A change that breaks a plug-in** (the stage or transport model
   protocols, or the output layout) raises the minor version: a package
   built on runtraj requires a range of it up to the next one.
 - **Release** is the time and place a run starts from: `releases.csv`, the
   `release` column, `--releases`, `group`, and the classes `PointRelease`,
   `ColumnRelease`, `MultiPointRelease`. A release placed at a measurement and
-  followed backward is what STILT calls a receptor.
+  followed backward is often called a receptor.
 - **Particle columns** get plain names for HYSPLIT's `indx`, `time`, `long`,
   `lati` (`docs/reference/particles.rst`).
 - **Config** is what the user writes, always a class next to the code that
@@ -174,7 +172,7 @@ Docstring examples (`>>>` lines under `src/`) run as tests too
 
 pytest loads a local `.env` for such variables. Test folders follow the
 package. The toy stages in `tests/fixtures/stages.py` stand for a stage in
-another package; a test never imports `stilt`. Never commit met files.
+another package; a test imports no other. Never commit met files.
 
 ### Code conventions
 

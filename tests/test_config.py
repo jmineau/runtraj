@@ -165,7 +165,7 @@ def test_model_config_reports_invalid_yaml(tmp_path):
     ids=["block", "variant"],
 )
 def test_model_config_refuses_a_repeated_key(tmp_path, text, where):
-    """A key written twice is refused, not read as its last value (PYSTILT#440)."""
+    """A key written twice is refused, not read as its last value."""
     path = tmp_path / "config.yaml"
     path.write_text(text)
 
@@ -272,7 +272,7 @@ def test_a_backends_setting_beside_backend_is_refused_naming_its_block(
 
 
 def test_unknown_execution_setting_is_an_error(tmp_path):
-    """A typo, or an sbatch option outside `slurm:`, used to be ignored or passed on (PYSTILT#63)."""
+    """A typo, or an sbatch option outside `slurm:`, used to be ignored or passed on."""
     with pytest.raises(ValueError, match=r"execution\.partion\s+Extra inputs"):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
@@ -521,7 +521,7 @@ def test_maxpar_follows_each_variants_numpar(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Variants are declared; unknown keys name the nearest setting (PYSTILT#150)
+# Variants are declared; unknown keys name the nearest setting
 # ---------------------------------------------------------------------------
 
 

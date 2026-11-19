@@ -54,7 +54,7 @@ above ground and 1 above sea level, as ``SETUP.CFG``'s ``KMSL``.
 release points (``release.coords()``) and ``altitude_ref``.
 :func:`~runtraj.transport.hysplit.run_hycs_std` runs ``hycs_std`` in the
 folder, and :func:`~runtraj.transport.hysplit.read_particle_dat` reads its
-``PARTICLE_STILT.DAT`` as a particle table. Use them to look at or change
+particle file as a particle table. Use them to look at or change
 the input files of a run. A project run then adds the release heights
 (:doc:`particles`); by hand:
 
@@ -69,6 +69,7 @@ the input files of a run. A project run then adds the release heights
        run_hycs_std,
        write_inputs,
    )
+   from runtraj.transport.hysplit.driver import PARTICLE_FILE
 
    config = HysplitConfig(n_hours=-24, numpar=200)
    write_inputs(
@@ -80,9 +81,8 @@ the input files of a run. A project run then adds the release heights
        kmsl=1 if release.altitude_ref == "msl" else 0,
    )
    run_hycs_std(Path("run"))
-   particles = read_particle_dat("run/PARTICLE_STILT.DAT", config.varsiwant)
+   particles = read_particle_dat(Path("run") / PARTICLE_FILE, config.varsiwant)
    particles = add_release_heights(particles, release)
-   particles = correct_near_field(particles, release, config.veght)
 
 .. autosummary::
    :toctree: _api

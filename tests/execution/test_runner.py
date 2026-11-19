@@ -280,7 +280,7 @@ def test_submit_writes_a_submission_and_hands_it_to_sbatch(pending, commands, tm
     folder = Path(script).parent
     assert folder.parent == project.directory / "_slurm"
     assert (folder / "releases.txt").read_text().split() == pending
-    # The tasks read the checked rows, in the order they split them (PYSTILT#191).
+    # The tasks read the checked rows, in the order they split them.
     rows = pd.read_parquet(folder / "releases.parquet")
     assert rows["release"].tolist() == pending
     assert {"kind", "location", "altitude_ref"} <= set(rows.columns)
@@ -351,7 +351,7 @@ def test_waiting_polls_sacct_until_every_task_ends(commands, caplog):
 def test_a_job_on_another_cluster_is_followed_there(
     pending, commands, tmp_path, monkeypatch
 ):
-    """``sbatch --parsable`` names the cluster when it is not the default (PYSTILT#187)."""
+    """``sbatch --parsable`` names the cluster when it is not the default."""
     import pandas as pd
 
     project = _hourly_project(tmp_path, 2)
@@ -379,7 +379,7 @@ def test_a_job_on_another_cluster_is_followed_there(
 def test_a_run_lists_once_more_when_the_files_look_late(
     pending, commands, tmp_path, monkeypatch
 ):
-    """The submitting node can see new files a minute late on a network filesystem (PYSTILT#191)."""
+    """The submitting node can see new files a minute late on a network filesystem."""
     import pandas as pd
 
     project = _hourly_project(tmp_path, 1)
@@ -684,7 +684,7 @@ def test_a_task_runs_here_whatever_the_backend(tmp_path, monkeypatch, commands):
 
 
 # ---------------------------------------------------------------------------
-# The fetch before the releases run (PYSTILT#436)
+# The fetch before the releases run
 # ---------------------------------------------------------------------------
 
 

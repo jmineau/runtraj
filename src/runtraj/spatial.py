@@ -37,8 +37,8 @@ def _grid_cell_count(minimum: float, maximum: float, resolution: float) -> int:
     Decimal bounds are not exact in binary, so ``maximum - minimum`` carries a
     rounding error that grows with the bounds (``40.93 - 40.45`` is
     ``0.4799999999999969``). The tolerance is sized to that error so the last
-    intended cell is kept (48 cells here at 0.01, as STILT-R's ``seq()``
-    gives) and a partial cell is still dropped.
+    intended cell is kept (48 cells here at 0.01) and a partial cell is
+    still dropped.
 
     Raises
     ------
@@ -332,7 +332,7 @@ class Grid(Bounds):
         description=(
             "Coordinate reference system of the grid, such as a PROJ "
             "string or ``EPSG:32612``. Particles and bounds are projected to it "
-            "before gridding. Also read under STILT-R's name, ``projection``."
+            "before gridding. Also read as ``projection``."
         ),
     )
 

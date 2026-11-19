@@ -775,7 +775,7 @@ def _a_worker_died(executor: ProcessPoolExecutor) -> bool:
     the second worker after waking the thread that watches the workers, which
     may already have made its list. If that worker is the one killed, the pool
     learns of it only when another release finishes, which can be hours later
-    (PYSTILT#400). Workers stay alive until the loop in :func:`_run_in_pool` ends, so
+    . Workers stay alive until the loop in :func:`_run_in_pool` ends, so
     one that is not alive has died.
     """
     return any(not process.is_alive() for process in list(executor._processes.values()))

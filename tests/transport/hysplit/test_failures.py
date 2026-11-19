@@ -3,6 +3,7 @@
 import pytest
 
 from runtraj.transport.hysplit import FailureReason
+from runtraj.transport.hysplit.driver import PARTICLE_FILE
 from runtraj.transport.hysplit.failures import failure_in
 
 
@@ -28,7 +29,7 @@ def test_all_failure_reasons_exist():
     ("line", "reason"),
     [
         ("meteorological data time interval varies", "VARYING_MET_INTERVAL"),
-        ("PARTICLE_STILT.DAT does not contain any trajectory data", "NO_PARTICLE_DATA"),
+        (f"{PARTICLE_FILE} does not contain any trajectory data", "NO_PARTICLE_DATA"),
         ("Fortran runtime error: end of file", "FORTRAN_RUNTIME_ERROR"),
         (
             "Weird variable in VARSIWANT(SETUP.CFG):  zfx1",

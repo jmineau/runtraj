@@ -24,10 +24,6 @@ _COLUMN_ATTRS: dict[str, dict[str, str]] = {
         "units": "ppm m2 s umol-1",
         "long_name": "sensitivity to surface fluxes over the output step",
     },
-    "foot_no_hnf_dilution": {
-        "units": "ppm m2 s umol-1",
-        "long_name": "foot before the near-field correction",
-    },
     "mlht": {"units": "m", "long_name": "mixed-layer height above ground"},
     "dens": {"units": "kg m-3", "long_name": "air density"},
     "samt": {"units": "minutes", "long_name": "time spent in the surface layer"},

@@ -586,7 +586,7 @@ def test_endpoints_returns_far_end_per_particle(point_release, tmp_path):
 def test_stored_settings_this_version_does_not_have_are_dropped(
     point_release, tmp_path
 ):
-    """Files written before a setting was removed still load (PYSTILT#44)."""
+    """Files written before a setting was removed still load."""
     params = _params(tmp_path)
     traj = finished(_particles_basic(), point_release)
     path = tmp_path / "traj.parquet"
@@ -595,7 +595,7 @@ def test_stored_settings_this_version_does_not_have_are_dropped(
     meta = dict(table.schema.metadata)
     stored = json.loads(meta[b"runtraj:settings"])
     meta[b"runtraj:settings"] = json.dumps({**stored, "gone": 1}).encode()
-    meta[b"stilt:is_error"] = b"true"  # written by earlier versions; ignored
+    meta[b"runtraj:is_error"] = b"true"  # a key it does not know is ignored
     pq.write_table(table.replace_schema_metadata(meta), path)
 
     rebuilt = transport_from_settings(particles_metadata(path).settings)

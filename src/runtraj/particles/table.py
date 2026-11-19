@@ -127,7 +127,7 @@ def particles_metadata(path: str | Path | UPath) -> ParticleMetadata:
     if b"runtraj:settings" not in meta:
         raise ValueError(
             f"{path} records no run settings. It was written before particle "
-            "files recorded them; rewrite its output directory (see PYSTILT#132)."
+            "files recorded them; rewrite its output directory."
         )
     realization = meta.get(b"runtraj:realization")
     return ParticleMetadata(
@@ -381,7 +381,7 @@ def add_release_heights(particles: pd.DataFrame, release: Release) -> pd.DataFra
     ``numpar`` slabs the column is split into, and ``release_height`` is that slab's
     center: the slab is what the particle stands for, not the random
     height inside it. A model that writes no release row, such as HYSPLIT
-    5.1.0 (STILT-R's build), falls back to matching: a column's particles are
+    5.1.0, falls back to matching: a column's particles are
     released bottom to top in ``particle`` order, and a multipoint release's
     are matched to the nearest point from their first row.
 

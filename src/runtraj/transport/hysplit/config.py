@@ -26,12 +26,12 @@ WIND_ERROR_SETTINGS = ("siguverr", "tluverr", "zcoruverr", "horcoruverr")
 ZI_ERROR_SETTINGS = ("sigzierr", "tlzierr", "horcorzierr")
 
 #: ``SETUP.CFG`` entries written with the same value in every run, which no
-#: setting changes. None of them can change ``PARTICLE_STILT.DAT``: they are
+#: setting changes. None of them can change the particle file: they are
 #: read only for HYSPLIT's concentration grids and deposition (``CMASS`` to
 #: ``KWET``), for puffs, which ``INITD=0`` turns off (``CONAGE`` to ``INITD``),
 #: by other HYSPLIT programs (``TOUT`` to ``DZF``), or for dump and restart
-#: files runtraj neither supplies nor reads (``NDUMP`` to ``KHINP``), or STILT
-#: mode overrides them (``DELT`` to ``IDSP``). Some break a run when changed:
+#: files runtraj neither supplies nor reads (``NDUMP`` to ``KHINP``), or
+#: ``ICHEM=8`` overrides them (``DELT`` to ``IDSP``). Some break a run when changed:
 #: ``ICHEM=0`` and ``IDSP=1`` write no particle file, and ``INITD`` 1 or 4
 #: releases puffs.
 
@@ -122,8 +122,8 @@ class HysplitConfig(TransportConfig):
     and ``ichem``, are not settings: runtraj writes the same value in every
     run (:data:`FIXED_SETUP`), and a config that sets one is refused.
 
-    The defaults are HYSPLIT's own, in the STILT mode those fixed entries
-    set. HYSPLIT decides ``capemin``, ``kblt``, ``kmixd``, ``krand`` and
+    The defaults are HYSPLIT's own, in the mode those fixed entries set
+    (``ICHEM=8``). HYSPLIT decides ``capemin``, ``kblt``, ``kmixd``, ``krand`` and
     ``vscales`` only after it has read ``SETUP.CFG``, from the mode and
     ``numpar``, so they are unset by default: an unset setting is not
     written, and HYSPLIT chooses. ``n_hours`` has no default.
@@ -205,7 +205,7 @@ class HysplitConfig(TransportConfig):
         description=(
             "Convection option. -1 turns convection off, -2 uses the Grell "
             "scheme, and a positive value mixes vertically when CAPE exceeds "
-            "it, in J/kg. Unset, HYSPLIT chooses -2 in STILT mode."
+            "it, in J/kg. Unset, HYSPLIT chooses -2 with ``ICHEM=8``."
         ),
     )
     emisshrs: float = Field(
@@ -236,7 +236,7 @@ class HysplitConfig(TransportConfig):
         description=(
             "Boundary-layer turbulence scheme: 1 Beljaars, 2 Kantha-Clayson, "
             "3 TKE, 4 measured variances, 5 Hanna. Unset, HYSPLIT chooses 5 "
-            "in STILT mode."
+            "with ``ICHEM=8``."
         ),
     )
     kdef: int = Field(
@@ -252,7 +252,7 @@ class HysplitConfig(TransportConfig):
         description=(
             "Mixed-layer depth source: 0 from the meteorology, 1 from the "
             "temperature profile, 2 from the TKE profile, 3 from a modified "
-            "Richardson number. Unset, HYSPLIT chooses 3 in STILT mode."
+            "Richardson number. Unset, HYSPLIT chooses 3 with ``ICHEM=8``."
         ),
     )
     krand: Literal[0, 1, 2, 3, 4, 10, 11, 12, 13] | None = Field(
@@ -273,14 +273,14 @@ class HysplitConfig(TransportConfig):
         None,
         description=(
             "Random seed for a reproducible run. Different seeds give "
-            "different runs. Requires ``krand: 2``. HYSPLIT 5.1.0 (STILT-R's "
-            "build) ignores the seed under ``krand`` 4 and 10 to 13, and under 1 uses "
+            "different runs. Requires ``krand: 2``. HYSPLIT 5.1.0 "
+            "ignores the seed under ``krand`` 4 and 10 to 13, and under 1 uses "
             "it only for the initial turbulent velocity. runtraj writes it to "
             "``SETUP.CFG`` as ``-(abs(seed) + 1)``, because HYSPLIT reseeds its "
             "generator only from a negative value and gives every ``SEED`` of "
             "0 or more the same stream. Realization ``k`` of a variant runs "
             "with ``seed + k``, so realization 0 shares the unperturbed run's "
-            "seed, as STILT-R's error run does."
+            "seed."
         ),
     )
     kzmix: int = Field(
@@ -311,7 +311,7 @@ class HysplitConfig(TransportConfig):
         0,
         ge=0,
         description=(
-            "Interval between particle outputs in ``PARTICLE_STILT.DAT``, in "
+            "Interval between particle outputs in the particle file, in "
             "minutes. 0 writes every time step. HYSPLIT writes no particles "
             "for a negative value, so it is refused. "
             "Only at 0 does runtraj check where the particles of a run that "
@@ -335,7 +335,7 @@ class HysplitConfig(TransportConfig):
         0.1,
         description=(
             "Fraction of the vertical Lagrangian timescale used as the time "
-            "step of the STILT dispersion scheme."
+            "step of the dispersion scheme."
         ),
     )
     tvmix: float = Field(
@@ -366,7 +366,7 @@ class HysplitConfig(TransportConfig):
             "Vertical Lagrangian timescale in a stable boundary layer, in "
             "seconds. -1 uses the Hanna timescale, which varies with the "
             "turbulence, and then ``vscaleu`` is not used. Unset, HYSPLIT "
-            "chooses -1 in STILT mode."
+            "chooses -1 with ``ICHEM=8``."
         ),
     )
     w_option: int = Field(
@@ -466,7 +466,7 @@ class HysplitConfig(TransportConfig):
     @classmethod
     def _flatten_ziscale(cls, value: Any) -> Any:
         """
-        Read STILT-R's one-element nested list, ``[[0.8, 0.9]]``, as ``[0.8, 0.9]``.
+        Read a one-element nested list, ``[[0.8, 0.9]]``, as ``[0.8, 0.9]``.
 
         Both mean the same factors, so they must hash the same.
         """
@@ -498,8 +498,8 @@ class HysplitConfig(TransportConfig):
             raise ValueError("ziscale cannot be empty; use 1.0 for no scaling.")
         if any(v == 0.0 for v in hourly):
             raise ValueError(
-                "ziscale of 0 would collapse the mixed layer to kmix0. STILT-R "
-                "uses 0 to mean unset; use 1.0 for no scaling."
+                "ziscale of 0 would collapse the mixed layer to kmix0. "
+                "Use 1.0 for no scaling."
             )
         if any(v != 1.0 for v in hourly) and len(hourly) > MAX_ZISCALE_HOURS:
             raise ValueError(
@@ -559,8 +559,7 @@ class HysplitConfig(TransportConfig):
         """
         Return *n* realizations of this config, realization ``k`` with ``seed + k``.
 
-        Realization 0 uses the configured seed, as STILT-R's single error run
-        does.
+        Realization 0 uses the configured seed.
 
         Raises
         ------

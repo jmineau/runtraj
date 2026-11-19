@@ -477,9 +477,8 @@ class Project:
         """
         Add rows to one of the project's input tables, and return its path.
 
-        A table is an input, like ``releases.csv``: the averaging kernels of
-        satellite soundings, for one, which a transform names as ``table:
-        kernels``. It is kept as ``tables/<name>.parquet``, created if
+        A table is an input, like ``releases.csv``, that a stage's settings
+        name, as in ``table: kernels``. It is kept as ``tables/<name>.parquet``, created if
         needed and otherwise added to. When the table has a ``release``
         column, rows of a release it already holds are left out, so adding
         the same kernels again changes nothing.

@@ -16,7 +16,7 @@ def test_winderrtf_partial_zi_raises():
         HysplitConfig(n_hours=-24, sigzierr=0.6, tlzierr=60.0)  # missing horcorzierr
 
 
-def test_stilt_params_flat_construction():
+def test_hysplit_config_flat_construction():
     """HysplitConfig accepts all fields flat (no met fields)."""
     p = HysplitConfig(
         n_hours=-24,
@@ -26,7 +26,7 @@ def test_stilt_params_flat_construction():
     assert p.numpar == 500
 
 
-def test_stilt_params_ziscale_defaults_to_scalar_one():
+def test_hysplit_config_ziscale_defaults_to_scalar_one():
     p = HysplitConfig(n_hours=-24)
     assert p.ziscale == 1.0
 
@@ -82,7 +82,7 @@ def test_varsiwant_takes_zcfx_the_name_hysplit_reads():
 
 @pytest.mark.parametrize("name", ["zfx1", "ZFX1"])
 def test_varsiwant_refuses_zfx1_and_names_zcfx(name):
-    """hycs_std stops at lowercase `zfx1` and reads `ZFX1` only in capitals, which no other name takes (PYSTILT#324)."""
+    """hycs_std stops at lowercase `zfx1` and reads `ZFX1` only in capitals, which no other name takes."""
     with pytest.raises(ValidationError, match="'zfx1' is not a varsiwant name.*'zcfx'"):
         HysplitConfig(n_hours=-24, varsiwant=["time", "indx", "long", "lati", name])
 
@@ -118,7 +118,7 @@ def test_n_hours_must_not_be_zero():
     ],
 )
 def test_a_physical_setting_out_of_its_range_is_refused(field, value):
-    """These were accepted and ran, or failed later with no field named (PYSTILT#440)."""
+    """These were accepted and ran, or failed later with no field named."""
     with pytest.raises(ValidationError, match=field):
         HysplitConfig(n_hours=-24, **{field: value})
 

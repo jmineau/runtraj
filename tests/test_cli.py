@@ -105,7 +105,7 @@ def test_resolve_project_returns_path_when_config_exists(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# An error the command did not expect: 3 to retry, 4 not to (PYSTILT#310)
+# An error the command did not expect: 3 to retry, 4 not to
 # ---------------------------------------------------------------------------
 
 
@@ -421,7 +421,7 @@ def test_status_into_a_closed_pipe_is_quiet_and_exits_1(tmp_path):
 
 
 def test_an_unreachable_object_store_exits_3_not_1(tmp_path):
-    """The reproduction of PYSTILT#310: `runtraj run` with an output bucket nothing answers."""
+    """`runtraj run` with an output bucket nothing answers."""
     pytest.importorskip("s3fs")
     _write_minimal_config(tmp_path)
     env = {

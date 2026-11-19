@@ -91,7 +91,7 @@ def test_location_id_column_integer_coords():
 
 
 def test_columns_that_differ_only_in_top_get_different_ids():
-    """Two columns at one place and time once shared an id and result files (PYSTILT#105)."""
+    """Two columns at one place and time once shared an id and result files."""
     low, high = (
         ColumnRelease(
             time="202101150600", longitude=-112, latitude=40.5, bottom=0, top=top
@@ -103,7 +103,7 @@ def test_columns_that_differ_only_in_top_get_different_ids():
 
 
 # ---------------------------------------------------------------------------
-# location_id - altitude reference (PYSTILT#105)
+# location_id - altitude reference
 # ---------------------------------------------------------------------------
 
 
@@ -145,7 +145,7 @@ def test_columns_that_differ_only_in_top_get_different_ids():
     ids=["point", "column", "multipoint"],
 )
 def test_msl_and_agl_releases_get_different_ids(make, agl_id):
-    """Releases that differ only in altitude reference once shared an id (PYSTILT#105)."""
+    """Releases that differ only in altitude reference once shared an id."""
     agl, msl = make("agl"), make("msl")
     assert msl.id == agl.id + "msl"
     assert not agl.id.endswith("msl")
@@ -326,7 +326,7 @@ def test_release_time_aware_input_normalizes_to_naive_utc():
 
 @pytest.mark.parametrize("text", ["05/07/2023 18:00", "07/15/2023 18:00", "now"])
 def test_release_time_text_that_is_not_iso_or_compact_is_refused(text):
-    """05/07/2023 was read as 7 May, and refused only when the day was above 12 (PYSTILT#440)."""
+    """05/07/2023 was read as 7 May, and refused only when the day was above 12."""
     with pytest.raises(ValueError, match="is not ISO 8601"):
         PointRelease(time=text, longitude=-111.85, latitude=40.77, altitude=5.0)
 
@@ -470,7 +470,7 @@ def test_latitude_out_of_range_raises():
     ],
 )
 def test_a_point_with_a_nan_or_infinite_coordinate_is_refused(field, value, message):
-    """A NaN passed the range checks and failed later at ``.id``, naming no field (PYSTILT#440)."""
+    """A NaN passed the range checks and failed later at ``.id``, naming no field."""
     point = {"longitude": -111.85, "latitude": 40.77, "altitude": 5.0}
     with pytest.raises(ValueError, match=message):
         PointRelease(time="202301011200", **{**point, field: value})
@@ -960,7 +960,7 @@ def test_parse_release_id_splits_time_and_location(
 
 
 # ---------------------------------------------------------------------------
-# Multipoint ids and altitude (PYSTILT#50)
+# Multipoint ids and altitude
 # ---------------------------------------------------------------------------
 
 
@@ -1064,7 +1064,7 @@ def test_frame_accepts_the_alternate_column_names():
 
 
 # ---------------------------------------------------------------------------
-# Appending keeps the altitude reference (PYSTILT#51)
+# Appending keeps the altitude reference
 # ---------------------------------------------------------------------------
 
 
@@ -1230,7 +1230,7 @@ def test_a_release_listed_twice_is_kept_once(point_release):
 
 
 def test_many_releases_listed_twice_are_checked_quickly():
-    """Each repeated id was built through a mask over the whole table: 31 s here (PYSTILT#191)."""
+    """Each repeated id was built through a mask over the whole table: 31 s here."""
     import time
 
     from runtraj.releases.table import release_rows
@@ -1298,7 +1298,7 @@ def test_releases_from_checked_rows_are_not_checked_again(
 
 
 def _multipoint_location_as_first_written(lons, lats, alts, altitude_ref):
-    """The multipoint id as it was written before PYSTILT#148, kept to check the faster one."""
+    """The multipoint id as it was first written, kept to check the faster one."""
 
     def hash_altitude(alt):
         rounded = round(alt, 2)
@@ -1354,7 +1354,7 @@ def test_multipoint_ids_are_the_same_as_first_written():
 
 @pytest.mark.parametrize("name", ["alt_ref", "height_reference", "ref"])
 def test_a_misnamed_altitude_ref_column_is_refused(name):
-    """Kept as a label, it left 1500 m above sea level as 1500 m above ground (PYSTILT#440)."""
+    """Kept as a label, it left 1500 m above sea level as 1500 m above ground."""
     text = f"time,lon,lat,z,{name}\n2023-07-15 18:00,-111.8,40.7,1500,MSL\n"
     with pytest.raises(ValueError, match=f"'{name}'.*Did you mean 'altitude_ref'"):
         read_releases(io.StringIO(text))

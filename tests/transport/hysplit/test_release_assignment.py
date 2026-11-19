@@ -16,6 +16,7 @@ from runtraj.transport.hysplit import (
     run_hycs_std,
     write_inputs,
 )
+from runtraj.transport.hysplit.driver import PARTICLE_FILE
 
 from ...conftest import integration
 from ...fixtures.factories import make_met_config
@@ -28,7 +29,7 @@ def _raw_particles(release, config, met, workdir, timeout):
     files = met.files_for(window)
     write_inputs(workdir, release.time, release.coords(), config, files)
     run_hycs_std(workdir, timeout)
-    return read_particle_dat(workdir / "PARTICLE_STILT.DAT", config.varsiwant)
+    return read_particle_dat(workdir / PARTICLE_FILE, config.varsiwant)
 
 
 def _release_time_rows(particles):
@@ -129,7 +130,7 @@ def test_hysplit_multipoint_release_points_follow_control_order_nondivisible(
     )
 
     # HYSPLIT gives each point 10 // 3, rounded up to 4, and maxpar leaves
-    # room for all 12, so the last point is not cut to 2 (PYSTILT#237).
+    # room for all 12, so the last point is not cut to 2.
     release_rows = _release_time_rows(result)
     assert release_rows["particle"].tolist() == list(range(1, 13))
     assert (
@@ -193,7 +194,7 @@ def test_close_spaced_slant_release_heights_are_recovered(tmp_path, met_dir):
     The case that used to fail silently.
 
     Ten release points 173 m apart (a 30-degree viewing zenith over a 3 km
-    column) climbing 300 m per level. HYSPLIT 5.1.0 (STILT-R's) writes no t=0
+    column) climbing 300 m per level. HYSPLIT 5.1.0 writes no t=0
     row, and in the first minute the wind carries particles hundreds of
     metres, past several neighbouring release points. Matching on horizontal
     position put the assigned release height off by ~240 m RMS; matching on

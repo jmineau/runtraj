@@ -5,7 +5,7 @@ Write HYSPLIT's input files, run ``hycs_std``, and read the particles it writes.
 ``hycs_std`` reads, and :func:`read_particle_dat` reads the particle file
 it writes. :class:`~runtraj.transport.hysplit.HysplitModel` runs the two
 around ``hycs_std`` in one directory; call them yourself to look at the
-input files of a run, or to read a ``PARTICLE_STILT.DAT`` from elsewhere.
+input files of a run, or to read a particle file from elsewhere.
 """
 
 import datetime as dt
@@ -47,7 +47,8 @@ EXEC_DIR = "exec"
 BDYFILES_DIR = "bdyfiles"
 #: HYSPLIT's data tables, which a run links into its workdir.
 DATA_TABLES = ("ASCDATA.CFG", "LANDUSE.ASC", "ROUGLEN.ASC", "TERRAIN.ASC")
-PARTICLE_STILT_FILE = "PARTICLE_STILT.DAT"
+#: The name HYSPLIT gives the particle file it writes with ``ICHEM=8``.
+PARTICLE_FILE = "PARTICLE_STILT.DAT"
 WINDERR_FILE = "WINDERR"
 ZIERR_FILE = "ZIERR"
 ZICONTROL_FILE = "ZICONTROL"
@@ -172,7 +173,7 @@ PARTICLE_COLUMNS = {"indx": "particle", "time": "age", "long": "lon", "lati": "l
 
 def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
     """
-    Read a ``PARTICLE_STILT.DAT`` file as a particle table.
+    Read HYSPLIT's particle file as a particle table.
 
     The ``varsiwant`` codes ``indx``, ``time``, ``long``, and ``lati``
     become the particle table's ``particle``, ``age``, ``lon``, and ``lat``
@@ -483,7 +484,7 @@ def write_inputs(
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
 
-    # Link the binary and the data tables, as STILT-R does; only hycs_std is
+    # Link the binary and the data tables; only hycs_std is
     # taken from exec/, which holds dozens of other programs.
     links = {HYCS_STD_FILE: find_hycs_std(config.directory)}
     for name, table in data_tables(config.directory).items():

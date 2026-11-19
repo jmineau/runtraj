@@ -100,7 +100,7 @@ def read_namelist(path: str | Path) -> dict[str, Any]:
     """
     Return the entries of a ``SETUP.CFG`` namelist, by lowercase name.
 
-    It reads the file as :class:`NameList` and STILT-R write it, one entry a
+    It reads the file as :class:`NameList` writes it, one entry a
     line. A value in quotes is a list of strings (``VARSIWANT``), ``TRUE``
     and ``FALSE`` (with or without dots) are booleans, a number is an ``int``
     or a ``float`` as written, and anything else, such as an empty

@@ -84,7 +84,7 @@ def test_a_project_with_everything_in_place_has_nothing_to_check(tmp_path):
 
 
 def test_a_project_with_no_releases_is_listed_once(tmp_path):
-    """An empty project ran nothing, with no warning (PYSTILT#440)."""
+    """An empty project ran nothing, with no warning."""
     project = _project(tmp_path, variants={"hrrr": {}, "hrrr-zi": {"ziscale": 0.8}})
     project.releases_path.write_text("time,longitude,latitude,altitude\n")
     project = Project(project.directory)
@@ -198,7 +198,7 @@ def _one_period_files(tmp_path: Path) -> list[Path]:
 def test_met_files_that_hold_one_time_period_are_found_once_for_the_met(
     tmp_path, n_hours
 ):
-    """HYSPLIT stops on a file with one time period, so every run of the met would fail (PYSTILT#286)."""
+    """HYSPLIT stops on a file with one time period, so every run of the met would fail."""
     project = _project(tmp_path, [_release(12), _release(13)], n_hours=n_hours)
     _one_period_files(tmp_path)
 
@@ -298,7 +298,7 @@ def test_a_met_file_the_hour_after_a_backward_run_needs_is_found_missing(tmp_pat
 
 
 def test_a_met_file_the_hour_after_a_forward_run_needs_is_found_missing(tmp_path):
-    """A forward run reads the step after its end too, so `runtraj check` lists it (PYSTILT#275)."""
+    """A forward run reads the step after its end too, so `runtraj check` lists it."""
     _block_met(tmp_path, 6)
     project = _project(tmp_path, [_release(8.5)], n_hours=3, files=False)
 

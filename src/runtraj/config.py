@@ -766,7 +766,7 @@ class ProjectConfig(BaseModel):
         """
         given = self.model_fields_set
         data = self.model_dump(mode="json", include=given - {"models", "stages"})
-        # A block's settings as its class writes them (a transform by its kind).
+        # A block's settings as its class writes them.
         if "models" in given:
             data["models"] = _JSON.dump_python(self.models, mode="json")
         if "stages" in given:

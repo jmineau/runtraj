@@ -19,6 +19,7 @@ from runtraj.transport.hysplit import (
 from runtraj.transport.hysplit.config import FIXED_SETUP, HYSPLIT_VARSIWANT
 from runtraj.transport.hysplit.control import ControlFile
 from runtraj.transport.hysplit.driver import (
+    PARTICLE_FILE,
     cells_from_edge,
     setup_entries,
     setup_seed,
@@ -153,7 +154,7 @@ def test_control_lists_the_met_files_as_one_grid(point_release, tmp_path):
 
 
 def test_control_reads_a_met_count_of_one_file_per_grid(point_release, tmp_path):
-    """A CONTROL file written by STILT-R gives a bare count."""
+    """A CONTROL file may give a bare count."""
     met = [Path("/met/hrrr_a"), Path("/met/hrrr_b")]
     path = tmp_path / "CONTROL"
     _make_control(point_release, met_files=met).write(path)
@@ -218,7 +219,7 @@ def _inputs(tmp_path, release, config=None) -> Path:
 
 
 def _write_particle_dat(path: Path, rows: list[list[float]]) -> None:
-    """Write a minimal PARTICLE_STILT.DAT with one dummy header line."""
+    """Write a minimal particle file with one dummy header line."""
     lines = ["header"]
     lines.extend(" ".join(str(v) for v in row) for row in rows)
     path.write_text("\n".join(lines) + "\n")
@@ -230,7 +231,7 @@ def _write_particle_dat(path: Path, rows: list[list[float]]) -> None:
 
 
 def test_read_particle_dat_parses_the_columns(tmp_path):
-    dat = tmp_path / "PARTICLE_STILT.DAT"
+    dat = tmp_path / PARTICLE_FILE
     _write_particle_dat(
         dat,
         rows=[
@@ -248,7 +249,7 @@ def test_read_particle_dat_parses_the_columns(tmp_path):
 
 
 def test_read_particle_dat_rejects_other_columns(tmp_path):
-    dat = tmp_path / "PARTICLE_STILT.DAT"
+    dat = tmp_path / PARTICLE_FILE
     _write_particle_dat(dat, rows=[[-60, 1, -111.9, 40.7, 10.0, 1e-5]])
 
     with pytest.raises(ValueError, match="6 columns, expected 2"):
@@ -256,7 +257,7 @@ def test_read_particle_dat_rejects_other_columns(tmp_path):
 
 
 def test_read_particle_dat_of_an_empty_file_is_an_empty_table(tmp_path):
-    dat = tmp_path / "PARTICLE_STILT.DAT"
+    dat = tmp_path / PARTICLE_FILE
     _write_particle_dat(dat, rows=[])
 
     df = read_particle_dat(dat, VARS)
@@ -294,11 +295,11 @@ def test_run_keeps_fortran_runtime_output_on_failure(tmp_path):
 
 
 def test_a_varsiwant_name_hycs_std_stops_on_fails_with_its_line(tmp_path):
-    """The log's last line says why no particles were written, not only that none were (PYSTILT#324)."""
+    """The log's last line says why no particles were written, not only that none were."""
     _script(
         tmp_path,
         "echo 'Weird variable in VARSIWANT(SETUP.CFG):  zfx1'\n"
-        "echo 'header' > PARTICLE_STILT.DAT\n",
+        f"echo 'header' > {PARTICLE_FILE}\n",
     )
 
     with pytest.raises(SimulationError) as caught:
@@ -310,7 +311,7 @@ def test_a_varsiwant_name_hycs_std_stops_on_fails_with_its_line(tmp_path):
 
 
 def test_met_that_ran_out_fails_from_hysplits_warning_file(tmp_path):
-    """HYSPLIT says so in WARNING, not in its log (PYSTILT#189)."""
+    """HYSPLIT says so in WARNING, not in its log."""
     _script(
         tmp_path,
         "echo ' WARNING emspnt: exceeding puff limit' > WARNING\n"
@@ -349,7 +350,7 @@ def _kill_when_started(workdir: Path, sig: int):
     Send *sig* to the script in *workdir* once it has written its pid, from another thread.
 
     The script must write ``pid`` last, just before ``exec``, so the kill cannot land
-    before the script has written what the test reads afterwards (PYSTILT#396).
+    before the script has written what the test reads afterwards.
     """
     import os
     import threading
@@ -370,7 +371,7 @@ def _kill_when_started(workdir: Path, sig: int):
 
 
 def test_run_fails_when_hycs_std_is_killed_from_outside(tmp_path):
-    """A kill the run did not send, such as the out-of-memory killer's, is a failure (PYSTILT#318)."""
+    """A kill the run did not send, such as the out-of-memory killer's, is a failure."""
     import signal
 
     _script(
@@ -512,7 +513,7 @@ def _fake_hysplit(
         if warning:
             (workdir / "WARNING").write_text(warning)
         if rows is not None:
-            _write_particle_dat(workdir / "PARTICLE_STILT.DAT", rows)
+            _write_particle_dat(workdir / PARTICLE_FILE, rows)
 
     monkeypatch.setattr(model, "run_hycs_std", fake_run)
     return calls
@@ -543,7 +544,7 @@ def _run(tmp_path, release, config=None):
 def test_a_run_whose_particles_left_the_domain_early_is_complete(
     tmp_path, point_release, monkeypatch
 ):
-    """Particles that stop short with no met failure are a domain exit, kept for any model (PYSTILT#189)."""
+    """Particles that stop short with no met failure are a domain exit, kept for any model."""
     from runtraj.transport import run_model
 
     _fake_hysplit(monkeypatch, log="", rows=_ending_at(13 * 60))
@@ -592,7 +593,7 @@ def test_run_leaves_particles_that_stop_early_to_the_caller(
 def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
     tmp_path, point_release, monkeypatch
 ):
-    """`zcfx` is a column of the particles under that name, as in STILT-R (PYSTILT#324)."""
+    """`zcfx` is a column of the particles under that name."""
     from runtraj.transport import run_model
 
     rows = [[*row, 2.5] for row in _ending_at(24 * 60)]
@@ -617,7 +618,7 @@ def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
 def test_run_without_a_particle_file_fails(tmp_path, point_release, monkeypatch):
     _fake_hysplit(monkeypatch, log="", rows=None)
 
-    with pytest.raises(SimulationError, match="PARTICLE_STILT.DAT") as caught:
+    with pytest.raises(SimulationError, match=PARTICLE_FILE) as caught:
         _run(tmp_path, point_release)
     assert caught.value.reason == FailureReason.NO_PARTICLE_DATA
 
@@ -628,7 +629,7 @@ PUFF_LIMIT = " WARNING emspnt: exceeding puff limit\n"
 def test_a_multipoint_release_cut_short_by_maxpar_fails(
     tmp_path, multipoint_release, monkeypatch
 ):
-    """HYSPLIT's puff-limit warning means the last locations got fewer particles (PYSTILT#237)."""
+    """HYSPLIT's puff-limit warning means the last locations got fewer particles."""
     _fake_hysplit(monkeypatch, log="", rows=_ending_at(24 * 60), warning=PUFF_LIMIT)
 
     with pytest.raises(SimulationError, match="3 release locations") as caught:
@@ -675,7 +676,7 @@ def test_a_perturbed_run_is_one_hycs_std_call_with_winderr(
 
 
 # ---------------------------------------------------------------------------
-# check_met_stop: met that ran out, told from a domain exit (PYSTILT#213)
+# check_met_stop: met that ran out, told from a domain exit
 # ---------------------------------------------------------------------------
 
 
@@ -1045,7 +1046,7 @@ def test_winderrtf_zero_value_params():
 
 
 def test_unset_maxpar_gives_every_location_its_rounded_up_share():
-    """HYSPLIT gives each of n locations ``numpar // n``, often plus one (PYSTILT#237)."""
+    """HYSPLIT gives each of n locations ``numpar // n``, often plus one."""
     p = HysplitConfig(n_hours=-24, numpar=1000)
     assert p.maxpar is None
     assert p.maxpar_for(1) == 1000  # one location keeps numpar
@@ -1131,8 +1132,7 @@ def test_setup_entries_route_transport_params_to_setup_cfg():
 
 
 # Fortran type of every SETUP.CFG entry runtraj writes, from the SETUP
-# namelist declarations in HYSPLIT's hysetup.f. STILT-R's v5.1.0 build
-# reads the same types.
+# namelist declarations in HYSPLIT's hysetup.f.
 
 HYSPLIT_SETUP_TYPES = {
     **dict.fromkeys(

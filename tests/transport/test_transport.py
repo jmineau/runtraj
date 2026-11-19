@@ -13,6 +13,7 @@ from runtraj.particles import particles_metadata
 from runtraj.simulation import Simulation
 from runtraj.transport import ModelRun, get_model
 from runtraj.transport.hysplit import HysplitConfig, HysplitModel, Met, MetConfig
+from runtraj.transport.hysplit.driver import PARTICLE_FILE
 from tests.fixtures.factories import blocks
 
 from ..fixtures.factories import make_met_config, make_met_files, make_variant
@@ -84,7 +85,7 @@ def _fake_hysplit(monkeypatch) -> dict:
     def run_hycs_std(workdir, timeout):
         seen["timeout"] = timeout
         (workdir / "hysplit.log").write_text("")
-        (workdir / "PARTICLE_STILT.DAT").write_text("")
+        (workdir / PARTICLE_FILE).write_text("")
 
     monkeypatch.setattr(model_module, "write_inputs", write_inputs)
     monkeypatch.setattr(model_module, "run_hycs_std", run_hycs_std)

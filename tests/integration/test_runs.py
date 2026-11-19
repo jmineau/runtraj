@@ -2,7 +2,7 @@
 Integration tests for runtraj end-to-end execution.
 
 These tests run real HYSPLIT against real met files and are collected by
-default.  They are automatically skipped when the stilt-tutorials met data
+default.  They are automatically skipped when the met data
 is not present (the ``met_dir`` fixture handles this).
 
 Run integration tests explicitly:
@@ -105,7 +105,7 @@ def test_idempotency(tmp_path, wbb_release, traj_only_config):
 
 
 def _forty_points() -> MultiPointRelease:
-    """Forty locations 0.03 degrees apart, 4 m up: HYSPLIT's maxpar cut left the last one empty (PYSTILT#237)."""
+    """Forty locations 0.03 degrees apart, 4 m up: HYSPLIT's maxpar cut left the last one empty."""
     lons = -112.4 + 0.03 * np.arange(40)
     lats = 40.76 + 0.0001 * np.arange(40)
     return MultiPointRelease(

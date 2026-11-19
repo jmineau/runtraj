@@ -1,4 +1,4 @@
-"""A ``hycs_std`` that ends badly is a failed simulation, whatever its particle file holds (PYSTILT#318)."""
+"""A ``hycs_std`` that ends badly is a failed simulation, whatever its particle file holds."""
 
 import datetime as dt
 import stat
@@ -12,6 +12,7 @@ from runtraj.exceptions import SimulationError
 from runtraj.meteorology import run_window
 from runtraj.releases import PointRelease
 from runtraj.transport.hysplit import FailureReason, HysplitConfig, HysplitModel
+from runtraj.transport.hysplit.driver import PARTICLE_FILE
 from tests.fixtures.factories import blocks
 
 from ...fixtures.factories import make_hysplit_dir, make_met_config, make_met_files
@@ -24,7 +25,7 @@ RELEASE = PointRelease(
 
 
 def _particle_dat(path: Path, last_minute: int) -> Path:
-    """Write a PARTICLE_STILT.DAT of one particle, hourly, whose last row is *last_minute* before release."""
+    """Write a particle file of one particle, hourly, whose last row is *last_minute* before release."""
     times = [-1, *range(-60, -last_minute - 1, -60)]
     lines = ["header"] + [f"{t} 1 -111.9 40.7 10.0 0.0" for t in times]
     path.write_text("\n".join(lines) + "\n")
@@ -67,7 +68,7 @@ def test_a_hycs_std_killed_part_way_fails_with_its_signal(tmp_path, outdt):
     """Its partial file is not read as a finished run, with ``outdt`` 0 or above."""
     partial = _particle_dat(tmp_path / "partial.dat", 120)
     build = _fake_hycs_std(
-        tmp_path / "build", f"cp {partial} PARTICLE_STILT.DAT\nkill -KILL $$\n"
+        tmp_path / "build", f"cp {partial} {PARTICLE_FILE}\nkill -KILL $$\n"
     )
 
     with pytest.raises(SimulationError) as caught:
@@ -81,7 +82,7 @@ def test_a_hycs_std_killed_part_way_fails_with_its_signal(tmp_path, outdt):
 def test_a_hycs_std_that_exits_1_part_way_fails_with_its_status(tmp_path, outdt):
     partial = _particle_dat(tmp_path / "partial.dat", 120)
     build = _fake_hycs_std(
-        tmp_path / "build", f"cp {partial} PARTICLE_STILT.DAT\nexit 1\n"
+        tmp_path / "build", f"cp {partial} {PARTICLE_FILE}\nexit 1\n"
     )
 
     with pytest.raises(SimulationError) as caught:
@@ -99,7 +100,7 @@ def test_a_hycs_std_that_exits_1_part_way_fails_with_its_status(tmp_path, outdt)
     ],
 )
 def test_a_release_outside_the_met_fails_with_hysplits_own_line(tmp_path, line):
-    """HYSPLIT exits 132 for both and names the cause in its log (PYSTILT#367)."""
+    """HYSPLIT exits 132 for both and names the cause in its log."""
     build = _fake_hycs_std(tmp_path / "build", f"echo '{line}'\nexit 132\n")
 
     with pytest.raises(SimulationError) as caught:
@@ -111,7 +112,7 @@ def test_a_release_outside_the_met_fails_with_hysplits_own_line(tmp_path, line):
 
 def test_a_hycs_std_that_exits_0_with_the_full_run_is_complete(tmp_path):
     full = _particle_dat(tmp_path / "full.dat", abs(N_HOURS) * 60)
-    build = _fake_hycs_std(tmp_path / "build", f"cp {full} PARTICLE_STILT.DAT\n")
+    build = _fake_hycs_std(tmp_path / "build", f"cp {full} {PARTICLE_FILE}\n")
 
     run = _model_run(tmp_path, build, outdt=0)
 
@@ -128,15 +129,15 @@ def test_a_hycs_std_that_exits_0_without_output_still_fails_for_that(tmp_path):
 
 
 def test_a_killed_simulation_stores_no_particles_and_a_rerun_runs_it_again(tmp_path):
-    """The failure is recorded with its reason, and the next run does not skip it (PYSTILT#318)."""
+    """The failure is recorded with its reason, and the next run does not skip it."""
     full = _particle_dat(tmp_path / "full.dat", abs(N_HOURS) * 60)
     partial = _particle_dat(tmp_path / "partial.dat", 120)
     flag = tmp_path / "kill-it"
     flag.touch()
     build = _fake_hycs_std(
         tmp_path / "build",
-        f"if [ -e {flag} ]; then cp {partial} PARTICLE_STILT.DAT; kill -KILL $$; fi\n"
-        f"cp {full} PARTICLE_STILT.DAT\n",
+        f"if [ -e {flag} ]; then cp {partial} {PARTICLE_FILE}; kill -KILL $$; fi\n"
+        f"cp {full} {PARTICLE_FILE}\n",
     )
     make_met_files(tmp_path / "met", RELEASE.time, N_HOURS)
     config = ProjectConfig(

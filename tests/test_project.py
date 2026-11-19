@@ -100,7 +100,7 @@ def test_opening_reads_nothing_but_looks_for_config_yaml(tmp_path):
 
 
 def test_a_path_that_is_not_a_project_is_refused_when_opened(tmp_path):
-    """A mistyped path read as a project with no releases, with no warning (PYSTILT#440)."""
+    """A mistyped path read as a project with no releases, with no warning."""
     with pytest.raises(FileNotFoundError, match=r"No config.yaml.*Project\.init"):
         Project(tmp_path / "my_projcet")
     assert not (tmp_path / "my_projcet").exists()
@@ -165,7 +165,7 @@ def ran(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# A selection of simulations (PYSTILT#107)
+# A selection of simulations
 # ---------------------------------------------------------------------------
 
 

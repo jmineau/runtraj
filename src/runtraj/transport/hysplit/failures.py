@@ -45,7 +45,8 @@ FAILURE_PHRASES: dict[str, FailureReason] = {
     "source point off grid": FailureReason.MET_COVERAGE,
     "Start height above mdl domain": FailureReason.MET_COVERAGE,
     "meteorological data time interval varies": FailureReason.VARYING_MET_INTERVAL,
-    "PARTICLE_STILT.DAT does not contain any trajectory data": FailureReason.NO_PARTICLE_DATA,
+    # The log names the particle file first.
+    "does not contain any trajectory data": FailureReason.NO_PARTICLE_DATA,
     "Fortran runtime error": FailureReason.FORTRAN_RUNTIME_ERROR,
     # hycs_std stops at the first varsiwant name it does not know, before it
     # writes a particle; the config refuses such names, so this is for a

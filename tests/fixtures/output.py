@@ -66,7 +66,7 @@ def as_written_before_the_rename(path: Path) -> Path:
     table = pq.read_table(path)
     names = ["receptor" if n == "release" else n for n in table.column_names]
     meta = {
-        (b"stilt:receptor" if k == b"runtraj:release" else k): v
+        (b"runtraj:receptor" if k == b"runtraj:release" else k): v
         for k, v in (table.schema.metadata or {}).items()
     }
     pq.write_table(table.rename_columns(names).replace_schema_metadata(meta), path)

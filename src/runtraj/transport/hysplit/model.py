@@ -18,7 +18,7 @@ from runtraj.transport import ModelRun
 from .config import HysplitConfig
 from .driver import (
     LOG_FILE,
-    PARTICLE_STILT_FILE,
+    PARTICLE_FILE,
     check_met_stop,
     check_release,
     data_tables,
@@ -291,10 +291,10 @@ class HysplitModel:
         try:
             run_hycs_std(workdir, timeout)
             check_release(workdir, release.coords(), config)
-            path = workdir / PARTICLE_STILT_FILE
+            path = workdir / PARTICLE_FILE
             if not path.exists():
                 raise SimulationError(
-                    f"HYSPLIT wrote no {PARTICLE_STILT_FILE}.",
+                    f"HYSPLIT wrote no {PARTICLE_FILE}.",
                     reason=FailureReason.NO_PARTICLE_DATA,
                 )
             particles = read_particle_dat(path, config.varsiwant)

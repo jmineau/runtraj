@@ -63,8 +63,7 @@ under its version.
 
 Docs, docstrings, config field descriptions, and CLI help are written for
 scientists who want to run the model and trust the result. Our models are the
-[STILT-R docs](https://uataq.github.io/stilt/), the xarray and MetPy user
-guides, and Herbie's tutorials.
+xarray and MetPy user guides, and Herbie's tutorials.
 
 - **Start from the reader's goal.** Open a page or section with what the
   reader wants to do and why it matters to their result. Then show it.
@@ -395,7 +394,7 @@ stages:
   as `reads = ("footprint",)`. The stage runs after them and again whenever
   one was made again, and its settings folder is named from theirs too.
   Find a file with `sim.path("footprint")` and read it with the reader of
-  the package that wrote it (`stilt.read_footprint`). A variant that sets a
+  the package that wrote it. A variant that sets a
   stage to null while another of its stages reads it is refused.
 
 The stage's package must be installed wherever the project is opened, the

@@ -1,4 +1,4 @@
-"""A script that runs a project on several cpus needs ``if __name__ == "__main__":`` (PYSTILT#274)."""
+"""A script that runs a project on several cpus needs ``if __name__ == "__main__":``."""
 
 import contextlib
 import os
