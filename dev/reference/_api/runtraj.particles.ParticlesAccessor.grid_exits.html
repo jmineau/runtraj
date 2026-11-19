@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=61a91ec9"></script>
+    <script src="../../_static/documentation_options.js?v=79c40fc8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev715+g28b0441aa" />
+  <meta name="docsearch:version" content="0.0.1.dev716+g0fb00edcf" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -600,15 +600,6 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Grid.html">runtraj.Grid</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.axes.html">runtraj.Grid.axes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.cells.html">runtraj.Grid.cells</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.dims.html">runtraj.Grid.dims</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.index.html">runtraj.Grid.index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.is_longlat.html">runtraj.Grid.is_longlat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.to_xarray.html">runtraj.Grid.to_xarray</a></li>
-</ul>
-</details></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../meteorology.html">Meteorology</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -695,6 +686,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.settings.html">runtraj.stages.Stage.settings</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.stages.Location.html">runtraj.stages.Location</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.stages.get_stage.html">runtraj.stages.get_stage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.stages.ordered.html">runtraj.stages.ordered</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.stages.check_stage.html">runtraj.stages.check_stage</a></li>
@@ -822,38 +814,38 @@
 <h1>runtraj.particles.ParticlesAccessor.grid_exits<a class="headerlink" href="#runtraj-particles-particlesaccessor-grid-exits" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="runtraj.particles.ParticlesAccessor.grid_exits">
-<span class="sig-prename descclassname"><span class="pre">ParticlesAccessor.</span></span><span class="sig-name descname"><span class="pre">grid_exits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/particles/accessor.html#ParticlesAccessor.grid_exits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.particles.ParticlesAccessor.grid_exits" title="Link to this definition">#</a></dt>
-<dd><p>Return where each particle first left a grid.</p>
+<span class="sig-prename descclassname"><span class="pre">ParticlesAccessor.</span></span><span class="sig-name descname"><span class="pre">grid_exits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/particles/accessor.html#ParticlesAccessor.grid_exits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.particles.ParticlesAccessor.grid_exits" title="Link to this definition">#</a></dt>
+<dd><p>Return where each particle first left a longitude/latitude box.</p>
 <p>For a backward run these are the points where the air entered the
-grid’s domain, where a field at the domain’s edge is sampled.
-Unlike <a class="reference internal" href="runtraj.particles.ParticlesAccessor.endpoints.html#runtraj.particles.ParticlesAccessor.endpoints" title="runtraj.particles.ParticlesAccessor.endpoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">endpoints()</span></code></a>, which gives where a particle ended, this
-gives where it first crossed the edge of the grid, even if it came
-back later or stayed in the meteorology domain long after.</p>
-<p>A particle is outside when it is beyond the outer edge of the grid’s
-cells, in the grid’s own coordinates: a projected grid is a
-rectangle in its projection, not in longitude and latitude. A grid
-across the dateline or past 180 degrees is read modulo 360, and a
-grid that goes all the way around the earth has no west or east edge.
-Rows are read in order of <code class="docutils literal notranslate"><span class="pre">abs(age)</span></code>, whatever their order in the
-table, so this works for a backward and a forward run.</p>
+domain, where a field at the domain’s edge is sampled. Unlike
+<a class="reference internal" href="runtraj.particles.ParticlesAccessor.endpoints.html#runtraj.particles.ParticlesAccessor.endpoints" title="runtraj.particles.ParticlesAccessor.endpoints"><code class="xref py py-meth docutils literal notranslate"><span class="pre">endpoints()</span></code></a>, which gives where a particle ended, this gives
+where it first crossed the edge of the box, even if it came back
+later or stayed in the meteorology domain long after.</p>
+<p>A particle is outside when it is beyond an edge of the box, in
+longitude and latitude. Longitudes are read as
+<a class="reference internal" href="runtraj.Bounds.contains.html#runtraj.Bounds.contains" title="runtraj.Bounds.contains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">contains()</span></code></a> reads them: a box across the
+dateline or past 180 degrees is read modulo 360, and a box 360
+degrees wide or more has no west or east edge. Rows are read in
+order of <code class="docutils literal notranslate"><span class="pre">abs(age)</span></code>, whatever their order in the table, so this
+works for a backward and a forward run.</p>
 <p>The point is on the edge: the exit is the straight line between the
-particle’s last row inside the grid and its first row outside,
+particle’s last row inside the box and its first row outside,
 and <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, <code class="docutils literal notranslate"><span class="pre">age</span></code> and <code class="docutils literal notranslate"><span class="pre">time</span></code> are interpolated
 along it to where it crosses. If the line crosses two edges at a
 corner, <code class="docutils literal notranslate"><span class="pre">edge</span></code> is the first it crosses. A particle whose first row is
 already outside has no row inside to interpolate from (the
 meteorology HYSPLIT 5.1.0 writes no row at
 the release), so it is reported at that row, on the edge it is
-farthest beyond, in cells.</p>
+farthest beyond.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>grid</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></span>) – The grid.</p>
+<dd class="field-odd"><p><strong>bounds</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></span>) – The box, such as the edge of your study area.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>One row per particle that left the grid, ordered by <code class="docutils literal notranslate"><span class="pre">particle</span></code>;
+<dd class="field-even"><p>One row per particle that left the box, ordered by <code class="docutils literal notranslate"><span class="pre">particle</span></code>;
 a particle that stayed inside is not in it. The columns are
 <code class="docutils literal notranslate"><span class="pre">particle</span></code>, <code class="docutils literal notranslate"><span class="pre">edge</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;n&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;e&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;s&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;w&quot;</span></code>,
-the side of the grid it left by), <code class="docutils literal notranslate"><span class="pre">lon</span></code> and <code class="docutils literal notranslate"><span class="pre">lat</span></code> (degrees),
+the side of the box it left by), <code class="docutils literal notranslate"><span class="pre">lon</span></code> and <code class="docutils literal notranslate"><span class="pre">lat</span></code> (degrees),
 <code class="docutils literal notranslate"><span class="pre">zagl</span></code> (meters), <code class="docutils literal notranslate"><span class="pre">age</span></code> (minutes since release) and, when the
 table has a <code class="docutils literal notranslate"><span class="pre">time</span></code> column, <code class="docutils literal notranslate"><span class="pre">time</span></code> (UTC). Longitudes are
 wrapped to -180 to 180 where the interpolation crosses 180.</p>
@@ -863,12 +855,10 @@ wrapped to -180 to 180 where the interpolation crosses 180.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>One particle that leaves a grid by its east edge, between two rows:</p>
+<p>One particle that leaves a box by its east edge, between two rows:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">runtraj</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">grid</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">Grid</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">xmin</span><span class="o">=-</span><span class="mi">112</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=-</span><span class="mi">110</span><span class="p">,</span> <span class="n">ymin</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="mf">0.5</span>
-<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">box</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">Bounds</span><span class="p">(</span><span class="n">xmin</span><span class="o">=-</span><span class="mi">112</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=-</span><span class="mi">110</span><span class="p">,</span> <span class="n">ymin</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="p">{</span>
 <span class="gp">... </span>        <span class="s2">"particle"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
@@ -878,7 +868,7 @@ wrapped to -180 to 180 where the interpolation crosses 180.</p>
 <span class="gp">... </span>        <span class="s2">"zagl"</span><span class="p">:</span> <span class="p">[</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">],</span>
 <span class="gp">... </span>    <span class="p">}</span>
 <span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span><span class="o">.</span><span class="n">runtraj</span><span class="o">.</span><span class="n">grid_exits</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span><span class="o">.</span><span class="n">runtraj</span><span class="o">.</span><span class="n">grid_exits</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
 <span class="go">   particle edge    lon   lat  zagl   age</span>
 <span class="go">0         1    e -110.0  41.0  25.0 -90.0</span>
 </pre></div>

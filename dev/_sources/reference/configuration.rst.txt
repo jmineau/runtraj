@@ -134,20 +134,13 @@ that gets the met files before a job array (:ref:`slurm-fetch`).
 
 .. config-model:: runtraj.execution.config.FetchConfig
 
-Grids
+Boxes
 ~~~~~
 
-A :class:`Grid` is a rectilinear raster: a met's crop box is a
-:class:`Bounds`, and a stage that sums particles onto cells takes a
-:class:`Grid`. Longitudes count modulo 360, so a grid across 180° can be
-written ``xmin: 170``, ``xmax: 190`` or ``xmin: 170``, ``xmax: -170``. An
-``xmax`` west of ``xmin`` is read as crossing 180° when the two are on
-either side of 0° or one is written past 180°: with both in one hemisphere
-(``xmin: -110.5``, ``xmax: -113``) they are taken to be swapped and the grid
-is refused. A grid spans at most 360°. Projected grids (a ``crs`` such as
-``EPSG:32612``) keep their bounds in degrees and take ``xres`` and ``yres``
-in the projection's units. A grid of more than a billion cells is refused,
-which catches a resolution in degrees on a grid in meters.
+A :class:`Bounds` is a longitude/latitude box, in degrees, such as a met's
+crop box. Longitudes count modulo 360, so a box across 180° can be written
+``xmin: 170``, ``xmax: 190`` or ``xmin: 170``, ``xmax: -170``, and a box
+360° wide or more holds every longitude (:meth:`Bounds.contains`).
 
 Config objects
 --------------
@@ -172,7 +165,6 @@ can share one.
    execution.SlurmConfig
    execution.FetchConfig
    Bounds
-   Grid
 
 Parameters
 ----------

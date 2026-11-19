@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtraj.Grid.to_xarray &#8212; runtraj dev</title>
+    <title>runtraj.stages.Location &#8212; runtraj dev</title>
   
   
   
@@ -42,13 +42,13 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=61a91ec9"></script>
+    <script src="../../_static/documentation_options.js?v=79c40fc8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.Grid.to_xarray';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.stages.Location';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
@@ -60,13 +60,13 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Meteorology" href="../meteorology.html" />
-    <link rel="prev" title="runtraj.Grid.is_longlat" href="runtraj.Grid.is_longlat.html" />
+    <link rel="next" title="runtraj.stages.get_stage" href="runtraj.stages.get_stage.html" />
+    <link rel="prev" title="runtraj.stages.Stage.settings" href="runtraj.stages.Stage.settings.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev715+g28b0441aa" />
+  <meta name="docsearch:version" content="0.0.1.dev716+g0fb00edcf" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -75,7 +75,7 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="runtraj">
-  <meta property="og:title" content="runtraj.Grid.to_xarray">
+  <meta property="og:title" content="runtraj.stages.Location">
   <meta property="og:description" content="Run particle dispersion models at scale.">
   <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -576,7 +576,7 @@
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="../layout.html">Output Layout</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../configuration.html">Configuration</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../configuration.html">Configuration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.ProjectConfig.html">runtraj.ProjectConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ProjectConfig.from_yaml.html">runtraj.ProjectConfig.from_yaml</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ProjectConfig.met_config.html">runtraj.ProjectConfig.met_config</a></li>
@@ -598,15 +598,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.Grid.html">runtraj.Grid</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.axes.html">runtraj.Grid.axes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.cells.html">runtraj.Grid.cells</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.dims.html">runtraj.Grid.dims</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.index.html">runtraj.Grid.index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.Grid.is_longlat.html">runtraj.Grid.is_longlat</a></li>
-<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.Grid.to_xarray</a></li>
 </ul>
 </details></li>
 </ul>
@@ -639,7 +630,7 @@
 </details></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../execution.html">Execution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../execution.html">Execution</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pending.html">runtraj.execution.pending</a></li>
@@ -695,6 +686,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.settings.html">runtraj.stages.Stage.settings</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.stages.Location</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.stages.get_stage.html">runtraj.stages.get_stage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.stages.ordered.html">runtraj.stages.ordered</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.stages.check_stage.html">runtraj.stages.check_stage</a></li>
@@ -796,12 +788,9 @@
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Reference</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../configuration.html" class="nav-link">Configuration</a></li>
+    <li class="breadcrumb-item"><a href="../execution.html" class="nav-link">Execution</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="runtraj.Grid.html" class="nav-link">runtraj.Grid</a></li>
-    
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.Grid.to_xarray</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.stages.Location</span></li>
   </ul>
 </nav>
 </div>
@@ -818,19 +807,18 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="runtraj-grid-to-xarray">
-<h1>runtraj.Grid.to_xarray<a class="headerlink" href="#runtraj-grid-to-xarray" title="Link to this heading">#</a></h1>
-<dl class="py method">
-<dt class="sig sig-object py" id="runtraj.Grid.to_xarray">
-<span class="sig-prename descclassname"><span class="pre">Grid.</span></span><span class="sig-name descname"><span class="pre">to_xarray</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/spatial.html#Grid.to_xarray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.Grid.to_xarray" title="Link to this definition">#</a></dt>
-<dd><p>Return the grid as a CF-1.8 dataset of cell centers.</p>
-<p>The dataset has <code class="docutils literal notranslate"><span class="pre">lon</span></code> and <code class="docutils literal notranslate"><span class="pre">lat</span></code> coordinates (<code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> when
-projected), and a <code class="docutils literal notranslate"><span class="pre">crs</span></code> grid-mapping variable. Use it to regrid a
-field onto this grid, or with other tools that read CF grids.
-Projected grids need <code class="docutils literal notranslate"><span class="pre">pyproj</span></code>.</p>
+  <section id="runtraj-stages-location">
+<h1>runtraj.stages.Location<a class="headerlink" href="#runtraj-stages-location" title="Link to this heading">#</a></h1>
+<dl class="py data">
+<dt class="sig sig-object py" id="runtraj.stages.Location">
+<span class="sig-prename descclassname"><span class="pre">runtraj.stages.</span></span><span class="sig-name descname"><span class="pre">Location</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeAlias" title="(in Python v3.15)"><span class="pre">TypeAlias</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">pathlib.Path</span> <span class="pre">|</span> <span class="pre">ForwardRef('UPath')</span></span><a class="headerlink" href="#runtraj.stages.Location" title="Link to this definition">#</a></dt>
+<dd><p>a <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.Path</span></code></a> on this
+filesystem, or a <code class="xref py py-class docutils literal notranslate"><span class="pre">upath.UPath</span></code> when the output directory is on an
+object store. Both have <code class="docutils literal notranslate"><span class="pre">open</span></code>, so <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">path.open(&quot;wb&quot;)</span> <span class="pre">as</span> <span class="pre">f:</span></code> writes
+to either.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span></p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Where <a class="reference internal" href="runtraj.stages.Stage.run.html#runtraj.stages.Stage.run" title="runtraj.stages.Stage.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Stage.run()</span></code></a> writes its file</p>
 </dd>
 </dl>
 </dd></dl>
@@ -848,20 +836,20 @@ Projected grids need <code class="docutils literal notranslate"><span class="pre
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="runtraj.Grid.is_longlat.html"
+       href="runtraj.stages.Stage.settings.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">runtraj.Grid.is_longlat</p>
+        <p class="prev-next-title">runtraj.stages.Stage.settings</p>
       </div>
     </a>
     <a class="right-next"
-       href="../meteorology.html"
+       href="runtraj.stages.get_stage.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Meteorology</p>
+        <p class="prev-next-title">runtraj.stages.get_stage</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -884,14 +872,14 @@ Projected grids need <code class="docutils literal notranslate"><span class="pre
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.Grid.to_xarray"><code class="docutils literal notranslate"><span class="pre">Grid.to_xarray()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.stages.Location"><code class="docutils literal notranslate"><span class="pre">Location</span></code></a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/reference/_api/runtraj.Grid.to_xarray.rst.txt">
+    <a href="../../_sources/reference/_api/runtraj.stages.Location.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
