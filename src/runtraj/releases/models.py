@@ -259,8 +259,8 @@ class Release(BaseModel):
     Base class of the release types.
 
     A release is a frozen value: its release time, its release points, and
-    the vertical reference of their heights. Iterating one yields
-    ``(lat, lon, alt)`` for each release point. Two releases are equal when
+    the vertical reference of their heights. ``coords()`` gives
+    ``(lon, lat, alt)`` for each release point. Two releases are equal when
     their type, time, points, and ``altitude_ref`` match; ``attrs`` do not
     count.
     """
@@ -318,7 +318,7 @@ class Release(BaseModel):
         return f"{self.time:%Y%m%d%H%M}_{self.location_id}"
 
     def coords(self) -> list[tuple[float, float, float]]:
-        """Return ``(lat, lon, alt)`` of each release point."""
+        """Return ``(lon, lat, alt)`` of each release point, the order ``from_points`` takes."""
         raise NotImplementedError
 
     def __eq__(self, other: object) -> bool:
@@ -353,7 +353,7 @@ class Release(BaseModel):
     @property
     def points(self) -> list[Point]:
         """Release points as shapely ``Point(lon, lat, alt)`` objects."""
-        return [Point(lon, lat, alt) for lat, lon, alt in self.coords()]
+        return [Point(lon, lat, alt) for lon, lat, alt in self.coords()]
 
     @cached_property
     def plot(self) -> ReleasePlotAccessor:
@@ -497,8 +497,8 @@ class PointRelease(Release):
         )
 
     def coords(self) -> list[tuple[float, float, float]]:
-        """Return ``(lat, lon, alt)`` of the release point."""
-        return [(self.latitude, self.longitude, self.altitude)]
+        """Return ``(lon, lat, alt)`` of the release point."""
+        return [(self.longitude, self.latitude, self.altitude)]
 
     def __repr__(self) -> str:
         return (
@@ -548,10 +548,10 @@ class ColumnRelease(Release):
         )
 
     def coords(self) -> list[tuple[float, float, float]]:
-        """Return ``(lat, lon, alt)`` of the bottom and the top of the column."""
+        """Return ``(lon, lat, alt)`` of the bottom and the top of the column."""
         return [
-            (self.latitude, self.longitude, self.bottom),
-            (self.latitude, self.longitude, self.top),
+            (self.longitude, self.latitude, self.bottom),
+            (self.longitude, self.latitude, self.top),
         ]
 
     def __repr__(self) -> str:
@@ -637,8 +637,8 @@ class MultiPointRelease(Release):
         )
 
     def coords(self) -> list[tuple[float, float, float]]:
-        """Return ``(lat, lon, alt)`` of each release point."""
-        return list(zip(self.latitudes, self.longitudes, self.altitudes, strict=True))
+        """Return ``(lon, lat, alt)`` of each release point."""
+        return list(zip(self.longitudes, self.latitudes, self.altitudes, strict=True))
 
     def __repr__(self) -> str:
         return (

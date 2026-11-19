@@ -103,11 +103,11 @@ def test_control_file_roundtrip_release_time(point_release, tmp_path):
 
 
 def test_control_file_lists_a_location_as_latitude_longitude_height(tmp_path):
-    """CONTROL's order, which is not the (lon, lat, height) of a release's points."""
+    """CONTROL's order; ``locations`` is (lon, lat, height), like a release's points."""
     path = tmp_path / "CONTROL"
     ControlFile(
         release_time=dt.datetime(2023, 7, 15, 18, 5),
-        locations=[(40.766, -111.848, 10.0), (40.5, -112.0, 250.0)],
+        locations=[(-111.848, 40.766, 10.0), (-112.0, 40.5, 250.0)],
         emisshrs=0.01,
         n_hours=-24,
         w_option=0,
@@ -122,8 +122,8 @@ def test_control_file_lists_a_location_as_latitude_longitude_height(tmp_path):
         "40.5 -112.0 250.0",
     ]
     assert ControlFile.read(path).locations == [
-        (40.766, -111.848, 10.0),
-        (40.5, -112.0, 250.0),
+        (-111.848, 40.766, 10.0),
+        (-112.0, 40.5, 250.0),
     ]
 
 
@@ -839,7 +839,7 @@ def test_write_inputs_takes_a_release_time_and_release_locations(tmp_path):
     write_inputs(
         workdir,
         release_time=dt.datetime(2021, 1, 5, 7, 37),
-        locations=[(40.7, -111.9, 1500.0), (40.8, -111.8, 1600.0)],
+        locations=[(-111.9, 40.7, 1500.0), (-111.8, 40.8, 1600.0)],
         config=_config(),
         met_files=[tmp_path / "met" / "dummy"],
         kmsl=1,

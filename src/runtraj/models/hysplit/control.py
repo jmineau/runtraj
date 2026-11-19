@@ -20,8 +20,9 @@ class ControlFile(BaseModel):
     release_time : datetime
         The release time, in UTC, written to the minute.
     locations : list of tuple of float
-        The release locations, each ``(latitude, longitude, height)`` in
-        degrees and meters, in the order ``CONTROL`` lists them. Whether the
+        The release locations, each ``(longitude, latitude, height)`` in
+        degrees and meters, in the order ``CONTROL`` lists them. The file
+        writes each latitude first, as HYSPLIT reads it. Whether the
         heights are above ground or above sea level is ``SETUP.CFG``'s
         ``KMSL``, not in this file.
     emisshrs : float
@@ -60,7 +61,7 @@ class ControlFile(BaseModel):
 
         # (2) number of release locations, (3) one line for each
         lines.append(str(len(self.locations)))
-        for lat, lon, height in self.locations:
+        for lon, lat, height in self.locations:
             lines.append(f"{lat} {lon} {height}")
 
         # Run parameters
@@ -156,7 +157,7 @@ class ControlFile(BaseModel):
         locations = []
         for i in range(cursor, cursor + n_locations):
             lat, lon, height = map(float, lines[i].strip().split())
-            locations.append((lat, lon, height))
+            locations.append((lon, lat, height))
 
         cursor += n_locations
         n_hours = int(lines[cursor].strip())

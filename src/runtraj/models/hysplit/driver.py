@@ -269,7 +269,7 @@ def release_locations(locations: Sequence[tuple[float, float, float]]) -> int:
     latitude and longitude are one: HYSPLIT joins their heights into one
     line source.
     """
-    return len({(lat, lon) for lat, lon, _ in locations})
+    return len({(lon, lat) for lon, lat, _ in locations})
 
 
 def check_release(
@@ -466,7 +466,7 @@ def write_inputs(
     release_time : datetime
         The release time, in UTC.
     locations : sequence of tuple of float
-        The release locations, each ``(latitude, longitude, height)`` in
+        The release locations, each ``(longitude, latitude, height)`` in
         degrees and meters, in the order ``CONTROL`` lists them.
     config : HysplitConfig
         Transport and error settings.

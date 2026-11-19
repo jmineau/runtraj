@@ -115,7 +115,7 @@ def _bounds_extent(bounds: Bounds, pad: float) -> tuple[float, float, float, flo
 
 def _release_points(release: Release) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return the longitudes, latitudes, and heights of a release's release points."""
-    lats, lons, alts = (
+    lons, lats, alts = (
         np.array(v, dtype=float) for v in zip(*release.coords(), strict=True)
     )
     return lons, lats, alts

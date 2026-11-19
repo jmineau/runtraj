@@ -70,7 +70,7 @@ def releases_to_frame(releases: Iterable[Release]) -> pd.DataFrame:
             **{k: r.attrs.get(k) for k in labels},
         }
         for idx, r in enumerate(releases)
-        for lat, lon, alt in r.coords()
+        for lon, lat, alt in r.coords()
     ]
     frame = pd.DataFrame(rows, columns=[*COLUMNS, *labels])
     return frame.astype({"time": "datetime64[ns]"})

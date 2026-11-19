@@ -588,6 +588,32 @@ def test_release_from_points_two_different_xy_makes_multipoint():
     assert isinstance(r, MultiPointRelease)
 
 
+@pytest.mark.parametrize(
+    "release",
+    [
+        PointRelease(
+            time="2021-01-15 12:00", longitude=10.0, latitude=50.0, altitude=10
+        ),
+        PointRelease(
+            time="2021-01-15 12:00", longitude=-111.85, latitude=40.77, altitude=5
+        ),
+        ColumnRelease(
+            time="2021-01-15 12:00", longitude=-111.85, latitude=40.77, bottom=0, top=50
+        ),
+        MultiPointRelease(
+            time="2021-01-15 12:00",
+            longitudes=[-111.85, -111.86],
+            latitudes=[40.77, 40.78],
+            altitudes=[5, 5],
+        ),
+    ],
+)
+def test_release_from_points_takes_back_coords(release):
+    """``coords()`` is (lon, lat, alt), so ``from_points`` rebuilds the same release."""
+    assert release.coords()[0][:2] == (release.points[0].x, release.points[0].y)
+    assert Release.from_points(release.time, release.coords()) == release
+
+
 def test_release_from_points_empty_raises():
     with pytest.raises(ValueError, match="least one"):
         Release.from_points("202301011200", [])
