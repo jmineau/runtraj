@@ -277,7 +277,6 @@ def setup(app: object) -> None:
     import docs_examples
 
     docs_examples.use_tiles()  # tiles kept in docs/_tiles: no network, the same every build
-    docs_examples.fetch_outlines()  # cartopy's first download, outside any page's cell
     app.connect("autodoc-skip-member", skip_pydantic_members)
     app.connect("autodoc-process-docstring", trim_class_docstrings)
     # Ahead of napoleon (priority 500), which reads the comment it gets.

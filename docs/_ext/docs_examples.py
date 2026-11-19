@@ -110,10 +110,16 @@ def _fetch_tile(tile: tuple[int, int, int], path: Path) -> None:
     """Download one tile to ``path`` when the build is asked to, else say how."""
     x, y, z = tile
     if not os.environ.get(FETCH_TILES):
-        raise RuntimeError(
+        message = (
             f"The map tile {z}/{y}/{x} is not in {TILES}. Build the docs once "
             f"with {FETCH_TILES}=1 to download it, then commit the new tiles."
         )
+        # A page's cell saves its figure where an error is not shown, so say
+        # it as a build warning too: warnings fail the build.
+        from sphinx.util import logging
+
+        logging.getLogger(__name__).warning(message)
+        raise RuntimeError(message)
     request = Request(
         TILE_SERVER.format(x=x, y=y, z=z), headers={"User-Agent": "runtraj docs"}
     )
@@ -148,26 +154,6 @@ def committed_tiler():
             return super().get_image(tile)
 
     return CommittedTiles(url=f"{TILES.as_uri()}/{{z}}/{{y}}/{{x}}.jpg")
-
-
-def fetch_outlines() -> None:
-    """
-    Download the state and coast outlines the maps draw, before any page draws one.
-
-    cartopy downloads them from Natural Earth the first time a map is drawn,
-    with a warning. The pages run with warnings as errors, so on a machine
-    that has not drawn a map before, the first one would fail in its cell.
-    """
-    import warnings
-
-    try:
-        import cartopy.feature as cfeature
-    except ImportError:
-        return
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        for feature in (cfeature.STATES, cfeature.COASTLINE):
-            list(feature.geometries())
 
 
 def use_tiles() -> None:
