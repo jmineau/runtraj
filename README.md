@@ -1,4 +1,9 @@
-# runtraj
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/logo_dark.svg">
+    <img alt="runtraj" src="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/logo.svg" height="64">
+  </picture>
+</h1>
 
 [![Tests](https://github.com/jmineau/runtraj/actions/workflows/tests.yml/badge.svg)](https://github.com/jmineau/runtraj/actions/workflows/tests.yml)
 [![Documentation](https://github.com/jmineau/runtraj/actions/workflows/docs.yml/badge.svg)](https://github.com/jmineau/runtraj/actions/workflows/docs.yml)

@@ -90,7 +90,8 @@ html_theme_options = {
     "header_links_before_dropdown": 6,
     # The navbar shows the name alone (it defaults to html_title); the version
     # switcher already says which version this is.
-    # Text only here; the image is added below when docs/_static/logo.svg exists.
+    # Text only here; when docs/_static/logo.svg exists it replaces the text
+    # below, since the logo carries the name.
     "logo": {"text": project},
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     # The version dropdown. The Documentation workflow publishes dev/ (main),
@@ -119,6 +120,8 @@ html_context = {
 }
 
 if (_static / "logo.svg").exists():
+    html_theme_options["logo"].pop("text")
+    html_theme_options["logo"]["alt_text"] = project
     html_theme_options["logo"]["image_light"] = "_static/logo.svg"
     _dark = "logo_dark.svg" if (_static / "logo_dark.svg").exists() else "logo.svg"
     html_theme_options["logo"]["image_dark"] = f"_static/{_dark}"
