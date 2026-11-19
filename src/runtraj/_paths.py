@@ -26,9 +26,6 @@ if TYPE_CHECKING:
     import pyarrow as pa
     from upath import UPath
 
-    #: A place on this filesystem or on an object store.
-    Location = Path | UPath
-
 #: A path on this filesystem, or a universal path on an object store.
 P = TypeVar("P", bound="Path | UPath")
 

@@ -87,7 +87,6 @@ from runtraj.stages import get_stage, reads
 if TYPE_CHECKING:
     from upath import UPath
 
-    from runtraj._paths import Location
     from runtraj.config import Variant
 
 logger = logging.getLogger(__name__)
@@ -134,7 +133,7 @@ def _date_dir(release_id: str) -> str:
     return f"date={time:%Y-%m-%d}"
 
 
-def _names(folder: Location) -> list[str]:
+def _names(folder: Path | UPath) -> list[str]:
     """
     Return the names in *folder*, or none when it does not exist.
 
@@ -153,8 +152,8 @@ def _names(folder: Location) -> list[str]:
 
 
 def _list_release_files(
-    root: Location, suffix: str, among: Iterable[str] | None = None
-) -> dict[str, Location]:
+    root: Path | UPath, suffix: str, among: Iterable[str] | None = None
+) -> dict[str, Path | UPath]:
     """
     Return ``{release_id: path}`` for every ``date=*/<id><suffix>`` under *root*, in date order.
 
@@ -190,12 +189,12 @@ def _list_release_files(
     return found
 
 
-def _read_yaml(path: Location) -> dict[str, Any]:
+def _read_yaml(path: Path | UPath) -> dict[str, Any]:
     """Return a YAML file of one mapping as a dict; an empty file is ``{}``."""
     return yaml.safe_load(path.read_text()) or {}
 
 
-def _write_yaml(path: Location, record: dict[str, Any]) -> None:
+def _write_yaml(path: Path | UPath, record: dict[str, Any]) -> None:
     """Write *record* to *path* as YAML in one step, making its folder as needed."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with atomic_path(path) as tmp:
@@ -204,7 +203,7 @@ def _write_yaml(path: Location, record: dict[str, Any]) -> None:
         )
 
 
-def _write_settings(path: Location, record: dict[str, Any]) -> None:
+def _write_settings(path: Path | UPath, record: dict[str, Any]) -> None:
     """Write a ``settings.yaml`` once. An existing file with the same hash is left alone."""
     if path.exists():
         existing = _read_yaml(path)
@@ -278,7 +277,9 @@ _NO_STAGE_FILES = pa.table(
 )
 
 
-def _old_files_message(kind: Kind, folder: Location, paths: list[Location]) -> str:
+def _old_files_message(
+    kind: Kind, folder: Path | UPath, paths: list[Path | UPath]
+) -> str:
     """Return the error for files that hold ``receptor`` where they now hold ``release``, naming the first."""
     first = paths[0]
     for path in paths:
@@ -297,7 +298,7 @@ _DATE_PARTITIONING = pads.partitioning(
 )
 
 
-def _settings_folders(tree: Location) -> list[str]:
+def _settings_folders(tree: Path | UPath) -> list[str]:
     """Return the ``settings=`` values under *tree* that hold a settings file, in name order."""
     return [
         name[len("settings=") :]
@@ -307,8 +308,8 @@ def _settings_folders(tree: Location) -> list[str]:
 
 
 def _release_file(
-    folder: Location, release_id: str, suffix: str = ".parquet"
-) -> Location:
+    folder: Path | UPath, release_id: str, suffix: str = ".parquet"
+) -> Path | UPath:
     """Return a release's file in *folder*: ``date=YYYY-MM-DD/<release_id><suffix>``."""
     return folder / _date_dir(release_id) / f"{release_id}{suffix}"
 
@@ -326,7 +327,7 @@ def completed(particles: frozenset[str], *stages: frozenset[str]) -> frozenset[s
     return particles.intersection(*stages)
 
 
-def _count_files(folder: Location) -> int:
+def _count_files(folder: Path | UPath) -> int:
     """Return how many result files a settings folder holds, in every ``realization=k`` partition."""
     parts = [n for n in _names(folder) if n.startswith("realization=")]
     roots = [folder / n for n in parts] if parts else [folder]
@@ -363,7 +364,7 @@ def _diff(
 
 
 def _differences(
-    kind: Kind, record: Mapping[str, Any], variant: Variant, path: Location
+    kind: Kind, record: Mapping[str, Any], variant: Variant, path: Path | UPath
 ) -> str:
     """Return how a folder's stored settings differ from *variant*'s, the first four, ``; ``-joined."""
     if kind == "particles":
@@ -434,7 +435,7 @@ class Output:
 
     def __init__(self, path: str | Path | UPath) -> None:
         #: The output directory, a Path or a universal path on an object store.
-        self.directory: Location = location(path)
+        self.directory: Path | UPath = location(path)
         # Each folder's settings hash, by kind and folder name. Reading one
         # means reading its _settings.yaml and hashing it again, so each is
         # read once; a lookup that misses lists the tree again.
@@ -663,7 +664,7 @@ class Output:
                 return name
         return None
 
-    def folder(self, kind: Kind, variant: Variant) -> Location | None:
+    def folder(self, kind: Kind, variant: Variant) -> Path | UPath | None:
         """
         Return *variant*'s folder of *kind*, or ``None`` before it exists.
 
@@ -672,7 +673,7 @@ class Output:
         name = self._name(kind, variant)
         return None if name is None else self._dir(kind, name)
 
-    def _dir(self, tree: str, name: str) -> Location:
+    def _dir(self, tree: str, name: str) -> Path | UPath:
         """Return the folder *name* of a tree: ``<tree>/settings=<name>``."""
         return self.directory / tree / f"settings={name}"
 
@@ -732,7 +733,7 @@ class Output:
 
     def _part(
         self, tree: str, name: str, variant: Variant, realization: int | None
-    ) -> Location:
+    ) -> Path | UPath:
         """
         Return the folder *name* of a tree, inside its ``realization=k`` partition for an ensemble.
 
@@ -747,7 +748,7 @@ class Output:
 
     def _found(
         self, kind: Kind, tree: str, variant: Variant, realization: int | None
-    ) -> Location | None:
+    ) -> Path | UPath | None:
         """Return the existing folder of *variant*'s results of *kind* in *tree*, or ``None``."""
         _check_realization(variant, realization)
         name = self._name(kind, variant)
@@ -755,7 +756,7 @@ class Output:
 
     def _made(
         self, kind: Kind, tree: str, variant: Variant, realization: int | None
-    ) -> Location:
+    ) -> Path | UPath:
         """Return the folder of *variant*'s results of *kind* in *tree*, making the settings folder on first use."""
         return self._part(tree, self._create(kind, variant), variant, realization)
 
@@ -767,7 +768,7 @@ class Output:
         variant: Variant,
         release_id: str,
         realization: int | None = None,
-    ) -> Location | None:
+    ) -> Path | UPath | None:
         """
         Return the file of one release's result, whether or not it exists.
 
@@ -786,7 +787,7 @@ class Output:
         variant: Variant,
         release_id: str,
         realization: int | None = None,
-    ) -> Location:
+    ) -> Path | UPath:
         """
         Return where one release's result of *kind* is written, making the variant's settings folder on first use.
 
@@ -851,14 +852,14 @@ class Output:
 
     def log_path(
         self, variant: Variant, release_id: str, realization: int | None = None
-    ) -> Location | None:
+    ) -> Path | UPath | None:
         """Return where the log of a release's transport model run is kept, or ``None`` before its folder exists."""
         logs = self._found("particles", "logs", variant, realization)
         return None if logs is None else _release_file(logs, release_id, ".log")
 
     def kept_workdir(
         self, variant: Variant, release_id: str, realization: int | None = None
-    ) -> Location | None:
+    ) -> Path | UPath | None:
         """Return where a release's failed run's working directory is kept, or ``None`` before its folder exists."""
         kept = self._found("particles", "scratch", variant, realization)
         return None if kept is None else kept / _date_dir(release_id) / release_id
@@ -1069,7 +1070,7 @@ class Output:
         particles: pd.DataFrame,
         met_files: list[Path],
         realization: int | None = None,
-    ) -> Location:
+    ) -> Path | UPath:
         """
         Write a release's particles (:func:`runtraj.particles.write_particles`).
 
@@ -1122,7 +1123,7 @@ class Output:
         release_id: str,
         text: str,
         realization: int | None = None,
-    ) -> Location:
+    ) -> Path | UPath:
         """Write the log of a release's transport model run."""
         logs = self._made("particles", "logs", variant, realization)
         path = _release_file(logs, release_id, ".log")
@@ -1136,7 +1137,7 @@ class Output:
         release_id: str,
         workdir: Path,
         realization: int | None = None,
-    ) -> Location:
+    ) -> Path | UPath:
         """
         Copy a run's working directory to :meth:`kept_workdir`, replacing an earlier copy.
 

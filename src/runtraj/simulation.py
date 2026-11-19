@@ -21,7 +21,8 @@ from runtraj.releases import Release
 from runtraj.stages import reads
 
 if TYPE_CHECKING:
-    from runtraj._paths import Location
+    from upath import UPath
+
     from runtraj.config import Variant
 
 logger = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ class Simulation:
 
     # -- where the results are ---------------------------------------------
 
-    def path(self, kind: str) -> Location | None:
+    def path(self, kind: str) -> Path | UPath | None:
         """
         Return the path of this simulation's file of *kind* in the output directory.
 
@@ -143,17 +144,17 @@ class Simulation:
         return path is not None and path.exists()
 
     @property
-    def particles_path(self) -> Location | None:
+    def particles_path(self) -> Path | UPath | None:
         """Path of the particle file in the output directory, or ``None`` before its folder exists."""
         return self.path("particles")
 
     @property
-    def log_path(self) -> Location | None:
+    def log_path(self) -> Path | UPath | None:
         """Path of the transport model's log in the output directory, or ``None`` before its folder exists."""
         return self.output.log_path(self.variant, self.release.id, self.realization)
 
     @property
-    def kept_workdir(self) -> Location | None:
+    def kept_workdir(self) -> Path | UPath | None:
         """
         Where a failed run's working directory is kept, or ``None`` before its folder exists.
 

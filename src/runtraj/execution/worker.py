@@ -45,7 +45,8 @@ from runtraj.simulation import Simulation
 from runtraj.stages import reads
 
 if TYPE_CHECKING:
-    from runtraj._paths import Location
+    from upath import UPath
+
     from runtraj.project import Project
 
 logger = logging.getLogger(__name__)
@@ -338,7 +339,7 @@ def run_particles_batch(
 
 
 @contextlib.contextmanager
-def _stage_file(path: Location, suffix: str) -> Iterator[Location]:
+def _stage_file(path: Path | UPath, suffix: str) -> Iterator[Path | UPath]:
     """
     Yield where a stage writes *path*, and leave a whole file there or none.
 

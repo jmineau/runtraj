@@ -27,8 +27,6 @@ from runtraj.releases import (
 if TYPE_CHECKING:
     from upath import UPath
 
-    from runtraj._paths import Location
-
 
 #: The columns every particle table has, as a particle file stores them:
 #: what a transport model's run must return. ``particle`` is the particle number
@@ -264,7 +262,7 @@ def write_particles(
     settings: Mapping[str, Any],
     met_files: list[Path],
     metadata: dict[bytes, bytes] | None = None,
-) -> Location:
+) -> Path | UPath:
     """
     Write a particle table to a Parquet file that :func:`read_particles` reads alone.
 
