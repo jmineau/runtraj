@@ -10,6 +10,10 @@ to do something, start with the :doc:`../guides/index` instead.
 :doc:`particles`
    The particle table a transport model run gives: its columns and units.
 
+:doc:`transforms`
+   Weighting particle rows (averaging kernels, pressure weighting, loss
+   along the way), and sampling a gridded field at particles.
+
 :doc:`layout`
    The files of an output directory, for reading them without runtraj.
 
@@ -36,6 +40,7 @@ to do something, start with the :doc:`../guides/index` instead.
 
    core
    particles
+   transforms
    layout
    configuration
    meteorology

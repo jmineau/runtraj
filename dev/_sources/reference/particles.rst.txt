@@ -113,6 +113,14 @@ Columns runtraj adds
    not stored; reading a particle file adds it, and so does
    :func:`runtraj.run_trajectories`.
 
+``weight``
+   How much each row counts, written by the particle transforms
+   (:doc:`transforms`), which multiply it; 1 where none has run. It is not
+   stored: a stage applies its transforms when it reads the particles, and
+   multiplies what it makes from a row by the row's weight. Pressure
+   weighting and an averaging kernel also add ``pwf``, ``xpres`` and
+   ``ak_weight``.
+
 Checking a table
 ----------------
 
