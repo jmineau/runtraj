@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=be7f2736"></script>
+    <script src="../_static/documentation_options.js?v=fc35c424"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev698+ge6f476a92" />
+  <meta name="docsearch:version" content="0.0.1.dev701+g6cf570711" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -539,9 +539,8 @@ its <code class="docutils literal notranslate"><span class="pre">DEFGRID.INC</sp
 read at most 128 met files: 32 days of 6-hour files, or about 5 days of
 hourly ones. A run that needs more stops with <code class="docutils literal notranslate"><span class="pre">Numb</span> <span class="pre">meteo</span> <span class="pre">times</span> <span class="pre">exceed</span>
 <span class="pre">DEFGRID</span> <span class="pre">limit</span></code> in its log.</p>
-<p>Listing each file as its own grid instead, as STILT-R does, is limited to
-12 files a run in NOAA’s builds (<code class="docutils literal notranslate"><span class="pre">mgrd</span></code>). The particles are the same
-either way.</p>
+<p>Listing each file as its own grid instead is limited to 12 files a run in
+NOAA’s builds (<code class="docutils literal notranslate"><span class="pre">mgrd</span></code>). The particles are the same either way.</p>
 <p>To rerun a kept workdir by hand, you can edit its <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file. A
 <code class="docutils literal notranslate"><span class="pre">#</span></code> starts a comment on the start time, the starting locations, and the
 line with the number of met files. HYSPLIT reads the met directory and

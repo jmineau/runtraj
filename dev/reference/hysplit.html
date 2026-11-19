@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=be7f2736"></script>
+    <script src="../_static/documentation_options.js?v=fc35c424"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev698+ge6f476a92" />
+  <meta name="docsearch:version" content="0.0.1.dev701+g6cf570711" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -816,7 +816,7 @@ above ground and 1 above sea level, as <code class="docutils literal notranslate
 release points (<code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>) and <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>.
 <a class="reference internal" href="_api/runtraj.transport.hysplit.run_hycs_std.html#runtraj.transport.hysplit.run_hycs_std" title="runtraj.transport.hysplit.run_hycs_std"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_hycs_std()</span></code></a> runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> in the
 folder, and <a class="reference internal" href="_api/runtraj.transport.hysplit.read_particle_dat.html#runtraj.transport.hysplit.read_particle_dat" title="runtraj.transport.hysplit.read_particle_dat"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_particle_dat()</span></code></a> reads its
-<code class="docutils literal notranslate"><span class="pre">PARTICLE_STILT.DAT</span></code> as a particle table. Use them to look at or change
+particle file as a particle table. Use them to look at or change
 the input files of a run. A project run then adds the release heights
 (<a class="reference internal" href="particles.html"><span class="doc">The Particle Table</span></a>); by hand:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -828,6 +828,7 @@ the input files of a run. A project run then adds the release heights
     <span class="n">run_hycs_std</span><span class="p">,</span>
     <span class="n">write_inputs</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.transport.hysplit.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">PARTICLE_FILE</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">HysplitConfig</span><span class="p">(</span><span class="n">n_hours</span><span class="o">=-</span><span class="mi">24</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 <span class="n">write_inputs</span><span class="p">(</span>
@@ -839,9 +840,8 @@ the input files of a run. A project run then adds the release heights
     <span class="n">kmsl</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">release</span><span class="o">.</span><span class="n">altitude_ref</span> <span class="o">==</span> <span class="s2">"msl"</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">run_hycs_std</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"run"</span><span class="p">))</span>
-<span class="n">particles</span> <span class="o">=</span> <span class="n">read_particle_dat</span><span class="p">(</span><span class="s2">"run/PARTICLE_STILT.DAT"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>
+<span class="n">particles</span> <span class="o">=</span> <span class="n">read_particle_dat</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"run"</span><span class="p">)</span> <span class="o">/</span> <span class="n">PARTICLE_FILE</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>
 <span class="n">particles</span> <span class="o">=</span> <span class="n">add_release_heights</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">)</span>
-<span class="n">particles</span> <span class="o">=</span> <span class="n">correct_near_field</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">veght</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
@@ -853,7 +853,7 @@ the input files of a run. A project run then adds the release heights
 <td><p>Run the <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> in <em>workdir</em>, writing its output to <code class="docutils literal notranslate"><span class="pre">hysplit.log</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.transport.hysplit.read_particle_dat.html#runtraj.transport.hysplit.read_particle_dat" title="runtraj.transport.hysplit.read_particle_dat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.transport.hysplit.read_particle_dat</span></code></a></p></td>
-<td><p>Read a <code class="docutils literal notranslate"><span class="pre">PARTICLE_STILT.DAT</span></code> file as a particle table.</p></td>
+<td><p>Read HYSPLIT's particle file as a particle table.</p></td>
 </tr>
 </tbody>
 </table>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=be7f2736"></script>
+    <script src="../_static/documentation_options.js?v=fc35c424"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev698+ge6f476a92" />
+  <meta name="docsearch:version" content="0.0.1.dev701+g6cf570711" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -670,7 +670,7 @@ of any selection of runs as one table:</p>
 <p>Every <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> entry that can change the particles is a setting of the
 same name in lowercase, such as <code class="docutils literal notranslate"><span class="pre">numpar</span></code>, <code class="docutils literal notranslate"><span class="pre">kmixd</span></code> or <code class="docutils literal notranslate"><span class="pre">tlfrac</span></code>
 (<a class="reference internal" href="../reference/configuration.html"><span class="doc">Configuration</span></a> lists them). Each defaults to HYSPLIT’s
-own value in STILT mode. A setting HYSPLIT decides only after reading the
+own value with <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>. A setting HYSPLIT decides only after reading the
 file (<code class="docutils literal notranslate"><span class="pre">capemin</span></code>, <code class="docutils literal notranslate"><span class="pre">kblt</span></code>, <code class="docutils literal notranslate"><span class="pre">kmixd</span></code>, <code class="docutils literal notranslate"><span class="pre">krand</span></code>, <code class="docutils literal notranslate"><span class="pre">vscales</span></code>) is left out
 unless you give it, so HYSPLIT chooses. runtraj writes the rest itself:</p>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -718,7 +718,7 @@ unless you give it, so HYSPLIT chooses. runtraj writes the rest itself:</p>
 <td><p>The wind and mixed-layer error settings, and <code class="docutils literal notranslate"><span class="pre">ziscale</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> <code class="docutils literal notranslate"><span class="pre">DELT</span></code>, <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code>, <code class="docutils literal notranslate"><span class="pre">KAGL</span></code>, <code class="docutils literal notranslate"><span class="pre">CMASS</span></code> and 37 more</p></td>
-<td><p>Fixed: STILT mode overrides them, or only concentration grids, puffs,
+<td><p>Fixed: <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code> overrides them, or only concentration grids, puffs,
 dump files or other HYSPLIT programs read them
 (<code class="xref py py-data docutils literal notranslate"><span class="pre">FIXED_SETUP</span></code>)</p></td>
 </tr>
@@ -731,7 +731,7 @@ dump files or other HYSPLIT programs read them
 </section>
 <section id="what-runtraj-leaves-to-other-tools">
 <h2>What runtraj leaves to other tools<a class="headerlink" href="#what-runtraj-leaves-to-other-tools" title="Link to this heading">#</a></h2>
-<p>runtraj runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> in its STILT mode (<code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>), which writes
+<p>runtraj runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> with <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>, which writes
 particle positions and the met along them. Concentration grids
 (<code class="docutils literal notranslate"><span class="pre">cdump</span></code>), puffs and <code class="docutils literal notranslate"><span class="pre">tdump</span></code> trajectory files come from HYSPLIT run on
 its own, and NOAA’s <a class="reference external" href="https://github.com/noaa-oar-arl/monetio">monetio</a>

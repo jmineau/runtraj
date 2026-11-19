@@ -6,7 +6,7 @@ direction. In a backward run, the usual one, the particles start at the
 receptor, the place you measured, and are followed back in time toward the
 sources that influenced it. In a forward run they start at the source and
 are followed forward toward where the air goes. A release placed at a
-measurement and followed backward is what STILT calls a *receptor*. Pick
+measurement and followed backward is often called a *receptor*. Pick
 the release type that matches how your instrument samples the air.
 
 .. _release-source-receptor:
@@ -154,7 +154,7 @@ A time with an offset, such as ``2023-07-15T12:00:00-06:00``, is converted
 to UTC; one without is taken as UTC. Other forms are refused, naming the
 row: ``05/07/2023`` could be 5 July or 7 May.
 
-The column names from STILT-R also work. Use ``long`` or ``lon`` for
+Some other column names also work. Use ``long`` or ``lon`` for
 longitude, ``lati`` or ``lat`` for latitude, and ``zagl`` or ``zmsl`` for
 altitude. A ``zmsl`` column means the altitudes are above sea level. To mix
 the two in one file, add an ``altitude_ref`` (or ``height_ref``) column with

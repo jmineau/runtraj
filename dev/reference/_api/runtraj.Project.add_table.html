@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=be7f2736"></script>
+    <script src="../../_static/documentation_options.js?v=fc35c424"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev698+ge6f476a92" />
+  <meta name="docsearch:version" content="0.0.1.dev701+g6cf570711" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -771,9 +771,8 @@
 <dt class="sig sig-object py" id="runtraj.Project.add_table">
 <span class="sig-prename descclassname"><span class="pre">Project.</span></span><span class="sig-name descname"><span class="pre">add_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/project.html#Project.add_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.Project.add_table" title="Link to this definition">#</a></dt>
 <dd><p>Add rows to one of the project’s input tables, and return its path.</p>
-<p>A table is an input, like <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>: the averaging kernels of
-satellite soundings, for one, which a transform names as <code class="docutils literal notranslate"><span class="pre">table:</span>
-<span class="pre">kernels</span></code>. It is kept as <code class="docutils literal notranslate"><span class="pre">tables/&lt;name&gt;.parquet</span></code>, created if
+<p>A table is an input, like <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>, that a stage’s settings
+name, as in <code class="docutils literal notranslate"><span class="pre">table:</span> <span class="pre">kernels</span></code>. It is kept as <code class="docutils literal notranslate"><span class="pre">tables/&lt;name&gt;.parquet</span></code>, created if
 needed and otherwise added to. When the table has a <code class="docutils literal notranslate"><span class="pre">release</span></code>
 column, rows of a release it already holds are left out, so adding
 the same kernels again changes nothing.</p>

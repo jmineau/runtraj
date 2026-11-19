@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=be7f2736"></script>
+    <script src="../../_static/documentation_options.js?v=fc35c424"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,7 +62,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev698+ge6f476a92" />
+  <meta name="docsearch:version" content="0.0.1.dev701+g6cf570711" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1253,7 +1253,7 @@
 <span class="sd">        """</span>
         <span class="n">given</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_fields_set</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="n">given</span> <span class="o">-</span> <span class="p">{</span><span class="s2">"models"</span><span class="p">,</span> <span class="s2">"stages"</span><span class="p">})</span>
-        <span class="c1"># A block's settings as its class writes them (a transform by its kind).</span>
+        <span class="c1"># A block's settings as its class writes them.</span>
         <span class="k">if</span> <span class="s2">"models"</span> <span class="ow">in</span> <span class="n">given</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">"models"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_JSON</span><span class="o">.</span><span class="n">dump_python</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">"stages"</span> <span class="ow">in</span> <span class="n">given</span><span class="p">:</span>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=be7f2736"></script>
+    <script src="../_static/documentation_options.js?v=fc35c424"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev698+ge6f476a92" />
+  <meta name="docsearch:version" content="0.0.1.dev701+g6cf570711" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -487,7 +487,7 @@ direction. In a backward run, the usual one, the particles start at the
 receptor, the place you measured, and are followed back in time toward the
 sources that influenced it. In a forward run they start at the source and
 are followed forward toward where the air goes. A release placed at a
-measurement and followed backward is what STILT calls a <em>receptor</em>. Pick
+measurement and followed backward is often called a <em>receptor</em>. Pick
 the release type that matches how your instrument samples the air.</p>
 <figure class="align-center" id="id1">
 <span id="release-source-receptor"></span><a class="reference internal image-reference" href="../_images/release_source_receptor.svg"><img alt="A factory, the source, sits upwind on the left and a measurement tower, the receptor, downwind on the right. A backward run releases particles at the top of the tower and follows them back in time toward the factory. A forward run releases particles at the factory chimney and follows them forward in time toward the tower." src="../_images/release_source_receptor.svg" style="width: 100%;" />
@@ -626,7 +626,7 @@ form has one row per point release:</p>
 A time with an offset, such as <code class="docutils literal notranslate"><span class="pre">2023-07-15T12:00:00-06:00</span></code>, is converted
 to UTC; one without is taken as UTC. Other forms are refused, naming the
 row: <code class="docutils literal notranslate"><span class="pre">05/07/2023</span></code> could be 5 July or 7 May.</p>
-<p>The column names from STILT-R also work. Use <code class="docutils literal notranslate"><span class="pre">long</span></code> or <code class="docutils literal notranslate"><span class="pre">lon</span></code> for
+<p>Some other column names also work. Use <code class="docutils literal notranslate"><span class="pre">long</span></code> or <code class="docutils literal notranslate"><span class="pre">lon</span></code> for
 longitude, <code class="docutils literal notranslate"><span class="pre">lati</span></code> or <code class="docutils literal notranslate"><span class="pre">lat</span></code> for latitude, and <code class="docutils literal notranslate"><span class="pre">zagl</span></code> or <code class="docutils literal notranslate"><span class="pre">zmsl</span></code> for
 altitude. A <code class="docutils literal notranslate"><span class="pre">zmsl</span></code> column means the altitudes are above sea level. To mix
 the two in one file, add an <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code> (or <code class="docutils literal notranslate"><span class="pre">height_ref</span></code>) column with

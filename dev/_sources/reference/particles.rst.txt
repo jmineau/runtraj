@@ -69,7 +69,7 @@ Some of them:
    * - ``foot``
      - ppm per (µmol m⁻² s⁻¹)
      - The particle's sensitivity to surface fluxes accumulated over the
-       output step, which HYSPLIT computes in its STILT mode with its
+       output step, which HYSPLIT computes with ``ICHEM=8`` and its
        ``veght`` (Lin et al., 2003).
    * - ``mlht``
      - m
