@@ -56,7 +56,10 @@ complete = [
 [dependency-groups]
 # Dev tooling and docs together; `uv sync` installs it by default.
 dev = [
-    "runtraj[complete]",
+    # The extras, spelled out: the floors job resolves the group with `uv pip
+    # compile`, which would look for `runtraj[complete]` on PyPI.
+    "arlmet[archives]>=0.1.0b10",
+    "cartopy>=0.26",
     "cf-xarray>=0.10",  # the CF trajectory export is read back with it
     "netcdf4>=1.6.5",  # and written to a file in its tests
     "docstr-coverage>=2.3",

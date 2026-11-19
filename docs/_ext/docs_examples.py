@@ -150,6 +150,26 @@ def committed_tiler():
     return CommittedTiles(url=f"{TILES.as_uri()}/{{z}}/{{y}}/{{x}}.jpg")
 
 
+def fetch_outlines() -> None:
+    """
+    Download the state and coast outlines the maps draw, before any page draws one.
+
+    cartopy downloads them from Natural Earth the first time a map is drawn,
+    with a warning. The pages run with warnings as errors, so on a machine
+    that has not drawn a map before, the first one would fail in its cell.
+    """
+    import warnings
+
+    try:
+        import cartopy.feature as cfeature
+    except ImportError:
+        return
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for feature in (cfeature.STATES, cfeature.COASTLINE):
+            list(feature.geometries())
+
+
 def use_tiles() -> None:
     """
     Draw every new map of this docs build on the committed tiles.
