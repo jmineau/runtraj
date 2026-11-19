@@ -359,3 +359,14 @@ def test_central_longitude_is_zero_unless_the_extent_runs_past_180():
     assert _central_longitude((-180.0, 180.0, -90.0, 90.0)) == 0.0
     assert _central_longitude((169.95, 190.05, 40.0, 50.0)) == pytest.approx(180.0)
     assert _central_longitude((-190.05, -169.95, 40.0, 50.0)) == pytest.approx(-180.0)
+
+
+def test_plotting_without_matplotlib_names_the_extra(monkeypatch):
+    """A missing matplotlib says to install the visualization extra."""
+    import importlib
+    import sys
+
+    monkeypatch.setitem(sys.modules, "matplotlib", None)
+    monkeypatch.delitem(sys.modules, "runtraj.visualization")
+    with pytest.raises(ImportError, match=r"runtraj\[visualization\]"):
+        importlib.import_module("runtraj.visualization")

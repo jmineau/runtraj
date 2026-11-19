@@ -6,11 +6,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
+
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+except ImportError as error:
+    raise ImportError(
+        "Plotting requires matplotlib, which the visualization extra installs. "
+        'Install it with: pip install "runtraj[visualization]"'
+    ) from error
 
 if TYPE_CHECKING:
     from cartopy.io.img_tiles import GoogleTiles
