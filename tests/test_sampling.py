@@ -596,3 +596,15 @@ def test_a_particle_time_between_microseconds_is_sampled(tmp_path):
     sampled = sample_met(particles, [met], columns=["mlht"])
 
     assert sampled["mlht"].iloc[0] == pytest.approx(600.0, rel=1e-6)
+
+
+def test_calc_pbl_height_is_nan_where_the_met_lacks_the_heat_flux(tmp_path):
+    """A GFS analysis has no fluxes; a missing one must not read as stable air."""
+    met = arlmet.open_dataset(_met_file(tmp_path / "met.arl", winds=True))
+    shtf = met["SHTF"].where(met["time"] != met["time"][1])
+    particles = _particles_at([_T0, _T0 + pd.Timedelta(minutes=30), _T1], [100.0] * 3)
+
+    mlht = sampling.calc_pbl_height(particles, met.assign(SHTF=shtf))
+
+    assert np.isfinite(mlht[0])
+    assert np.isnan(mlht[1:]).all()
