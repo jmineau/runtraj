@@ -30,10 +30,10 @@ public API may still change.
 
 ## Installation
 
-Until its first release, install it from this repository:
+Install it from PyPI:
 
 ```bash
-pip install "runtraj @ git+https://github.com/jmineau/runtraj"
+pip install runtraj
 ```
 
 For plotting and for downloading meteorology from NOAA, add the `complete` extra
