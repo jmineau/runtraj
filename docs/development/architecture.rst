@@ -56,6 +56,8 @@ Module map
      models/         the TransportModel and TransportConfig protocols, MODELS, get_model
        hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
      execution/      ExecutionConfig, the runner (plan, local run, Slurm submit), the worker
+     transforms/     particle transforms, each multiplying the weight column
+     sampling.py     sample_field, a gridded field read at points
      meteorology.py, spatial.py, visualization.py, exceptions.py
 
 The import contracts in ``pyproject.toml`` (``just imports``) hold this

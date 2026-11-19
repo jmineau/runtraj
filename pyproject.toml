@@ -139,6 +139,8 @@ layers = [
     "identity : meteorology : models",
     "particles",
     "releases : visualization",
+    "transforms",
+    "sampling",
     "spatial",
     "_plugins",
     "_paths | exceptions | _transient",
