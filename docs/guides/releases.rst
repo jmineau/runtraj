@@ -230,6 +230,21 @@ fewer particles or none. Leave ``maxpar`` unset: runtraj then gives HYSPLIT
 room for every location (``n * (numpar // n + 1)``). A run whose ``maxpar``
 cuts a multipoint release short fails as ``PARTICLE_LIMIT``.
 
+A release happens at one time, but HYSPLIT releases its particles over
+``emisshrs`` hours, starting at that time. The default,
+0.01 hours (36 seconds), is close to an instant, which is what a measurement
+at one moment needs. For a source that emits over a period, or an instrument
+that averages over one, set ``emisshrs`` to that period in hours:
+
+.. code-block:: yaml
+
+   models:
+     hysplit:
+       emisshrs: 1.0
+
+The particles are then spread evenly over the hour. :doc:`choosing_settings`
+lists the other settings HYSPLIT chooses for you.
+
 
 Advanced: release heights for multipoint and slant releases
 ------------------------------------------------------------

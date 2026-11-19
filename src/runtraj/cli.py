@@ -244,12 +244,14 @@ def check(project: str | None = _PROJECT_ARG) -> None:
     For each variant, checks that the met's directory exists and holds ARL
     files, that every met file each release's run needs is there (naming
     the hours), that the first of them holds more than one time period,
-    which HYSPLIT needs, that each release is inside the met's crop box,
-    that ``varsiwant`` holds ``zsfc`` when releases above sea level need it,
-    and what each stage finds in its own settings.
-    Nothing is run or downloaded. It looks for files, not inside
-    them: a run that passes can still fail as MET_COVERAGE, when a met file
-    is damaged or cut short, or the release is outside the files' domain.
+    which HYSPLIT needs, and that each ends on a whole time step, that each
+    release is inside the grid of the met files its run starts in (or inside
+    the crop box, when the met is cropped), that ``varsiwant`` holds ``zsfc``
+    when releases above sea level need it, and what each stage finds in its
+    own settings.
+    Nothing is run or downloaded. It opens only a met file or two, for
+    their time periods and grid: a run that passes can still fail as
+    MET_COVERAGE, when a met file is damaged.
     Exits with 0 when it finds nothing, 1 when it lists anything, and 2 when
     the command line is wrong or the project's files are invalid.
     """

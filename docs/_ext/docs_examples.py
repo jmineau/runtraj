@@ -6,9 +6,10 @@ cropped around Salt Lake. A page that works with a project on disk starts from
 a small sample project, which is built once per docs build (about 40 s) and
 copied into a temporary folder for each page that uses it.
 
-Every run on these pages uses ``krand=2`` and ``seed=42``. HYSPLIT's default,
-``krand=4``, draws the random numbers for its turbulence from the clock, so
-each build would make different particles, numbers, and figures.
+Every run on these pages uses ``krand=2`` and ``seed=42``. Without a fixed
+seed, HYSPLIT's random numbers for turbulence change from run to run (and
+``krand=4`` draws them from the clock), so each build would make different
+particles, numbers, and figures.
 
 A page uses these from a block that is run but not shown (``:suppress:``)::
 

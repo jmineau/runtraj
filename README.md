@@ -16,6 +16,8 @@ what is made from the particles afterwards, plug in by the import path of a clas
 runtraj is not a model: it runs one, for every release and every set of settings, and
 keeps track of what is done.
 
+The guides and the API reference are at <https://jmineau.github.io/runtraj>.
+
 ## Status
 
 runtraj is alpha software. There are no backward compatibility guarantees before v1.0, and the
