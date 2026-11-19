@@ -169,12 +169,16 @@ For an ensemble of the same run with different turbulence, give a variant
 Where each ``CONTROL`` and ``SETUP.CFG`` line comes from
 --------------------------------------------------------
 
-Every ``SETUP.CFG`` entry that can change the particles is a setting of the
-same name in lowercase, such as ``numpar``, ``kmixd`` or ``tlfrac``
+Every ``SETUP.CFG`` entry but ``ICHEM`` and ``IDSP`` is a setting of the same name in
+lowercase, such as ``numpar``, ``kmixd`` or ``tlfrac``
 (:doc:`../reference/configuration` lists them). Each defaults to HYSPLIT's
 own value with ``ICHEM=8``. A setting HYSPLIT decides only after reading the
-file (``capemin``, ``kblt``, ``kmixd``, ``krand``, ``vscales``) is left out
-unless you give it, so HYSPLIT chooses. runtraj writes the rest itself:
+file (``capemin``, ``cpack``, ``kblt``, ``kmixd``, ``krand``,
+``vscales``) is left out unless you give it, so HYSPLIT chooses. Some act
+only with another: the puff settings when ``initd`` releases puffs, and
+``pinpf`` when ``ninit`` reads particles from a file. ``delt`` has no
+effect, since HYSPLIT steps 1 minute with ``ICHEM=8``. runtraj writes the
+rest itself:
 
 .. list-table::
    :header-rows: 1
@@ -204,9 +208,8 @@ unless you give it, so HYSPLIT chooses. runtraj writes the rest itself:
      - ``seed``, written as ``-(abs(seed) + 1)``
    * - ``SETUP.CFG`` ``WINDERRTF``, ``ZICONTROLTF``
      - The wind and mixed-layer error settings, and ``ziscale``
-   * - ``SETUP.CFG`` ``DELT``, ``ICHEM``, ``KAGL``, ``CMASS`` and 37 more
-     - Fixed: ``ICHEM=8`` overrides them, or only concentration grids, puffs,
-       dump files or other HYSPLIT programs read them
+   * - ``SETUP.CFG`` ``ICHEM``, ``IDSP``
+     - Fixed at 8 and 2, the only values with which HYSPLIT writes particles
        (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`)
 
 To read the files of one run, pass ``workdir="run"`` to
