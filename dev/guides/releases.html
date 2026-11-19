@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=6fce01d4"></script>
+    <script src="../_static/documentation_options.js?v=9bcd4d64"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev710+g22c06ef19" />
+  <meta name="docsearch:version" content="0.0.1.dev711+gb975b480a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -694,6 +694,18 @@ in order, so a <code class="docutils literal notranslate"><span class="pre">maxp
 fewer particles or none. Leave <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> unset: runtraj then gives HYSPLIT
 room for every location (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">(numpar</span> <span class="pre">//</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">1)</span></code>). A run whose <code class="docutils literal notranslate"><span class="pre">maxpar</span></code>
 cuts a multipoint release short fails as <code class="docutils literal notranslate"><span class="pre">PARTICLE_LIMIT</span></code>.</p>
+<p>A release happens at one time, but HYSPLIT releases its particles over
+<code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> hours, starting at that time. The default,
+0.01 hours (36 seconds), is close to an instant, which is what a measurement
+at one moment needs. For a source that emits over a period, or an instrument
+that averages over one, set <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> to that period in hours:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">models</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hysplit</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">emisshrs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</pre></div>
+</div>
+<p>The particles are then spread evenly over the hour. <a class="reference internal" href="choosing_settings.html"><span class="doc">Choosing Settings</span></a>
+lists the other settings HYSPLIT chooses for you.</p>
 </section>
 <section id="advanced-release-heights-for-multipoint-and-slant-releases">
 <h2>Advanced: release heights for multipoint and slant releases<a class="headerlink" href="#advanced-release-heights-for-multipoint-and-slant-releases" title="Link to this heading">#</a></h2>
