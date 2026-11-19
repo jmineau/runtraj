@@ -573,3 +573,26 @@ def test_terrain_following_met_without_pres_has_no_pressure(tmp_path):
 
     with pytest.raises(KeyError, match="PRES"):
         sample_met(_particles_at([_T0], [100.0]), met, columns=["pres"])
+
+
+def test_met_without_sphu_gives_the_density_of_dry_air(tmp_path):
+    met = arlmet.open_dataset(_met_file(tmp_path / "met.arl"))
+    particles = _particles_at([_T0], [100.0])
+
+    sampled = sample_met(particles, met.drop_vars("SPHU"), columns=["dens"])
+
+    moist = sample_met(particles, met, columns=["pres", "dens"])
+    up = (100.0 - 46.25) / (462.5 - 46.25)
+    dry = 100.0 * moist["pres"] / (287.04 * (280.0 - 5.0 * up))
+    np.testing.assert_allclose(sampled["dens"], dry, rtol=1e-6)
+    assert (sampled["dens"] > moist["dens"]).all()
+
+
+def test_a_particle_time_between_microseconds_is_sampled(tmp_path):
+    """A time in nanoseconds is compared with met times pandas holds in microseconds."""
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0 + pd.Timedelta(minutes=20, nanoseconds=1)], [100.0])
+
+    sampled = sample_met(particles, [met], columns=["mlht"])
+
+    assert sampled["mlht"].iloc[0] == pytest.approx(600.0, rel=1e-6)
