@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=79c40fc8"></script>
+    <script src="../_static/documentation_options.js?v=c0263968"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev716+g0fb00edcf" />
+  <meta name="docsearch:version" content="0.0.1.dev717+g4b137b152" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -529,6 +529,8 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.PARTICLE_SCHEMA.html">runtraj.particles.PARTICLE_SCHEMA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.check_particles.html">runtraj.particles.check_particles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.add_release_heights.html">runtraj.particles.add_release_heights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.sample_met.html">runtraj.sampling.sample_met</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html">runtraj.sampling.calc_pbl_height</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="transforms.html">Transforms and Sampling</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -976,6 +978,42 @@ That, with the columns the model wrote, is what a particle file stores and
 </table>
 </div>
 </section>
+<section id="met-columns-for-a-model-that-writes-only-positions">
+<h2>Met columns for a model that writes only positions<a class="headerlink" href="#met-columns-for-a-model-that-writes-only-positions" title="Link to this heading">#</a></h2>
+<p>A transport model that writes only positions leaves out the columns
+HYSPLIT writes from the met. <a class="reference internal" href="_api/runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a> reads <code class="docutils literal notranslate"><span class="pre">mlht</span></code>, <code class="docutils literal notranslate"><span class="pre">dens</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pres</span></code> and <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> from the met files at each particle’s position and
+time, as HYSPLIT reads them. Give it the files the run read and the top of
+its domain, which a stored run records:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">runtraj</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.sampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample_met</span>
+
+<span class="n">meta</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">particles_metadata</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles_path</span><span class="p">)</span>
+<span class="n">sampled</span> <span class="o">=</span> <span class="n">sample_met</span><span class="p">(</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"mlht"</span><span class="p">,</span> <span class="s2">"dens"</span><span class="p">]),</span>
+    <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"mlht"</span><span class="p">,</span> <span class="s2">"dens"</span><span class="p">],</span>
+    <span class="n">z_top</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"z_top"</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The sampled values differ a little from HYSPLIT’s own columns, by the
+amounts under <a class="reference internal" href="_api/runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a>’s Notes. <code class="docutils literal notranslate"><span class="pre">mlht</span></code> from <a class="reference internal" href="_api/runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a>
+is the met’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>. HYSPLIT’s default (<code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>) finds the mixed
+layer from the met’s profile instead, and <a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_pbl_height()</span></code></a> finds it
+the same way.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample_met</span></code></a></p></td>
+<td><p>Return the particles with met columns sampled from ARL files at each particle's position.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_pbl_height</span></code></a></p></td>
+<td><p>Return the mixed-layer height at each particle, found from the met's profile as HYSPLIT's <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code> finds it.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 </section>
 
 
@@ -1030,6 +1068,7 @@ That, with the columns the model wrote, is what a particle file stores and
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#columns-runtraj-adds">Columns runtraj adds</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-a-table">Checking a table</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#after-a-run">After a run</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#met-columns-for-a-model-that-writes-only-positions">Met columns for a model that writes only positions</a></li>
 </ul>
   </nav></div>
 

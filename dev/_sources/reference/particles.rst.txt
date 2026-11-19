@@ -142,3 +142,40 @@ That, with the columns the model wrote, is what a particle file stores and
    :nosignatures:
 
    add_release_heights
+
+Met columns for a model that writes only positions
+--------------------------------------------------
+
+.. currentmodule:: runtraj.sampling
+
+A transport model that writes only positions leaves out the columns
+HYSPLIT writes from the met. :func:`sample_met` reads ``mlht``, ``dens``,
+``pres`` and ``zsfc`` from the met files at each particle's position and
+time, as HYSPLIT reads them. Give it the files the run read and the top of
+its domain, which a stored run records:
+
+.. code-block:: python
+
+   import runtraj
+   from runtraj.sampling import sample_met
+
+   meta = runtraj.particles.particles_metadata(sim.particles_path)
+   sampled = sample_met(
+       sim.particles.drop(columns=["mlht", "dens"]),
+       meta.met_files,
+       columns=["mlht", "dens"],
+       z_top=meta.settings["z_top"],
+   )
+
+The sampled values differ a little from HYSPLIT's own columns, by the
+amounts under :func:`sample_met`'s Notes. ``mlht`` from :func:`sample_met`
+is the met's ``PBLH``. HYSPLIT's default (``kmixd: 3``) finds the mixed
+layer from the met's profile instead, and :func:`calc_pbl_height` finds it
+the same way.
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   sample_met
+   calc_pbl_height

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=79c40fc8"></script>
+    <script src="../_static/documentation_options.js?v=c0263968"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.0.1.dev716+g0fb00edcf" />
+  <meta name="docsearch:version" content="0.0.1.dev717+g4b137b152" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -529,6 +529,8 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.PARTICLE_SCHEMA.html">runtraj.particles.PARTICLE_SCHEMA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.check_particles.html">runtraj.particles.check_particles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.add_release_heights.html">runtraj.particles.add_release_heights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.sample_met.html">runtraj.sampling.sample_met</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html">runtraj.sampling.calc_pbl_height</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="transforms.html">Transforms and Sampling</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -808,7 +810,8 @@ to do something, start with the <a class="reference internal" href="../guides/in
 <dl class="simple">
 <dt><a class="reference internal" href="core.html"><span class="doc">Core Objects</span></a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">Project</span></code>, releases, simulations, particles, and grids.</p>
 </dd>
-<dt><a class="reference internal" href="particles.html"><span class="doc">The Particle Table</span></a></dt><dd><p>The particle table a transport model run gives: its columns and units.</p>
+<dt><a class="reference internal" href="particles.html"><span class="doc">The Particle Table</span></a></dt><dd><p>The particle table a transport model run gives: its columns and units,
+and the met columns sampled for a model that writes only positions.</p>
 </dd>
 <dt><a class="reference internal" href="transforms.html"><span class="doc">Transforms and Sampling</span></a></dt><dd><p>Weighting particle rows (averaging kernels, pressure weighting, loss
 along the way), and sampling a gridded field at particles.</p>
@@ -847,6 +850,7 @@ along the way), and sampling a gridded field at particles.</p>
 <li class="toctree-l2"><a class="reference internal" href="particles.html#columns-runtraj-adds">Columns runtraj adds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="particles.html#checking-a-table">Checking a table</a></li>
 <li class="toctree-l2"><a class="reference internal" href="particles.html#after-a-run">After a run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="particles.html#met-columns-for-a-model-that-writes-only-positions">Met columns for a model that writes only positions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="transforms.html">Transforms and Sampling</a><ul>

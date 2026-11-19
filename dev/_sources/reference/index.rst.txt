@@ -8,7 +8,8 @@ to do something, start with the :doc:`../guides/index` instead.
    ``Project``, releases, simulations, particles, and grids.
 
 :doc:`particles`
-   The particle table a transport model run gives: its columns and units.
+   The particle table a transport model run gives: its columns and units,
+   and the met columns sampled for a model that writes only positions.
 
 :doc:`transforms`
    Weighting particle rows (averaging kernels, pressure weighting, loss

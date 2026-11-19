@@ -57,7 +57,7 @@ Module map
        hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
      execution/      ExecutionConfig, the runner (plan, local run, Slurm submit), the worker
      transforms/     particle transforms, each multiplying the weight column
-     sampling.py     sample_field, a gridded field read at points
+     sampling.py     sample_field, sample_met, calc_pbl_height: fields and met read at points
      meteorology.py, spatial.py, visualization.py, exceptions.py
 
 The import contracts in ``pyproject.toml`` (``just imports``) hold this
