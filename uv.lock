@@ -3886,7 +3886,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.1" },
     { name = "pyarrow", specifier = ">=14.0" },
-    { name = "pydantic", specifier = ">=2.1.0" },
+    { name = "pydantic", specifier = ">=2.5.3" },
     { name = "pyproj", specifier = ">=3.5" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "runtraj", extras = ["download"], marker = "extra == 'complete'" },
