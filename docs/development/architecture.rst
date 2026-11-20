@@ -53,7 +53,7 @@ Module map
      stages.py       the Stage protocol, get_stage, check_stage
      releases/       release classes, releases.csv, shared validation
      particles/      the particle table and files, release heights, particles.runtraj
-     models/         the TransportModel and TransportConfig protocols, MODELS, get_model
+     models/         the TransportModel and TransportConfig protocols, MODELS, get_model, check_model
        hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
      execution/      ExecutionConfig, the runner (plan, local run, Slurm submit), the worker
      transforms/     particle transforms, each multiplying the weight column

@@ -88,7 +88,7 @@ src/runtraj/
   stages.py       the Stage protocol, get_stage, check_stage;  _plugins.py  a class by import path
   releases/       release classes, releases.csv, shared validation
   particles/      the particle table and files, release heights, the particles.runtraj accessor
-  models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model
+  models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model, check_model
     hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
   execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker
   transforms/     particle transforms: each multiplies the `weight` column, one module each

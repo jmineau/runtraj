@@ -317,6 +317,17 @@ core on it (run, status, check, fetch, a stage, transforms), so a change
 that makes the core depend on something only HYSPLIT does fails there.
 Test a change to the core on the toy as well as on HYSPLIT.
 
+`runtraj.models.check_model(model, config, met, release)` checks the
+promises a model keeps: its config uses no key runtraj records beside it
+(`RESERVED_SETTINGS`) and its record reads back, also for its realizations;
+its build makes a `ModelInfo`; and, given a release, the release is run
+through the same code a project's run uses (`run` with a `timeout`, and
+`run_many` with no workdir for a batched model), so its particles have the
+table's columns, ages that go the way `n_hours` does, release heights, and
+a particle file that stores them. A release its `check_releases` lists must
+be refused, not run. Call it in the tests of a model of your own, with a
+point, a column and a multipoint release.
+
 A check in the Code Quality workflow (`.github/workflows/quality.yml`) keeps
 HYSPLIT's setting names (`numpar`, `outdt`, `kmixd`, `varsiwant`, ...; the
 list is in the workflow) in `runtraj/models/hysplit/`. Elsewhere a line may name one only

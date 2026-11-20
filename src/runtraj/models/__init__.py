@@ -12,7 +12,9 @@ another model needs no change to the worker.
 from __future__ import annotations
 
 import datetime as dt
+import json
 import os
+import tempfile
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -20,12 +22,17 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self
 
 import pandas as pd
 import xarray as xr
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from runtraj._plugins import import_class
 from runtraj.exceptions import SimulationError
 from runtraj.meteorology import run_window
-from runtraj.particles import add_release_heights, check_particles
+from runtraj.particles import (
+    add_release_heights,
+    check_particles,
+    read_particles,
+    write_particles,
+)
 from runtraj.releases import releases_to_frame
 
 if TYPE_CHECKING:
@@ -507,12 +514,23 @@ def run_model(
         no particles; or if where the particles of a column or multipoint
         release started is not known (``NO_RELEASE_ROWS``).
     """
-    model = get_model(name)
+    return _run_one(get_model(name), release, config, met, workdir, timeout)
+
+
+def _run_one(
+    model: TransportModel,
+    release: Release,
+    config: TransportConfig,
+    met: Any,
+    workdir: Path | None,
+    timeout: int | None,
+) -> ModelRun:
+    """Run *model* for *release* as :func:`run_model` does: refuse, run, finish."""
     refused = _refused(model, [release], config).get(str(release.id))
     if refused is not None:
         raise refused
     window = run_window(release.time, config.n_hours)
-    run = model.run(release, config, met, window, workdir, timeout=timeout)
+    run = _returned(model.run(release, config, met, window, workdir, timeout=timeout))
     return _finish(run, release, model)
 
 
@@ -544,10 +562,21 @@ def run_model_many(
     SimulationError
         If the whole call fails.
     """
-    model = get_model(name)
+    return _run_many(get_model(name), releases, config, met, workdir, timeout)
+
+
+def _run_many(
+    model: TransportModel,
+    releases: list[Release],
+    config: TransportConfig,
+    met: Any,
+    workdir: Path | None,
+    timeout: int | None,
+) -> dict[str, ModelRun | SimulationError]:
+    """Run batched *model* for *releases* as :func:`run_model_many` does."""
     run_many = getattr(model, "run_many", None)
     if run_many is None:
-        raise TypeError(f"Transport model {name!r} has no run_many.")
+        raise TypeError(f"Transport model {model.name!r} has no run_many.")
     results: dict[str, ModelRun | SimulationError] = dict(
         _refused(model, releases, config)
     )
@@ -555,7 +584,7 @@ def run_model_many(
     if not releases:
         return results
     windows = [run_window(r.time, config.n_hours) for r in releases]
-    run = run_many(releases, config, met, windows, workdir, timeout=timeout)
+    run = _returned(run_many(releases, config, met, windows, workdir, timeout=timeout))
     if "release" not in run.particles.columns:
         raise SimulationError(
             "A batched transport model's particles need a release column.",
@@ -579,6 +608,15 @@ def run_model_many(
             error.log = run.log
             results[str(release.id)] = error
     return results
+
+
+def _returned(run: Any) -> ModelRun:
+    """Return *run*, what a model's ``run`` or ``run_many`` returned, when it is a :class:`ModelRun`."""
+    if not isinstance(run, ModelRun):
+        raise TypeError(
+            f"A transport model's run must return a ModelRun, not {type(run).__name__}."
+        )
+    return run
 
 
 def _release_points(releases: Iterable[Release]) -> pd.DataFrame:
@@ -738,6 +776,250 @@ def run_trajectories(
     return particles
 
 
+#: Keys a run's settings record holds beside the transport model's own
+#: settings (:func:`runtraj.identity.run_settings`), or a variant reads as its
+#: own (:class:`runtraj.config.Variant`): a model's config may not use them.
+RESERVED_SETTINGS = frozenset(
+    {"met", "model", "ensemble", "realization", "realizations", "stages"}
+)
+
+
+def check_model(
+    model: TransportModel,
+    config: TransportConfig,
+    met: Any = None,
+    release: Release | None = None,
+) -> None:
+    """
+    Check that *model* keeps the promises runtraj relies on, for one *config*.
+
+    Call it from the tests of a transport model of your own, as
+    :func:`runtraj.stages.check_stage` is for a stage. It checks that:
+
+    - ``config_class`` is a :class:`TransportConfig` whose fields use none
+      of :data:`RESERVED_SETTINGS`, and ``met_config_class`` a pydantic
+      model;
+    - the record ``config.settings()`` writes is plain data, and
+      ``config_class`` reads it back to a config with the same record: a
+      stored settings folder is found that way; and so for each config
+      ``config.realizations(3)`` returns, unless it refuses with a
+      ``ValueError``;
+    - ``sha256``, ``version`` and ``data_files`` make a :class:`ModelInfo`
+      (``sha256`` may raise ``FileNotFoundError`` when the build is not on
+      this machine).
+
+    With a *release* and its *met* (of ``met_config_class``), it also runs
+    the model once, through the code a project's run uses (``run``, and
+    ``run_many`` too for a batched model), and checks the particles: the
+    columns of the particle table, ages that go the way ``n_hours`` does and
+    stay within it, the release heights of a column or multipoint release
+    (from a row at ``age = 0`` or the model's ``release_rows``), and a
+    particle file that stores every column. A model's ``check_releases``
+    must return its table's columns in order; when it refuses *release*, the
+    run must fail as ``RELEASE_REFUSED``, and nothing is run. Run it with a
+    point, a column and a multipoint release to cover each.
+
+    Raises
+    ------
+    AssertionError
+        Saying which promise is broken.
+    SimulationError
+        If the run fails, as it would in a project.
+
+    Examples
+    --------
+    >>> from runtraj.models import check_model
+    >>> from runtraj.models.hysplit import HysplitConfig, HysplitModel
+    >>> check_model(HysplitModel(), HysplitConfig(n_hours=-24))
+    """
+    name = type(model).__name__
+    assert isinstance(model.name, str) and model.name, f"{name}.name must be a string"
+    assert isinstance(model.config_class, type) and issubclass(
+        model.config_class, TransportConfig
+    ), f"{name}.config_class must subclass runtraj.models.TransportConfig"
+    reserved = sorted(RESERVED_SETTINGS & set(model.config_class.model_fields))
+    assert not reserved, (
+        f"{name}.config_class may not have a field named {reserved}: runtraj "
+        "records or reads those keys beside the model's settings"
+    )
+    assert isinstance(model.met_config_class, type) and issubclass(
+        model.met_config_class, BaseModel
+    ), f"{name}.met_config_class must be a pydantic model"
+    assert isinstance(config, model.config_class), (
+        f"config must be a {model.config_class.__name__}"
+    )
+    _check_reads_back(model, config)
+    try:
+        realizations = config.realizations(3)
+    except ValueError:
+        realizations = []  # a config may refuse realizations, as without a seed
+    else:
+        assert len(realizations) == 3, f"{name}'s realizations(3) must return 3 configs"
+    for each in realizations:
+        assert isinstance(each, model.config_class), (
+            f"{name}'s realizations() must return {model.config_class.__name__}s"
+        )
+        _check_reads_back(model, each)
+    _check_build(model, config)
+    if release is None:
+        return
+    assert isinstance(met, model.met_config_class), (
+        f"met must be a {model.met_config_class.__name__} to run the model"
+    )
+    met_settings = getattr(met, "settings", None)
+    assert callable(met_settings), (
+        f"{model.met_config_class.__name__} needs settings(), what a run records of the met"
+    )
+    _plain(met_settings(), f"{name}'s met settings()")
+    if not _check_refusal(model, config, met, release):
+        _check_run(model, config, met, release)
+
+
+def _plain(record: Any, what: str) -> dict[str, Any]:
+    """Return *record* when it is a mapping of plain data, as a settings file stores it."""
+    from runtraj.identity import canonical
+
+    assert isinstance(record, Mapping), f"{what} must return a mapping"
+    try:
+        return json.loads(json.dumps(canonical(record)))
+    except TypeError as error:
+        raise AssertionError(
+            f"{what} must return plain data (mappings, lists, strings, numbers): "
+            f"{error}"
+        ) from None
+
+
+def _check_reads_back(model: TransportModel, config: TransportConfig) -> None:
+    """Check *config*'s settings record is plain data its class reads back."""
+    name = type(model).__name__
+    record = _plain(config.settings(), f"{name}'s config settings()")
+    fields = model.config_class.model_fields
+    try:
+        read_back = model.config_class.model_validate(
+            {k: v for k, v in record.items() if k in fields}
+        )
+    except ValidationError as error:
+        raise AssertionError(
+            f"{name}.config_class cannot read back what settings() wrote: {error}"
+        ) from None
+    again = _plain(read_back.settings(), f"{name}'s config settings()")
+    assert again == record, (
+        f"{name}.config_class does not read back what settings() wrote: "
+        f"{record} became {again}"
+    )
+
+
+def _check_build(model: TransportModel, config: TransportConfig) -> None:
+    """Check the model's build makes a :class:`ModelInfo`, as a variant builds it."""
+    name = type(model).__name__
+    try:
+        sha256 = model.sha256(config)
+        data_files = model.data_files(config)
+    except FileNotFoundError:
+        return  # the build is not on this machine, which a project allows
+    try:
+        ModelInfo(
+            name=model.name,
+            sha256=sha256,
+            data_files=data_files,
+            version=model.version(config),
+        )
+    except ValidationError as error:
+        raise AssertionError(
+            f"{name}'s sha256, data_files and version must make a ModelInfo: {error}"
+        ) from None
+
+
+def _check_refusal(
+    model: TransportModel, config: TransportConfig, met: Any, release: Release
+) -> bool:
+    """Check the model's ``check_releases`` table, and return whether it refuses *release*."""
+    check_releases = getattr(model, "check_releases", None)
+    if check_releases is None:
+        return False
+    name = type(model).__name__
+    table = check_releases(_release_points([release]), config)
+    assert isinstance(table, pd.DataFrame) and list(table.columns) == [
+        "check",
+        "release",
+        "message",
+    ], f"{name}.check_releases must return a table of check, release and message"
+    if str(release.id) not in set(table["release"].astype(str)):
+        return False
+    try:
+        _run_one(model, release, config, met, None, None)
+    except SimulationError as error:
+        assert error.reason == "RELEASE_REFUSED", (
+            f"a release {name}.check_releases lists must fail as RELEASE_REFUSED"
+        )
+        return True
+    raise AssertionError(f"a release {name}.check_releases lists must not run")
+
+
+def _check_run(
+    model: TransportModel, config: TransportConfig, met: Any, release: Release
+) -> None:
+    """Run *model* once for *release* as a project's run does, and check its particles."""
+    name = type(model).__name__
+    batched = bool(getattr(model, "batched", False))
+    assert not batched or callable(getattr(model, "run_many", None)), (
+        f"{name} is batched, so it needs run_many"
+    )
+    with tempfile.TemporaryDirectory(prefix="runtraj-check-") as tmp:
+        workdir = None
+        if getattr(model, "needs_workdir", True):
+            workdir = Path(tmp) / "work"
+            workdir.mkdir()
+        runs = {"run": _promised(name, _run_one, model, release, config, met, workdir)}
+        if batched:
+            # The worker gives run_many no workdir.
+            many = _promised(name, _run_many, model, [release], config, met, None)
+            result = many.get(str(release.id))
+            assert result is not None, f"{name}.run_many must return the release"
+            if isinstance(result, SimulationError):
+                raise result
+            runs["run_many"] = result
+        for how, run in runs.items():
+            _check_particles(f"{name}.{how}", run, config, release, Path(tmp))
+
+
+def _promised(name: str, run: Callable[..., Any], *args: Any) -> Any:
+    """Return ``run(*args, None)``, a run as the core makes it, with a broken promise as an :class:`AssertionError`."""
+    try:
+        return run(*args, None)
+    except (TypeError, ValueError) as error:
+        raise AssertionError(f"{name}: {error}") from error
+
+
+def _check_particles(
+    what: str, run: ModelRun, config: TransportConfig, release: Release, tmp: Path
+) -> None:
+    """Check the finished particles of one run, and that a particle file stores them."""
+    assert isinstance(run.log, str), f"{what}'s ModelRun.log must be a string"
+    finished = run.particles
+    age = finished["age"].to_numpy(dtype=float)
+    backward = config.n_hours < 0
+    assert ((age <= 0) if backward else (age >= 0)).all(), (
+        f"{what}'s ages must be {'<=' if backward else '>='} 0 for "
+        f"n_hours {config.n_hours}: minutes since release"
+    )
+    assert (abs(age) <= abs(config.n_hours) * 60).all(), (
+        f"{what}'s ages must stay within n_hours ({config.n_hours} h)"
+    )
+    if "release_height" in finished.columns:
+        assert finished["release_height"].notna().all(), (
+            f"every particle of {what} needs a release height"
+        )
+    path = tmp / "particles.parquet"
+    try:
+        write_particles(path, finished, release, config.settings(), run.met_files)
+    except ValueError as error:
+        raise AssertionError(f"{what}'s particles cannot be stored: {error}") from error
+    missing = set(finished.columns) - set(read_particles(path).columns)
+    assert not missing, f"a particle file does not store {what}'s {sorted(missing)}"
+    path.unlink()
+
+
 __all__ = [
     "MODELS",
     "BatchedTransportModel",
@@ -745,6 +1027,8 @@ __all__ = [
     "ModelRun",
     "TransportConfig",
     "TransportModel",
+    "RESERVED_SETTINGS",
+    "check_model",
     "get_model",
     "open_met",
     "run_model",
