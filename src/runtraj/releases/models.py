@@ -601,8 +601,15 @@ class MultiPointRelease(Release):
     @field_validator("longitudes", "latitudes", "altitudes", mode="before")
     @classmethod
     def _as_floats(cls, value: Any) -> tuple[float, ...]:
-        """Return the values as a tuple of floats."""
-        return tuple(float(v) for v in np.asarray(value, dtype=float).ravel())
+        """Return the values, a list or 1-D array of numbers, as a tuple of floats."""
+        if isinstance(value, (str, bytes)):
+            raise ValueError(f"must be a list of numbers, not the text {value!r}")
+        values = np.asarray(value, dtype=float)
+        if values.ndim != 1:
+            raise ValueError(
+                f"must be a list or 1-D array of numbers; got shape {values.shape}"
+            )
+        return tuple(float(v) for v in values)
 
     @model_validator(mode="after")
     def _check(self) -> MultiPointRelease:
@@ -611,6 +618,8 @@ class MultiPointRelease(Release):
             raise ValueError(
                 "longitudes, latitudes, and altitudes must have the same length."
             )
+        if not self.longitudes:
+            raise ValueError("A MultiPointRelease needs at least one point.")
         _raise_first(
             [
                 *point_errors(

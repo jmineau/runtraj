@@ -79,6 +79,12 @@ def particle_pwf(
             )
     pres = release_coordinate(particles, "pres")
     zagl = release_coordinate(particles, "zagl")
+    missing = int((pres.isna() | zagl.isna()).sum())
+    if missing:
+        raise ValueError(
+            f"Pressure weighting reads each particle's first pres and zagl, and "
+            f"{missing} of {len(pres)} particles have none there."
+        )
 
     # Particle heights in the release's own vertical reference, so the fit
     # can be evaluated at the release heights.

@@ -12,7 +12,12 @@ import pandas as pd
 from numpy.typing import ArrayLike
 from pydantic import BaseModel, ConfigDict, Field
 
-from runtraj.transforms._common import step_minutes, trajectory_columns, weigh
+from runtraj.transforms._common import (
+    elapsed_minutes,
+    step_minutes,
+    trajectory_columns,
+    weigh,
+)
 
 if TYPE_CHECKING:
     from runtraj.releases import Release
@@ -48,7 +53,7 @@ def survival(particles: pd.DataFrame, rate: ArrayLike) -> pd.Series:
     ------
     ValueError
         If a column is missing, ``rate`` has the wrong length, or a rate is
-        negative or missing.
+        negative, infinite or missing, or an age is missing.
 
     Notes
     -----
@@ -74,15 +79,17 @@ def survival(particles: pd.DataFrame, rate: ArrayLike) -> pd.Series:
         raise ValueError(
             f"rate has {k.size} values for {len(particles)} particle rows."
         )
-    if np.isnan(k).any() or (k < 0).any():
-        raise ValueError("rate must be zero or positive at every row, with no NaN.")
+    if not np.isfinite(k).all() or (k < 0).any():
+        raise ValueError(
+            "rate must be a finite number, zero or positive, at every row."
+        )
     step = step_minutes(particles)
     # Add the losses up from the release, one trajectory at a time.
     keys = trajectory_columns(particles)
     rows = particles[keys].reset_index(drop=True)
     rows = rows.assign(
         _loss=k * step.to_numpy() * 60.0,
-        _elapsed=particles["age"].abs().to_numpy(dtype=float),
+        _elapsed=elapsed_minutes(particles),
     ).sort_values([*keys, "_elapsed"], kind="stable")
     cumulative = rows.groupby(keys, sort=False, dropna=False)["_loss"].cumsum()
     return pd.Series(np.exp(-cumulative.sort_index().to_numpy()), index=particles.index)
@@ -108,10 +115,5 @@ class FirstOrderLifetime(BaseModel):
         directory: str | Path | None = None,
     ) -> pd.DataFrame:
         """Return the particles with ``weight`` decayed by age."""
-        if "age" not in particles.columns:
-            raise ValueError(
-                "Particle DataFrame has no 'age' column, required for "
-                "first_order_lifetime."
-            )
-        age_hours = np.abs(particles["age"].to_numpy(dtype=float)) / 60.0
+        age_hours = elapsed_minutes(particles) / 60.0
         return weigh(particles, np.exp(-age_hours / self.lifetime_hours))

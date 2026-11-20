@@ -47,7 +47,7 @@ def nearest_cell(coords: np.ndarray, values: np.ndarray) -> np.ndarray:
     Parameters
     ----------
     coords : numpy.ndarray
-        Cell centers along one axis, ascending or descending.
+        Cell centers along one axis, strictly ascending or strictly descending.
     values : numpy.ndarray
         Positions to look up.
 
@@ -59,6 +59,13 @@ def nearest_cell(coords: np.ndarray, values: np.ndarray) -> np.ndarray:
     coords = np.asarray(coords, dtype=float)
     if coords.ndim != 1 or coords.size == 0:
         raise ValueError("Field coordinates must be a non-empty 1-D array.")
+    steps = np.diff(coords)
+    if not ((steps > 0).all() or (steps < 0).all()):
+        raise ValueError(
+            "Field coordinates must strictly increase or strictly decrease; "
+            f"got {coords[:6].tolist()}{' ...' if coords.size > 6 else ''}. "
+            "Sort the field along that dimension and drop repeated values."
+        )
     ascending = coords[0] <= coords[-1]
     c = coords if ascending else coords[::-1]
     if c.size == 1:
@@ -143,7 +150,8 @@ def sample_field(
         vertical dimension. Required when the field has one. Matched to the
         nearest level, so a point above the top level takes the top level.
     times : array-like, optional
-        Time of each point. Required when the field has a ``time``
+        Time of each point, as datetimes or date strings, with none
+        missing. Required when the field has a ``time``
         dimension. By default matched to the nearest time, so times
         outside the field's span take the first or last step. See
         ``step_starts``.
@@ -171,6 +179,12 @@ def sample_field(
         One value per point.
     """
     y_dim, x_dim = horizontal_dims(field)
+    missing = [d for d in (y_dim, x_dim) if d not in field.coords]
+    if missing:
+        raise ValueError(
+            f"The field has no coordinates for its {' and '.join(map(repr, missing))} "
+            "dimensions, so a point cannot be placed in it. Assign them first."
+        )
     xs = np.asarray(x, dtype=float).ravel()
     ys = np.asarray(y, dtype=float).ravel()
     if xs.shape != ys.shape:
@@ -197,9 +211,20 @@ def sample_field(
     if "time" in field.dims:
         if times is None:
             raise ValueError("field has a time dimension; pass times.")
-        stamps = pd.DatetimeIndex(pd.to_datetime(np.asarray(times).ravel()))
+        raw = np.asarray(times).ravel()
+        if raw.dtype.kind in "biufc":
+            raise TypeError(
+                f"times must be datetimes or date strings; got numbers ({raw.dtype})."
+            )
+        stamps = pd.DatetimeIndex(pd.to_datetime(raw))
         if len(stamps) != len(xs):
             raise ValueError("times must have the same length as x and y.")
+        missing = np.asarray(stamps.isna())
+        if missing.any():
+            raise ValueError(
+                f"times holds {int(missing.sum())} missing value(s), the first "
+                f"at position {int(np.flatnonzero(missing)[0])}."
+            )
         index = field.indexes["time"]
         if step_starts:
             if isinstance(index, pd.IntervalIndex):
@@ -227,6 +252,21 @@ def sample_field(
         indexers["time"] = xr.DataArray(it, dims="points")
     sampled = field.isel(indexers).to_numpy().astype(float)
     return np.where(inside & ~np.isnan(sampled), sampled, fill_value)
+
+
+def _check_z_top(particles: pd.DataFrame, z_top: float | None) -> None:
+    """Refuse a *z_top* that is not positive, or below a particle, as one given in km would be."""
+    if z_top is None:
+        return
+    if not z_top > 0:
+        raise ValueError(f"z_top must be a positive height in meters; got {z_top:g}.")
+    if "zagl" in particles.columns and len(particles):
+        highest = float(np.nanmax(particles["zagl"].to_numpy(dtype=float)))
+        if highest > z_top:
+            raise ValueError(
+                f"z_top is {z_top:g} m, below particles at up to {highest:g} m "
+                "above ground. z_top is the top of the run's domain in meters."
+            )
 
 
 def _nearest_level(levels: xr.DataArray, z: np.ndarray) -> np.ndarray:
@@ -403,7 +443,7 @@ def sample_met(
     ValueError
         If a column is not one of the four or is in *particles* already
         (drop it first), *particles* has no ``time`` column, a row is outside
-        the files' times, or *z_top* is not positive.
+        the files' times, or *z_top* is not positive or is below a particle.
     KeyError
         If the met lacks a variable a column needs.
 
@@ -443,6 +483,7 @@ def sample_met(
         raise ValueError(
             f"sample_met cannot sample {unknown}; it samples {list(_MET_VARIABLES)}."
         )
+    _check_z_top(particles, z_top)
     present = [c for c in columns if c in particles.columns]
     if present:
         raise ValueError(
@@ -750,6 +791,7 @@ def calc_pbl_height(
         raise ValueError(
             "calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."
         )
+    _check_z_top(particles, z_top)
     with _opened(met) as sources:
         names = _met_variables(sources)
         pressure = _pressure_variable(sources, names)

@@ -86,7 +86,8 @@ def _normalize_columns(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str
     Raises
     ------
     ValueError
-        If a column is named ``r_idx``, the old name of ``group``.
+        If a column is named ``r_idx``, the old name of ``group``, or two
+        columns name one field, such as ``altitude`` and ``zagl``.
     """
     old = [str(c) for c in frame.columns if str(c).lower() == "r_idx"]
     if old:
@@ -96,10 +97,13 @@ def _normalize_columns(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str
         )
     spelling: dict[str, str] = {}
     for field, aliases in ALIASES.items():
-        for col in frame.columns:
-            if str(col).lower() in aliases:
-                spelling[field] = str(col)
-                break
+        found = [str(col) for col in frame.columns if str(col).lower() in aliases]
+        if len(found) > 1:
+            raise ValueError(
+                f"The columns {found} all name the release's {field}; keep one."
+            )
+        if found:
+            spelling[field] = found[0]
     frame = frame.rename(columns={name: field for field, name in spelling.items()})
     if "altitude_ref" not in frame.columns:
         implied = "msl" if spelling.get("altitude", "").lower() == "zmsl" else "agl"
@@ -437,14 +441,23 @@ def check_distinct_ids(releases: Iterable[Release]) -> None:
     Raise if two different releases share an id.
 
     An id names a release's result files, so two releases with one id
-    would overwrite each other. Equal releases listed twice are fine.
+    would overwrite each other. Equal releases listed twice are fine, but
+    not with different labels (``attrs``): only one set could be kept.
     """
     seen: dict[str, Release] = {}
     for r in releases:
         other = seen.setdefault(r.id, r)
-        if other is not r and other != r:
+        if other is r:
+            continue
+        if other != r:
             raise ValueError(
                 f"Two different releases share the id {r.id!r}: {other!r} and {r!r}."
+            )
+        if other.attrs != r.attrs:
+            raise ValueError(
+                f"The release {r.id!r} is listed twice with different labels, "
+                f"{other.attrs} and {r.attrs}. Only one set can be kept: list it "
+                "once."
             )
 
 

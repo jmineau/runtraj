@@ -1421,3 +1421,51 @@ def test_a_table_of_datetimes_with_a_missing_one_names_the_row():
     )
     with pytest.raises(ValueError, match="row 1: time is empty"):
         release_rows(frame)
+
+
+def test_read_releases_refuses_two_height_columns(tmp_path):
+    path = tmp_path / "releases.csv"
+    path.write_text(
+        "time,longitude,latitude,altitude,zagl\n2023-07-15 18:00,-111.8,40.7,10,500\n"
+    )
+    with pytest.raises(ValueError, match="keep one"):
+        read_releases(path)
+
+
+def test_read_releases_refuses_a_release_listed_twice_with_other_labels(tmp_path):
+    path = tmp_path / "releases.csv"
+    path.write_text(
+        "time,longitude,latitude,altitude,site\n"
+        "2023-07-15 18:00,-111.848,40.766,10,WBB\n"
+        "2023-07-15 18:00,-111.848,40.766,10,UOU\n"
+    )
+    with pytest.raises(ValueError, match="different labels"):
+        read_releases(path)
+
+
+def test_read_releases_takes_a_release_listed_twice_with_the_same_labels(tmp_path):
+    path = tmp_path / "releases.csv"
+    row = "2023-07-15 18:00,-111.848,40.766,10,WBB\n"
+    path.write_text("time,longitude,latitude,altitude,site\n" + row + row)
+    assert len(read_releases(path)) == 1
+
+
+@pytest.mark.parametrize(
+    ("points", "message"),
+    [
+        (dict(longitudes=[], latitudes=[], altitudes=[]), "at least one point"),
+        (
+            dict(
+                longitudes=[[-111.80, -111.81], [-111.82, -111.83]],
+                latitudes=[[40.70, 40.71], [40.72, 40.73]],
+                altitudes=[0, 0, 0, 0],
+            ),
+            "1-D",
+        ),
+        (dict(longitudes="-111.8", latitudes=[40.7], altitudes=[10]), "text"),
+    ],
+    ids=["empty", "2-D", "text"],
+)
+def test_multipoint_release_refuses_points_that_are_not_a_list(points, message):
+    with pytest.raises(ValueError, match=message):
+        MultiPointRelease(time="2023-07-15 18:00", **points)

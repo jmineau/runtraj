@@ -91,3 +91,14 @@ def test_bounds_refuse_edges_no_point_can_be_inside(change, message):
     box = {"xmin": -114.0, "xmax": -110.0, "ymin": 39.0, "ymax": 42.0}
     with pytest.raises(ValueError, match=message):
         Bounds(**{**box, **change})
+
+
+def test_bounds_refuse_west_and_east_swapped():
+    with pytest.raises(ValueError, match="swapped"):
+        Bounds(xmin=-109, xmax=-114, ymin=37, ymax=42)
+
+
+def test_bounds_take_a_narrow_box_across_the_dateline_and_a_wide_one_past_180():
+    assert Bounds(xmin=170, xmax=-170, ymin=-10, ymax=10).contains(180, 0)
+    wide = Bounds(xmin=-109, xmax=246, ymin=37, ymax=42)
+    assert wide.contains(116.4, 40.0) and not wide.contains(-111.9, 40.8)

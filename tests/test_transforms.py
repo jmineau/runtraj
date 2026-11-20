@@ -615,7 +615,7 @@ def test_first_order_lifetime_decays_by_transport_age():
 
 def test_first_order_lifetime_requires_transport_time_column():
     p = _aged_particles().drop(columns=["age"])
-    with pytest.raises(ValueError, match="time"):
+    with pytest.raises(ValueError, match="age"):
         FirstOrderLifetime(lifetime_hours=1.0).apply(p)
 
 
@@ -719,7 +719,12 @@ def test_survival_takes_any_step():
 
 @pytest.mark.parametrize(
     "rate, match",
-    [([1e-3, 1e-3], "values"), ([-1e-3] * 6, "positive"), ([np.nan] * 6, "NaN")],
+    [
+        ([1e-3, 1e-3], "values"),
+        ([-1e-3] * 6, "positive"),
+        ([np.nan] * 6, "finite"),
+        ([np.inf] * 6, "finite"),
+    ],
 )
 def test_survival_refuses_a_bad_rate(rate, match):
     with pytest.raises(ValueError, match=match):
@@ -1346,3 +1351,30 @@ def test_averaging_kernel_reads_each_releases_own_heights():
         both.loc[both.release == "B", "ak_weight"].to_numpy(),
         kernel.apply(b)["ak_weight"].to_numpy(),
     )
+
+
+# ---------------------------------------------------------------------------
+# Inputs that would give a plausible wrong weight are refused
+# ---------------------------------------------------------------------------
+
+
+def test_an_age_given_as_a_timedelta_is_refused():
+    p = _trajectory().assign(age=lambda d: pd.to_timedelta(d["age"], unit="min"))
+    with pytest.raises(TypeError, match="minutes"):
+        FirstOrderLifetime(lifetime_hours=24).apply(p)
+    with pytest.raises(TypeError, match="minutes"):
+        survival(p, np.full(len(p), 1e-4))
+
+
+def test_a_missing_age_is_refused():
+    p = _trajectory()
+    p.loc[0, "age"] = np.nan
+    with pytest.raises(ValueError, match="missing in 1 row"):
+        FirstOrderLifetime(lifetime_hours=24).apply(p)
+
+
+def test_pressure_weighting_refuses_a_column_without_pressure_at_release():
+    p = _column_particles(5, rows_per_particle=2)
+    p.loc[p["age"] == -1.0, "pres"] = np.nan
+    with pytest.raises(ValueError, match="5 of 5 particles"):
+        PressureWeighting().apply(p)

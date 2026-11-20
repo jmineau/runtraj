@@ -83,6 +83,32 @@ def weigh(particles: pd.DataFrame, factor: ArrayLike) -> pd.DataFrame:
     return out
 
 
+def elapsed_minutes(particles: pd.DataFrame) -> np.ndarray:
+    """
+    Return each row's time since release, ``|age|``, in minutes.
+
+    Raises
+    ------
+    ValueError
+        If there is no ``age`` column, or a row's is missing.
+    TypeError
+        If ``age`` is not a number of minutes, such as a timedelta.
+    """
+    if "age" not in particles.columns:
+        raise ValueError("Particle DataFrame has no 'age' column.")
+    age = particles["age"]
+    if not pd.api.types.is_numeric_dtype(age) or pd.api.types.is_bool_dtype(age):
+        raise TypeError(
+            f"The particles' age must be minutes since release, as numbers; got {age.dtype}."
+        )
+    minutes = np.abs(age.to_numpy(dtype=float))
+    if np.isnan(minutes).any():
+        raise ValueError(
+            f"The particles' age is missing in {int(np.isnan(minutes).sum())} row(s)."
+        )
+    return minutes
+
+
 def release_coordinate(particles: pd.DataFrame, coordinate: str) -> pd.Series:
     """
     Return each particle's value of ``coordinate`` at release, indexed by ``particle``.
@@ -129,7 +155,7 @@ def step_minutes(particles: pd.DataFrame) -> pd.Series:
     if missing:
         raise ValueError(f"Particle DataFrame has no {missing} column(s).")
     keys = trajectory_columns(particles)
-    elapsed = particles["age"].abs().to_numpy(dtype=float)
+    elapsed = elapsed_minutes(particles)
     rows = particles[keys].reset_index(drop=True).assign(_elapsed=elapsed)
     rows = rows.sort_values([*keys, "_elapsed"], kind="stable")
     step = rows.groupby(keys, sort=False, dropna=False)["_elapsed"].diff()

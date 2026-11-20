@@ -815,3 +815,54 @@ def test_calc_pbl_height_is_nan_where_the_met_lacks_the_heat_flux(tmp_path):
     assert np.isfinite(mlht[0])
     assert mlht[1] == mlht[0]  # between the two, the time with the fluxes
     assert np.isnan(mlht[2])
+
+
+# ---------------------------------------------------------------------------
+# Inputs that would give a plausible wrong value are refused
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "lons",
+    [(-112.0, -110.0, -111.0), (-112.0, -111.0, -111.0)],
+    ids=["unsorted", "repeated"],
+)
+def test_sample_field_refuses_coordinates_out_of_order(lons):
+    with pytest.raises(ValueError, match="strictly increase"):
+        sample_field(_flux(lons=lons), [-111.0], [41.0])
+
+
+def test_sample_field_refuses_a_field_without_coordinates():
+    field = xr.DataArray(np.ones((2, 3)), dims=("y", "x"))
+    with pytest.raises(ValueError, match="no coordinates"):
+        sample_field(field, [1.0], [1.0])
+
+
+def _hourly():
+    times = pd.date_range("2023-07-15", periods=3, freq="h")
+    return _flux().expand_dims(time=times).copy()
+
+
+@pytest.mark.parametrize("step_starts", [False, True])
+def test_sample_field_refuses_a_missing_time(step_starts):
+    with pytest.raises(ValueError, match="missing"):
+        sample_field(
+            _hourly(), [-111.0], [41.0], times=[pd.NaT], step_starts=step_starts
+        )
+
+
+def test_sample_field_refuses_times_given_as_numbers():
+    with pytest.raises(TypeError, match="datetimes"):
+        sample_field(_hourly(), [-111.0], [41.0], times=[60.0])
+
+
+@pytest.mark.parametrize("function", ["sample_met", "calc_pbl_height"])
+@pytest.mark.parametrize(
+    ("z_top", "message"), [(-100.0, "positive"), (0.05, "below particles")]
+)
+def test_a_z_top_that_is_not_the_runs_top_in_meters_is_refused(
+    tmp_path, function, z_top, message
+):
+    met = _met_file(tmp_path / "met.arl")
+    with pytest.raises(ValueError, match=message):
+        getattr(sampling, function)(_particles_at([_T0], [100.0]), [met], z_top=z_top)

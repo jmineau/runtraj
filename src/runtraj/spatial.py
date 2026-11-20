@@ -88,7 +88,10 @@ class Bounds(BaseModel):
     Longitude/latitude bounding box, in degrees.
 
     The edges are finite numbers, and ``-90 <= ymin < ymax <= 90``.
-    Longitudes count modulo 360 (:meth:`contains`).
+    Longitudes count modulo 360 (:meth:`contains`), so ``xmin`` east of
+    ``xmax`` is a box across the dateline. Such a box is refused when it
+    would be more than 180 degrees wide, as when the edges were swapped
+    (``xmin=-109, xmax=-114``); write a wider one with ``xmax`` past 180.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -114,6 +117,14 @@ class Bounds(BaseModel):
             raise ValueError(
                 f"Bounds need -90 <= ymin < ymax <= 90 degrees latitude; got "
                 f"ymin={self.ymin:g}, ymax={self.ymax:g}."
+            )
+        width = (self.xmax - self.xmin) % 360.0
+        if self.xmin > self.xmax and width > 180.0:
+            raise ValueError(
+                f"Bounds xmin={self.xmin:g} is east of xmax={self.xmax:g}, which "
+                f"makes a box across the dateline {width:g} degrees wide. Were "
+                "the edges swapped? For a box that wide, write xmax past 180 "
+                f"(xmax={self.xmax + 360:g})."
             )
         return self
 
