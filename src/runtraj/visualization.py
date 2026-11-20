@@ -16,7 +16,9 @@ try:
 except ImportError as error:
     raise ImportError(
         "Plotting requires matplotlib, which the visualization extra installs. "
-        'Install it with: pip install "runtraj[visualization]"'
+        "Install it with the visualization extra of the package you installed "
+        '(pip install "runtraj[visualization]" or "pystilt[visualization]"), '
+        "or with: pip install matplotlib cartopy"
     ) from error
 
 if TYPE_CHECKING:

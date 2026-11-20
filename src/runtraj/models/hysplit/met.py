@@ -431,7 +431,9 @@ class Met:
             raise MeteorologyError(
                 f"No met file in {where} for {_spans(cover.gaps)}. "
                 f"The run covers {earlier:%Y-%m-%d %H:%M} to "
-                f"{later:%Y-%m-%d %H:%M}."
+                f"{later:%Y-%m-%d %H:%M}. Put ARL met files that cover it in "
+                "that folder, or set download: on the met to fetch them from "
+                "NOAA's archive (needs the download extra)."
             )
         return cover.files
 

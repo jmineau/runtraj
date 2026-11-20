@@ -110,7 +110,7 @@ def find_hycs_std(directory: str | Path | None = None) -> Path:
     if found is None:
         raise HYSPLITNotFoundError(
             f"No {HYCS_STD_FILE} on PATH. runtraj does not include HYSPLIT: get "
-            "it (the installation guide says where), then set directory (under "
+            "it from NOAA ARL (https://www.ready.noaa.gov/HYSPLIT.php), then set directory (under "
             "models: hysplit: in config.yaml) to the HYSPLIT folder, or put the "
             f"folder that holds an executable {HYCS_STD_FILE} on PATH."
         )
