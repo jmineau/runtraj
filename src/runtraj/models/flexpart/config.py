@@ -46,10 +46,12 @@ class FlexpartConfig(TransportConfig):
     eta: bool = Field(
         False,
         description=(
-            "Run the eta build, ``src/FLEXPART_ETA``, which ECMWF input (ERA5 "
-            "from flex_extract) needs, with ``numpf = 3`` in ``par_mod.f90`` "
-            "for flex_extract's three precipitation fields. Off runs "
-            "``src/FLEXPART``, the meter build, which GFS needs."
+            "Run the eta build, ``src/FLEXPART_ETA``, which keeps particles on "
+            "ECMWF's model levels and is the build FLEXPART's documentation "
+            "intends for ECMWF input (ERA5 from flex_extract). Off runs "
+            "``src/FLEXPART``, the meter build, which GFS needs and which "
+            "reads ERA5 too. Either build needs ``numpf = 3`` in "
+            "``par_mod.f90`` to read flex_extract's three precipitation fields."
         ),
     )
     numpar: int = Field(
@@ -101,7 +103,10 @@ class FlexpartConfig(TransportConfig):
         0,
         description=(
             "Skewed rather than Gaussian turbulence in the convective boundary "
-            "layer (``CBLFLAG``): 1 on, 0 off. Needs a large ``ctl`` and ``ifine``."
+            "layer (``CBLFLAG``): 1 on, 0 off. It needs short time steps: "
+            "``ctl`` of 5 or more, ``ctl`` times ``ifine`` of 50 or more, and "
+            "``lsynctime`` of 1200 s or less. FLEXPART changes the three "
+            "itself otherwise, so runtraj refuses them."
         ),
     )
     threads: int = Field(
@@ -109,7 +114,9 @@ class FlexpartConfig(TransportConfig):
         description=(
             "OpenMP threads. FLEXPART seeds each thread's random numbers with "
             "a fixed number, so the thread count changes the particles and is "
-            "recorded with the run."
+            "recorded with the run. Each release runs FLEXPART with this many "
+            "threads, whatever ``OMP_NUM_THREADS`` is, so ask for ``threads`` "
+            "cores for every release that runs at once (``cpus``)."
         ),
     )
 
@@ -134,11 +141,20 @@ class FlexpartConfig(TransportConfig):
 
     @model_validator(mode="after")
     def _steps(self) -> FlexpartConfig:
-        """Check that ``lsynctime`` divides ``loutstep``, which FLEXPART requires."""
+        """Check that ``lsynctime`` divides ``loutstep``, and that ``cblflag`` has the time steps FLEXPART would force."""
         if self.loutstep % self.lsynctime:
             raise ValueError(
                 f"lsynctime ({self.lsynctime} s) must divide loutstep "
                 f"({self.loutstep} s)."
+            )
+        if self.cblflag and (
+            self.ctl < 5 or self.ctl * self.ifine < 50 or self.lsynctime > 1200
+        ):
+            raise ValueError(
+                "cblflag: 1 needs ctl of 5 or more, ctl * ifine of 50 or more, "
+                "and lsynctime of 1200 s or less (such as ctl: 5, ifine: 10). "
+                "FLEXPART changes them itself otherwise, and the run's settings "
+                "would not be the ones it ran with."
             )
         return self
 
@@ -216,8 +232,8 @@ class FlexpartMetConfig(BaseModel):
         description=(
             "The weather model the files come from: ``gfs``, NCEP's GFS on "
             "pressure levels, or ``era5``, ECMWF's reanalysis on model levels "
-            "as flex_extract writes it, which needs ``eta: true`` in the "
-            "model's block. On GFS, FLEXPART 11 derives the surface heat flux "
+            "as flex_extract writes it, which we run with ``eta: true`` in "
+            "the model's block. On GFS, FLEXPART 11 derives the surface heat flux "
             "and stress itself, and at a mountain site at midday they came "
             "out near zero, so its particles did not mix: a run on GFS warns "
             "so, and results that depend on mixing need ERA5."
@@ -232,7 +248,10 @@ class FlexpartMetConfig(BaseModel):
     )
     pattern: str = Field(
         "*",
-        description="Glob that picks the GRIB files in ``directory``.",
+        description=(
+            "Glob that picks the GRIB files in ``directory``. A file that "
+            "holds no GRIB message, such as an index cfgrib wrote, is left out."
+        ),
     )
 
     @model_validator(mode="before")
@@ -248,22 +267,25 @@ class FlexpartMetConfig(BaseModel):
         Return what a run records of this met: its source and its grid.
 
         The grid, such as ``0.5x0.5 deg, 720x361``, is read from the first
-        file, so GFS at 0.5 and at 0.25 degrees run in different settings
+        GRIB file, so GFS at 0.5 and at 0.25 degrees run in different settings
         folders. Where the files are kept is not recorded.
 
         Raises
         ------
         FileNotFoundError
-            If ``directory`` holds no file that matches ``pattern``.
+            If ``directory`` holds no GRIB file that matches ``pattern``.
         """
-        from runtraj.models.flexpart.met import grib_grid
+        from runtraj.models.flexpart.met import grib_grid, holds_grib
 
-        files = sorted(Path(self.directory).glob(self.pattern))
-        if not files:
+        files = sorted(
+            p for p in Path(self.directory).glob(self.pattern) if p.is_file()
+        )
+        first = next((p for p in files if holds_grib(p)), None)
+        if first is None:
             raise FileNotFoundError(
-                f"No files match {self.pattern!r} in {self.directory}."
+                f"No GRIB files match {self.pattern!r} in {self.directory}."
             )
-        return {"source": self.source, "grid": grib_grid(files[0])}
+        return {"source": self.source, "grid": grib_grid(first)}
 
 
 __all__ = ["FlexpartConfig", "FlexpartMetConfig", "flexpart_version"]

@@ -24,7 +24,9 @@ which the reader relies on:
   FLEXPART writes the positions at the last output time but the fill value
   in every field it interpolates from the met (``hmix``, ``rho``, ``prs``,
   ``T``, ``sh``), so those are NaN there. With gridded output on they are
-  written (seen with FLEXPART 11 at git bb09a19 on GFS).
+  written (seen with FLEXPART 11 at git bb09a19 on GFS). The eta build
+  writes NaN for ``z`` there as well (seen on ERA5), so those rows have a
+  position and no height.
 - On GFS, FLEXPART gives its lowest level, the ground, the pressure,
   density, temperature, and wind of the lowest GFS pressure level above
   the terrain (``verttransform_mod.f90``), so ``prs`` and ``rho`` near the

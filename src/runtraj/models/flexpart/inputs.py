@@ -280,7 +280,21 @@ def outgrid(release: Release) -> str:
 
 
 def available(met_files: dict[dt.datetime, Path]) -> str:
-    """Return the ``AVAILABLE`` file: three header lines, then each met file's valid time and name."""
+    """
+    Return the ``AVAILABLE`` file: three header lines, then each met file's valid time and name.
+
+    Raises
+    ------
+    ValueError
+        If a file's name has a space in it: FLEXPART reads the name up to
+        the first space, and would not find the file.
+    """
+    spaced = [path.name for path in met_files.values() if " " in path.name]
+    if spaced:
+        raise ValueError(
+            f"FLEXPART reads a met file's name up to its first space, so it "
+            f"cannot read {spaced[0]!r}: rename the file."
+        )
     lines = [
         "XXXXXX EMPTY LINES XXXXXXXXX",
         "XXXXXX EMPTY LINES XXXXXXXX",
