@@ -221,6 +221,27 @@ def test_run_particles_without_particles_is_a_simulation_error(
     assert caught.value.reason == "NO_PARTICLE_DATA"
 
 
+def test_a_batched_model_that_writes_no_log_leaves_no_started_line(
+    tmp_path, release, other_release, monkeypatch
+):
+    project = _model(tmp_path, [release, other_release])
+    sims = [project.simulation(str(r.id), "hrrr") for r in (release, other_release)]
+    monkeypatch.setattr(
+        worker,
+        "run_model_many",
+        lambda model, releases, *a, **k: {
+            str(r.id): ModelRun(_particles(r)) for r in releases
+        },
+    )
+
+    written, failed = worker.run_particles_batch(sims)
+
+    assert len(written) == 2 and not failed
+    for sim in sims:
+        with pytest.raises(FileNotFoundError, match="No log"):
+            sim.log  # noqa: B018
+
+
 # ---------------------------------------------------------------------------
 # run_release: variants that share particles run as one group
 # ---------------------------------------------------------------------------

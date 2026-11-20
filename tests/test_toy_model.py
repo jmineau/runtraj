@@ -334,10 +334,6 @@ def test_a_batched_model_is_not_given_a_release_it_refuses(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="#46: the line runtraj writes when a run starts stays as the log",
-)
 def test_a_toy_run_has_no_log(tmp_path):
     project = _project(tmp_path)
     _run(project)

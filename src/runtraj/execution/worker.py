@@ -230,6 +230,7 @@ def run_particles(
     _log_start(sim)
     log = ""
     succeeded = False
+    ended = False  # the run finished or failed with a record, not cut off
     try:
         result = run_model(
             sim.variant.model,
@@ -248,12 +249,16 @@ def run_particles(
             sim.realization,
         )
         succeeded = True
+        ended = True
         return result.particles
     except SimulationError as error:
         log = error.log
+        ended = True
         raise
     finally:
-        if log:
+        if ended:
+            _log_end(sim, log)
+        elif log:
             output.write_log(sim.variant, rid, log, sim.realization)
         if needs_workdir:
             # An empty directory is not kept: a run that failed before
@@ -284,6 +289,21 @@ def _log_start(sim: Simulation) -> None:
         "the transport model's log replaces this line when the run ends.\n",
         sim.realization,
     )
+
+
+def _log_end(sim: Simulation, log: str) -> None:
+    """
+    Write the transport model's *log* over the line :func:`_log_start` wrote.
+
+    A model that wrote no log leaves *sim* with none, rather than with the
+    line that promises one.
+    """
+    if log:
+        sim.output.write_log(sim.variant, sim.release.id, log, sim.realization)
+    else:
+        path = sim.log_path
+        if path is not None:
+            path.unlink(missing_ok=True)
 
 
 def run_particles_batch(
@@ -328,8 +348,7 @@ def run_particles_batch(
     for sim in sims:
         rid = sim.release.id
         result = results[rid]
-        if result.log:
-            sim.output.write_log(sim.variant, rid, result.log, sim.realization)
+        _log_end(sim, result.log)
         if isinstance(result, SimulationError):
             failed[rid] = _failed(sim, "particles", result)
             continue
