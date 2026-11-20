@@ -245,8 +245,9 @@ def check(project: str | None = _PROJECT_ARG) -> None:
     """
     List what would stop a project's runs, before any run.
 
-    For each variant, checks that the met's directory exists and holds ARL
-    files, that every met file each release's run needs is there (naming
+    For each variant, checks that the transport model can run each release
+    (HYSPLIT refuses a multipoint release whose points share a location),
+    that the met's directory exists and holds ARL files, that every met file each release's run needs is there (naming
     the hours), that the first of them holds more than one time period,
     which HYSPLIT needs, and that each ends on a whole time step, that each
     release is inside the grid of the met files its run starts in (or inside

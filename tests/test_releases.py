@@ -752,43 +752,47 @@ def test_read_releases_zmsl_infers_msl(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# MultiPointRelease - duplicate horizontal locations are rejected
+# MultiPointRelease - points at one location
 # ---------------------------------------------------------------------------
 
 
-def test_multipoint_rejects_stacked_heights_at_one_location():
-    # HYSPLIT chains same-lat/lon release locations into one vertical line
-    # source and releases only between the last two heights.
-    with pytest.raises(ValueError, match="distinct horizontal"):
-        MultiPointRelease(
-            time="202508110440",
-            longitudes=[-76.68869] * 5,
-            latitudes=[37.76396] * 5,
-            altitudes=[100.0, 200.0, 300.0, 400.0, 500.0],
-        )
+def test_multipoint_may_stack_heights_at_one_location(tmp_path):
+    """Another transport model may run it; HYSPLIT refuses it (tests/models/hysplit)."""
+    release = MultiPointRelease(
+        time="202508110440",
+        longitudes=[-76.68869] * 5,
+        latitudes=[37.76396] * 5,
+        altitudes=[100.0, 200.0, 300.0, 400.0, 500.0],
+    )
+    path = tmp_path / "releases.csv"
+    write_releases([release], path)
+
+    assert read_releases(path) == [release]
 
 
-def test_multipoint_rejects_nonconsecutive_duplicate_location():
-    with pytest.raises(ValueError, match="distinct horizontal"):
+def test_multipoint_of_two_points_at_one_location_is_a_column():
+    """releases.csv reads two rows at one location as a column, so the class refuses them."""
+    with pytest.raises(ValueError, match="is a ColumnRelease in releases.csv"):
         MultiPointRelease(
             time="202301011200",
-            longitudes=[-111.85, -111.86, -111.85],
-            latitudes=[40.77, 40.78, 40.77],
-            altitudes=[100.0, 200.0, 300.0],
+            longitudes=[-111.85, -111.85],
+            latitudes=[40.77, 40.77],
+            altitudes=[100.0, 200.0],
         )
 
 
-def test_read_releases_stacked_group_reports_its_group(tmp_path):
-    csv = tmp_path / "releases.csv"
-    csv.write_text(
-        "group,time,longitude,latitude,altitude,altitude_ref\n"
-        + "".join(
-            f"0,2025-08-11 04:40:50,-76.688690186,37.763957977,{z},agl\n"
-            for z in (100.0, 200.0, 300.0, 400.0, 500.0)
-        )
+def test_two_points_apart_by_less_than_5_decimals_are_a_multipoint(tmp_path):
+    """The class and releases.csv compare the two locations exactly."""
+    release = MultiPointRelease(
+        time="202301011200",
+        longitudes=[-111.850001, -111.85],
+        latitudes=[40.77, 40.77],
+        altitudes=[100.0, 200.0],
     )
-    with pytest.raises(ValueError, match="group=0.*distinct horizontal"):
-        read_releases(csv)
+    path = tmp_path / "releases.csv"
+    write_releases([release], path)
+
+    assert read_releases(path) == [release]
 
 
 # ---------------------------------------------------------------------------

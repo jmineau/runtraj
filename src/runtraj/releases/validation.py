@@ -13,17 +13,6 @@ from collections.abc import Iterable
 from typing import Any
 
 import numpy as np
-import pandas as pd
-
-#: Why a multipoint release's points may not share a horizontal location.
-REPEATED_LOCATION = (
-    "MultiPointRelease points must have distinct horizontal locations "
-    "(HYSPLIT collapses release locations that share a lat/lon into a "
-    "single vertical line source and releases only between the last two "
-    "heights). Use ColumnRelease for a vertical column, or one "
-    "PointRelease per height (distinct group) for discrete release "
-    "heights at one location."
-)
 
 
 def point_errors(
@@ -57,27 +46,26 @@ def column_errors(bottom: Any, top: Any) -> list[tuple[np.ndarray, str]]:
     return [(bad, "'bottom' must be less than 'top'.")]
 
 
-def multipoint_errors(lon: Any, lat: Any, release: Any) -> list[tuple[np.ndarray, str]]:
+def two_points_errors(lon: Any, lat: Any) -> list[tuple[np.ndarray, str]]:
     """
-    Return the check a multipoint release must pass, as ``(bad, message)``.
+    Return the check a multipoint release of two points must pass, as ``(bad, message)``.
 
-    No two points of one release may share a horizontal location, to 5
-    decimal places. *release* labels each point's release. A point is bad
-    when an earlier point of its release is at the same location.
-
-    HYSPLIT joins consecutive release locations at one latitude and
-    longitude into a vertical line source and releases only from the last
-    pair, and runtraj matches particles to their release point by
-    horizontal position.
+    In ``releases.csv`` a group of two rows at exactly one horizontal
+    location is a column release, so a multipoint release of two such
+    points would be read back as a column. The comparison is exact, as the
+    file's is.
     """
-    points = pd.DataFrame(
-        {
-            "release": np.asarray(release),
-            "lon": np.round(np.asarray(lon, dtype=float), 5),
-            "lat": np.round(np.asarray(lat, dtype=float), 5),
-        }
-    )
-    return [(points.duplicated().to_numpy(), REPEATED_LOCATION)]
+    lon = np.asarray(lon, dtype=float)
+    lat = np.asarray(lat, dtype=float)
+    bad = len(lon) == 2 and lon[0] == lon[1] and lat[0] == lat[1]
+    return [
+        (
+            np.array([bad]),
+            "A MultiPointRelease of two points at one location is a "
+            "ColumnRelease in releases.csv, which would read it back as one. "
+            "Use ColumnRelease for a column, or add a third point.",
+        )
+    ]
 
 
 def _raise_first(errors: Iterable[tuple[np.ndarray, str]]) -> None:

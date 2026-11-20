@@ -6,8 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
-import warnings
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -350,8 +349,9 @@ def needs_height_to_match(
     """
     Return whether a multipoint release's particles can be told from their points only by height.
 
-    :func:`add_release_heights` matches them by height when every point has its
-    own altitude and the model writes no release (``t = 0``) rows; for a
+    HYSPLIT's release rows match them by height when every point has its
+    own altitude and the run wrote no release (``t = 0``) rows
+    (:func:`runtraj.models.hysplit.releases.release_rows`); for a
     release above sea level that height is ``zagl + zsfc``. Points that share
     an altitude are matched by position, and so are points more than
     ``1000 m`` apart, which position tells apart reliably. This is the one
@@ -369,126 +369,173 @@ def needs_height_to_match(
     )
 
 
-def add_release_heights(particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+#: Columns of a table of release rows: where each particle started.
+RELEASE_ROW_COLUMNS = ("particle", "lon", "lat", "height")
+
+
+def add_release_heights(
+    particles: pd.DataFrame,
+    release: Release,
+    release_rows: Callable[[pd.DataFrame, Release], pd.DataFrame] | None = None,
+) -> pd.DataFrame:
     """
     Return *particles* with each particle's ``release_height``, for a column or multipoint release.
 
-    The release row (``age = 0``) says where each particle started. For a
-    multipoint release that is one of its points, and ``release_height`` is that
-    point's altitude. For a column release it is inside one of the
-    slabs the column is split into, one per particle, and ``release_height`` is that slab's
-    center: the slab is what the particle stands for, not the random
-    height inside it. A model that writes no release row, such as HYSPLIT
-    5.1.0, falls back to matching: a column's particles are
-    released bottom to top in ``particle`` order, and a multipoint release's
-    are matched to the nearest point from their first row.
+    Each particle's release row says where it started: its row at
+    ``age = 0``, or, for a transport model that writes none, the row
+    *release_rows* gives (the model's ``release_rows``,
+    :class:`runtraj.models.TransportModel`). For a multipoint release
+    ``release_height`` is the altitude of the point the particle started
+    at. For a column release it is the center of the particle's slab: the
+    column is split into slabs of equal depth, one per release row, and the
+    slab is what the particle stands for, not the random height inside it.
+    So the release rows must hold every particle released, including any
+    missing from *particles*, such as one that left the met's domain before
+    its first row.
 
     A point release's particles are returned as they are.
+
+    Parameters
+    ----------
+    particles : pandas.DataFrame
+        The particle table of one release.
+    release : Release
+        The release the particles started from.
+    release_rows : callable, optional
+        ``release_rows(particles, release)``, which returns a table with
+        :data:`RELEASE_ROW_COLUMNS`, one row per particle released: where it
+        started, its ``height`` in the release's vertical reference. It
+        holds each particle of *particles* once, and may hold particles
+        released but not in *particles*. Used when the particles have no
+        row at ``age = 0``, or their heights above sea level cannot be known
+        without ``zsfc``.
+
+    Raises
+    ------
+    ValueError
+        If the particles have no release rows and *release_rows* is not
+        given, *release_rows* returns a table without its columns or
+        without each particle once, or a release row's height is needed and
+        cannot be known (``zsfc`` missing for a release above sea level).
     """
+    if not isinstance(release, ColumnRelease | MultiPointRelease):
+        return particles
+    started = _started(particles, release, release_rows)
     if isinstance(release, ColumnRelease):
-        return particles.assign(
-            release_height=_column_release_heights(particles, release)
-        )
-    if isinstance(release, MultiPointRelease):
-        return particles.assign(
-            release_height=_multipoint_release_heights(particles, release)
-        )
-    return particles
+        heights = _column_heights(started, release)
+    else:
+        heights = _multipoint_heights(started, release)
+    mapping = dict(zip(started["particle"].to_numpy(), heights, strict=True))
+    return particles.assign(
+        release_height=pd.Series(
+            particles["particle"].to_numpy(), index=particles.index
+        ).map(mapping.get)
+    )
 
 
-def _release_rows(p: pd.DataFrame) -> pd.DataFrame | None:
-    """Return each particle's release row (``age = 0``), or ``None`` when the model wrote none."""
+def _started(
+    p: pd.DataFrame,
+    release: Release,
+    release_rows: Callable[[pd.DataFrame, Release], pd.DataFrame] | None,
+) -> pd.DataFrame:
+    """Return each particle's release row, with :data:`RELEASE_ROW_COLUMNS`."""
     released = p.loc[p["age"] == 0].drop_duplicates(subset="particle")
-    if released.empty or len(released) != p["particle"].nunique():
-        return None
-    return released
+    rows = None
+    if not released.empty and len(released) == p["particle"].nunique():
+        rows = pd.DataFrame(
+            {
+                "particle": released["particle"].to_numpy(),
+                "lon": released["lon"].to_numpy(dtype=float),
+                "lat": released["lat"].to_numpy(dtype=float),
+                "height": _height(released, release),
+            }
+        )
+        # Heights a release above sea level cannot have without zsfc: the
+        # model's own release rows may know them.
+        if release_rows is None or not rows["height"].isna().any():
+            return rows
+    if release_rows is None:
+        raise ValueError(
+            f"The particles of {release.kind} release {release.id} have no row "
+            "at age = 0, so where each one started is not known. A transport "
+            "model that writes no such row gives release_rows."
+        )
+    return _checked_rows(release_rows(p, release), p, release_rows)
 
 
-def _height(rows: pd.DataFrame, release: Release) -> np.ndarray | None:
-    """Return the rows' heights in the release's vertical reference, or ``None`` when they cannot be known."""
+def _checked_rows(
+    rows: pd.DataFrame, p: pd.DataFrame, release_rows: Callable[..., pd.DataFrame]
+) -> pd.DataFrame:
+    """Return the table *release_rows* gave, after checking it holds each particle of *p* once."""
+    name = getattr(release_rows, "__qualname__", "release_rows")
+    missing = [c for c in RELEASE_ROW_COLUMNS if c not in rows.columns]
+    if missing:
+        raise ValueError(f"{name} returned no {missing} column(s).")
+    repeated = rows["particle"].duplicated()
+    if repeated.any():
+        raise ValueError(
+            f"{name} returned more than one row for particle "
+            f"{rows.loc[repeated, 'particle'].iloc[0]}."
+        )
+    absent = np.setdiff1d(p["particle"].unique(), rows["particle"].to_numpy())
+    if len(absent):
+        raise ValueError(f"{name} returned no row for particle {absent[0]}.")
+    return rows[list(RELEASE_ROW_COLUMNS)].reset_index(drop=True)
+
+
+def _height(rows: pd.DataFrame, release: Release) -> np.ndarray | float:
+    """Return the rows' heights in the release's vertical reference, ``nan`` when they cannot be known."""
     if "zagl" not in rows.columns:
-        return None
+        return np.nan
     if release.altitude_ref == "agl":
         return rows["zagl"].to_numpy(dtype=float)
     if "zsfc" in rows.columns:
         return (rows["zagl"] + rows["zsfc"]).to_numpy(dtype=float)
-    return None
+    return np.nan
 
 
-def _column_release_heights(p: pd.DataFrame, release: ColumnRelease) -> pd.Series:
-    """
-    Return each row's release height for a column release: the center of its particle's slab.
-
-    The column is split into slabs of equal depth, one per particle. With release
-    rows, a particle's slab is the one its release height falls in;
-    without them, particle ``particle`` is in slab ``particle``, as HYSPLIT
-    releases them.
-    """
-    n_slabs = int(p["particle"].max())
-    step = (release.top - release.bottom) / n_slabs
-    released = _release_rows(p)
-    height = None if released is None else _height(released, release)
-    if released is None or height is None:
-        return (p["particle"] - 0.5) * step + release.bottom
-    slab = np.clip(np.floor((height - release.bottom) / step), 0, n_slabs - 1)
-    center = dict(
-        zip(released["particle"], release.bottom + (slab + 0.5) * step, strict=True)
-    )
-    return pd.Series(p["particle"].to_numpy(), index=p.index).map(center.get)
-
-
-def _multipoint_release_heights(
-    p: pd.DataFrame, release: MultiPointRelease
-) -> pd.Series:
-    """
-    Return each row's release altitude for a multipoint release.
-
-    The particle table does not record which point a particle came from.
-    It is recovered from each particle's row nearest the release time:
-
-    1. If the model writes release (``t = 0``) rows, match the nearest
-       release point horizontally. Nothing has moved yet, so this is exact.
-    2. Otherwise the first row is one time step after release. Height
-       drifts about 30 times less than horizontal position over that step,
-       so when all release heights differ (as in a slanted column), match
-       on height.
-    3. Otherwise match on horizontal position, and warn when the release
-       points are too close together for that to be reliable.
-    """
-    first = (
-        p.assign(_age=p["age"].abs())
-        .sort_values("_age", kind="stable")
-        .drop_duplicates(subset="particle")
-    )
-    lons = np.asarray(release.longitudes, dtype=float)
-    lats = np.asarray(release.latitudes, dtype=float)
-    alts = np.asarray(release.altitudes, dtype=float)
-    has_t0 = bool((first["_age"] == 0).all())
-
-    # Height of each particle in the release's own vertical reference.
-    height = _height(first, release)
-
-    if not has_t0 and height is not None and len(np.unique(alts)) == len(alts):
-        nearest = np.argmin(np.abs(height[:, None] - alts[None, :]), axis=1)
-    else:
-        xy = first[["lon", "lat"]].to_numpy(dtype=float)
-        pts = np.column_stack((lons, lats))
-        nearest = np.argmin(
-            np.sum((xy[:, None, :] - pts[None, :, :]) ** 2, axis=2), axis=1
+def _column_heights(started: pd.DataFrame, release: ColumnRelease) -> np.ndarray:
+    """Return the center of the slab each particle started in, one slab per release row."""
+    height = started["height"].to_numpy(dtype=float)
+    if np.isnan(height).any():
+        raise ValueError(
+            f"Column release {release.id} is above sea level and its release "
+            "rows have no zsfc, so the slab each particle started in is not "
+            "known."
         )
-        if not has_t0 and len(alts) > 1:
-            spacing = _closest_points_m(lons, lats)
-            if spacing < _MIN_RELIABLE_SPACING_M:
-                warnings.warn(
-                    f"MultiPointRelease release points are as close as "
-                    f"{spacing:.0f} m and cannot be separated by altitude, and this "
-                    "model writes no t=0 row, so particles cannot be "
-                    "reliably matched to their release points; 'release_height' may be wrong. "
-                    "Use a HYSPLIT build that writes release-time rows "
-                    "(HysplitConfig.directory) or space the points more than "
-                    f"{_MIN_RELIABLE_SPACING_M:.0f} m apart.",
-                    stacklevel=3,
-                )
+    n_slabs = len(started)
+    step = (release.top - release.bottom) / n_slabs
+    slab = np.clip(np.floor((height - release.bottom) / step), 0, n_slabs - 1)
+    return release.bottom + (slab + 0.5) * step
 
-    mapping = dict(zip(first["particle"].to_numpy(), alts[nearest], strict=True))
-    return pd.Series(p["particle"].to_numpy(), index=p.index).map(mapping.get)
+
+def _multipoint_heights(
+    started: pd.DataFrame, release: MultiPointRelease
+) -> np.ndarray:
+    """
+    Return the altitude of the point each particle started at.
+
+    A particle started at the point nearest its release row horizontally;
+    among points at one location, at the one nearest its height.
+    """
+    alts = np.asarray(release.altitudes, dtype=float)
+    xy = started[["lon", "lat"]].to_numpy(dtype=float)
+    points = np.column_stack(
+        (
+            np.asarray(release.longitudes, dtype=float),
+            np.asarray(release.latitudes, dtype=float),
+        )
+    )
+    d2 = np.sum((xy[:, None, :] - points[None, :, :]) ** 2, axis=2)
+    nearest = d2 <= d2.min(axis=1, keepdims=True) + 1e-12
+    if (nearest.sum(axis=1) > 1).any():
+        height = started["height"].to_numpy(dtype=float)
+        if np.isnan(height).any():
+            raise ValueError(
+                f"Multipoint release {release.id} has points at one location "
+                "and is above sea level, and its release rows have no zsfc, so "
+                "the point each particle started at is not known."
+            )
+        dz = np.where(nearest, np.abs(height[:, None] - alts[None, :]), np.inf)
+        return alts[np.argmin(dz, axis=1)]
+    return alts[np.argmin(d2, axis=1)]

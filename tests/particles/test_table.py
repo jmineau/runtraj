@@ -13,16 +13,23 @@ import pytest
 from runtraj.identity import run_settings, transport_from_settings
 from runtraj.models import ModelInfo
 from runtraj.models.hysplit import HysplitConfig
+from runtraj.models.hysplit.releases import release_rows
 from runtraj.particles import (
     particles_from_table,
     particles_metadata,
     read_particles,
     write_particles,
 )
-from runtraj.particles.table import add_release_heights, needs_height_to_match
+from runtraj.particles.table import add_release_heights as _add_release_heights
+from runtraj.particles.table import needs_height_to_match
 from runtraj.releases import ColumnRelease, MultiPointRelease
 
 from ..fixtures.particles import finished
+
+
+def add_release_heights(particles: pd.DataFrame, release) -> pd.DataFrame:
+    """Add release heights as after a HYSPLIT run: its release rows when it wrote no row at age = 0."""
+    return _add_release_heights(particles, release, release_rows)
 
 
 def _particles_basic() -> pd.DataFrame:
@@ -378,7 +385,7 @@ def test_finished_particles_multipoint_nondivisible_particle_blocks_follow_relea
 # without release-time rows first report a particle a timestep after release,
 # by which point the wind has carried it hundreds of metres -- further than
 # the points of a slant column are apart. These tests pin down the three
-# cases in ``_multipoint_release_heights``.
+# cases in HYSPLIT's ``release_rows``.
 # ---------------------------------------------------------------------------
 
 
@@ -604,8 +611,6 @@ def test_stored_settings_this_version_does_not_have_are_dropped(
 
 def test_a_column_release_row_says_which_slab_a_particle_stands_for():
     """With t = 0 rows, release_height is the centre of the slab the release falls in, not the indx order."""
-    from runtraj.particles import add_release_heights
-
     column = ColumnRelease(
         time="2023-01-01 12:00", longitude=-111.85, latitude=40.77, bottom=0, top=1000
     )
@@ -625,7 +630,7 @@ def test_a_column_release_row_says_which_slab_a_particle_stands_for():
     ]
     assert by_particle.to_dict() == {1: 875.0, 2: 125.0, 3: 625.0, 4: 375.0}
 
-    # Without the release rows, particle indx is in slab indx.
+    # Without the release rows, HYSPLIT's put particle indx in slab indx.
     first_step = add_release_heights(rows[rows.age == -1], column)
     assert first_step["release_height"].tolist() == [125.0, 375.0, 625.0, 875.0]
 
@@ -676,3 +681,89 @@ def test_msl_multipoint_release_heights_do_not_read_zsfc_when_it_is_not_needed(
 
 
 #: foot of one minute below a 500 m layer of air of mean density 1 kg/m3.
+
+
+# ---------------------------------------------------------------------------
+# The core's release heights, for any model: rows at age = 0, or release_rows
+# ---------------------------------------------------------------------------
+
+_COLUMN = ColumnRelease(
+    time="2023-01-01 12:00", longitude=-111.85, latitude=40.77, bottom=0, top=1000
+)
+
+
+def _column_rows_at_release(**extra) -> pd.DataFrame:
+    released = [900.0, 10.0, 600.0, 300.0]
+    return pd.DataFrame(
+        {
+            "particle": [1, 2, 3, 4] * 2,
+            "age": [0] * 4 + [-1] * 4,
+            "lon": [-111.85] * 8,
+            "lat": [40.77] * 8,
+            "zagl": released + [z + 3.0 for z in released],
+            **extra,
+        }
+    )
+
+
+def test_the_core_finds_a_columns_slabs_from_rows_at_age_0():
+    found = _add_release_heights(_column_rows_at_release(), _COLUMN)
+
+    heights = found.drop_duplicates("particle").set_index("particle")["release_height"]
+    assert heights.to_dict() == {1: 875.0, 2: 125.0, 3: 625.0, 4: 375.0}
+
+
+def test_the_core_matches_points_at_one_location_by_height():
+    release = MultiPointRelease(
+        time="2023-01-01 12:00",
+        longitudes=[-111.85, -111.85, -111.80],
+        latitudes=[40.77, 40.77, 40.80],
+        altitudes=[10.0, 200.0, 50.0],
+    )
+    p = pd.DataFrame(
+        {
+            "particle": [1, 2, 3] * 2,
+            "age": [0] * 3 + [-1] * 3,
+            "lon": [-111.85, -111.85, -111.80] * 2,
+            "lat": [40.77, 40.77, 40.80] * 2,
+            "zagl": [200.0, 10.0, 50.0, 210.0, 15.0, 55.0],
+        }
+    )
+
+    found = _add_release_heights(p, release)
+
+    assert found["release_height"].tolist() == [200.0, 10.0, 50.0] * 2
+
+
+def test_the_core_needs_zsfc_for_a_column_above_sea_level():
+    column = _COLUMN.model_copy(update={"altitude_ref": "msl"})
+
+    with pytest.raises(ValueError, match="no zsfc"):
+        _add_release_heights(_column_rows_at_release(), column)
+
+
+@pytest.mark.parametrize(
+    ("change", "message"),
+    [
+        (lambda rows: rows.drop(columns="height"), r"no \['height'\] column"),
+        (lambda rows: rows[rows["particle"] != 3], "no row for particle 3"),
+        (lambda rows: pd.concat([rows, rows.iloc[:1]]), "more than one row"),
+    ],
+)
+def test_the_core_refuses_release_rows_without_each_particle_once(change, message):
+    p = _column_rows_at_release().query("age < 0")
+
+    def rows(particles, release):
+        return change(
+            pd.DataFrame(
+                {
+                    "particle": [1, 2, 3, 4],
+                    "lon": -111.85,
+                    "lat": 40.77,
+                    "height": [100.0, 300.0, 500.0, 700.0],
+                }
+            )
+        )
+
+    with pytest.raises(ValueError, match=message):
+        _add_release_heights(p, _COLUMN, rows)

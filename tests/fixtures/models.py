@@ -10,7 +10,8 @@ one differs from HYSPLIT wherever it can:
   writes no log;
 - it reads no met files, so it has no ``check_met`` or ``fetch_met``;
 - its first row is one output step after the release: it writes no row
-  at ``age = 0``;
+  at ``age = 0``, and says where each particle started through
+  ``release_rows`` instead;
 - it numbers its particles 10, 20, 30, ... (:data:`PARTICLE_STEP`), not 1 to N;
 - its settings have names of their own (``n_particles``, ``step``) and
   share none of HYSPLIT's;
@@ -42,6 +43,9 @@ PARTICLE_STEP = 10
 
 #: How far a particle moves west each hour, in degrees.
 DRIFT = 0.05
+
+#: How far a particle rises each hour, in meters.
+RISE = 10.0
 
 
 class ToyConfig(TransportConfig):
@@ -122,10 +126,25 @@ class ToyModel:
                 "age": np.repeat(sign * ages, n),
                 "lon": np.tile(lon, len(ages)) - DRIFT * hours + jitter,
                 "lat": np.tile(lat, len(ages)) + jitter,
-                "zagl": np.tile(alt, len(ages)) + 10.0 * hours,
+                "zagl": np.tile(alt, len(ages)) + RISE * hours,
             }
         )
         return ModelRun(particles=particles)
+
+    def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+        """Return where each particle started: its first row, with the drift taken back."""
+        first = particles.loc[
+            particles["age"].abs().groupby(particles["particle"]).idxmin()
+        ]
+        hours = first["age"].abs().to_numpy() / 60.0
+        return pd.DataFrame(
+            {
+                "particle": first["particle"].to_numpy(),
+                "lon": first["lon"].to_numpy() + DRIFT * hours,
+                "lat": first["lat"].to_numpy(),
+                "height": first["zagl"].to_numpy() - RISE * hours,
+            }
+        )
 
 
 def _starts(

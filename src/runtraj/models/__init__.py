@@ -26,6 +26,7 @@ from runtraj._plugins import import_class
 from runtraj.exceptions import SimulationError
 from runtraj.meteorology import run_window
 from runtraj.particles import add_release_heights, check_particles
+from runtraj.releases import releases_to_frame
 
 if TYPE_CHECKING:
     from runtraj.releases import Release
@@ -224,6 +225,27 @@ class TransportModel(Protocol):
         :func:`open_met` calls it, so that the met is read at particles
         (:mod:`runtraj.sampling`) without guessing its format from the
         files. A model without it reads ARL files.
+    check_releases : callable, optional
+        ``check_releases(releases, config)``, for a model that cannot run
+        every release runtraj accepts. *releases* is a table with one row
+        per release point (``release``, ``kind``, ``longitude``,
+        ``latitude``, ``altitude``, ``altitude_ref``) and *config* the
+        model's config. It returns a DataFrame with ``check``, ``release``
+        and ``message`` columns, in that order, one row for each release it
+        cannot run. ``runtraj check`` lists them, and :func:`run_model` and
+        :func:`run_model_many` fail them with the reason
+        ``RELEASE_REFUSED`` before the model runs, so :meth:`run` and
+        ``run_many`` never get such a release. HYSPLIT refuses a multipoint
+        release whose points share a horizontal location, which it would
+        join into a line source. A model without it runs every release.
+    release_rows : callable, optional
+        ``release_rows(particles, release)``, for a model that writes no
+        row at ``age = 0``: returns where each particle of a column or
+        multipoint release started, one row per particle with ``particle``,
+        ``lon``, ``lat``, and ``height`` in the release's vertical reference
+        (:func:`runtraj.particles.add_release_heights`). A model that writes
+        release rows needs none; one that writes neither cannot run a column
+        or multipoint release.
     """
 
     name: str
@@ -479,12 +501,19 @@ def run_model(
     Raises
     ------
     SimulationError
-        If the run fails, as when the meteorology does not cover it
-        (``MET_COVERAGE``), or the model wrote no particles.
+        If the model's ``check_releases`` refuses the release
+        (``RELEASE_REFUSED``), before it runs; if the run fails, as when the
+        meteorology does not cover it (``MET_COVERAGE``), or the model wrote
+        no particles; or if where the particles of a column or multipoint
+        release started is not known (``NO_RELEASE_ROWS``).
     """
+    model = get_model(name)
+    refused = _refused(model, [release], config).get(str(release.id))
+    if refused is not None:
+        raise refused
     window = run_window(release.time, config.n_hours)
-    run = get_model(name).run(release, config, met, window, workdir, timeout=timeout)
-    return _finish(run, release, config)
+    run = model.run(release, config, met, window, workdir, timeout=timeout)
+    return _finish(run, release, model)
 
 
 def run_model_many(
@@ -500,8 +529,9 @@ def run_model_many(
 
     The model's one table is split by its ``release`` column, and each
     release's particles get the steps :func:`run_model` applies. A release
-    whose particles are missing or fail those steps gets its error, and the
-    others their runs.
+    the model's ``check_releases`` refuses is left out of the call and
+    gets a ``RELEASE_REFUSED`` error; one whose particles are missing or
+    fail those steps gets its error, and the others their runs.
 
     Returns
     -------
@@ -514,11 +544,17 @@ def run_model_many(
     SimulationError
         If the whole call fails.
     """
-    windows = [run_window(r.time, config.n_hours) for r in releases]
     model = get_model(name)
     run_many = getattr(model, "run_many", None)
     if run_many is None:
         raise TypeError(f"Transport model {name!r} has no run_many.")
+    results: dict[str, ModelRun | SimulationError] = dict(
+        _refused(model, releases, config)
+    )
+    releases = [r for r in releases if str(r.id) not in results]
+    if not releases:
+        return results
+    windows = [run_window(r.time, config.n_hours) for r in releases]
     run = run_many(releases, config, met, windows, workdir, timeout=timeout)
     if "release" not in run.particles.columns:
         raise SimulationError(
@@ -527,7 +563,6 @@ def run_model_many(
             log=run.log,
         )
     by_release = dict(tuple(run.particles.groupby("release", sort=False)))
-    results: dict[str, ModelRun | SimulationError] = {}
     for release in releases:
         rows = by_release.get(str(release.id))
         own = replace(
@@ -539,14 +574,48 @@ def run_model_many(
             ),
         )
         try:
-            results[str(release.id)] = _finish(own, release, config)
+            results[str(release.id)] = _finish(own, release, model)
         except SimulationError as error:
             error.log = run.log
             results[str(release.id)] = error
     return results
 
 
-def _finish(run: ModelRun, release: Release, config: TransportConfig) -> ModelRun:
+def _release_points(releases: Iterable[Release]) -> pd.DataFrame:
+    """
+    Return *releases* as a model's ``check_releases`` gets them: one row per release point.
+
+    The columns are ``release`` (the release id), ``kind``, ``longitude``,
+    ``latitude``, ``altitude`` and ``altitude_ref``, the columns of a
+    project's release rows that a model reads.
+    """
+    releases = list(releases)
+    rows = releases_to_frame(releases)
+    each = [r for r in releases for _ in r.coords()]  # a release per point
+    rows["release"] = [str(r.id) for r in each]
+    rows["kind"] = [r.kind for r in each]
+    return rows[
+        ["release", "kind", "longitude", "latitude", "altitude", "altitude_ref"]
+    ]
+
+
+def _refused(
+    model: TransportModel, releases: list[Release], config: TransportConfig
+) -> dict[str, SimulationError]:
+    """Return the error of each of *releases* the model's ``check_releases`` refuses, by release id."""
+    check_releases = getattr(model, "check_releases", None)
+    if check_releases is None:
+        return {}
+    ids = {str(r.id) for r in releases}
+    table = check_releases(_release_points(releases), config)
+    return {
+        str(release): SimulationError(str(message), reason="RELEASE_REFUSED")
+        for _check, release, message in table.itertuples(index=False)
+        if str(release) in ids
+    }
+
+
+def _finish(run: ModelRun, release: Release, model: TransportModel) -> ModelRun:
     """
     Return *run* with its particles checked and their release heights.
 
@@ -558,7 +627,8 @@ def _finish(run: ModelRun, release: Release, config: TransportConfig) -> ModelRu
     Raises
     ------
     SimulationError
-        With the run's log, if the model wrote no particles.
+        With the run's log, if the model wrote no particles, or where each
+        particle of a column or multipoint release started is not known.
     """
     if run.particles.empty:
         raise SimulationError(
@@ -567,7 +637,15 @@ def _finish(run: ModelRun, release: Release, config: TransportConfig) -> ModelRu
             log=run.log,
         )
     check_particles(run.particles)
-    return replace(run, particles=add_release_heights(run.particles, release))
+    try:
+        particles = add_release_heights(
+            run.particles, release, getattr(model, "release_rows", None)
+        )
+    except ValueError as error:
+        raise SimulationError(
+            str(error), reason="NO_RELEASE_ROWS", log=run.log
+        ) from error
+    return replace(run, particles=particles)
 
 
 def run_trajectories(

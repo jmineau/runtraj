@@ -29,6 +29,7 @@ from .driver import (
 )
 from .failures import FailureReason
 from .met import Met, MetConfig
+from .releases import check_releases, release_rows
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -240,6 +241,25 @@ class HysplitModel:
         True
         """
         return met.download is not None
+
+    def check_releases(
+        self, releases: pd.DataFrame, config: HysplitConfig
+    ) -> pd.DataFrame:
+        """
+        Return the releases HYSPLIT cannot run: multipoint releases whose points share a location.
+
+        No setting changes which, so *config* is not read. See
+        :func:`runtraj.models.hysplit.releases.check_releases`.
+        """
+        return check_releases(releases)
+
+    def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+        """
+        Return where each particle started, for a HYSPLIT build that writes no row at ``age = 0``.
+
+        See :func:`runtraj.models.hysplit.releases.release_rows`.
+        """
+        return release_rows(particles, release)
 
     def run(
         self,

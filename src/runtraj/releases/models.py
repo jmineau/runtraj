@@ -37,7 +37,12 @@ from shapely import Geometry, LineString, MultiPoint, Point
 if TYPE_CHECKING:
     from runtraj.visualization import ReleasePlotAccessor
 
-from .validation import _raise_first, column_errors, multipoint_errors, point_errors
+from .validation import (
+    _raise_first,
+    column_errors,
+    point_errors,
+    two_points_errors,
+)
 
 TimeLike: TypeAlias = dt.datetime | pd.Timestamp | np.datetime64 | str
 
@@ -576,15 +581,19 @@ class MultiPointRelease(Release):
     Release that releases particles from several points at once.
 
     Use it for a slanted column, such as a satellite sounding sampled at
-    several heights along the line of sight. Each point must have its own
-    longitude and latitude. For several heights at one location, use a
-    :class:`ColumnRelease` or one :class:`PointRelease` per height.
+    several heights along the line of sight. Points may share a horizontal
+    location, but a transport model may refuse such a release: HYSPLIT joins
+    them into a line source, so with HYSPLIT use a :class:`ColumnRelease` or
+    one :class:`PointRelease` per height. A release of only two points at
+    one location is refused here, since ``releases.csv`` reads it as a
+    column.
 
     Raises
     ------
     ValueError
         If the arrays differ in length, a coordinate is out of range or not a
-        finite number, or two points share a horizontal location.
+        finite number, or the release has exactly two points at one
+        horizontal location.
     """
 
     kind: Literal["multipoint"] = Field(
@@ -606,7 +615,7 @@ class MultiPointRelease(Release):
 
     @model_validator(mode="after")
     def _check(self) -> MultiPointRelease:
-        """Check the points, and that no two share a horizontal location."""
+        """Check the points, and that two points are not at one location, which releases.csv reads as a column."""
         if not (len(self.longitudes) == len(self.latitudes) == len(self.altitudes)):
             raise ValueError(
                 "longitudes, latitudes, and altitudes must have the same length."
@@ -616,9 +625,7 @@ class MultiPointRelease(Release):
                 *point_errors(
                     self.longitudes, self.latitudes, self.altitudes, self.altitude_ref
                 ),
-                *multipoint_errors(
-                    self.longitudes, self.latitudes, [0] * len(self.longitudes)
-                ),
+                *two_points_errors(self.longitudes, self.latitudes),
             ]
         )
         return self

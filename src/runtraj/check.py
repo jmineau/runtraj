@@ -3,7 +3,9 @@ The check before a run: what would stop a project's simulations, found without r
 
 :func:`check_project` looks at the inputs of a project, never at its results:
 that it has releases, that the transport model's
-executable is there (HYSPLIT's ``hycs_std``), the met files each release needs,
+executable is there (HYSPLIT's ``hycs_std``), that the model can run each
+release (HYSPLIT refuses a multipoint release whose points share a
+location), the met files each release needs,
 whether each release is inside the met's domain (or its crop, when it has
 one), whether HYSPLIT's ``varsiwant`` holds ``zsfc`` where the run needs it, and what each stage of a variant finds
 wrong with its own inputs (:meth:`runtraj.stages.Stage.check`).
@@ -59,6 +61,7 @@ def check_project(project: Project) -> pd.DataFrame:
         checks = (
             *_build_checks(variant),
             *_met_checks(variant, rows),
+            *_release_checks(variant, rows),
             *_stage_checks(variant, rows, project, configs),
             *_zsfc_checks(variant, rows),
         )
@@ -119,6 +122,23 @@ def _met_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
         ]
 
     yield ("met", variant.met, variant.model, n_hours), make
+
+
+def _release_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
+    """Yield the releases the variant's transport model cannot run, from its ``check_releases``."""
+    check_releases = getattr(get_model(variant.model), "check_releases", None)
+    if check_releases is None:
+        return
+
+    def make() -> list[_Finding]:
+        """Return the model's findings for the project's releases as plain tuples."""
+        table = check_releases(rows, variant.transport)
+        return [
+            (str(check), None if pd.isna(release) else str(release), str(message))
+            for check, release, message in table.itertuples(index=False)
+        ]
+
+    yield ("release_refused", variant.model, variant.transport.model_dump_json()), make
 
 
 def _stage_checks(

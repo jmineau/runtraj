@@ -267,15 +267,20 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   `realization` column and `realization=k/` partitions, run with `seed + k`.
   HYSPLIT gets `SEED = -(|seed| + 1)` (`setup_seed`), and `seed` needs `krand: 2`.
 - **HYSPLIT chains same-location starts into a line source**: that is how
-  `ColumnRelease` works, and why a `MultiPointRelease` may not repeat a
-  horizontal location.
+  `ColumnRelease` works, and why HYSPLIT refuses a `MultiPointRelease` that
+  repeats a horizontal location (its `check_releases`, which `runtraj check`
+  lists and `run_model` fails as `RELEASE_REFUSED` before the model runs).
+  The core refuses only two points at one location, which `releases.csv`
+  reads as a column.
 - **HYSPLIT stops releasing at `MAXPAR`** and fills a multipoint release's
   locations in order. An unset `maxpar` is chosen per release
   (`HysplitConfig.maxpar_for`), so it is recorded unset; `check_release` fails
   a multipoint run whose `WARNING` says `exceeding puff limit` (a one-location
   run writes it too, harmlessly).
-- **Release heights come from the `age = 0` row** (`add_release_heights`), with
-  a fallback for models that write none, as HYSPLIT 5.1.0 does.
+- **Release heights come from the `age = 0` row** (`add_release_heights`), or
+  from the model's `release_rows` when it writes none, as HYSPLIT 5.1.0 does
+  (its particle `k` in slab `k`; `models/hysplit/releases.py`). With neither,
+  a column or multipoint run fails `NO_RELEASE_ROWS`.
 - **Never name a workdir from the simulation alone**: each run gets a new path
   in the compute root (`_new_workdir`), so projects can share one. Real runs
   are heavy: on a shared HPC system use Slurm or an allocation.

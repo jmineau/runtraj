@@ -282,7 +282,14 @@ the run covers; the model finds its own met from them. `run` returns a `ModelRun
 columns of `runtraj.particles.PARTICLE_SCHEMA`, `foot` if the model computes
 one, and what a stage reads, with a release row at `age = 0` when the
 model can write one; see `docs/reference/particles.rst`), its log as text,
-and the met files it read. A failed run raises `SimulationError` with its
+and the met files it read. A model that writes no row at `age = 0` gives
+`release_rows(particles, release)`, where each particle of a column or
+multipoint release started, or such a release fails. A model that cannot
+run every release lists the ones it cannot with `check_releases(releases,
+config)`, as HYSPLIT does for a multipoint release whose points share a
+location: `runtraj check` shows them, and `run_model` and `run_model_many`
+fail them as `RELEASE_REFUSED` before `run` or `run_many` is called, so a
+batched model never has to refuse one release of a call. A failed run raises `SimulationError` with its
 log. runtraj adds the release heights itself (`runtraj.models.run_model`).
 A model that writes no files sets
 `needs_workdir = False` and is handed `workdir=None`. A model that runs

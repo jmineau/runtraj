@@ -67,6 +67,13 @@ looks at share its rows. The command exits with 0 when it finds nothing and
        executable; without ``directory``, no ``hycs_std`` on ``PATH``.
      - Get HYSPLIT and set ``directory`` or ``PATH``
        (:doc:`../getting_started/installation`).
+   * - ``release_refused``
+     - The transport model cannot run a release. HYSPLIT refuses a
+       multipoint release whose points share a horizontal location, which
+       it would join into a line source; such a run fails as
+       ``RELEASE_REFUSED``.
+     - For HYSPLIT, use a ``ColumnRelease`` for a vertical column, or one
+       ``PointRelease`` per height (:doc:`releases`).
    * - ``met_directory``
      - A met's ``directory`` does not exist or holds no ARL file.
      - Correct ``directory`` under ``mets:``. A met with ``download`` makes

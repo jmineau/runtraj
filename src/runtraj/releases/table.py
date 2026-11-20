@@ -27,7 +27,7 @@ from .models import (
     _parse_time_text,
     _point_location,
 )
-from .validation import column_errors, multipoint_errors, point_errors
+from .validation import column_errors, point_errors
 
 #: The columns of a release table, one row per release point.
 COLUMNS = ("group", "time", "longitude", "latitude", "altitude", "altitude_ref")
@@ -155,8 +155,7 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
         or latitude out of range or empty, a height that is empty or not
         finite, a negative height above ground, rows of one group that
         differ in time or altitude reference, a column whose two heights are
-        equal, a multipoint release with two points at one location, or two
-        different releases with one id. Also for a misnamed
+        equal, or two different releases with one id. Also for a misnamed
         ``altitude_ref`` column (:func:`releases_from_frame`).
     """
     frame, _ = _normalize_columns(frame)
@@ -248,10 +247,6 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
             )
     multi = np.flatnonzero(kind == "multipoint")
     if len(multi):
-        for bad, message in multipoint_errors(lon[multi], lat[multi], codes[multi]):
-            dup = np.zeros(n, dtype=bool)
-            dup[multi] = bad
-            fail(dup, message)
         found = _multipoint_locations(
             codes[multi], lon[multi], lat[multi], alt[multi], group_ref
         )
