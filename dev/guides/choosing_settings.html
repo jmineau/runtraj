@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=894de7c6"></script>
+    <script src="../_static/documentation_options.js?v=10b6cb9a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev26+gcd04f3845" />
+  <meta name="docsearch:version" content="0.1.0a3.dev28+g2443ca148" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -583,7 +583,8 @@ a colleague’s run gives the same particles:</p>
 difference between <code class="docutils literal notranslate"><span class="pre">hrrr</span></code> and <code class="docutils literal notranslate"><span class="pre">hrrr-zi08</span></code> comes from <code class="docutils literal notranslate"><span class="pre">ziscale</span></code> and
 not from a different draw. An ensemble (<code class="docutils literal notranslate"><span class="pre">realizations:</span> <span class="pre">N</span></code>,
 <a class="reference internal" href="projects.html"><span class="doc">Projects And Variants</span></a>) runs realization <code class="docutils literal notranslate"><span class="pre">k</span></code> with <code class="docutils literal notranslate"><span class="pre">seed</span> <span class="pre">+</span> <span class="pre">k</span></code>, so each gets its
-own draws. <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">4</span></code> seeds each run from the clock instead, so every run
+own draws. A <code class="docutils literal notranslate"><span class="pre">seed</span></code> must be 0 or more, because HYSPLIT would run a seed and
+its negative the same. <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">4</span></code> seeds each run from the clock instead, so every run
 differs and cannot be made again. <code class="docutils literal notranslate"><span class="pre">krand</span></code> in
 <a class="reference internal" href="../reference/configuration.html"><span class="doc">Configuration</span></a> lists every mode.</p>
 </section>

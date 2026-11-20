@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=894de7c6"></script>
+    <script src="../../../../_static/documentation_options.js?v=10b6cb9a"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev26+gcd04f3845" />
+  <meta name="docsearch:version" content="0.1.0a3.dev28+g2443ca148" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -720,17 +720,27 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">setup_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the ``SEED`` value written to ``SETUP.CFG`` for a user seed.</span>
+<span class="sd">    Return the ``SEED`` value written to ``SETUP.CFG`` for a *seed* of 0 or more.</span>
 
 <span class="sd">    HYSPLIT sets its generator state to ``-1 + SEED``. Under ``krand=2`` it</span>
 <span class="sd">    reinitializes only from a negative state, and every state of -1 or more</span>
-<span class="sd">    gives the same stream. Writing ``-(|seed| + 1)`` puts the state at</span>
-<span class="sd">    ``-(|seed| + 2)``. That is negative, different for each ``|seed|``, and</span>
-<span class="sd">    never the unseeded default (``SEED = 0``). A patched HYSPLIT that uses</span>
-<span class="sd">    ``SEED`` directly maps a negative ``SEED`` to the same state, so the</span>
-<span class="sd">    value works with both builds.</span>
+<span class="sd">    gives the same stream. Writing ``-(seed + 1)`` puts the state at</span>
+<span class="sd">    ``-(seed + 2)``. That is negative, different for each seed, and never</span>
+<span class="sd">    the unseeded default (``SEED = 0``).</span>
+<span class="sd">    :class:`~runtraj.models.hysplit.HysplitConfig` refuses a negative seed,</span>
+<span class="sd">    which this mapping would give the same ``SEED`` as its positive.</span>
+
+<span class="sd">    This mapping is for HYSPLIT before 5.5, which ignores a positive</span>
+<span class="sd">    ``SEED``. It goes when 5.5 is the minimum version.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; setup_seed(0)</span>
+<span class="sd">    -1</span>
+<span class="sd">    &gt;&gt;&gt; setup_seed(42)</span>
+<span class="sd">    -43</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">seed</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">release_locations</span><span class="p">(</span><span class="n">locations</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
