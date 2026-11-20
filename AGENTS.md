@@ -176,7 +176,10 @@ Docstring examples (`>>>` lines under `src/`) run as tests too
 
 pytest loads a local `.env` for such variables. Test folders follow the
 package. The toy stages in `tests/fixtures/stages.py` stand for a stage in
-another package; a test imports no other. Never commit met files.
+another package; a test imports no other. The toy transport model in
+`tests/fixtures/models.py` is made unlike HYSPLIT (no executable, workdir,
+log, met files or `age = 0` row; particles numbered 10, 20, ...):
+`tests/test_toy_model.py` runs the core on it. Never commit met files.
 
 ### Code conventions
 

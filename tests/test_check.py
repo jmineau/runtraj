@@ -7,9 +7,8 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
-from pydantic import BaseModel, ConfigDict
 
-from runtraj import Project, models
+from runtraj import Project
 from runtraj.releases import (
     PointRelease,
 )
@@ -364,47 +363,6 @@ def test_a_release_on_the_edge_of_the_grid_is_inside_it(tmp_path):
 # ---------------------------------------------------------------------------
 # More than one thing, and another transport model
 # ---------------------------------------------------------------------------
-
-
-class _NoFilesMet(BaseModel):
-    """A met for a model that reads no files."""
-
-    model_config = ConfigDict(extra="allow")
-
-    def settings(self) -> dict[str, Any]:
-        return {"source": "toy"}
-
-
-class _NoFilesModel:
-    """A transport model with no ``check_met``."""
-
-    name = "toy"
-    config_class = models.TransportConfig
-    met_config_class = _NoFilesMet
-
-    def sha256(self, config):
-        return None
-
-    def version(self, config) -> str:
-        return "1.0"
-
-    def data_files(self, config) -> None:
-        return None
-
-    def run(self, *args, **kwargs):
-        raise NotImplementedError
-
-
-def test_a_model_with_no_files_to_check_has_no_met_findings(tmp_path, monkeypatch):
-    monkeypatch.setitem(models.MODELS, "toy", _NoFilesModel)
-    project = _project(
-        tmp_path,
-        [_release(20)],
-        models={"toy": {"n_hours": -24}},
-        variants={"toy": {"model": "toy", "met": "hrrr"}},
-    )
-
-    assert project.check().empty
 
 
 def test_a_project_whose_files_are_invalid_cannot_be_checked(tmp_path):

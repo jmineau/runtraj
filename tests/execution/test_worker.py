@@ -2,6 +2,7 @@
 
 import datetime as dt
 from concurrent.futures import Future
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -19,6 +20,7 @@ from runtraj.output import Output
 from runtraj.releases import PointRelease, Release
 
 from ..fixtures.factories import make_met_config, make_project_config
+from ..fixtures.models import TOY
 
 # ---------------------------------------------------------------------------
 # Fixtures and helpers
@@ -540,46 +542,8 @@ def test_run_releases_pool_dead_worker_stops_the_run_and_names_what_was_running(
     assert pool.shutdowns == [{"wait": False, "cancel_futures": True}]
 
 
-#: A transport model in its own package, which pool workers import by path.
-_TOY_PACKAGE = """
-import pandas as pd
-from pydantic import BaseModel
-from runtraj.models import ModelRun, TransportConfig
-
-class ToyConfig(TransportConfig):
-    pass
-
-class ToyMet(BaseModel):
-    weather: str
-
-    def settings(self):
-        return {"weather": self.weather}
-
-class ToyModel:
-    name = "toy"
-    config_class = ToyConfig
-    met_config_class = ToyMet
-
-    def sha256(self, config):
-        return None
-
-    def version(self, config):
-        return "1.0"
-
-    def data_files(self, config):
-        return None
-
-    def run(self, release, config, met, window, workdir=None, timeout=None):
-        particles = pd.DataFrame({
-            "particle": [1, 2, 1, 2],
-            "age": [0, 0, -60, -60],
-            "lon": release.longitude,
-            "lat": release.latitude,
-            "zagl": release.altitude,
-            "foot": [0.0, 0.0, 0.01, 0.01],
-        })
-        return ModelRun(particles=particles)
-"""
+#: The repository, whose ``tests`` package holds the toy model pool workers import by path.
+REPOSITORY = Path(__file__).parents[2]
 
 
 def test_a_run_on_two_cpus_writes_to_the_output_it_was_given(tmp_path):
@@ -588,12 +552,10 @@ def test_a_run_on_two_cpus_writes_to_the_output_it_was_given(tmp_path):
     import subprocess
     import sys
 
-    (tmp_path / "toypool").mkdir()
-    (tmp_path / "toypool" / "__init__.py").write_text(_TOY_PACKAGE)
     project = tmp_path / "project"
     project.mkdir()
     (project / "config.yaml").write_text(
-        "models:\n  toy:\n    class: toypool.ToyModel\n    n_hours: -1\n"
+        f"models:\n  toy:\n    class: {TOY}\n    n_hours: -1\n"
         "mets:\n  toy:\n    weather: hrrr\n"
         "variants:\n  toy: {}\n"
     )
@@ -608,7 +570,7 @@ def test_a_run_on_two_cpus_writes_to_the_output_it_was_given(tmp_path):
         + ["--output", str(override), "--compute-root", str(tmp_path / "work")],
         capture_output=True,
         text=True,
-        env={**os.environ, "PYTHONPATH": str(tmp_path)},
+        env={**os.environ, "PYTHONPATH": str(REPOSITORY)},
     )
 
     assert done.returncode == 0, done.stdout + done.stderr
@@ -624,7 +586,7 @@ import os
 import signal
 import time
 
-from toypool import ToyModel
+from tests.fixtures.models import ToyModel
 
 class KillingToy(ToyModel):
     def run(self, release, config, met, window, workdir=None, timeout=None):
@@ -642,9 +604,8 @@ def test_a_worker_killed_outright_stops_the_run_and_a_rerun_finishes_it(tmp_path
     import subprocess
     import sys
 
-    for name, source in (("toypool", _TOY_PACKAGE), ("toykill", _KILLING_TOY_PACKAGE)):
-        (tmp_path / name).mkdir()
-        (tmp_path / name / "__init__.py").write_text(source)
+    (tmp_path / "toykill").mkdir()
+    (tmp_path / "toykill" / "__init__.py").write_text(_KILLING_TOY_PACKAGE)
     project = tmp_path / "project"
     project.mkdir()
     (project / "config.yaml").write_text(
@@ -663,7 +624,7 @@ def test_a_worker_killed_outright_stops_the_run_and_a_rerun_finishes_it(tmp_path
     )
     command = [sys.executable, "-m", "runtraj", "run", str(project), "--cpus", "2"]
     command += ["--compute-root", str(tmp_path / "work")]
-    env = {**os.environ, "PYTHONPATH": str(tmp_path)}
+    env = {**os.environ, "PYTHONPATH": f"{tmp_path}{os.pathsep}{REPOSITORY}"}
 
     # On main this hangs; the timeout turns that into a failure.
     killed = subprocess.run(

@@ -316,23 +316,6 @@ def test_met_fetch_errors_other_than_a_missing_file_are_not_swallowed(
         met.fetch([_window("2024-07-02 00:00", "2024-07-02 06:00")])
 
 
-def test_a_model_with_no_fetch_adds_no_row(tmp_path, monkeypatch):
-    from .test_check import _NoFilesModel
-
-    monkeypatch.setitem(models.MODELS, "toy", _NoFilesModel)
-    project = Project.init(
-        tmp_path / "proj",
-        releases=[_release(2, 3)],
-        **blocks(
-            mets={"hrrr": {"directory": tmp_path / "met", "download": "hrrr"}},
-            models={"toy": {"n_hours": -3}},
-            variants={"toy": {"met": "hrrr"}},
-        ),
-    )
-
-    assert project.fetch().empty
-
-
 # ---------------------------------------------------------------------------
 # runtraj fetch
 # ---------------------------------------------------------------------------

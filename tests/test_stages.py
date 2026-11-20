@@ -349,13 +349,14 @@ def test_to_yaml_writes_each_stage_block_as_given(tmp_path):
     )
 
 
-def test_the_toy_stages_import_only_public_names():
-    """A stage in another package uses only names runtraj makes public, so the toy stages do too."""
+@pytest.mark.parametrize("fixture", ["stages.py", "models.py"])
+def test_the_toy_stages_and_model_import_only_public_names(fixture):
+    """A stage or model in another package uses only names runtraj makes public, so the toys do too."""
     import ast
     import importlib
     from pathlib import Path
 
-    source = Path(__file__).parent / "fixtures" / "stages.py"
+    source = Path(__file__).parent / "fixtures" / fixture
     private = []
     for node in ast.walk(ast.parse(source.read_text())):
         if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(

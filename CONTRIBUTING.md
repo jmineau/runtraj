@@ -302,6 +302,14 @@ runtraj goes in `runtraj.models.MODELS` under a short name instead. Keep
 its package out of the core: the import contracts in `pyproject.toml` say
 how.
 
+The toy transport model in `tests/fixtures/models.py` stands for a model in
+another package, and is made unlike HYSPLIT: it runs no program, needs no
+workdir, reads no met files, writes no log and no row at `age = 0`, and
+numbers its particles 10, 20, 30, .... `tests/test_toy_model.py` runs the
+core on it (run, status, check, fetch, a stage, transforms), so a change
+that makes the core depend on something only HYSPLIT does fails there.
+Test a change to the core on the toy as well as on HYSPLIT.
+
 ## Adding a stage
 
 A stage is what is made from each simulation's results after the transport

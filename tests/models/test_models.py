@@ -6,67 +6,29 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
-from typing import Any, ClassVar
 
 import pytest
 import xarray as xr
 import yaml
-from pydantic import BaseModel, ConfigDict
 
 from runtraj import models
 from runtraj.config import ProjectConfig
 from runtraj.identity import read_run_settings, settings_hash
-from runtraj.models import ModelInfo, TransportConfig, open_met
+from runtraj.models import ModelInfo, open_met
 from runtraj.spatial import Bounds
 
 from ..fixtures.factories import make_met_config
+from ..fixtures.models import TOY, ToyConfig, ToyMet, ToyModel
+
+#: The repository, whose ``tests`` package holds the toy model.
+REPOSITORY = Path(__file__).parents[2]
 
 GRID = {"xmin": -112, "xmax": -111, "ymin": 40, "ymax": 41, "xres": 0.1, "yres": 0.1}
-
-
-class ToyConfig(TransportConfig):
-    """A second model's config: its own parameters, and the base class for the rest."""
-
-    UNRECORDED: ClassVar[frozenset[str]] = frozenset({"build_dir"})
-
-    nparticles: int = 100
-    build_dir: str | None = None
-
-
-class ToyMet(BaseModel):
-    """The toy model's met: it reads no files, and accepts the keys of a HYSPLIT met it shares."""
-
-    model_config = ConfigDict(extra="allow")
-
-    def settings(self) -> dict[str, Any]:
-        return {"source": "toy"}
-
-
-class ToyModel:
-    name = "toy"
-    config_class = ToyConfig
-    met_config_class = ToyMet
-
-    def sha256(self, config):
-        return None
-
-    def version(self, config: ToyConfig) -> str:
-        return "1.0"
-
-    def data_files(self, config: ToyConfig) -> dict[str, str] | None:
-        return None
-
-    def run(self, *args: Any, **kwargs: Any) -> Any:
-        raise NotImplementedError
 
 
 @pytest.fixture
 def toy(monkeypatch):
     monkeypatch.setitem(models.MODELS, "toy", ToyModel)
-
-
-#: The toy model by its import path, as config.yaml names a model in another package.
-TOY_PATH = f"{__name__}.ToyModel"
 
 
 def _mets(tmp_path):
@@ -79,7 +41,7 @@ def test_each_models_block_holds_its_own_defaults(tmp_path, toy):
         mets=_mets(tmp_path),
         models={
             "hysplit": {"n_hours": -6, "numpar": 300, "krand": 2},
-            "toy": {"n_hours": -12, "nparticles": 7},
+            "toy": {"n_hours": -12, "n_particles": 7},
         },
         variants={
             "hrrr": {"model": "hysplit"},
@@ -90,7 +52,7 @@ def test_each_models_block_holds_its_own_defaults(tmp_path, toy):
     variants = config.resolve()
     assert variants["hrrr"].transport.n_hours == -6
     assert variants["toy"].transport.n_hours == -12
-    assert variants["toy"].transport.nparticles == 7
+    assert variants["toy"].transport.n_particles == 7
     assert variants["toy-long"].transport.n_hours == -48
     assert "numpar" not in type(variants["toy"].transport).model_fields
     for hysplits_own in ("krand", "numpar"):
@@ -185,11 +147,11 @@ def test_a_model_has_one_block(tmp_path):
     """Two blocks that name one class are refused: the second set of settings is a variant."""
     with pytest.raises(
         ValueError,
-        match=f"models: a and b are both {TOY_PATH}. A model has one block",
+        match=f"models: a and b are both {TOY}. A model has one block",
     ):
         ProjectConfig(
             mets=_mets(tmp_path),
-            models={"a": {"class": TOY_PATH}, "b": {"class": TOY_PATH}},
+            models={"a": {"class": TOY}, "b": {"class": TOY}},
             variants={"hrrr": {"model": "a"}},
         )
 
@@ -230,12 +192,13 @@ def _write(tmp_path, text):
 
 
 def test_a_model_config_inherits_the_recorded_settings_and_realizations():
-    config = ToyConfig(n_hours=-6, seed=5, nparticles=10, build_dir="/opt/toy")
+    config = ToyConfig(n_hours=-6, seed=5, n_particles=10, label="a note")
 
     assert config.settings() == {
         "n_hours": -6,
         "seed": 5,
-        "nparticles": 10,
+        "n_particles": 10,
+        "step": 60,
     }
     assert [r.seed for r in config.realizations(3)] == [5, 6, 7]
     assert [r.seed for r in ToyConfig(n_hours=-6).realizations(2)] == [None, None]
@@ -249,16 +212,16 @@ def test_a_model_is_named_by_its_import_path_without_registering_it(tmp_path):
     """The block's name is the variant's handle; ``class`` is what runs and what is recorded."""
     config = ProjectConfig(
         mets=_mets(tmp_path),
-        models={"mine": {"class": TOY_PATH, "n_hours": -6, "nparticles": 3}},
+        models={"mine": {"class": TOY, "n_hours": -6, "n_particles": 3}},
         variants={"toy": {"model": "mine", "met": "hrrr"}},
     )
     variant = config.resolve()["toy"]
-    assert variant.transport.nparticles == 3
+    assert variant.transport.n_particles == 3
     assert yaml.safe_load(config.to_yaml())["models"] == {
-        "mine": {"class": TOY_PATH, "n_hours": -6, "nparticles": 3}
+        "mine": {"class": TOY, "n_hours": -6, "n_particles": 3}
     }
     # The record names the import path, so another process imports it again.
-    assert variant.build == ModelInfo(name=TOY_PATH, version="1.0")
+    assert variant.build == ModelInfo(name=TOY, version="toy-1")
     stored = read_run_settings(variant.run_settings)
     assert settings_hash(stored) == variant.particles_hash
 
@@ -277,61 +240,15 @@ def test_a_record_of_a_model_not_installed_still_reads(tmp_path):
 
 def test_a_model_in_its_own_package_runs_from_a_fresh_interpreter(tmp_path):
     """No registration in the process: the import path alone finds the model."""
-    package = tmp_path / "toypkg"
-    package.mkdir()
-    (package / "__init__.py").write_text(
-        textwrap.dedent(
-            """
-            import pandas as pd
-            from pydantic import BaseModel
-            from runtraj.models import ModelRun, TransportConfig
-
-            class ToyConfig(TransportConfig):
-                nparticles: int = 2
-
-            class ToyMet(BaseModel):
-                weather: str
-
-                def settings(self):
-                    return {"weather": self.weather}
-
-            class ToyModel:
-                name = "toy"
-                config_class = ToyConfig
-                met_config_class = ToyMet
-
-                def sha256(self, config):
-                    return None
-
-                def version(self, config):
-                    return "1.0"
-
-                def data_files(self, config):
-                    return None
-
-                def run(self, release, config, met, window, workdir=None, timeout=None):
-                    n = config.nparticles
-                    particles = pd.DataFrame({
-                        "particle": list(range(1, n + 1)) * 2,
-                        "age": [0] * n + [-60] * n,
-                        "lon": [release.longitude] * 2 * n,
-                        "lat": [release.latitude] * 2 * n,
-                        "zagl": [release.altitude] * 2 * n,
-                        "foot": [0.0] * n + [0.01] * n,
-                    })
-                    return ModelRun(particles=particles)
-            """
-        )
-    )
     script = textwrap.dedent(
-        """
+        f"""
         import runtraj
         release = runtraj.PointRelease(
             time="2023-01-01 12:00", longitude=-111.85, latitude=40.77, altitude=5
         )
-        met = {"weather": "hrrr"}  # no directory: the toy reads no met files
+        met = {{"weather": "hrrr"}}  # no directory: the toy reads no met files
         particles = runtraj.run_trajectories(
-            release, met, model="toypkg.ToyModel", n_hours=-1, nparticles=4
+            release, met, model={TOY!r}, n_hours=-2, n_particles=3
         )
         print(len(particles), sorted(int(p) for p in particles["particle"].unique()))
         """
@@ -341,14 +258,14 @@ def test_a_model_in_its_own_package_runs_from_a_fresh_interpreter(tmp_path):
             sys.executable,
             "-I",
             "-c",
-            f"import sys; sys.path.insert(0, {str(tmp_path)!r})\n{script}",
+            f"import sys; sys.path.insert(0, {str(REPOSITORY)!r})\n{script}",
         ],
         capture_output=True,
         text=True,
         cwd=tmp_path,
     )
     assert done.returncode == 0, done.stderr
-    assert done.stdout.strip() == "8 [1, 2, 3, 4]"
+    assert done.stdout.strip() == "6 [10, 20, 30]"
 
 
 # -- open_met: a run's met files as runtraj.sampling reads them ---------------

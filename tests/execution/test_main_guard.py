@@ -10,7 +10,8 @@ import pytest
 
 from runtraj.execution import worker
 
-from .test_worker import _TOY_PACKAGE
+from ..fixtures.models import TOY
+from .test_worker import REPOSITORY
 
 #: A script that makes a project and runs it on two cpus, under one start method.
 _SCRIPT = """
@@ -31,7 +32,7 @@ project = runtraj.Project.init(
     "project",
     releases=releases,
     mets={"toy": {"weather": "hrrr"}},
-    models={"toy": {"class": "toypool.ToyModel", "n_hours": -1}},
+    models={"toy": {"class": "TOY_CLASS", "n_hours": -1}},
     variants={"toy": {}},
     execution={"backend": "local", "local": {"cpus": 2}},
 )
@@ -48,14 +49,12 @@ START_METHODS = ["spawn", "forkserver"]
 
 def _run_script(tmp_path, body, method):
     """Run the script in its own process group, and kill the group if it does not end."""
-    (tmp_path / "toypool").mkdir()
-    (tmp_path / "toypool" / "__init__.py").write_text(_TOY_PACKAGE)
     script = tmp_path / "script.py"
-    script.write_text(_SCRIPT.format(body=body))
+    script.write_text(_SCRIPT.format(body=body.replace("TOY_CLASS", TOY)))
     proc = subprocess.Popen(
         [sys.executable, str(script), method],
         cwd=tmp_path,
-        env={**os.environ, "PYTHONPATH": str(tmp_path)},
+        env={**os.environ, "PYTHONPATH": str(REPOSITORY)},
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
