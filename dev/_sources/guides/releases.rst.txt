@@ -124,12 +124,13 @@ same ID.
 
 .. warning::
 
-   Every point must have its own horizontal location. HYSPLIT treats
-   consecutive release points at the same latitude and longitude as one
-   vertical line source, and releases particles only between the last two
-   heights. Stacking several heights at one location would silently drop all
-   but the top segment, so :class:`MultiPointRelease` raises
-   ``ValueError`` instead.
+   With HYSPLIT, every point must have its own horizontal location. HYSPLIT
+   treats consecutive release points at the same latitude and longitude as
+   one vertical line source, and releases particles only between the last
+   two heights. Stacking several heights at one location would silently drop
+   all but the top segment, so HYSPLIT refuses such a release: ``runtraj
+   check`` lists it, and its run fails with the reason ``RELEASE_REFUSED``.
+   Another transport model may run it.
 
    For a vertical column, use :class:`ColumnRelease`. For several separate
    heights at one location, run one :class:`PointRelease` per height (a

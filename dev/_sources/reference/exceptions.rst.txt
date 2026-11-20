@@ -39,6 +39,20 @@ name for the cause: for HYSPLIT, one of
 ``NO_PARTICLE_DATA``, or ``TIMEOUT``. A run that the meteorology does not
 cover fails as ``MET_COVERAGE``.
 
+Two reasons come from runtraj itself, for any transport model:
+
+``RELEASE_REFUSED``
+   The transport model cannot run the release, and said so in its
+   ``check_releases`` before the run; ``runtraj check`` lists it too. With
+   HYSPLIT, it is a multipoint release whose points share a horizontal
+   location: use a :class:`~runtraj.ColumnRelease` for a column, or one
+   :class:`~runtraj.PointRelease` per height.
+``NO_RELEASE_ROWS``
+   Where the particles of a column or multipoint release started is not
+   known: the model wrote no row at ``age = 0`` and gives no
+   ``release_rows``, or its ``release_rows`` left out a particle. A model
+   should write a release row at ``age = 0`` (:doc:`particles`).
+
 .. autosummary::
    :toctree: _api
    :nosignatures:

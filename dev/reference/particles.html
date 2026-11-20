@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=80cccd22"></script>
+    <script src="../_static/documentation_options.js?v=8ea2f8cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev11+g55f83d08b" />
+  <meta name="docsearch:version" content="0.1.0a3.dev12+gd7d34be05" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -682,9 +682,11 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.needs_workdir.html">runtraj.models.hysplit.HysplitModel.needs_workdir</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.particle_files.html">runtraj.models.hysplit.HysplitModel.particle_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.check_met.html">runtraj.models.hysplit.HysplitModel.check_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.data_files.html">runtraj.models.hysplit.HysplitModel.data_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.downloads_met.html">runtraj.models.hysplit.HysplitModel.downloads_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.fetch_met.html">runtraj.models.hysplit.HysplitModel.fetch_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.release_rows.html">runtraj.models.hysplit.HysplitModel.release_rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.run.html">runtraj.models.hysplit.HysplitModel.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.sha256.html">runtraj.models.hysplit.HysplitModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.version.html">runtraj.models.hysplit.HysplitModel.version</a></li>
@@ -742,6 +744,8 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
 </ul>
 </details></li>
@@ -867,11 +871,15 @@ int32, and read back as float64.</p></td>
 <p>A model should write each particle’s release as a row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>. That
 row is where the particle started, so it says which release point of a
 multipoint release the particle left from, and which slab of a column
-release (<a class="reference internal" href="_api/runtraj.particles.add_release_heights.html#runtraj.particles.add_release_heights" title="runtraj.particles.add_release_heights"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_release_heights()</span></code></a>). HYSPLIT 5.1.0 writes no such row: its
-first row is one time step after release. For it, runtraj matches each
-particle to a release point from its first position, and takes a column’s
-particles to be released bottom to top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order. A HYSPLIT
-build that writes the release rows (<code class="docutils literal notranslate"><span class="pre">directory</span></code>) makes the matching exact.</p>
+release (<a class="reference internal" href="_api/runtraj.particles.add_release_heights.html#runtraj.particles.add_release_heights" title="runtraj.particles.add_release_heights"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_release_heights()</span></code></a>). A model that writes no such row
+says where each particle started through its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code>
+(<a class="reference internal" href="_api/runtraj.models.TransportModel.html#runtraj.models.TransportModel" title="runtraj.models.TransportModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransportModel</span></code></a>); without either, a column or
+multipoint release fails with the reason <code class="docutils literal notranslate"><span class="pre">NO_RELEASE_ROWS</span></code>.</p>
+<p>HYSPLIT 5.1.0 writes no release row: its first row is one time step after
+release. Its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code> matches each particle to a release point from
+its first position, and takes a column’s particles to be released bottom to
+top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order. A HYSPLIT build that writes the release rows
+(<code class="docutils literal notranslate"><span class="pre">directory</span></code>) makes the matching exact.</p>
 </section>
 <section id="columns-the-model-adds">
 <h2>Columns the model adds<a class="headerlink" href="#columns-the-model-adds" title="Link to this heading">#</a></h2>

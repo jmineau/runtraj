@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=80cccd22"></script>
+    <script src="../../../_static/documentation_options.js?v=8ea2f8cb"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev11+g55f83d08b" />
+  <meta name="docsearch:version" content="0.1.0a3.dev12+gd7d34be05" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -477,7 +477,7 @@
     <span class="n">_parse_time_text</span><span class="p">,</span>
     <span class="n">_point_location</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">column_errors</span><span class="p">,</span> <span class="n">multipoint_errors</span><span class="p">,</span> <span class="n">point_errors</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">column_errors</span><span class="p">,</span> <span class="n">point_errors</span>
 
 <span class="c1">#: The columns of a release table, one row per release point.</span>
 <span class="n">COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"group"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">,</span> <span class="s2">"longitude"</span><span class="p">,</span> <span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"altitude"</span><span class="p">,</span> <span class="s2">"altitude_ref"</span><span class="p">)</span>
@@ -612,8 +612,7 @@
 <span class="sd">        or latitude out of range or empty, a height that is empty or not</span>
 <span class="sd">        finite, a negative height above ground, rows of one group that</span>
 <span class="sd">        differ in time or altitude reference, a column whose two heights are</span>
-<span class="sd">        equal, a multipoint release with two points at one location, or two</span>
-<span class="sd">        different releases with one id. Also for a misnamed</span>
+<span class="sd">        equal, or two different releases with one id. Also for a misnamed</span>
 <span class="sd">        ``altitude_ref`` column (:func:`releases_from_frame`).</span>
 <span class="sd">    """</span>
     <span class="n">frame</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_normalize_columns</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
@@ -705,10 +704,6 @@
             <span class="p">)</span>
     <span class="n">multi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"multipoint"</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">multi</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">bad</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">multipoint_errors</span><span class="p">(</span><span class="n">lon</span><span class="p">[</span><span class="n">multi</span><span class="p">],</span> <span class="n">lat</span><span class="p">[</span><span class="n">multi</span><span class="p">],</span> <span class="n">codes</span><span class="p">[</span><span class="n">multi</span><span class="p">]):</span>
-            <span class="n">dup</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-            <span class="n">dup</span><span class="p">[</span><span class="n">multi</span><span class="p">]</span> <span class="o">=</span> <span class="n">bad</span>
-            <span class="n">fail</span><span class="p">(</span><span class="n">dup</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
         <span class="n">found</span> <span class="o">=</span> <span class="n">_multipoint_locations</span><span class="p">(</span>
             <span class="n">codes</span><span class="p">[</span><span class="n">multi</span><span class="p">],</span> <span class="n">lon</span><span class="p">[</span><span class="n">multi</span><span class="p">],</span> <span class="n">lat</span><span class="p">[</span><span class="n">multi</span><span class="p">],</span> <span class="n">alt</span><span class="p">[</span><span class="n">multi</span><span class="p">],</span> <span class="n">group_ref</span>
         <span class="p">)</span>

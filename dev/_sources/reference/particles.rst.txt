@@ -44,11 +44,16 @@ The release row
 A model should write each particle's release as a row at ``age = 0``. That
 row is where the particle started, so it says which release point of a
 multipoint release the particle left from, and which slab of a column
-release (:func:`add_release_heights`). HYSPLIT 5.1.0 writes no such row: its
-first row is one time step after release. For it, runtraj matches each
-particle to a release point from its first position, and takes a column's
-particles to be released bottom to top in ``particle`` order. A HYSPLIT
-build that writes the release rows (``directory``) makes the matching exact.
+release (:func:`add_release_heights`). A model that writes no such row
+says where each particle started through its ``release_rows``
+(:class:`~runtraj.models.TransportModel`); without either, a column or
+multipoint release fails with the reason ``NO_RELEASE_ROWS``.
+
+HYSPLIT 5.1.0 writes no release row: its first row is one time step after
+release. Its ``release_rows`` matches each particle to a release point from
+its first position, and takes a column's particles to be released bottom to
+top in ``particle`` order. A HYSPLIT build that writes the release rows
+(``directory``) makes the matching exact.
 
 Columns the model adds
 ----------------------
