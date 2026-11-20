@@ -329,8 +329,8 @@ def test_a_batched_model_is_not_given_a_release_it_refuses(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# What the core still takes from HYSPLIT, found by the toy. Each is an
-# expected failure that names its issue, and passes once that is fixed.
+# What the core once took from HYSPLIT, found by the toy. Each test fails
+# if it comes back.
 # ---------------------------------------------------------------------------
 
 

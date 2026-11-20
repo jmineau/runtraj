@@ -339,8 +339,10 @@ def run_particles_batch(
         log = getattr(error, "log", "")
         failed: dict[str, str] = {}
         for sim in sims:
-            if log:
-                sim.output.write_log(sim.variant, sim.release.id, log, sim.realization)
+            # A SimulationError ends the run as one run's does; any other
+            # error keeps the started line unless the error carries a log.
+            if log or isinstance(error, SimulationError):
+                _log_end(sim, log)
             failed[sim.release.id] = _failed(sim, "particles", error)
         return {}, failed
     written: dict[str, pd.DataFrame] = {}

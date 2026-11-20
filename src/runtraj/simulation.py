@@ -237,7 +237,8 @@ class Simulation:
         Raises
         ------
         FileNotFoundError
-            If the log has not been written yet.
+            If the log has not been written yet, or the transport model
+            wrote none.
         """
         log_path = self.log_path
         if log_path is None or not log_path.exists():

@@ -242,6 +242,75 @@ def test_a_batched_model_that_writes_no_log_leaves_no_started_line(
             sim.log  # noqa: B018
 
 
+def test_a_run_that_fails_without_a_model_log_leaves_no_started_line(
+    sim, met, compute_root, monkeypatch
+):
+    class _Model:
+        name = "hysplit"
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            raise SimulationError("stop here", reason="TIMEOUT")
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    with pytest.raises(SimulationError):
+        worker.run_particles(sim, workdir=compute_root / "w")
+
+    with pytest.raises(FileNotFoundError, match="No log"):
+        sim.log  # noqa: B018
+
+
+def test_a_run_that_fails_unexpectedly_without_a_model_log_keeps_its_started_line(
+    sim, met, compute_root, monkeypatch
+):
+    class _Model:
+        name = "hysplit"
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            raise RuntimeError("a bug in the model")
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    with pytest.raises(RuntimeError):
+        worker.run_particles(sim, workdir=compute_root / "w")
+
+    assert "runtraj started this run" in sim.log
+
+
+def test_a_batched_model_that_fails_without_a_log_leaves_no_started_line(
+    tmp_path, release, other_release, monkeypatch
+):
+    project = _model(tmp_path, [release, other_release])
+    sims = [project.simulation(str(r.id), "hrrr") for r in (release, other_release)]
+
+    def fail(*args, **kwargs):
+        raise SimulationError("the one call failed", reason="TIMEOUT")
+
+    monkeypatch.setattr(worker, "run_model_many", fail)
+
+    written, failed = worker.run_particles_batch(sims)
+
+    assert not written and len(failed) == 2
+    for sim in sims:
+        with pytest.raises(FileNotFoundError, match="No log"):
+            sim.log  # noqa: B018
+
+
+def test_a_batched_model_that_fails_unexpectedly_keeps_its_started_lines(
+    tmp_path, release, other_release, monkeypatch
+):
+    project = _model(tmp_path, [release, other_release])
+    sims = [project.simulation(str(r.id), "hrrr") for r in (release, other_release)]
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("a bug in the model")
+
+    monkeypatch.setattr(worker, "run_model_many", fail)
+
+    worker.run_particles_batch(sims)
+
+    for sim in sims:
+        assert "runtraj started this run" in sim.log
+
+
 # ---------------------------------------------------------------------------
 # run_release: variants that share particles run as one group
 # ---------------------------------------------------------------------------
