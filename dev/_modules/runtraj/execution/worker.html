@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=35e18cd1"></script>
+    <script src="../../../_static/documentation_options.js?v=10835246"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev19+g8c999f71a" />
+  <meta name="docsearch:version" content="0.1.0a3.dev20+g228c4fbb3" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -682,6 +682,7 @@
     <span class="n">_log_start</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
     <span class="n">log</span> <span class="o">=</span> <span class="s2">""</span>
     <span class="n">succeeded</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">ended</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># the run finished or failed with a record, not cut off</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">run_model</span><span class="p">(</span>
             <span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
@@ -700,12 +701,16 @@
             <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">succeeded</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">ended</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">particles</span>
     <span class="k">except</span> <span class="n">SimulationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="n">log</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">log</span>
+        <span class="n">ended</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">raise</span>
     <span class="k">finally</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ended</span><span class="p">:</span>
+            <span class="n">_log_end</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">log</span><span class="p">:</span>
             <span class="n">output</span><span class="o">.</span><span class="n">write_log</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="n">rid</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">needs_workdir</span><span class="p">:</span>
             <span class="c1"># An empty directory is not kept: a run that failed before</span>
@@ -737,6 +742,21 @@
         <span class="s2">"the transport model's log replaces this line when the run ends.</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
         <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">,</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_end</span><span class="p">(</span><span class="n">sim</span><span class="p">:</span> <span class="n">Simulation</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Write the transport model's *log* over the line :func:`_log_start` wrote.</span>
+
+<span class="sd">    A model that wrote no log leaves *sim* with none, rather than with the</span>
+<span class="sd">    line that promises one.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+        <span class="n">sim</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_log</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">log_path</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">path</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">run_particles_batch</span><span class="p">(</span>
@@ -781,8 +801,7 @@
     <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">sims</span><span class="p">:</span>
         <span class="n">rid</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">log</span><span class="p">:</span>
-            <span class="n">sim</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_log</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="n">rid</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">)</span>
+        <span class="n">_log_end</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationError</span><span class="p">):</span>
             <span class="n">failed</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span> <span class="o">=</span> <span class="n">_failed</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s2">"particles"</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
             <span class="k">continue</span>
