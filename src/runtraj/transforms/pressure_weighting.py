@@ -39,8 +39,10 @@ def particle_pwf(
     HYSPLIT spreads column particles evenly over height, each placed at
     random within its own slab, one slab per particle. Each release height therefore
     stands for the slab centered on it. Slab edges sit midway between
-    neighboring release pressures, the ground closes the bottom slab, and the
-    top slab extends above its release height as far as it does below.
+    neighboring release pressures, the surface pressure closes the bottom
+    slab, and the top slab extends above its release height as far as it
+    does below. Each slab's weight is its pressure depth over the surface
+    pressure.
 
     A multipoint release releases several particles from each point. Those
     particles share one release height, so the point's slab is split evenly
@@ -54,7 +56,11 @@ def particle_pwf(
         first-step height is used. An MSL release also needs ``zsfc``, the
         terrain height (m above sea level).
     surface_pressure : float, optional
-        Surface pressure in hPa. Defaults to the fitted curve at the ground.
+        Surface pressure in hPa, such as a satellite retrieval's. It closes
+        the bottom slab and divides every slab's depth, so a higher value
+        gives the bottom slab more weight and the others less. Defaults to
+        the fitted curve at the ground. It must not be below the pressure at
+        the lowest release height.
     altitude_ref : {"agl", "msl"}, default "agl"
         Vertical reference of the release heights, ``release.altitude_ref``.
         With ``"msl"`` the fit is made against ``zagl + zsfc`` so that it can
@@ -64,7 +70,8 @@ def particle_pwf(
     Returns
     -------
     xpres : pandas.Series
-        Release pressure of each particle in hPa, indexed by ``particle``.
+        Release pressure of each particle in hPa, from the fitted curve,
+        indexed by ``particle``.
     pwf : pandas.Series
         Pressure weight of each particle, indexed by ``particle``. The weights
         sum to the fraction of the atmosphere's mass inside the column,
@@ -125,19 +132,25 @@ def particle_pwf(
     if zsfc is not None:
         at_bottom = z_release.to_numpy() == heights[0]
         z_ground = float(np.median(zsfc.to_numpy()[at_bottom]))
+    xpres = pd.Series(np.exp(b + a * z_release.to_numpy()), index=z_release.index)
+
+    # One slab per distinct release height, surface upward, shared evenly by
+    # the particles released at that height.
+    levels = np.exp(b + a * heights)
     p_sfc = (
         float(surface_pressure)
         if surface_pressure is not None
         else float(np.exp(b + a * z_ground))
     )
-
-    xpres = pd.Series(
-        p_sfc * np.exp(a * (z_release.to_numpy() - z_ground)), index=z_release.index
-    )
-
-    # One slab per distinct release height, surface upward, shared evenly by
-    # the particles released at that height.
-    levels = p_sfc * np.exp(a * (heights - z_ground))
+    if (
+        surface_pressure is not None
+        and p_sfc < levels[0]
+        and not np.isclose(p_sfc, levels[0])
+    ):
+        raise ValueError(
+            f"surface_pressure {p_sfc:g} hPa is below the pressure at the "
+            f"lowest release height, {levels[0]:.1f} hPa. Give it in hPa."
+        )
     mids = (levels[:-1] + levels[1:]) / 2.0
     lower_edges = np.concatenate(([p_sfc], mids))
     upper_edges = np.concatenate((mids, [2 * levels[-1] - mids[-1]]))
@@ -172,9 +185,11 @@ class PressureWeighting(BaseModel):
     surface_pressure: float | None = Field(
         default=None,
         gt=0,
+        le=1100,
         description=(
-            "Surface pressure at the bottom of the column, in hPa. Unset "
-            "estimates it from the particles."
+            "Surface pressure at the bottom of the column, in hPa, such as a "
+            "satellite retrieval's. It closes the bottom slab and divides "
+            "each slab's depth. Unset estimates it from the particles."
         ),
     )
 

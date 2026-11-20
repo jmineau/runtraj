@@ -302,15 +302,48 @@ def test_pwf_uses_release_row_not_drifted_rows():
     assert got.to_numpy() == pytest.approx(release.to_numpy(), rel=1e-6)
 
 
-def test_pwf_surface_pressure_override_rescales_column():
-    p = _column_particles(50)
+def test_pwf_surface_pressure_closes_the_bottom_slab():
+    n = 5
+    p_given = P_SFC + 20.0
+    result = PressureWeighting(surface_pressure=p_given).apply(_column_particles(n))
+
+    levels = P_SFC * np.exp(-np.linspace(0.0, 3000.0, n) / SCALE_HEIGHT)
+    mids = (levels[:-1] + levels[1:]) / 2.0
+    lower = np.concatenate(([p_given], mids))
+    upper = np.concatenate((mids, [2 * levels[-1] - mids[-1]]))
+    expected = (lower - upper) / p_given
+    assert result["pwf"].to_numpy() == pytest.approx(expected, rel=1e-6)
+
+
+def test_pwf_surface_pressure_moves_weight_to_the_bottom_slab():
+    p = _column_particles(5)
     fitted = PressureWeighting().apply(p)
-    pinned = PressureWeighting(surface_pressure=900.0).apply(p)
-    # Same column shape, referenced to the supplied surface pressure.
+    pinned = PressureWeighting(surface_pressure=P_SFC + 20.0).apply(p)
+    # The release pressures stay on the fitted curve.
     assert pinned["xpres"].to_numpy() == pytest.approx(
-        fitted["xpres"].to_numpy() * 0.9, rel=1e-6
+        fitted["xpres"].to_numpy(), rel=1e-9
     )
-    assert pinned["pwf"].sum() == pytest.approx(fitted["pwf"].sum(), rel=1e-6)
+    # The bottom slab gains weight, every other slab loses some.
+    gain = pinned["pwf"].to_numpy() - fitted["pwf"].to_numpy()
+    assert gain[0] > 0
+    assert (gain[1:] < 0).all()
+
+
+def test_pwf_surface_pressure_equal_to_fitted_changes_nothing():
+    p = _column_particles(5)
+    fitted = PressureWeighting().apply(p)
+    pinned = PressureWeighting(surface_pressure=P_SFC).apply(p)
+    assert pinned["pwf"].to_numpy() == pytest.approx(fitted["pwf"].to_numpy(), rel=1e-9)
+
+
+def test_pwf_rejects_surface_pressure_below_the_lowest_release():
+    with pytest.raises(ValueError, match="below the pressure at the lowest"):
+        PressureWeighting(surface_pressure=500.0).apply(_column_particles(5))
+
+
+def test_pwf_rejects_surface_pressure_in_pa():
+    with pytest.raises(ValidationError):
+        PressureWeighting(surface_pressure=85000.0)
 
 
 def test_pwf_elevated_column_bottom_assigns_air_below_to_lowest_particle():
