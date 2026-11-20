@@ -12,7 +12,9 @@ work underneath.
 - :func:`~runtraj.execution.submit` is what ``project.submit()`` calls. It
   writes a job array script (:func:`~runtraj.execution.job_script`) whose
   tasks each run ``runtraj run --task``, submits it with ``sbatch``, and
-  returns the job id at once.
+  returns the job id at once. With ``backend: kubernetes`` it makes an
+  indexed Job instead (:func:`~runtraj.execution.kubernetes.job_manifest`)
+  and creates it with ``kubectl``.
 - :func:`~runtraj.execution.worker.run_particles` runs the transport model for one
   :class:`~runtraj.Simulation` and writes its particles and log.
 - :func:`~runtraj.execution.worker.run_stages` runs the stages of the variants
@@ -75,6 +77,19 @@ Slurm job arrays
 
    runtraj.execution.job_script
    runtraj.execution.fetch_script
+
+Kubernetes indexed Jobs
+-----------------------
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.execution.kubernetes.job_manifest
+   runtraj.execution.kubernetes.submit_job
+   runtraj.execution.inputs.push
+   runtraj.execution.inputs.pull
+   runtraj.execution.inputs.hash_inputs
 
 Transport model
 ----------------

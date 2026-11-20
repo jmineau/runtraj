@@ -116,7 +116,7 @@ Execution
 
 The keys under ``execution:`` (:doc:`../guides/running`). ``backend`` names
 where the project runs, and every setting of that place is in the block of
-its name. Only that block is read, so a config can hold both.
+its name. Only that block is read, so a config can hold several.
 
 .. config-model:: runtraj.execution.config.ExecutionConfig
 
@@ -133,6 +133,16 @@ The keys under ``execution: slurm: fetch:``, the Slurm resources of the job
 that gets the met files before a job array (:ref:`slurm-fetch`).
 
 .. config-model:: runtraj.execution.config.FetchConfig
+
+The keys under ``execution: kubernetes:``, a Kubernetes indexed Job
+(:ref:`kubernetes-submit`), in Kubernetes' own names and units.
+
+.. config-model:: runtraj.execution.config.KubernetesConfig
+
+The keys of one entry under ``execution: kubernetes: volumes:``, a
+PersistentVolumeClaim mounted in every pod.
+
+.. config-model:: runtraj.execution.config.Volume
 
 Boxes
 ~~~~~
@@ -164,6 +174,8 @@ can share one.
    execution.LocalConfig
    execution.SlurmConfig
    execution.FetchConfig
+   execution.KubernetesConfig
+   execution.Volume
    Bounds
 
 Parameters

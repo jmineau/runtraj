@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=0a0c37d3"></script>
+    <script src="../_static/documentation_options.js?v=08d58490"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2.dev10+g075f3fd30" />
+  <meta name="docsearch:version" content="0.1.0a3.dev1+g9758d997c" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -598,6 +598,8 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
 </ul>
@@ -646,6 +648,11 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html">runtraj.execution.kubernetes.job_manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.submit_job.html">runtraj.execution.kubernetes.submit_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.push.html">runtraj.execution.inputs.push</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.pull.html">runtraj.execution.inputs.pull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.hash_inputs.html">runtraj.execution.inputs.hash_inputs</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
@@ -1327,7 +1334,7 @@ footprint is such a stage:</p>
 <h3>Execution<a class="headerlink" href="#execution" title="Link to this heading">#</a></h3>
 <p>The keys under <code class="docutils literal notranslate"><span class="pre">execution:</span></code> (<a class="reference internal" href="../guides/running.html"><span class="doc">Running</span></a>). <code class="docutils literal notranslate"><span class="pre">backend</span></code> names
 where the project runs, and every setting of that place is in the block of
-its name. Only that block is read, so a config can hold both.</p>
+its name. Only that block is read, so a config can hold several.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 22.0%" />
@@ -1342,7 +1349,7 @@ its name. Only that block is read, so a config can hold both.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backend</span></code></p></td>
-<td><p>Where to run: on this machine (<code class="docutils literal notranslate"><span class="pre">local</span></code>) or as a Slurm job array (<code class="docutils literal notranslate"><span class="pre">slurm</span></code>).</p></td>
+<td><p>Where to run: on this machine (<code class="docutils literal notranslate"><span class="pre">local</span></code>), as a Slurm job array (<code class="docutils literal notranslate"><span class="pre">slurm</span></code>), or as a Kubernetes indexed Job (<code class="docutils literal notranslate"><span class="pre">kubernetes</span></code>).</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'local'</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">local</span></code></p></td>
@@ -1353,11 +1360,15 @@ its name. Only that block is read, so a config can hold both.</p>
 <td><p>The job array of a Slurm run (<code class="xref py py-class docutils literal notranslate"><span class="pre">SlurmConfig</span></code>), and any other <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> option by name. Read with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">SlurmConfig(n_workers=1,</span> <span class="pre">cpus=1,</span> <span class="pre">time=None,</span> <span class="pre">mem=None,</span> <span class="pre">partition=None,</span> <span class="pre">account=None,</span> <span class="pre">q...</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kubernetes</span></code></p></td>
+<td><p>The indexed Job of a Kubernetes run (<code class="xref py py-class docutils literal notranslate"><span class="pre">KubernetesConfig</span></code>). Read with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">KubernetesConfig(image=None,</span> <span class="pre">completions=1,</span> <span class="pre">parallelism=None,</span> <span class="pre">cpus=1,</span> <span class="pre">memory=None,</span> <span class="pre">na...</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code></p></td>
 <td><p>Time limit for one transport model run, in seconds. A run that exceeds it is stopped and recorded as a failed simulation, and the worker moves on. Unset waits indefinitely, so a hung run can hold a worker until its job ends.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keep_workdir</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">keep_workdir</span></code></p></td>
 <td><p>Keep every run’s workdir, as the transport model left it, under <code class="docutils literal notranslate"><span class="pre">scratch/</span></code> in the output directory. A failed run’s is always kept.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
@@ -1485,6 +1496,98 @@ that gets the met files before a job array (<a class="reference internal" href="
 </tbody>
 </table>
 </div>
+<p>The keys under <code class="docutils literal notranslate"><span class="pre">execution:</span> <span class="pre">kubernetes:</span></code>, a Kubernetes indexed Job
+(<a class="reference internal" href="../guides/containers.html#kubernetes-submit"><span class="std std-ref">Submitting to Kubernetes</span></a>), in Kubernetes’ own names and units.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 60.0%" />
+<col style="width: 18.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
+<td><p>Container image of the pods, with runtraj, the transport model and the project’s stages. Required with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">completions</span></code></p></td>
+<td><p>Number of tasks (pods to complete), which the releases are split evenly among.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parallelism</span></code></p></td>
+<td><p>Most pods running at once. Unset runs every task at once.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code></p></td>
+<td><p>Releases each pod runs at once, and the CPUs each pod requests.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">memory</span></code></p></td>
+<td><p>Memory each pod requests, and its limit, in Kubernetes’ binary units such as <code class="docutils literal notranslate"><span class="pre">8Gi</span></code> or <code class="docutils literal notranslate"><span class="pre">512Mi</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">namespace</span></code></p></td>
+<td><p>Namespace of the Job. Unset is <code class="docutils literal notranslate"><span class="pre">kubectl</span></code>’s current one.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code></p></td>
+<td><p>Bucket URL the project’s inputs (<code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">tables/</span></code>) are copied to at submit, such as <code class="docutils literal notranslate"><span class="pre">s3://bucket/projects/my_project</span></code>; each pod copies them back. Unset, the pods open the project folder at the path it has here, so it must be on a volume they mount at that path.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">volumes</span></code></p></td>
+<td><p>PersistentVolumeClaims mounted in every pod (<code class="xref py py-class docutils literal notranslate"><span class="pre">Volume</span></code>), such as the met archive.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">secrets</span></code></p></td>
+<td><p>Secrets whose keys become each pod’s environment variables, such as a bucket’s credentials.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">service_account</span></code></p></td>
+<td><p>Service account of the pods, on a cluster that grants bucket access through one.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_deadline_seconds</span></code></p></td>
+<td><p>Seconds the whole Job may run before Kubernetes stops it. Unset lets it run as long as its simulations take.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The keys of one entry under <code class="docutils literal notranslate"><span class="pre">execution:</span> <span class="pre">kubernetes:</span> <span class="pre">volumes:</span></code>, a
+PersistentVolumeClaim mounted in every pod.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 60.0%" />
+<col style="width: 18.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">claim_name</span></code></p></td>
+<td><p>Name of the PersistentVolumeClaim.</p></td>
+<td><p>Required</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mount_path</span></code></p></td>
+<td><p>Where the volume is mounted in each pod, an absolute path.</p></td>
+<td><p>Required</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">read_only</span></code></p></td>
+<td><p>Mount it read-only, as for a met archive the pods only read.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 <section id="boxes">
 <h3>Boxes<a class="headerlink" href="#boxes" title="Link to this heading">#</a></h3>
@@ -1520,6 +1623,12 @@ can share one.</p>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html#runtraj.execution.FetchConfig" title="runtraj.execution.FetchConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.FetchConfig</span></code></a></p></td>
 <td><p>The Slurm resources of the job that gets the met files before a job array.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html#runtraj.execution.KubernetesConfig" title="runtraj.execution.KubernetesConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.KubernetesConfig</span></code></a></p></td>
+<td><p>The Kubernetes indexed Job a project's releases run as: the <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block of <code class="docutils literal notranslate"><span class="pre">execution</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.Volume.html#runtraj.execution.Volume" title="runtraj.execution.Volume"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.Volume</span></code></a></p></td>
+<td><p>A PersistentVolumeClaim mounted in every pod: one entry of <code class="docutils literal notranslate"><span class="pre">volumes</span></code> in the <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.Bounds.html#runtraj.Bounds" title="runtraj.Bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bounds</span></code></a></p></td>
 <td><p>Longitude/latitude bounding box, in degrees.</p></td>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=0a0c37d3"></script>
+    <script src="../_static/documentation_options.js?v=08d58490"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2.dev10+g075f3fd30" />
+  <meta name="docsearch:version" content="0.1.0a3.dev1+g9758d997c" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -598,6 +598,8 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
 </ul>
@@ -646,6 +648,11 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html">runtraj.execution.kubernetes.job_manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.submit_job.html">runtraj.execution.kubernetes.submit_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.push.html">runtraj.execution.inputs.push</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.pull.html">runtraj.execution.inputs.pull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.hash_inputs.html">runtraj.execution.inputs.hash_inputs</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
@@ -819,7 +826,9 @@ which is what <code class="docutils literal notranslate"><span class="pre">runtr
 <li><p><a class="reference internal" href="_api/runtraj.execution.submit.html#runtraj.execution.submit" title="runtraj.execution.submit"><code class="xref py py-func docutils literal notranslate"><span class="pre">submit()</span></code></a> is what <code class="docutils literal notranslate"><span class="pre">project.submit()</span></code> calls. It
 writes a job array script (<a class="reference internal" href="_api/runtraj.execution.job_script.html#runtraj.execution.job_script" title="runtraj.execution.job_script"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_script()</span></code></a>) whose
 tasks each run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code>, submits it with <code class="docutils literal notranslate"><span class="pre">sbatch</span></code>, and
-returns the job id at once.</p></li>
+returns the job id at once. With <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code> it makes an
+indexed Job instead (<a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html#runtraj.execution.kubernetes.job_manifest" title="runtraj.execution.kubernetes.job_manifest"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_manifest()</span></code></a>)
+and creates it with <code class="docutils literal notranslate"><span class="pre">kubectl</span></code>.</p></li>
 <li><p><a class="reference internal" href="_api/runtraj.execution.worker.run_particles.html#runtraj.execution.worker.run_particles" title="runtraj.execution.worker.run_particles"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_particles()</span></code></a> runs the transport model for one
 <a class="reference internal" href="_api/runtraj.Simulation.html#runtraj.Simulation" title="runtraj.Simulation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation</span></code></a> and writes its particles and log.</p></li>
 <li><p><a class="reference internal" href="_api/runtraj.execution.worker.run_stages.html#runtraj.execution.worker.run_stages" title="runtraj.execution.worker.run_stages"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_stages()</span></code></a> runs the stages of the variants
@@ -851,7 +860,7 @@ Slurm job array by its id.</p>
 <td><p>Run every simulation of a project that has not finished, and wait for it.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.submit.html#runtraj.execution.submit" title="runtraj.execution.submit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.submit</span></code></a></p></td>
-<td><p>Submit every simulation of a project that has not finished to Slurm.</p></td>
+<td><p>Submit every simulation of a project that has not finished to Slurm or Kubernetes.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.pending</span></code></a></p></td>
 <td><p>Return the ids of the releases a run would run, each once, in project order.</p></td>
@@ -902,6 +911,29 @@ Slurm job array by its id.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.fetch_script.html#runtraj.execution.fetch_script" title="runtraj.execution.fetch_script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.fetch_script</span></code></a></p></td>
 <td><p>Return the <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> script of the job that gets the met files before a job array.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="kubernetes-indexed-jobs">
+<h2>Kubernetes indexed Jobs<a class="headerlink" href="#kubernetes-indexed-jobs" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html#runtraj.execution.kubernetes.job_manifest" title="runtraj.execution.kubernetes.job_manifest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.kubernetes.job_manifest</span></code></a></p></td>
+<td><p>Return the indexed Job that runs a project in <em>n_tasks</em> pods, as a Kubernetes manifest.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.kubernetes.submit_job.html#runtraj.execution.kubernetes.submit_job" title="runtraj.execution.kubernetes.submit_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.kubernetes.submit_job</span></code></a></p></td>
+<td><p>Make the indexed Job that runs <em>pending</em> releases, and return its name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.inputs.push.html#runtraj.execution.inputs.push" title="runtraj.execution.inputs.push"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.inputs.push</span></code></a></p></td>
+<td><p>Copy a project's inputs to <em>url</em>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.inputs.pull.html#runtraj.execution.inputs.pull" title="runtraj.execution.inputs.pull"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.inputs.pull</span></code></a></p></td>
+<td><p>Copy a project's inputs from <em>url</em> into <em>directory</em>, the reverse of <code class="xref py py-func docutils literal notranslate"><span class="pre">push()</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.inputs.hash_inputs.html#runtraj.execution.inputs.hash_inputs" title="runtraj.execution.inputs.hash_inputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.inputs.hash_inputs</span></code></a></p></td>
+<td><p>Return a content hash of a project folder's <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1026,6 +1058,7 @@ write one. Use <a class="reference internal" href="_api/runtraj.stages.check_sta
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running">Running</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workers">Workers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#slurm-job-arrays">Slurm job arrays</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kubernetes-indexed-jobs">Kubernetes indexed Jobs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transport-model">Transport model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stages">Stages</a></li>
 </ul>
