@@ -268,6 +268,8 @@ def _opened(met: Met) -> Iterator[list[Any]]:
         yield [met]
         return
     handles = [arlmet.File(path) for path in met]
+    if not handles:
+        raise ValueError("No met files were given.")
     try:
         yield handles
     finally:
@@ -307,8 +309,8 @@ def _pressure_variable(sources: list[Any], names: set[str]) -> str:
     A file with ``PRES`` on its levels, such as HRRR's, gives the pressure
     HYSPLIT reads. A file on pressure levels (GFS) or hybrid levels (ERA5)
     has none: its pressure comes from its vertical axis, which arlmet's
-    virtual ``"pressure"`` reads. Terrain-following levels give no pressure
-    without ``PRES``.
+    virtual ``"pressure"`` reads. Terrain-following levels and WRF's hybrid
+    levels give no pressure without ``PRES``.
     """
     import arlmet
 
@@ -320,10 +322,10 @@ def _pressure_variable(sources: list[Any], names: set[str]) -> str:
         if isinstance(first, xr.Dataset)
         else first.vertical_axis
     )
-    if isinstance(axis, arlmet.TerrainAxis):
+    if isinstance(axis, arlmet.TerrainAxis | arlmet.WrfAxis):
         raise KeyError(
-            "Met on terrain-following levels needs a PRES field for the pressure, "
-            "which it lacks."
+            f"Met on {axis.coord_system} levels needs a PRES field for the "
+            "pressure, which it lacks."
         )
     return "pressure"
 
@@ -597,9 +599,11 @@ def calc_pbl_height(
     -------
     numpy.ndarray
         The mixed-layer height at each row, in m above ground. A row off
-        the met's grid is NaN, and so is a row whose met time lacks the
-        surface fluxes, as a GFS analysis (``f000``) does without the
-        previous cycle's forecast.
+        the met's grid is NaN. A met time that lacks the surface fluxes,
+        as a GFS analysis (``f000``) does without the previous cycle's
+        forecast, has no height: a row at that time is NaN, and a row
+        between it and a met time with the fluxes takes the height of the
+        other time.
 
     Raises
     ------
@@ -730,7 +734,18 @@ def calc_pbl_height(
     n = len(particles)
     out = value[:n].copy()
     w = weight[later]
-    out[later] = (1.0 - w) * out[later] + w * value[n:]
+    before_value, after_value = out[later], value[n:]
+    # Between a met time with a height and one without (a GFS analysis has
+    # no fluxes), the row takes the height it has.
+    out[later] = np.where(
+        np.isnan(before_value),
+        after_value,
+        np.where(
+            np.isnan(after_value),
+            before_value,
+            (1.0 - w) * before_value + w * after_value,
+        ),
+    )
     return out
 
 

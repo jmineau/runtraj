@@ -265,7 +265,7 @@ _T1 = pd.Timestamp("2021-01-15 01:00")
 _LEVELS = [0.0, 50.0, 500.0, 2000.0]
 
 
-def _met_file(path: Path, *, winds: bool = False) -> Path:
+def _met_file(path: Path, *, winds: bool = False, axis=None) -> Path:
     """
     Write an ARL file with two times of uniform fields, and return its path.
 
@@ -275,7 +275,8 @@ def _met_file(path: Path, *, winds: bool = False) -> Path:
     level's PRES rises by 10 hPa; the rest stay the same. SPHU stays above
     1/254, the smallest value ARL packing keeps in a uniform field. With
     *winds*, it also has what :func:`calc_pbl_height` reads: winds that
-    grow with height, an upward heat flux, and a friction velocity.
+    grow with height, an upward heat flux, and a friction velocity. *axis*
+    replaces the vertical axis.
     """
     from arlmet import File, Projection
     from arlmet import Grid as ArlGrid
@@ -300,7 +301,11 @@ def _met_file(path: Path, *, winds: bool = False) -> Path:
     )
     ones = np.ones((20, 20), np.float32)
     with File(
-        path, mode="w", source="TEST", grid=grid, vertical_axis=TerrainAxis(_LEVELS)
+        path,
+        mode="w",
+        source="TEST",
+        grid=grid,
+        vertical_axis=TerrainAxis(_LEVELS) if axis is None else axis,
     ) as f:
         for time, pblh, dp in ((_T0, 500.0, 0.0), (_T1, 800.0, 10.0)):
             rs = f.create_recordset(time)
@@ -575,6 +580,22 @@ def test_terrain_following_met_without_pres_has_no_pressure(tmp_path):
         sample_met(_particles_at([_T0], [100.0]), met, columns=["pres"])
 
 
+def test_wrf_met_without_pres_has_no_pressure(tmp_path):
+    """WRF's hybrid levels give pressure only from PRES, as HYSPLIT's prfwrf reads it."""
+    axis = arlmet.WrfAxis(levels=[1.0, 0.995, 0.98, 0.9], offset=50.0)
+    path = _met_file(tmp_path / "met.arl", axis=axis)
+    met = arlmet.open_dataset(path).drop_vars("PRES")
+
+    with pytest.raises(KeyError, match="PRES"):
+        sample_met(_particles_at([_T0], [100.0]), met, columns=["pres"])
+
+
+@pytest.mark.parametrize("function", [sample_met, sampling.calc_pbl_height])
+def test_no_met_files_is_a_clear_error(function):
+    with pytest.raises(ValueError, match="No met files"):
+        function(_particles_at([_T0], [100.0]), [])
+
+
 def test_met_without_sphu_gives_the_density_of_dry_air(tmp_path):
     met = arlmet.open_dataset(_met_file(tmp_path / "met.arl"))
     particles = _particles_at([_T0], [100.0])
@@ -607,4 +628,5 @@ def test_calc_pbl_height_is_nan_where_the_met_lacks_the_heat_flux(tmp_path):
     mlht = sampling.calc_pbl_height(particles, met.assign(SHTF=shtf))
 
     assert np.isfinite(mlht[0])
-    assert np.isnan(mlht[1:]).all()
+    assert mlht[1] == mlht[0]  # between the two, the time with the fluxes
+    assert np.isnan(mlht[2])
