@@ -1,6 +1,7 @@
 """Tests for FLEXPART's config, met, input files, and model, with a stand-in for its executable."""
 
 import datetime as dt
+import resource
 import shutil
 import stat
 from pathlib import Path
@@ -34,6 +35,7 @@ WINDOW = (dt.datetime(2023, 5, 31, 18), dt.datetime(2023, 6, 1, 18))
 #: A stand-in for FLEXPART: copies the real sample into output/ and says it worked.
 FAKE = """#!/bin/bash
 test -f options/COMMAND && test -f options/RELEASES && test -f AVAILABLE || exit 2
+ulimit -s > stack_limit
 cp {sample} output/partoutput_20230601180000_init.nc
 echo " CONGRATULATIONS: YOU HAVE SUCCESSFULLY COMPLETED A FLEXPART MODEL RUN!"
 """
@@ -283,6 +285,31 @@ def test_era5_needs_the_eta_build(checkout, gfs, tmp_path):
     met = FlexpartMetConfig(source="era5", directory=gfs)
     with pytest.raises(ValueError, match="eta: true"):
         FlexpartModel().run(RELEASE, config(checkout), met, WINDOW, tmp_path)
+
+
+def test_gfs_refuses_the_eta_build(checkout, gfs, tmp_path):
+    met = FlexpartMetConfig(directory=gfs)
+    with pytest.raises(ValueError, match="eta: false"):
+        FlexpartModel().run(RELEASE, config(checkout, eta=True), met, WINDOW, tmp_path)
+
+
+def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, gfs, tmp_path):
+    """FLEXPART's documentation asks for ``ulimit -s unlimited`` with OpenMP."""
+    soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
+    expected = "unlimited" if hard == resource.RLIM_INFINITY else str(hard // 1024)
+    # A low soft limit here, as many systems set, which FLEXPART would inherit.
+    resource.setrlimit(resource.RLIMIT_STACK, (8 * 1024 * 1024, hard))
+    try:
+        FlexpartModel().run(
+            RELEASE,
+            config(checkout),
+            FlexpartMetConfig(directory=gfs),
+            WINDOW,
+            tmp_path,
+        )
+    finally:
+        resource.setrlimit(resource.RLIMIT_STACK, (soft, hard))
+    assert (tmp_path / "stack_limit").read_text().strip() == expected
 
 
 def test_version_is_none_without_file_or_git(tmp_path):

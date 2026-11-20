@@ -49,7 +49,7 @@ class FlexpartConfig(TransportConfig):
             "Run the eta build, ``src/FLEXPART_ETA``, which ECMWF input (ERA5 "
             "from flex_extract) needs, with ``numpf = 3`` in ``par_mod.f90`` "
             "for flex_extract's three precipitation fields. Off runs "
-            "``src/FLEXPART``, the meter build, for GFS."
+            "``src/FLEXPART``, the meter build, which GFS needs."
         ),
     )
     numpar: int = Field(
