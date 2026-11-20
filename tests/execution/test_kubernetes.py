@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -303,3 +304,173 @@ def test_a_bucket_that_cannot_be_read_is_an_os_error(tmp_path, monkeypatch):
     monkeypatch.setattr(fsspec.implementations.memory.MemoryFileSystem, "info", info)
     with pytest.raises(OSError, match="connection refused"):
         pull("memory://down/p", tmp_path / "pod")
+
+
+# ---------------------------------------------------------------------------
+# The project's Jobs, for runtraj status
+# ---------------------------------------------------------------------------
+
+#: A Job as ``kubectl get jobs -o json`` shows it, part way through.
+RUNNING = {
+    "metadata": {
+        "name": "runtraj-hourly-x7k2p",
+        "creationTimestamp": "2026-10-29T16:00:00Z",
+    },
+    "spec": {"completions": 20, "parallelism": 5},
+    "status": {"active": 5, "completedIndexes": "0-9,12", "failedIndexes": "10,11"},
+}
+#: The same Job once it gave up on its failed tasks.
+FAILED = {
+    **RUNNING,
+    "status": {
+        "completedIndexes": "0-9,12-19",
+        "failedIndexes": "10,11",
+        "conditions": [
+            {"type": "FailureTarget", "status": "True", "reason": "FailedIndexes"},
+            {"type": "Failed", "status": "True", "reason": "FailedIndexes"},
+        ],
+    },
+}
+COMPLETE = {
+    **RUNNING,
+    "metadata": {
+        "name": "runtraj-hourly-a1b2c",
+        "creationTimestamp": "2026-10-28T09:00:00Z",
+    },
+    "status": {
+        "completedIndexes": "0-19",
+        "conditions": [{"type": "Complete", "status": "True"}],
+    },
+}
+
+
+@pytest.mark.parametrize(("indexes", "n"), [("0-3,7", 5), ("4", 1), ("", 0), (None, 0)])
+def test_count_indexes(indexes, n):
+    assert kubernetes.count_indexes(indexes) == n
+
+
+def test_a_running_job_s_summary_counts_its_tasks():
+    assert kubernetes.job_summary(RUNNING) == {
+        "name": "runtraj-hourly-x7k2p",
+        "state": "running",
+        "reason": None,
+        "created": "2026-10-29T16:00:00Z",
+        "tasks": 20,
+        "done": 11,
+        "failed": 2,
+        "failed_tasks": "10,11",
+        "running": 5,
+    }
+
+
+def test_a_job_s_state_is_failed_with_its_reason_complete_or_suspended():
+    assert (
+        kubernetes.job_summary(FAILED)["state"],
+        kubernetes.job_summary(FAILED)["reason"],
+    ) == ("failed", "FailedIndexes")
+    assert kubernetes.job_summary(COMPLETE)["state"] == "complete"
+    suspended = {**RUNNING, "spec": {"suspend": True}}
+    assert kubernetes.job_summary(suspended)["state"] == "suspended"
+
+
+def _claimed(job: dict, project: str | None) -> dict:
+    """*job* with the project annotation *project*, or with none."""
+    annotations = {} if project is None else {kubernetes.PROJECT_ANNOTATION: project}
+    return {**job, "metadata": {**job["metadata"], "annotations": annotations}}
+
+
+@pytest.fixture
+def cluster(monkeypatch):
+    """A fake ``kubectl get jobs``: ``jobs`` is what it lists, ``args`` what it was asked."""
+    state = SimpleNamespace(jobs=[], args=[], answer=None)
+
+    def fake_run(args, **kwargs):
+        state.args.append(args)
+        if state.answer is not None:
+            return state.answer
+        return SimpleNamespace(
+            returncode=0, stdout=json.dumps({"items": state.jobs}), stderr=""
+        )
+
+    monkeypatch.setattr(kubernetes.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(kubernetes.subprocess, "run", fake_run)
+    return state
+
+
+def test_a_project_s_jobs_are_found_by_its_label_oldest_first(tmp_path, cluster):
+    project = _project(tmp_path)
+    where = str(project.directory.resolve())
+    cluster.jobs = [_claimed(RUNNING, where), _claimed(COMPLETE, where)]
+
+    jobs = kubernetes.project_jobs(project, _execution(namespace="runs"))
+
+    assert [job["name"] for job in jobs] == [
+        "runtraj-hourly-a1b2c",
+        "runtraj-hourly-x7k2p",
+    ]
+    [args] = cluster.args
+    assert args[1:5] == ["get", "jobs", "-l", f"{kubernetes.PROJECT_LABEL}=hourly"]
+    assert args[-2:] == ["--namespace", "runs"]
+
+
+def test_jobs_of_another_project_of_the_same_name_are_left_out(tmp_path, cluster):
+    project = _project(tmp_path)
+    cluster.jobs = [
+        _claimed(RUNNING, "s3://lab-b/projects/hourly"),
+        _claimed(COMPLETE, None),
+        _claimed(FAILED, "S3://lab-a/projects/hourly/"),
+    ]
+
+    jobs = kubernetes.project_jobs(
+        project, _execution(inputs="s3://lab-a/projects/hourly")
+    )
+
+    assert [(job["name"], job["state"]) for job in jobs] == [
+        ("runtraj-hourly-x7k2p", "failed")
+    ]
+
+
+def test_a_project_reached_through_a_symlink_finds_its_jobs(tmp_path, cluster):
+    project = _project(tmp_path)
+    link = tmp_path / "link"
+    link.symlink_to(project.directory)
+    cluster.jobs = [_claimed(RUNNING, str(project.directory.resolve()))]
+
+    jobs = kubernetes.project_jobs(Project(link), _execution())
+
+    assert len(jobs) == 1
+
+
+def test_the_jobs_of_a_schedule_and_a_submit_are_listed_alike(tmp_path, cluster):
+    project = _project(tmp_path)
+    where = str(project.directory.resolve())
+    cron = kubernetes.cron_job_manifest("hourly", where, _execution(), output="/out")
+    hourly = {
+        **cron["spec"]["jobTemplate"],
+        "metadata": {
+            **cron["spec"]["jobTemplate"]["metadata"],
+            "name": "runtraj-hourly-1234abcd-29001",
+        },
+        "status": {"completedIndexes": "0"},
+    }
+    cluster.jobs = [hourly]
+
+    [job] = kubernetes.project_jobs(project, _execution())
+
+    assert (job["name"], job["done"], job["tasks"]) == (
+        "runtraj-hourly-1234abcd-29001",
+        1,
+        1,
+    )
+
+
+def test_listing_jobs_says_why_kubectl_could_not(tmp_path, cluster):
+    cluster.answer = SimpleNamespace(returncode=1, stdout="", stderr="Unauthorized")
+    with pytest.raises(RuntimeError, match="could not list the Jobs: Unauthorized"):
+        kubernetes.project_jobs(_project(tmp_path), _execution())
+
+
+def test_listing_jobs_without_kubectl_says_so(tmp_path, monkeypatch):
+    monkeypatch.setattr(kubernetes.shutil, "which", lambda name: None)
+    with pytest.raises(FileNotFoundError, match="kubectl is not installed"):
+        kubernetes.project_jobs(_project(tmp_path), _execution())

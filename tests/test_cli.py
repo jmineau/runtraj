@@ -755,6 +755,71 @@ def test_a_bucket_with_no_project_exits_with_2(tmp_path, calls):
     assert "no config.yaml" in result.output
 
 
+JOB = {
+    "name": "runtraj-proj-x7k2p",
+    "state": "failed",
+    "reason": "FailedIndexes",
+    "created": "2026-10-29T16:00:00Z",
+    "tasks": 5,
+    "done": 3,
+    "failed": 2,
+    "failed_tasks": "1,4",
+    "running": 0,
+}
+
+
+def test_status_lists_the_project_s_jobs_on_kubernetes(tmp_path, monkeypatch):
+    project = _on_kubernetes(_project(tmp_path))
+    monkeypatch.setattr("runtraj.cli.project_jobs", lambda project, execution: [JOB])
+
+    result = _invoke("status", project=project)
+
+    assert result.exit_code == 0, result.output
+    lines = result.output.splitlines()
+    assert lines[1:3] == [
+        "Jobs:",
+        "  runtraj-proj-x7k2p  failed (FailedIndexes)  3 of 5 tasks done, 0 running, "
+        "2 failed (tasks 1,4)  started 2026-10-29T16:00:00Z",
+    ]
+
+
+def test_status_as_json_has_the_jobs_on_kubernetes(tmp_path, monkeypatch):
+    project = _on_kubernetes(_project(tmp_path))
+    monkeypatch.setattr("runtraj.cli.project_jobs", lambda project, execution: [JOB])
+
+    result = _invoke("status", "--json", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["jobs"] == [JOB]
+
+
+def test_status_still_counts_when_the_jobs_cannot_be_listed(tmp_path, monkeypatch):
+    project = _on_kubernetes(_project(tmp_path))
+
+    def refuse(project, execution):
+        raise FileNotFoundError("kubectl is not installed, or not on PATH.")
+
+    monkeypatch.setattr("runtraj.cli.project_jobs", refuse)
+
+    result = _invoke("status", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert "total=2" in result.output
+    assert "Jobs: not listed. kubectl is not installed" in result.output
+
+
+def test_status_lists_no_jobs_on_another_backend(tmp_path, monkeypatch):
+    def unexpected(project, execution):
+        raise AssertionError("kubectl was asked")
+
+    monkeypatch.setattr("runtraj.cli.project_jobs", unexpected)
+
+    result = _invoke("status", "--json", project=_project(tmp_path))
+
+    assert result.exit_code == 0, result.output
+    assert "jobs" not in json.loads(result.output)
+
+
 # ---------------------------------------------------------------------------
 # Kubernetes: schedule, and each hour's tick
 # ---------------------------------------------------------------------------

@@ -71,7 +71,7 @@ from runtraj.exceptions import MissingClass, WorkerDied
 from runtraj.execution import schedule as schedules
 from runtraj.execution.config import ExecutionConfig, check_url
 from runtraj.execution.inputs import hash_inputs, pull
-from runtraj.execution.kubernetes import schedule_job
+from runtraj.execution.kubernetes import project_jobs, schedule_job
 from runtraj.execution.runner import pending, resolve_compute_root
 from runtraj.project import STATES, Project
 
@@ -852,6 +852,11 @@ def status(
     hycs_std, a variant's folder is the one it made (by its name) with its
     other settings; status exits with 2 when the variant made two, with two
     builds of hycs_std.
+
+    With backend: kubernetes in config.yaml, it also lists the project's
+    Jobs on the cluster kubectl points at (from runtraj submit and runtraj
+    schedule), with how many of their tasks are done, running and failed.
+    When kubectl cannot list them, it says why, and the counts still print.
     """
     opened = Project(_resolve_project(project), output=output)
     _require_inputs(opened)
@@ -862,11 +867,50 @@ def status(
         _require_met(opened)
         _require_build(opened)
         raise
+    jobs = _jobs(opened)
     if as_json:
-        typer.echo(json.dumps(_status_data(opened, table, folders), indent=2))
+        data = _status_data(opened, table, folders)
+        if jobs is not None:
+            data["jobs"] = jobs
+        typer.echo(json.dumps(data, indent=2))
         return
     _print_status(opened, status=table)
+    if jobs is not None:
+        _print_jobs(jobs)
     _print_folders(opened, folders)
+
+
+def _jobs(project: Project) -> list[dict[str, Any]] | str | None:
+    """
+    Return the project's Kubernetes Jobs, why they could not be listed, or ``None`` on another backend.
+
+    Not reaching the cluster is not an error of ``runtraj status``: the
+    counts come from the output directory, so they print either way.
+    """
+    execution = project.config.execution
+    if execution.backend != "kubernetes":
+        return None
+    try:
+        return project_jobs(project, execution)
+    except (FileNotFoundError, RuntimeError) as error:
+        return str(error)
+
+
+def _print_jobs(jobs: list[dict[str, Any]] | str) -> None:
+    """Print the project's Kubernetes Jobs, one line each, or why they could not be listed."""
+    if isinstance(jobs, str):
+        typer.echo(f"Jobs: not listed. {jobs}")
+        return
+    if not jobs:
+        typer.echo("Jobs: none on the cluster")
+        return
+    typer.echo("Jobs:")
+    for job in jobs:
+        state = job["state"] + (f" ({job['reason']})" if job["reason"] else "")
+        tasks = f"{job['done']} of {job['tasks']} tasks done, {job['running']} running"
+        if job["failed"]:
+            tasks += f", {job['failed']} failed (tasks {job['failed_tasks']})"
+        typer.echo(f"  {job['name']}  {state}  {tasks}  started {job['created']}")
 
 
 # ---------------------------------------------------------------------------

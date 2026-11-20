@@ -27,6 +27,7 @@ under the same rules.
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import re
 import shutil
@@ -503,9 +504,133 @@ def _pods_open(project: Project, execution: ExecutionConfig) -> tuple[str, str]:
             "config.yaml to a bucket, or give --output s3://..., with "
             "execution.kubernetes.inputs set."
         )
-    if kube.inputs is not None:
-        return kube.inputs.rstrip("/"), output
-    return str(project.directory.resolve()), output
+    return _target(project, execution), output
+
+
+def _target(project: Project, execution: ExecutionConfig) -> str:
+    """Return what the pods open: the inputs' URL, or the project folder's real path."""
+    inputs = execution.kubernetes.inputs
+    if inputs is not None:
+        return inputs.rstrip("/")
+    return str(Path(project.directory).resolve())
+
+
+def count_indexes(indexes: str | None) -> int:
+    """
+    Return how many task indexes a Job's list of them holds, such as ``0-3,7``.
+
+    Examples
+    --------
+    >>> count_indexes("0-3,7")
+    5
+    >>> count_indexes(None)
+    0
+    """
+    total = 0
+    for part in (indexes or "").split(","):
+        if part:
+            first, _, last = part.partition("-")
+            total += int(last or first) - int(first) + 1
+    return total
+
+
+def job_summary(job: dict[str, Any]) -> dict[str, Any]:
+    """
+    Return what ``runtraj status`` shows of one Job, from ``kubectl get jobs -o json``.
+
+    ``state`` is ``complete``, ``failed``, ``suspended`` or ``running``, and
+    ``reason`` is Kubernetes' reason for a failed Job, such as
+    ``FailedIndexes`` or ``DeadlineExceeded``. ``tasks`` is the Job's
+    ``completions``; ``done``, ``failed`` and ``running`` count its tasks,
+    and ``failed_tasks`` lists the ones that gave up as Kubernetes writes
+    them (``1,4-6``).
+
+    Examples
+    --------
+    >>> job = {
+    ...     "metadata": {"name": "runtraj-towers-x7k2p"},
+    ...     "spec": {"completions": 8},
+    ...     "status": {"completedIndexes": "0-5", "failedIndexes": "7", "active": 1},
+    ... }
+    >>> summary = job_summary(job)
+    >>> summary["state"], summary["done"], summary["failed_tasks"]
+    ('running', 6, '7')
+    """
+    spec, status = job.get("spec", {}), job.get("status", {})
+    conditions = {
+        c["type"]: c for c in status.get("conditions", []) if c.get("status") == "True"
+    }
+    reason = None
+    if "Complete" in conditions:
+        state = "complete"
+    elif "Failed" in conditions:
+        state, reason = "failed", conditions["Failed"].get("reason")
+    elif spec.get("suspend"):
+        state = "suspended"
+    else:
+        state = "running"
+    return {
+        "name": job["metadata"]["name"],
+        "state": state,
+        "reason": reason,
+        "created": job["metadata"].get("creationTimestamp"),
+        "tasks": spec.get("completions"),
+        "done": count_indexes(status.get("completedIndexes")),
+        "failed": count_indexes(status.get("failedIndexes")),
+        "failed_tasks": status.get("failedIndexes") or "",
+        "running": status.get("active", 0),
+    }
+
+
+def project_jobs(project: Project, execution: ExecutionConfig) -> list[dict[str, Any]]:
+    """
+    Return the summaries of a project's Jobs on the cluster, oldest first (:func:`job_summary`).
+
+    These are the indexed Jobs of ``runtraj submit`` and the hourly Jobs of
+    ``runtraj schedule``, in the namespace of *execution*'s ``kubernetes``
+    block. ``kubectl`` selects them by the project's label, which is only
+    its name, so two projects can share it; a Job is kept only when its
+    annotation names where this project's pods open it (the inputs' URL,
+    or the folder's path).
+
+    Raises
+    ------
+    FileNotFoundError
+        If ``kubectl`` is not on ``PATH``.
+    RuntimeError
+        If ``kubectl`` cannot list the Jobs; the message is its error.
+    """
+    kubectl = shutil.which("kubectl")
+    if kubectl is None:
+        raise FileNotFoundError("kubectl is not installed, or not on PATH.")
+    args = [
+        kubectl,
+        "get",
+        "jobs",
+        "-l",
+        f"{PROJECT_LABEL}={label_value(project.name)}",
+        "-o",
+        "json",
+    ]
+    namespace = execution.kubernetes.namespace
+    if namespace is not None:
+        args += ["--namespace", namespace]
+    result = subprocess.run(args, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise RuntimeError(
+            "kubectl could not list the Jobs: "
+            + (result.stderr.strip() or f"exit {result.returncode}")
+        )
+    target = project_key(_target(project, execution))
+    jobs = [
+        job_summary(item)
+        for item in json.loads(result.stdout)["items"]
+        if project_key(
+            item["metadata"].get("annotations", {}).get(PROJECT_ANNOTATION, "")
+        )
+        == target
+    ]
+    return sorted(jobs, key=lambda job: job["created"] or "")
 
 
 def _keep(project: Project, kind: str, manifest: dict[str, Any]) -> Path:
@@ -623,12 +748,15 @@ __all__ = [
     "SCRATCH",
     "TICK_DEADLINE",
     "cron_job_manifest",
+    "count_indexes",
     "cron_job_name",
     "job_manifest",
+    "job_summary",
     "kubectl_apply",
     "kubectl_create",
     "label_value",
     "pod_args",
+    "project_jobs",
     "project_key",
     "pull_policy",
     "schedule_job",

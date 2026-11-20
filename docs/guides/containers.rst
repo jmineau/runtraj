@@ -104,7 +104,21 @@ ones, so ``runtraj submit`` on Kubernetes takes no ``--releases`` and no
 ``--no-skip``. It does not fetch the met first: run ``runtraj fetch``
 before it (:ref:`fetch-once`) when the pods share the met volume.
 Afterwards ``runtraj status`` counts the project's simulations, as for any
-run.
+run, and lists the project's Jobs on the cluster ``kubectl`` points at:
+
+.. code-block:: text
+
+   Project: /project  total=480  complete=455  failed=5  interrupted=0  pending=20
+   Jobs:
+     runtraj-my-project-x7k2p  running  17 of 20 tasks done, 2 running, 1 failed (tasks 6)  started 2026-10-29T16:00:00Z
+
+A task counts as failed once Kubernetes gave up on it (after its retries,
+or at once for exit 1 or 4); ``kubectl logs`` of its pod says why, and the
+failed simulations each have a ``.failure.yaml``. The Jobs are found by the
+project's name and kept when they were made for this project's inputs, so
+another project of the same name is left out. When ``kubectl`` cannot list
+them, the line says why and the counts still print. ``runtraj status
+--json`` adds them as ``jobs``.
 
 .. _kubernetes-schedule:
 
@@ -169,7 +183,8 @@ holds back the next. Scheduling the project again, after editing
 ``sites.csv`` or the ``kubernetes`` block, replaces its CronJob, which is
 named for the project and where its inputs are. The manifest is kept in
 ``_kubernetes/<date_time>_<id>/cronjob.yaml`` in the project;
-``kubectl delete cronjob <name>`` stops the schedule.
+``kubectl delete cronjob <name>`` stops the schedule. ``runtraj status``
+lists each hour's Job with the others.
 
 .. _fetch-once:
 
