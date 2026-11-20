@@ -24,14 +24,20 @@ if TYPE_CHECKING:
 MARGIN_CELLS = 3
 
 
-def _first_message_keys(path: str | Path, keys: tuple[str, ...]) -> list:
-    """Return *keys* of the first GRIB message in *path*, read with eccodes."""
+def _eccodes():
+    """Return the eccodes module, or say which extra installs it."""
     try:
         import eccodes
     except ImportError as err:
         raise ImportError(
             'FLEXPART runs read GRIB met with eccodes: pip install "runtraj[flexpart]"'
         ) from err
+    return eccodes
+
+
+def _first_message_keys(path: str | Path, keys: tuple[str, ...]) -> list:
+    """Return *keys* of the first GRIB message in *path*, read with eccodes."""
+    eccodes = _eccodes()
     with open(path, "rb") as f:
         handle = eccodes.codes_grib_new_from_file(f)
         if handle is None:
@@ -40,6 +46,23 @@ def _first_message_keys(path: str | Path, keys: tuple[str, ...]) -> list:
             return [eccodes.codes_get(handle, key) for key in keys]
         finally:
             eccodes.codes_release(handle)
+
+
+def holds_grib(path: str | Path) -> bool:
+    """
+    Return whether *path* holds a GRIB message.
+
+    A met directory often holds other files: cfgrib writes an index
+    (``.idx``) beside each GRIB file it opens, and ``pattern`` is ``*``
+    unless set.
+    """
+    eccodes = _eccodes()
+    try:
+        _first_message_keys(path, ())
+    except (ValueError, eccodes.CodesInternalError):
+        # No message at all, or bytes eccodes cannot read as one.
+        return False
+    return True
 
 
 def grib_valid_time(path: str | Path) -> dt.datetime:
@@ -81,6 +104,8 @@ def _catalog(files: tuple[tuple[str, int, int], ...]) -> dict[dt.datetime, Path]
     """Return the files by valid time; *files* are (path, size, mtime) so a changed file is read again."""
     by_time: dict[dt.datetime, Path] = {}
     for name, _, _ in files:
+        if not holds_grib(name):
+            continue
         valid = grib_valid_time(name)
         if valid in by_time:
             raise MeteorologyError(
@@ -94,7 +119,9 @@ def catalog(directory: str | Path, pattern: str = "*") -> dict[dt.datetime, Path
     """
     Return the GRIB files in *directory* that match *pattern*, by valid time.
 
-    Each file is read once per process, and again only if it changes.
+    A file that holds no GRIB message, such as an index cfgrib wrote, is
+    left out. Each file is read once per process, and again only if it
+    changes.
 
     Raises
     ------
@@ -268,6 +295,7 @@ __all__ = [
     "files_for",
     "grib_grid",
     "grib_valid_time",
+    "holds_grib",
     "nxshift",
     "open_era5",
     "open_gfs",

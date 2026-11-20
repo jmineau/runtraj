@@ -150,9 +150,9 @@ class FlexpartModel:
             FLEXPART stopped without finishing, and ``NO_PARTICLE_DATA``
             when it finished but wrote no particle file.
         ValueError
-            If the met is ERA5 and the config does not run the eta build, or
-            the met is GFS and it does: FLEXPART's documentation says the
-            eta build is intended for ECMWF data.
+            If the met is GFS and the config runs the eta build: FLEXPART's
+            documentation says the eta build is intended for ECMWF data.
+            ERA5 runs on either build.
 
         Warns
         -----
@@ -160,11 +160,6 @@ class FlexpartModel:
             If the met is GFS, once in each process: FLEXPART 11 does not
             mix its particles on GFS.
         """
-        if met.source == "era5" and not config.eta:
-            raise ValueError(
-                "FLEXPART reads ERA5 only with its eta build: set eta: true in "
-                "the flexpart block and build src/FLEXPART_ETA."
-            )
         if met.source == "gfs" and config.eta:
             raise ValueError(
                 "FLEXPART's eta build is intended for ECMWF data; GFS runs on "
@@ -204,7 +199,9 @@ def run_flexpart(
     It runs with ``config.threads`` OpenMP threads and its stack limit
     raised as far as the system allows (FLEXPART's documentation asks for
     ``ulimit -s unlimited``: with OpenMP, a small stack ends the run in a
-    segmentation fault). If this process is interrupted while it waits,
+    segmentation fault). ``OMP_PLACES`` and ``OMP_PROC_BIND``, which the
+    documentation also suggests, are left as they are: several FLEXPART
+    processes on one node would each bind to the same cores. If this process is interrupted while it waits,
     FLEXPART is stopped too.
 
     Raises
@@ -249,9 +246,15 @@ def run_flexpart(
 
 
 def _raise_stack_limit() -> None:
-    """Raise this process's stack limit to its hard limit, as ``ulimit -s unlimited`` does where that is allowed."""
+    """
+    Raise this process's stack limit to its hard limit, as ``ulimit -s unlimited`` does where that is allowed.
+
+    Where the system refuses, FLEXPART runs with the limit it has: macOS
+    reports no hard limit and still refuses a stack above 64 MB.
+    """
     _, hard = resource.getrlimit(resource.RLIMIT_STACK)
-    resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
+    with contextlib.suppress(ValueError, OSError):
+        resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
 
 
 def _terminate(proc: subprocess.Popen) -> None:

@@ -4,6 +4,7 @@ import datetime as dt
 import resource
 import shutil
 import stat
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +16,7 @@ from runtraj.exceptions import MeteorologyError, SimulationError
 from runtraj.models import get_model
 from runtraj.models.flexpart import FlexpartConfig, FlexpartMetConfig, FlexpartModel
 from runtraj.models.flexpart.config import flexpart_version
-from runtraj.models.flexpart.inputs import command, partoptions, releases
+from runtraj.models.flexpart.inputs import available, command, partoptions, releases
 from runtraj.models.flexpart.met import catalog, files_for
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
 
@@ -91,6 +92,18 @@ def test_config_needs_lsynctime_to_divide_loutstep(checkout):
         config(checkout, loutstep=3600, lsynctime=700)
 
 
+def test_config_refuses_cblflag_with_time_steps_flexpart_would_change(checkout):
+    """FLEXPART raises CTL to 5 and IFINE until CTL * IFINE is 50, and caps LSYNCTIME at 1200 s."""
+    for steps in (
+        {},
+        {"ctl": 5.0, "ifine": 4},
+        {"ctl": 5.0, "ifine": 10, "lsynctime": 1800, "loutstep": 3600},
+    ):
+        with pytest.raises(ValidationError, match="cblflag: 1 needs ctl"):
+            config(checkout, cblflag=1, **steps)
+    assert config(checkout, cblflag=1, ctl=5.0, ifine=10).cblflag == 1
+
+
 def test_config_records_threads_but_not_where_the_checkout_is(checkout):
     settings = config(checkout).settings()
     assert "directory" not in settings
@@ -117,6 +130,17 @@ def test_met_config_takes_a_bare_directory_and_records_the_grid(gfs):
     assert met.settings() == {"source": "gfs", "grid": "1x1 deg, 3x3"}
 
 
+def test_met_config_reads_the_grid_past_a_file_that_is_not_grib(gfs):
+    (gfs / "a_readme.txt").write_text("not GRIB\n")
+    assert FlexpartMetConfig(directory=gfs).settings()["grid"] == "1x1 deg, 3x3"
+
+
+def test_met_config_names_a_directory_without_grib_files(tmp_path):
+    (tmp_path / "notes.txt").write_text("not GRIB\n")
+    with pytest.raises(FileNotFoundError, match="No GRIB files match"):
+        FlexpartMetConfig(directory=tmp_path).settings()
+
+
 def test_get_model_finds_flexpart():
     assert isinstance(get_model("flexpart"), FlexpartModel)
 
@@ -129,6 +153,20 @@ def test_files_for_a_window_include_one_beyond_each_end(gfs):
         catalog(gfs), (dt.datetime(2023, 5, 31, 20), dt.datetime(2023, 6, 1, 5))
     )
     assert list(files) == [dt.datetime(2023, 5, 31, 18), dt.datetime(2023, 6, 1, 6)]
+
+
+def test_catalog_leaves_out_the_index_cfgrib_writes_beside_a_file(gfs):
+    """Cfgrib writes ``<file>.<hash>.idx`` beside a GRIB file, and ``pattern`` is ``*`` unless set."""
+    (gfs / "gfs_2023-05-31_18.grb2.5b78f.idx").write_bytes(
+        b"\x80\x04not a GRIB message"
+    )
+    assert len(catalog(gfs)) == 4
+
+
+def test_available_refuses_a_file_name_with_a_space(tmp_path):
+    """FLEXPART reads a name in AVAILABLE up to its first space."""
+    with pytest.raises(ValueError, match="first space"):
+        available({dt.datetime(2023, 6, 1): tmp_path / "gfs 0p50.grb2"})
 
 
 def test_files_for_a_window_the_files_do_not_cover(gfs):
@@ -281,10 +319,11 @@ def test_eta_runs_the_eta_build(checkout):
         FlexpartModel().sha256(config(checkout, eta=True))
 
 
-def test_era5_needs_the_eta_build(checkout, gfs, tmp_path):
+def test_era5_runs_on_the_meter_build(checkout, gfs, tmp_path):
+    """FLEXPART's meter build reads ECMWF data too (seen on a real ERA5 run)."""
     met = FlexpartMetConfig(source="era5", directory=gfs)
-    with pytest.raises(ValueError, match="eta: true"):
-        FlexpartModel().run(RELEASE, config(checkout), met, WINDOW, tmp_path)
+    run = FlexpartModel().run(RELEASE, config(checkout), met, WINDOW, tmp_path)
+    assert len(run.result)
 
 
 def test_gfs_refuses_the_eta_build(checkout, gfs, tmp_path):
@@ -293,6 +332,9 @@ def test_gfs_refuses_the_eta_build(checkout, gfs, tmp_path):
         FlexpartModel().run(RELEASE, config(checkout, eta=True), met, WINDOW, tmp_path)
 
 
+@pytest.mark.skipif(
+    sys.platform == "darwin", reason="macOS refuses a stack above 64 MB"
+)
 def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, gfs, tmp_path):
     """FLEXPART's documentation asks for ``ulimit -s unlimited`` with OpenMP."""
     soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
@@ -310,6 +352,21 @@ def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, gfs, tmp_path):
     finally:
         resource.setrlimit(resource.RLIMIT_STACK, (soft, hard))
     assert (tmp_path / "stack_limit").read_text().strip() == expected
+
+
+def test_run_goes_on_where_the_stack_limit_cannot_be_raised(
+    checkout, gfs, tmp_path, monkeypatch
+):
+    """MacOS reports no hard limit and refuses the raise; FLEXPART still runs."""
+
+    def refuse(*args):
+        raise ValueError("current limit exceeds maximum limit")
+
+    monkeypatch.setattr(resource, "setrlimit", refuse)
+    run = FlexpartModel().run(
+        RELEASE, config(checkout), FlexpartMetConfig(directory=gfs), WINDOW, tmp_path
+    )
+    assert len(run.result)
 
 
 def test_version_is_none_without_file_or_git(tmp_path):
