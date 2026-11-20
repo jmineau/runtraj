@@ -221,8 +221,9 @@ reporting.
 the folder HYSPLIT ran in, is kept under ``scratch/`` in the output
 directory, and ``sim.kept_workdir`` says where. For HYSPLIT it holds
 ``CONTROL``, ``SETUP.CFG`` and ``MESSAGE``, enough to rerun ``hycs_std`` by
-hand. Set ``keep_workdir: true`` under ``execution:`` to keep every run's
-workdir.
+hand. The particle file is left out, since it can take hundreds of
+megabytes. Set ``keep_workdir: true`` under ``execution:`` to keep every
+run's workdir whole, particle file included.
 
 My particles look wrong
 -----------------------

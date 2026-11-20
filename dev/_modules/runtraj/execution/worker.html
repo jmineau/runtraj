@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=d37100c9"></script>
+    <script src="../../../_static/documentation_options.js?v=73ada6c5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev5+g4de920d8b" />
+  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -642,7 +642,8 @@
 <span class="sd">    (:func:`runtraj.models.run_model`), with the variant's met. Its log is written to the output</span>
 <span class="sd">    directory whether the run succeeds or fails. The working directory is</span>
 <span class="sd">    then removed, unless the run failed or *keep_workdir* is set, in which</span>
-<span class="sd">    case it is copied under the output directory's ``scratch/`` first.</span>
+<span class="sd">    case it is copied under the output directory's ``scratch/`` first. A</span>
+<span class="sd">    failed run's copy leaves out the model's ``particle_files``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -670,7 +671,8 @@
 <span class="sd">        missing.</span>
 <span class="sd">    """</span>
     <span class="n">output</span><span class="p">,</span> <span class="n">rid</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span>
-    <span class="n">needs_workdir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">get_model</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">model</span><span class="p">),</span> <span class="s2">"needs_workdir"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">needs_workdir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">"needs_workdir"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">needs_workdir</span><span class="p">:</span>
         <span class="c1"># The model runs in an empty directory. The runner gives each run a</span>
         <span class="c1"># new one, but a caller can hand over a directory that a stopped run</span>
@@ -710,7 +712,12 @@
             <span class="c1"># writing anything, such as on missing meteorology, has nothing</span>
             <span class="c1"># to look at.</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">keep_workdir</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">succeeded</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">workdir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
-                <span class="n">output</span><span class="o">.</span><span class="n">keep_workdir</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="n">rid</span><span class="p">,</span> <span class="n">workdir</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">)</span>
+                <span class="c1"># A failed run's particle files can be large, and the</span>
+                <span class="c1"># model's inputs and logs say why it failed.</span>
+                <span class="n">leave_out</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">keep_workdir</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">"particle_files"</span><span class="p">,</span> <span class="p">())</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">keep_workdir</span><span class="p">(</span>
+                    <span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="n">rid</span><span class="p">,</span> <span class="n">workdir</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">,</span> <span class="n">leave_out</span><span class="o">=</span><span class="n">leave_out</span>
+                <span class="p">)</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 

@@ -24,6 +24,7 @@ Attributes
 
    ~HysplitModel.batched
    ~HysplitModel.needs_workdir
+   ~HysplitModel.particle_files
 
 
 

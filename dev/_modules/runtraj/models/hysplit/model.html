@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=d37100c9"></script>
+    <script src="../../../../_static/documentation_options.js?v=73ada6c5"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev5+g4de920d8b" />
+  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -586,6 +586,8 @@
     <span class="n">met_config_class</span> <span class="o">=</span> <span class="n">MetConfig</span>
     <span class="c1">#: HYSPLIT writes its inputs and outputs as files in a directory.</span>
     <span class="n">needs_workdir</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1">#: Its particle file, left out of a failed run's kept workdir.</span>
+    <span class="n">particle_files</span> <span class="o">=</span> <span class="p">(</span><span class="n">PARTICLE_FILE</span><span class="p">,)</span>
     <span class="c1">#: One hycs_std process per release.</span>
     <span class="n">batched</span> <span class="o">=</span> <span class="kc">False</span>
 

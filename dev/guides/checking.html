@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d37100c9"></script>
+    <script src="../_static/documentation_options.js?v=73ada6c5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev5+g4de920d8b" />
+  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -730,8 +730,9 @@ reporting.</p>
 the folder HYSPLIT ran in, is kept under <code class="docutils literal notranslate"><span class="pre">scratch/</span></code> in the output
 directory, and <code class="docutils literal notranslate"><span class="pre">sim.kept_workdir</span></code> says where. For HYSPLIT it holds
 <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>, <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> and <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, enough to rerun <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> by
-hand. Set <code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">execution:</span></code> to keep every run’s
-workdir.</p>
+hand. The particle file is left out, since it can take hundreds of
+megabytes. Set <code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">execution:</span></code> to keep every
+run’s workdir whole, particle file included.</p>
 </section>
 <section id="my-particles-look-wrong">
 <h2>My particles look wrong<a class="headerlink" href="#my-particles-look-wrong" title="Link to this heading">#</a></h2>
