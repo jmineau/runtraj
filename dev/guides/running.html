@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7d91e538"></script>
+    <script src="../_static/documentation_options.js?v=81e7dfe4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev9+g687184581" />
+  <meta name="docsearch:version" content="0.1.0a3.dev10+g3e50260fa" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -566,6 +566,10 @@ processes runs one release at a time, with all of that release’s
 variants. Set it to the number of CPU cores you can spare, because each
 HYSPLIT run uses one core. A Slurm run has its own <code class="docutils literal notranslate"><span class="pre">cpus</span></code>, per array task,
 in the <code class="docutils literal notranslate"><span class="pre">slurm</span></code> block (<a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>).</p>
+<p>Each process gets its share of the cores as <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, 4 on a
+16-core machine with <code class="docutils literal notranslate"><span class="pre">cpus:</span> <span class="pre">4</span></code>, so a program that starts a thread per
+core does not start 16 in each. To choose another value, export
+<code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> before the run; runtraj keeps it.</p>
 <p>A Python script that calls <code class="docutils literal notranslate"><span class="pre">project.run()</span></code> with <code class="docutils literal notranslate"><span class="pre">cpus</span></code> above 1 needs its
 code under <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;:</span></code>. Python 3.14, macOS, and Windows
 start each worker by importing the script again, so anything at the top of the

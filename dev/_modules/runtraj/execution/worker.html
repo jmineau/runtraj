@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=7d91e538"></script>
+    <script src="../../../_static/documentation_options.js?v=81e7dfe4"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev9+g687184581" />
+  <meta name="docsearch:version" content="0.1.0a3.dev10+g3e50260fa" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -1124,6 +1124,26 @@
 <span class="n">_POOL_SKIP</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_available_cpus</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the CPUs this process may run on, which a scheduler may have limited."""</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s2">"sched_getaffinity"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sched_getaffinity</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_share_threads</span><span class="p">(</span><span class="n">workers</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Set ``OMP_NUM_THREADS`` in this pool worker to its share of the CPUs, unless the run set it.</span>
+
+<span class="sd">    The transport model and the programs it starts read it, so *workers*</span>
+<span class="sd">    processes on as many CPUs do not each start a thread per CPU. A Slurm</span>
+<span class="sd">    task's script sets it (:func:`~runtraj.execution.runner.job_script`), and</span>
+<span class="sd">    a value set before the run is kept.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"OMP_NUM_THREADS"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"OMP_NUM_THREADS"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_available_cpus</span><span class="p">()</span> <span class="o">//</span> <span class="n">workers</span><span class="p">))</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_init_pool_worker</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">output</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1139,6 +1159,7 @@
 <span class="sd">    worker that gets it ends the transport model run it is in the middle</span>
 <span class="sd">    of and exits (:func:`_pool_run`). It ignores</span>
 <span class="sd">    Ctrl-C, which the terminal also sends to it: the parent answers that.</span>
+<span class="sd">    It gets its share of the CPUs as ``OMP_NUM_THREADS`` (:func:`_share_threads`).</span>
 
 <span class="sd">    *rows* are the release rows the parent took in place of</span>
 <span class="sd">    ``releases.csv`` (a Slurm task's), if any.</span>
@@ -1148,6 +1169,7 @@
     <span class="k">global</span> <span class="n">_POOL_PROJECT</span><span class="p">,</span> <span class="n">_POOL_COMPUTE_ROOT</span><span class="p">,</span> <span class="n">_POOL_EXECUTION</span><span class="p">,</span> <span class="n">_POOL_SKIP</span>
     <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">_exit_worker</span><span class="p">)</span>
     <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_IGN</span><span class="p">)</span>
+    <span class="n">_share_threads</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">cpus</span><span class="p">)</span>
     <span class="n">_POOL_PROJECT</span> <span class="o">=</span> <span class="n">Project</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">_POOL_PROJECT</span><span class="o">.</span><span class="n">_take_rows</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
