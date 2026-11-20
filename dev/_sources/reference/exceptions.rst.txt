@@ -14,9 +14,10 @@ Every exception runtraj raises is a :class:`runtraj.RuntrajError`, so one
        print(f"runtraj stopped: {error}")
 
 Each one also subclasses the builtin that describes it. A
-:class:`~runtraj.exceptions.SimulationError` is a ``RuntimeError`` and a
-:class:`~runtraj.exceptions.HYSPLITNotFoundError` is a ``FileNotFoundError``,
-so an ``except`` for the builtin catches it too. Plain input checks, such as
+:class:`~runtraj.exceptions.SimulationError` is a ``RuntimeError``, and a
+:class:`~runtraj.exceptions.HYSPLITNotFoundError` is a ``FileNotFoundError``.
+A :class:`~runtraj.exceptions.MeteorologyError`, raised when a met's files
+cannot be found, is both. An ``except`` for the builtin catches it too. Plain input checks, such as
 a negative particle count, raise ``ValueError``.
 
 Base class

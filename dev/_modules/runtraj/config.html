@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=763442d7"></script>
+    <script src="../../_static/documentation_options.js?v=7d91e538"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
+  <meta name="docsearch:version" content="0.1.0a3.dev9+g687184581" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -494,6 +494,7 @@
 <span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeteorologyError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.identity</span><span class="w"> </span><span class="kn">import</span> <span class="n">canonical</span><span class="p">,</span> <span class="n">run_settings</span><span class="p">,</span> <span class="n">settings_hash</span><span class="p">,</span> <span class="n">stage_hash</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -657,13 +658,14 @@
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError</span>
-<span class="sd">            If the met's directory holds no file to read its product from.</span>
+<span class="sd">        runtraj.exceptions.MeteorologyError</span>
+<span class="sd">            If the met's directory does not exist or holds no file to read</span>
+<span class="sd">            its product from.</span>
 <span class="sd">        """</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">met_config</span><span class="o">.</span><span class="n">settings</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Met </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">met</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+            <span class="k">raise</span> <span class="n">MeteorologyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Met </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">met</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="Variant.build">

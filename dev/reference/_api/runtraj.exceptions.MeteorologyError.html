@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=763442d7"></script>
+    <script src="../../_static/documentation_options.js?v=7d91e538"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
+  <meta name="docsearch:version" content="0.1.0a3.dev9+g687184581" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -823,6 +823,9 @@
 <dt class="sig sig-object py" id="runtraj.exceptions.MeteorologyError">
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">runtraj.exceptions.</span></span><span class="sig-name descname"><span class="pre">MeteorologyError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/exceptions.html#MeteorologyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.exceptions.MeteorologyError" title="Link to this definition">#</a></dt>
 <dd><p>The meteorology files a simulation needs could not be found or staged.</p>
+<p>Raised when a met’s directory does not exist or holds no met file, and
+when the files do not cover a run. It is also a <code class="docutils literal notranslate"><span class="pre">FileNotFoundError</span></code>,
+so either name catches it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
