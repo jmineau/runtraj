@@ -756,6 +756,116 @@ def test_a_bucket_with_no_project_exits_with_2(tmp_path, calls):
 
 
 # ---------------------------------------------------------------------------
+# Kubernetes: schedule, and each hour's tick
+# ---------------------------------------------------------------------------
+
+TOWER = "longitude,latitude,altitude\n-112.0,40.5,10\n"
+
+
+def test_a_tick_adds_the_due_hours_on_the_bucket_and_runs_them_here(
+    tmp_path, calls, monkeypatch
+):
+    from runtraj.execution import schedule
+    from runtraj.execution.inputs import push
+
+    project = _project(tmp_path)
+    (project.directory / "sites.csv").write_text(TOWER)
+    url = "memory://cli-tick/projects/proj"
+    push(project.directory, url)
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "pod-tmp"))
+
+    result = _invoke("tick", url, "--now", "2023-01-02T20:15", "--cpus", "2")
+
+    assert result.exit_code == 0, result.output
+    [(what, options)] = calls
+    hours = schedule.due_hours(
+        dt.datetime(2023, 1, 2, 20, 15), since=NOON.replace(hour=13)
+    )
+    assert what == "run"
+    assert options["releases"][0].startswith(f"{hours[0]:%Y%m%d%H%M}_")
+    assert len(options["releases"]) == len(hours)
+    assert options["execution"].backend == "local"
+    assert options["execution"].cpus == 2
+    rows = Project(tmp_path / "pod-tmp" / "runtraj-inputs" / "proj").releases
+    assert len(rows) == 2 + len(hours)
+
+
+def test_a_tick_refuses_a_now_later_than_the_clock(tmp_path, calls):
+    project = _project(tmp_path)
+    (project.directory / "sites.csv").write_text(TOWER)
+
+    result = _invoke("tick", "--now", "2999-01-01T00:00", project=project)
+
+    assert result.exit_code == 2
+    assert "later than the clock" in result.output
+    assert calls == []
+
+
+def test_a_tick_names_the_line_of_a_site_it_refuses(tmp_path, calls):
+    project = _project(tmp_path)
+    (project.directory / "sites.csv").write_text(
+        "longitude,latitude,altitude\n-111.85,95,5\n"
+    )
+
+    result = _invoke("tick", project=project)
+
+    assert result.exit_code == 2
+    assert "sites.csv line 2: latitude" in result.output
+    assert calls == []
+
+
+def test_a_tick_that_cannot_lock_the_releases_exits_with_3(
+    tmp_path, calls, monkeypatch
+):
+    from runtraj.execution import inputs
+
+    project = _project(tmp_path)
+    (project.directory / "sites.csv").write_text(TOWER)
+
+    def refuse(*args):
+        raise PermissionError("access denied")
+
+    monkeypatch.setattr(inputs, "_acquire", refuse)
+
+    result = _invoke("tick", project=project)
+
+    assert result.exit_code == 3
+    assert "cannot lock releases.csv" in result.output
+    assert "access denied" in result.output
+    assert calls == []
+
+
+def test_schedule_makes_the_cron_job_with_the_kubernetes_block(tmp_path, monkeypatch):
+    project = _on_kubernetes(_project(tmp_path))
+    made = []
+
+    def schedule_job(opened, execution, *, delay):
+        made.append((opened.directory, execution, delay))
+        return "runtraj-proj-12345678"
+
+    monkeypatch.setattr("runtraj.cli.schedule_job", schedule_job)
+
+    result = _invoke("schedule", "--delay", "6", project=project)
+
+    assert result.exit_code == 0, result.output
+    assert "Scheduled: runtraj-proj-12345678" in result.output
+    [(directory, execution, delay)] = made
+    assert (directory, execution.backend, delay) == (project.directory, "kubernetes", 6)
+
+
+def test_schedule_needs_an_image(tmp_path):
+    result = _invoke("schedule", project=_project(tmp_path))
+    assert result.exit_code == 2
+    assert "kubernetes.image is required" in result.output
+
+
+def test_schedule_needs_sites(tmp_path):
+    result = _invoke("schedule", project=_on_kubernetes(_project(tmp_path)))
+    assert result.exit_code == 2
+    assert "has no sites.csv" in result.output
+
+
+# ---------------------------------------------------------------------------
 # An error the command did not expect: 3 to retry, 4 not to
 # ---------------------------------------------------------------------------
 

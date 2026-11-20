@@ -296,7 +296,7 @@ class KubernetesConfig(BaseModel):
         None,
         description=(
             "Bucket URL the project's inputs (``config.yaml``, ``releases.csv``, "
-            "``tables/``) are copied to at submit, such as "
+            "``tables/``, ``sites.csv``) are copied to at submit, such as "
             "``s3://bucket/projects/my_project``; each pod copies them back. "
             "Unset, the pods open the project folder at the path it has here, "
             "so it must be on a volume they mount at that path."

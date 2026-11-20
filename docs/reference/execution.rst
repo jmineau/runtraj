@@ -15,6 +15,10 @@ work underneath.
   returns the job id at once. With ``backend: kubernetes`` it makes an
   indexed Job instead (:func:`~runtraj.execution.kubernetes.job_manifest`)
   and creates it with ``kubectl``.
+- :func:`~runtraj.execution.kubernetes.schedule_job` is what ``runtraj
+  schedule`` calls: a CronJob (:func:`~runtraj.execution.kubernetes.cron_job_manifest`)
+  whose pod each hour runs ``runtraj tick``, which adds the hours now due
+  (:func:`~runtraj.execution.schedule.add_due_releases`) and runs them.
 - :func:`~runtraj.execution.worker.run_particles` runs the transport model for one
   :class:`~runtraj.Simulation` and writes its particles and log.
 - :func:`~runtraj.execution.worker.run_stages` runs the stages of the variants
@@ -90,6 +94,25 @@ Kubernetes indexed Jobs
    runtraj.execution.inputs.push
    runtraj.execution.inputs.pull
    runtraj.execution.inputs.hash_inputs
+
+Running every hour
+------------------
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.execution.kubernetes.schedule_job
+   runtraj.execution.kubernetes.cron_job_manifest
+   runtraj.execution.kubernetes.cron_job_name
+   runtraj.execution.schedule.add_due_releases
+   runtraj.execution.schedule.due_hours
+   runtraj.execution.schedule.read_sites
+   runtraj.execution.schedule.hourly_releases
+   runtraj.execution.schedule.check_now
+   runtraj.execution.inputs.lock
+   runtraj.execution.inputs.get
+   runtraj.execution.inputs.put
 
 Transport model
 ----------------

@@ -90,7 +90,8 @@ src/runtraj/
   particles/      the particle table and files, release heights, the particles.runtraj accessor
   models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model
     hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
-  execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker
+  execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker,
+                  kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
   sampling.py     sample_field: a gridded field read at points
   meteorology.py, spatial.py, visualization.py, exceptions.py, _paths.py

@@ -14,6 +14,8 @@ Examples::
     runtraj run --releases ids.txt     # run only the releases listed in ids.txt
     runtraj submit                      # submit a Slurm job array and return
     runtraj submit --backend kubernetes # make a Kubernetes indexed Job and return
+    runtraj schedule                    # run every hour on Kubernetes, for the sites in sites.csv
+    runtraj tick                        # add the hours now due for the sites, and run them
     runtraj status                      # count finished simulations; list the settings folders
 
 ``runtraj run`` exits with 0 when every simulation it ran is complete, 1 when
@@ -53,6 +55,7 @@ import threading
 import traceback
 from collections import Counter
 from collections.abc import Iterable, Iterator
+from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -65,8 +68,10 @@ from typer.core import TyperGroup
 from runtraj._paths import is_url
 from runtraj._transient import is_transient
 from runtraj.exceptions import MissingClass, WorkerDied
+from runtraj.execution import schedule as schedules
 from runtraj.execution.config import ExecutionConfig, check_url
 from runtraj.execution.inputs import hash_inputs, pull
+from runtraj.execution.kubernetes import schedule_job
 from runtraj.execution.runner import pending, resolve_compute_root
 from runtraj.project import STATES, Project
 
@@ -335,8 +340,8 @@ def _local_inputs(project: str | None) -> str | None:
     """
     Return the project folder to open: *project*, or a copy of its inputs when it is a URL.
 
-    A URL's inputs (``config.yaml``, ``releases.csv``, ``tables/``) are
-    copied to ``$TMPDIR/runtraj-inputs/<name>``. Exits with 2 when there is
+    A URL's inputs (``config.yaml``, ``releases.csv``, ``tables/``,
+    ``sites.csv``) are copied to ``$TMPDIR/runtraj-inputs/<name>``. Exits with 2 when there is
     no project there, and with 3 when the URL cannot be read, which a retry
     may get past.
     """
@@ -626,6 +631,16 @@ def run(
         execution_file=execution,
         output=output,
     )
+    _run_and_exit(opened, options, release_ids, share)
+
+
+def _run_and_exit(
+    opened: Project,
+    options: dict[str, Any],
+    release_ids: list[str] | None,
+    share: tuple[int, int] | None,
+) -> NoReturn:
+    """Run the project's unfinished simulations, print what ran, and exit with the run's code."""
     try:
         table = opened.run(releases=release_ids, task=share, **options)
     except ValueError as error:
@@ -707,6 +722,107 @@ def submit(
         typer.echo(f"Submitted job: {job_id}")
     else:
         _print_status(opened)
+
+
+_DELAY = typer.Option(
+    schedules.DELAY_HOURS,
+    "--delay",
+    min=0,
+    help="Hours before an hour gets its releases: how long its met takes to appear.",
+)
+
+
+_NOW = typer.Option(
+    None,
+    "--now",
+    formats=["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M"],
+    help="Act as if it were this time, in UTC, to fill in a past day. Defaults to now.",
+)
+
+
+@app.command()
+def schedule(
+    project: str | None = _PROJECT_ARG,
+    delay: int = _DELAY,
+    output: str | None = _OUTPUT,
+) -> None:
+    """
+    Run a project every hour on Kubernetes, for the sites in its sites.csv.
+
+    Makes a CronJob, with the settings of execution's kubernetes block in
+    config.yaml, whose one pod an hour runs runtraj tick: it adds a release
+    at each site for each hour of the last day that is at least --delay
+    hours old, then runs what is not finished. With inputs set,
+    config.yaml, sites.csv and tables/ are copied there, and releases.csv
+    while the bucket has none. Scheduling a project again replaces its
+    CronJob.
+    """
+    opened = Project(_resolve_project(project), output=output)
+    _require_inputs(opened)
+    try:
+        execution = ExecutionConfig.model_validate(
+            {
+                **opened.config.execution.model_dump(exclude_unset=True),
+                "backend": "kubernetes",
+            }
+        )
+    except ValidationError as error:
+        _fail(_settings_problems(error))
+    try:
+        name = schedule_job(opened, execution, delay=delay)
+    except (FileNotFoundError, ValueError, RuntimeError) as error:
+        _fail(str(error))
+    typer.echo(f"Scheduled: {name}  (every hour at :15 UTC, {delay} h behind)")
+
+
+@app.command()
+def tick(
+    project: str | None = _PROJECT_ARG,
+    delay: int = _DELAY,
+    now: datetime | None = _NOW,
+    cpus: int | None = _CPUS,
+    compute_root: str | None = _COMPUTE_ROOT,
+    output: str | None = _OUTPUT,
+) -> None:
+    """
+    Add the hours now due for the sites in sites.csv, then run them here.
+
+    What each hour's pod of runtraj schedule runs. It adds a release at each
+    site for each hour of the last day that is at least --delay hours old,
+    and reaches back further, up to a week more, to close a gap after the
+    newest hour releases.csv holds. releases.csv is locked while it is
+    added to and, for a project on a bucket, copied back there. Then those
+    releases run in this process, as runtraj run --releases would, and the
+    exit codes are runtraj run's. A bucket that cannot be read exits with 3.
+    """
+    try:
+        moment = schedules.check_now(now)
+    except ValueError as error:
+        _fail(str(error))
+    directory = _resolve_project(_local_inputs(project))
+    # releases.csv is locked, and added to, where the inputs are: the bucket or this folder.
+    location = project if project is not None and is_url(project) else directory
+    try:
+        release_ids = schedules.add_due_releases(
+            location, directory, now=moment, delay=delay
+        )
+    except (FileNotFoundError, ValueError) as error:
+        _fail(str(error))
+    except OSError as error:
+        typer.echo(f"runtraj exits with 3: {error}", err=True)
+        raise typer.Exit(code=EXIT_INTERRUPTED) from None
+    opened, options = _start(
+        directory,
+        backend="local",
+        n_workers=None,
+        cpus=cpus,
+        no_skip=False,
+        compute_root=compute_root,
+        waits=True,
+        release_ids=release_ids,
+        output=output,
+    )
+    _run_and_exit(opened, options, release_ids, None)
 
 
 @app.command()

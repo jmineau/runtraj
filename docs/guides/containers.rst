@@ -106,6 +106,71 @@ before it (:ref:`fetch-once`) when the pods share the met volume.
 Afterwards ``runtraj status`` counts the project's simulations, as for any
 run.
 
+.. _kubernetes-schedule:
+
+Running every hour
+------------------
+
+A project for fixed sites, such as towers, can run on its own every hour:
+each hour gets a release at each site once its met is out. List the sites in
+``sites.csv`` in the project folder, one row each:
+
+.. code-block:: text
+
+   name,longitude,latitude,altitude,altitude_ref
+   tower,-111.8476,40.7663,35,agl
+   valley,-112.1155,40.5385,5,
+
+``longitude``, ``latitude`` and ``altitude`` are required; ``altitude_ref``
+(``agl``, the default, or ``msl``) is optional, and other columns, such as a
+name, are ignored. The project needs no ``releases.csv`` to start. Then,
+with the same ``kubernetes`` block as for ``runtraj submit``:
+
+.. code-block:: bash
+
+   runtraj schedule /project
+
+It makes a Kubernetes CronJob, with ``kubectl apply``, and prints its name.
+At 15 minutes past each hour (UTC) the CronJob starts one pod, which runs
+``runtraj tick``. A tick
+
+1. adds a release at each site for each hour of the last day that is at
+   least ``--delay`` hours old (8 by default), and reaches back up to a week
+   further to close a gap after the newest hour ``releases.csv`` holds, as
+   after an outage;
+2. writes ``releases.csv`` back, to the bucket when the inputs are on one;
+3. runs those releases in the pod, as ``runtraj run --releases`` would, and
+   exits with ``runtraj run``'s code.
+
+Releases whose results exist are skipped, so each tick runs the new hour
+and any of the last day that failed before, such as an hour whose met was
+not out yet. We recommend the default delay for HRRR: NOAA's archive posts
+each 6-hour file about 40 minutes after its last hour, and a run also needs
+the hour after its release, so an hour's met is all there about 7 hours 40
+minutes later.
+
+With ``inputs`` set, ``runtraj schedule`` copies ``config.yaml``,
+``sites.csv`` and ``tables/`` there, and ``releases.csv`` only while the
+bucket has none: from then on the bucket's copy is the one each hour adds
+to, so read it there. Without ``inputs`` the pods open the project folder
+at its path here, as for ``runtraj submit``. A tick locks ``releases.csv``
+(a file ``.releases.csv.lock`` beside it) while it adds to it, so a tick
+run by hand to fill in a past day waits for the hourly one rather than
+writing over its hours:
+
+.. code-block:: bash
+
+   runtraj tick s3://bucket/projects/my_project --now 2026-10-01T00:00
+
+``--now`` is the time to act as if it were, in UTC; a time later than the
+clock is refused. Each hour's pod has 45 minutes, unless
+``active_deadline_seconds`` gives it another limit, and a pod still running
+holds back the next. Scheduling the project again, after editing
+``sites.csv`` or the ``kubernetes`` block, replaces its CronJob, which is
+named for the project and where its inputs are. The manifest is kept in
+``_kubernetes/<date_time>_<id>/cronjob.yaml`` in the project;
+``kubectl delete cronjob <name>`` stops the schedule.
+
 .. _fetch-once:
 
 Fetching the meteorology once

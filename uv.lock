@@ -3883,7 +3883,7 @@ requires-dist = [
     { name = "arlmet", specifier = ">=0.1.0b12" },
     { name = "arlmet", extras = ["archives"], marker = "extra == 'download'", specifier = ">=0.1.0b12" },
     { name = "cartopy", marker = "extra == 'visualization'", specifier = ">=0.26" },
-    { name = "fsspec", specifier = ">=2024.5.0" },
+    { name = "fsspec", specifier = ">=2024.12.0" },
     { name = "matplotlib", marker = "extra == 'visualization'", specifier = ">=3.7" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.1" },
