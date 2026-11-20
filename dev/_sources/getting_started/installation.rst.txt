@@ -4,11 +4,11 @@ Installation
 Install runtraj
 ---------------
 
-runtraj has no release on PyPI yet. Install it from its repository:
+Install runtraj from PyPI:
 
 .. code-block:: bash
 
-   pip install "runtraj[visualization] @ git+https://github.com/jmineau/runtraj"
+   pip install "runtraj[visualization]"
 
 This installs runtraj, the ``runtraj`` command-line tool, and matplotlib and
 cartopy for plotting maps. Check that it worked:
