@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=baa5b07c"></script>
+    <script src="../../../_static/documentation_options.js?v=0a3c24d6"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev15+ge9e616d5d" />
+  <meta name="docsearch:version" content="0.1.0a3.dev16+g9eff8ada9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -494,8 +494,10 @@
 <span class="sd">    HYSPLIT spreads column particles evenly over height, each placed at</span>
 <span class="sd">    random within its own slab, one slab per particle. Each release height therefore</span>
 <span class="sd">    stands for the slab centered on it. Slab edges sit midway between</span>
-<span class="sd">    neighboring release pressures, the ground closes the bottom slab, and the</span>
-<span class="sd">    top slab extends above its release height as far as it does below.</span>
+<span class="sd">    neighboring release pressures, the surface pressure closes the bottom</span>
+<span class="sd">    slab, and the top slab extends above its release height as far as it</span>
+<span class="sd">    does below. Each slab's weight is its pressure depth over the surface</span>
+<span class="sd">    pressure.</span>
 
 <span class="sd">    A multipoint release releases several particles from each point. Those</span>
 <span class="sd">    particles share one release height, so the point's slab is split evenly</span>
@@ -509,7 +511,11 @@
 <span class="sd">        first-step height is used. An MSL release also needs ``zsfc``, the</span>
 <span class="sd">        terrain height (m above sea level).</span>
 <span class="sd">    surface_pressure : float, optional</span>
-<span class="sd">        Surface pressure in hPa. Defaults to the fitted curve at the ground.</span>
+<span class="sd">        Surface pressure in hPa, such as a satellite retrieval's. It closes</span>
+<span class="sd">        the bottom slab and divides every slab's depth, so a higher value</span>
+<span class="sd">        gives the bottom slab more weight and the others less. Defaults to</span>
+<span class="sd">        the fitted curve at the ground. It must not be below the pressure at</span>
+<span class="sd">        the lowest release height.</span>
 <span class="sd">    altitude_ref : {"agl", "msl"}, default "agl"</span>
 <span class="sd">        Vertical reference of the release heights, ``release.altitude_ref``.</span>
 <span class="sd">        With ``"msl"`` the fit is made against ``zagl + zsfc`` so that it can</span>
@@ -519,7 +525,8 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    xpres : pandas.Series</span>
-<span class="sd">        Release pressure of each particle in hPa, indexed by ``particle``.</span>
+<span class="sd">        Release pressure of each particle in hPa, from the fitted curve,</span>
+<span class="sd">        indexed by ``particle``.</span>
 <span class="sd">    pwf : pandas.Series</span>
 <span class="sd">        Pressure weight of each particle, indexed by ``particle``. The weights</span>
 <span class="sd">        sum to the fraction of the atmosphere's mass inside the column,</span>
@@ -580,19 +587,25 @@
     <span class="k">if</span> <span class="n">zsfc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">at_bottom</span> <span class="o">=</span> <span class="n">z_release</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">==</span> <span class="n">heights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">z_ground</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">zsfc</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[</span><span class="n">at_bottom</span><span class="p">]))</span>
+    <span class="n">xpres</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">z_release</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()),</span> <span class="n">index</span><span class="o">=</span><span class="n">z_release</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="c1"># One slab per distinct release height, surface upward, shared evenly by</span>
+    <span class="c1"># the particles released at that height.</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">heights</span><span class="p">)</span>
     <span class="n">p_sfc</span> <span class="o">=</span> <span class="p">(</span>
         <span class="nb">float</span><span class="p">(</span><span class="n">surface_pressure</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">surface_pressure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">z_ground</span><span class="p">))</span>
     <span class="p">)</span>
-
-    <span class="n">xpres</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
-        <span class="n">p_sfc</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">z_release</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">-</span> <span class="n">z_ground</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">z_release</span><span class="o">.</span><span class="n">index</span>
-    <span class="p">)</span>
-
-    <span class="c1"># One slab per distinct release height, surface upward, shared evenly by</span>
-    <span class="c1"># the particles released at that height.</span>
-    <span class="n">levels</span> <span class="o">=</span> <span class="n">p_sfc</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">heights</span> <span class="o">-</span> <span class="n">z_ground</span><span class="p">))</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">surface_pressure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">p_sfc</span> <span class="o">&lt;</span> <span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">p_sfc</span><span class="p">,</span> <span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"surface_pressure </span><span class="si">{</span><span class="n">p_sfc</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> hPa is below the pressure at the "</span>
+            <span class="sa">f</span><span class="s2">"lowest release height, </span><span class="si">{</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hPa. Give it in hPa."</span>
+        <span class="p">)</span>
     <span class="n">mids</span> <span class="o">=</span> <span class="p">(</span><span class="n">levels</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">levels</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mf">2.0</span>
     <span class="n">lower_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="n">p_sfc</span><span class="p">],</span> <span class="n">mids</span><span class="p">))</span>
     <span class="n">upper_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">mids</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">levels</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]))</span>
@@ -630,9 +643,11 @@
     <span class="n">surface_pressure</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">le</span><span class="o">=</span><span class="mi">1100</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Surface pressure at the bottom of the column, in hPa. Unset "</span>
-            <span class="s2">"estimates it from the particles."</span>
+            <span class="s2">"Surface pressure at the bottom of the column, in hPa, such as a "</span>
+            <span class="s2">"satellite retrieval's. It closes the bottom slab and divides "</span>
+            <span class="s2">"each slab's depth. Unset estimates it from the particles."</span>
         <span class="p">),</span>
     <span class="p">)</span>
 

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=baa5b07c"></script>
+    <script src="../../_static/documentation_options.js?v=0a3c24d6"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev15+ge9e616d5d" />
+  <meta name="docsearch:version" content="0.1.0a3.dev16+g9eff8ada9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -838,8 +838,10 @@ height represents.</p>
 <p>HYSPLIT spreads column particles evenly over height, each placed at
 random within its own slab, one slab per particle. Each release height therefore
 stands for the slab centered on it. Slab edges sit midway between
-neighboring release pressures, the ground closes the bottom slab, and the
-top slab extends above its release height as far as it does below.</p>
+neighboring release pressures, the surface pressure closes the bottom
+slab, and the top slab extends above its release height as far as it
+does below. Each slab’s weight is its pressure depth over the surface
+pressure.</p>
 <p>A multipoint release releases several particles from each point. Those
 particles share one release height, so the point’s slab is split evenly
 among them.</p>
@@ -850,7 +852,11 @@ among them.</p>
 optionally <code class="docutils literal notranslate"><span class="pre">release_height</span></code>, the release height (m). Without <code class="docutils literal notranslate"><span class="pre">release_height</span></code> the
 first-step height is used. An MSL release also needs <code class="docutils literal notranslate"><span class="pre">zsfc</span></code>, the
 terrain height (m above sea level).</p></li>
-<li><p><strong>surface_pressure</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Surface pressure in hPa. Defaults to the fitted curve at the ground.</p></li>
+<li><p><strong>surface_pressure</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Surface pressure in hPa, such as a satellite retrieval’s. It closes
+the bottom slab and divides every slab’s depth, so a higher value
+gives the bottom slab more weight and the others less. Defaults to
+the fitted curve at the ground. It must not be below the pressure at
+the lowest release height.</p></li>
 <li><p><strong>altitude_ref</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code></a>[<span class="highlight sphinx_autodoc_typehints-value"><code class="docutils literal notranslate"><span class="s1"><span class="pre">'agl'</span></span></code></span>, <span class="highlight sphinx_autodoc_typehints-value"><code class="docutils literal notranslate"><span class="s1"><span class="pre">'msl'</span></span></code></span>]</span>) – Vertical reference of the release heights, <code class="docutils literal notranslate"><span class="pre">release.altitude_ref</span></code>.
 With <code class="docutils literal notranslate"><span class="pre">&quot;msl&quot;</span></code> the fit is made against <code class="docutils literal notranslate"><span class="pre">zagl</span> <span class="pre">+</span> <span class="pre">zsfc</span></code> so that it can
 be evaluated at the release heights, and the ground closing the
@@ -862,7 +868,8 @@ bottom slab is the terrain under the lowest release height.</p></li>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
-<li><p><strong>xpres</strong> (<em>pandas.Series</em>) – Release pressure of each particle in hPa, indexed by <code class="docutils literal notranslate"><span class="pre">particle</span></code>.</p></li>
+<li><p><strong>xpres</strong> (<em>pandas.Series</em>) – Release pressure of each particle in hPa, from the fitted curve,
+indexed by <code class="docutils literal notranslate"><span class="pre">particle</span></code>.</p></li>
 <li><p><strong>pwf</strong> (<em>pandas.Series</em>) – Pressure weight of each particle, indexed by <code class="docutils literal notranslate"><span class="pre">particle</span></code>. The weights
 sum to the fraction of the atmosphere’s mass inside the column,
 <code class="docutils literal notranslate"><span class="pre">(p_sfc</span> <span class="pre">-</span> <span class="pre">p_top)</span> <span class="pre">/</span> <span class="pre">p_sfc</span></code>. The rest lies above the column top,
