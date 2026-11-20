@@ -121,7 +121,8 @@ rest of that file, and FLEXPART's other input files, for each release.
 .. config-model:: runtraj.models.flexpart.FlexpartConfig
 
 FLEXPART reads GRIB files, not ARL: a met for it is a directory of GFS or
-ERA5 files, found by their valid times.
+ERA5 files, found by their valid times. :doc:`flexpart` says how to build
+FLEXPART, which met to use, and what its particles hold.
 
 .. config-model:: runtraj.models.flexpart.FlexpartMetConfig
 
