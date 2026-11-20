@@ -328,3 +328,21 @@ def test_a_file_stamp_says_which_folder_and_version_made_a_file():
     }
     assert file_stamp("abc123", 2)[b"runtraj:realization"] == b"2"
     assert runtraj_version() == runtraj.__version__
+
+
+@pytest.mark.parametrize(
+    ("as_float", "as_int"),
+    [
+        ({"numpar": 1000.0}, {"numpar": 1000}),
+        ({"levels": [0.0, 50.0]}, {"levels": [0, 50]}),
+        ({"block": {"n_hours": -24.0}}, {"block": {"n_hours": -24}}),
+    ],
+)
+def test_a_whole_number_float_and_its_integer_name_one_settings_folder(
+    as_float, as_int
+):
+    assert settings_hash(as_float) == settings_hash(as_int)
+
+
+def test_a_float_with_a_fraction_names_its_own_settings_folder():
+    assert settings_hash({"numpar": 1000.5}) != settings_hash({"numpar": 1000})
