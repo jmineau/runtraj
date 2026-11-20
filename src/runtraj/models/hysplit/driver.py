@@ -264,11 +264,12 @@ def setup_seed(seed: int) -> int:
     reinitializes only from a negative state, and every state of -1 or more
     gives the same stream. Writing ``-(seed + 1)`` puts the state at
     ``-(seed + 2)``. That is negative, different for each seed, and never
-    the unseeded default (``SEED = 0``). A patched HYSPLIT that uses
-    ``SEED`` directly maps a negative ``SEED`` to the same state, so the
-    value works with both builds. :class:`~runtraj.models.hysplit.HysplitConfig`
-    refuses a negative seed, which this mapping would give the same ``SEED``
-    as its positive.
+    the unseeded default (``SEED = 0``).
+    :class:`~runtraj.models.hysplit.HysplitConfig` refuses a negative seed,
+    which this mapping would give the same ``SEED`` as its positive.
+
+    This mapping is for HYSPLIT before 5.5, which ignores a positive
+    ``SEED``. It goes when 5.5 is the minimum version.
 
     Examples
     --------
