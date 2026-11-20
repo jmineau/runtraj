@@ -1,0 +1,6 @@
+runtraj.ExecutionConfig.cpus
+============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: ExecutionConfig.cpus

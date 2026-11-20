@@ -1,0 +1,6 @@
+runtraj.Simulation.kept\_workdir
+================================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.kept_workdir

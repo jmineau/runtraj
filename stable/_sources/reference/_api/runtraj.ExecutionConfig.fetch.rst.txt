@@ -1,0 +1,6 @@
+runtraj.ExecutionConfig.fetch
+=============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: ExecutionConfig.fetch

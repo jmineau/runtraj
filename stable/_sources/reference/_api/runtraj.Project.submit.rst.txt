@@ -1,0 +1,5 @@
+runtraj.Project.submit
+======================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.submit

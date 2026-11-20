@@ -1,0 +1,6 @@
+runtraj.ColumnRelease.location\_id
+==================================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: ColumnRelease.location_id

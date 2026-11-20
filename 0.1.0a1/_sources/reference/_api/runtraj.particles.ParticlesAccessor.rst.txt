@@ -1,0 +1,40 @@
+﻿runtraj.particles.ParticlesAccessor
+===================================
+
+.. currentmodule:: runtraj.particles
+
+
+
+
+
+
+.. class-signature:: runtraj.particles.ParticlesAccessor
+
+
+.. class-parameters:: runtraj.particles.ParticlesAccessor
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~ParticlesAccessor.plot
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~ParticlesAccessor.endpoints
+   ~ParticlesAccessor.grid_exits
+   ~ParticlesAccessor.to_cf_trajectories
+
+
+

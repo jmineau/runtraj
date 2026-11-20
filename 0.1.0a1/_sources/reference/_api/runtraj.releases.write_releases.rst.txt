@@ -1,0 +1,6 @@
+﻿runtraj.releases.write\_releases
+================================
+
+.. currentmodule:: runtraj.releases
+
+.. autofunction:: write_releases

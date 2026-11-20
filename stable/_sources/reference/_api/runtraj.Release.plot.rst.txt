@@ -1,0 +1,6 @@
+runtraj.Release.plot
+====================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Release.plot

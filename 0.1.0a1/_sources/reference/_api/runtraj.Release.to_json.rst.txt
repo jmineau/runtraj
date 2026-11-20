@@ -1,0 +1,5 @@
+runtraj.Release.to\_json
+========================
+
+.. currentmodule:: runtraj
+.. automethod:: Release.to_json

@@ -1,0 +1,6 @@
+runtraj.Project.name
+====================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.name

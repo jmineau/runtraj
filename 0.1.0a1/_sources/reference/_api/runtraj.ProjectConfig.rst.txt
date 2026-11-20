@@ -1,0 +1,36 @@
+﻿runtraj.ProjectConfig
+=====================
+
+.. currentmodule:: runtraj
+
+
+
+
+
+
+.. class-signature:: runtraj.ProjectConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.ProjectConfig
+
+
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~ProjectConfig.from_yaml
+   ~ProjectConfig.met_config
+   ~ProjectConfig.model_post_init
+   ~ProjectConfig.resolve
+   ~ProjectConfig.to_yaml
+
+
+

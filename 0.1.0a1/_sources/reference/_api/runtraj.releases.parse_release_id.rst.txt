@@ -1,0 +1,6 @@
+﻿runtraj.releases.parse\_release\_id
+===================================
+
+.. currentmodule:: runtraj.releases
+
+.. autofunction:: parse_release_id

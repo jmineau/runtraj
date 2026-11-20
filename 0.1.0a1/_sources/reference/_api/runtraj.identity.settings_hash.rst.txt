@@ -1,0 +1,6 @@
+﻿runtraj.identity.settings\_hash
+===============================
+
+.. currentmodule:: runtraj.identity
+
+.. autofunction:: settings_hash

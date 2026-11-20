@@ -1,0 +1,5 @@
+runtraj.Project.init
+====================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.init

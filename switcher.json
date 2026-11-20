@@ -3,5 +3,11 @@
     "name": "dev",
     "version": "dev",
     "url": "https://jmineau.github.io/runtraj/dev/"
+  },
+  {
+    "name": "0.1.0a1 (latest)",
+    "version": "0.1.0a1",
+    "url": "https://jmineau.github.io/runtraj/stable/",
+    "preferred": true
   }
 ]

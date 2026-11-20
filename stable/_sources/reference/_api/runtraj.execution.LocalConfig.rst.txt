@@ -1,0 +1,24 @@
+﻿runtraj.execution.LocalConfig
+=============================
+
+.. currentmodule:: runtraj.execution
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.LocalConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.execution.LocalConfig
+
+
+
+
+
+
+

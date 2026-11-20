@@ -1,0 +1,6 @@
+runtraj.Release.points
+======================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Release.points

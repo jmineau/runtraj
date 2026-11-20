@@ -1,0 +1,5 @@
+runtraj.Project.add\_releases
+=============================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.add_releases

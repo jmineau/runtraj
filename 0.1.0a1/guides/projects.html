@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Projects And Variants &#8212; runtraj 0.1.0a1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=a2d71c7f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../_static/documentation_options.js?v=49b5e7b8"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/projects';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Releases" href="releases.html" />
+    <link rel="prev" title="User Guide" href="index.html" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.0a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="runtraj">
+  <meta property="og:title" content="Projects And Variants">
+  <meta property="og:description" content="Run particle dispersion models at scale.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">runtraj is in alpha: names and options may change between releases.</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.svg" class="logo__image only-light" alt="runtraj"/>
+    <img src="../_static/logo_dark.svg" class="logo__image only-dark pst-js-only" alt="runtraj"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Setting up a project</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Projects And Variants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meteorology.html">Meteorology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="choosing_settings.html">Choosing Settings</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Running</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="output.html">The Output Directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particles.html">Reading And Plotting Particles</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">HYSPLIT</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="hysplit_users.html">runtraj For HYSPLIT Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hysplit_build.html">Your Own HYSPLIT Build And Data Tables</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Projects And Variants</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="projects-and-variants">
+<h1>Projects And Variants<a class="headerlink" href="#projects-and-variants" title="Link to this heading">#</a></h1>
+<p>A <a class="reference internal" href="../getting_started/glossary.html#term-project"><span class="xref std std-term">project</span></a> is a folder with your settings and your releases. Every
+<a class="reference internal" href="../getting_started/glossary.html#term-release"><span class="xref std std-term">release</span></a> runs once under each <a class="reference internal" href="../getting_started/glossary.html#term-variant"><span class="xref std std-term">variant</span></a>, a named set of
+settings, and the results go to an <a class="reference internal" href="../getting_started/glossary.html#term-output-directory"><span class="xref std std-term">output directory</span></a> the settings
+name. We keep one project per study: a project reruns only what is missing
+and never overwrites a result, so you can add releases and try other
+settings as the study grows. Most projects need only the settings below,
+and <a class="reference internal" href="../reference/configuration.html"><span class="doc">Configuration</span></a> lists every option.</p>
+<section id="the-project-folder">
+<h2>The project folder<a class="headerlink" href="#the-project-folder" title="Link to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my_project/
+  config.yaml        # your settings: meteorology, transport model, variants
+  releases.csv       # your releases: where and when particles start
+  tables/            # other inputs a stage reads (project.add_table)
+</pre></div>
+</div>
+<p>Both files are yours to edit. runtraj never rewrites <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and
+only appends to <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>. <code class="docutils literal notranslate"><span class="pre">project.add_table(&quot;name&quot;,</span> <span class="pre">table)</span></code>
+writes <code class="docutils literal notranslate"><span class="pre">tables/name.parquet</span></code> for a stage that reads a table. A Slurm run
+also makes a <code class="docutils literal notranslate"><span class="pre">_slurm/</span></code> folder with its job scripts and logs
+(<a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>).</p>
+</section>
+<section id="a-typical-config-yaml">
+<h2>A typical config.yaml<a class="headerlink" href="#a-typical-config-yaml" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">mets</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hrrr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/data/arl/hrrr</span>
+
+<span class="nt">models</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hysplit</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">n_hours</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-24</span>
+<span class="w">    </span><span class="nt">numpar</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="w">    </span><span class="nt">krand</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">    </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+
+<span class="nt">variants</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hrrr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w">            </span><span class="c1"># every release runs once, with these settings</span>
+</pre></div>
+</div>
+<p>The file is made of blocks, and no setting sits outside one:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">mets</span></code></dt><dd><p>Your meteorology, by name (<a class="reference internal" href="meteorology.html"><span class="doc">Meteorology</span></a>). <code class="docutils literal notranslate"><span class="pre">hrrr</span></code> here is a name
+you choose for the folder of met files.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">models</span></code></dt><dd><p>The transport model and its settings. <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> is the one built in.
+It needs at least <code class="docutils literal notranslate"><span class="pre">n_hours</span></code>; every other setting has a default.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">variants</span></code></dt><dd><p>What runs (<a class="reference internal" href="#variants">Variants</a>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">stages</span></code></dt><dd><p>What is made from each simulation’s particles after the run, if
+anything (<a class="reference internal" href="#stages">Stages</a>). Without it, a project makes particles only.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">execution</span></code></dt><dd><p>Where to run. Leave it out to run on your own computer (<a class="reference internal" href="running.html"><span class="doc">Running</span></a>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">output</span></code></dt><dd><p>Where results go, <code class="docutils literal notranslate"><span class="pre">output</span></code> inside the project folder by default
+(<a class="reference internal" href="output.html"><span class="doc">The Output Directory</span></a>).</p>
+</dd>
+</dl>
+<p>A setting written at the top of the file is refused with a message that
+names the block it belongs in. A key runtraj does not know is an error that
+names the nearest setting, so a typo such as <code class="docutils literal notranslate"><span class="pre">numpr</span></code> is caught when the
+file loads, before anything runs.</p>
+<section id="the-same-project-in-python">
+<h3>The same project in Python<a class="headerlink" href="#the-same-project-in-python" title="Link to this heading">#</a></h3>
+<p><a class="reference internal" href="../reference/_api/runtraj.Project.init.html#runtraj.Project.init" title="runtraj.Project.init"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.init</span></code></a> makes the folder, writes the
+blocks you pass it to <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and your releases to
+<code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>. The blocks are plain dictionaries:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">runtraj</span>
+
+<span class="n">releases</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">runtraj</span><span class="o">.</span><span class="n">PointRelease</span><span class="p">(</span>
+        <span class="n">time</span><span class="o">=</span><span class="sa">f</span><span class="s2">"2021-01-15 </span><span class="si">{</span><span class="n">hour</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:00"</span><span class="p">,</span>   <span class="c1"># UTC</span>
+        <span class="n">longitude</span><span class="o">=-</span><span class="mf">111.848</span><span class="p">,</span>
+        <span class="n">latitude</span><span class="o">=</span><span class="mf">40.766</span><span class="p">,</span>
+        <span class="n">altitude</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>                       <span class="c1"># meters above ground</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">hour</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">project</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">Project</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
+    <span class="s2">"./my_project"</span><span class="p">,</span>
+    <span class="n">releases</span><span class="o">=</span><span class="n">releases</span><span class="p">,</span>
+    <span class="n">mets</span><span class="o">=</span><span class="p">{</span><span class="s2">"hrrr"</span><span class="p">:</span> <span class="s2">"/data/arl/hrrr"</span><span class="p">},</span>
+    <span class="n">models</span><span class="o">=</span><span class="p">{</span><span class="s2">"hysplit"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"n_hours"</span><span class="p">:</span> <span class="o">-</span><span class="mi">24</span><span class="p">,</span> <span class="s2">"numpar"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> <span class="s2">"krand"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">:</span> <span class="mi">42</span><span class="p">}},</span>
+    <span class="n">variants</span><span class="o">=</span><span class="p">{</span><span class="s2">"hrrr"</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">"hrrr-zi08"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"ziscale"</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">}},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Project.init</span></code> runs once per project: it stops with a <code class="docutils literal notranslate"><span class="pre">FileExistsError</span></code>
+if the folder already has a <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>. <code class="docutils literal notranslate"><span class="pre">project.variants</span></code> holds each
+variant with its settings in full, the model block merged with the
+variant’s own, checked by the transport model.</p>
+</section>
+</section>
+<section id="the-settings-most-people-change">
+<h2>The settings most people change<a class="headerlink" href="#the-settings-most-people-change" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 48.0%" />
+<col style="width: 15.0%" />
+<col style="width: 15.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting, under <code class="docutils literal notranslate"><span class="pre">models:</span> <span class="pre">hysplit:</span></code></p></th>
+<th class="head"><p>What it does</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>We use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_hours</span></code></p></td>
+<td><p>How many hours to follow the particles. Negative runs backward in
+time, from a measurement toward its sources. Positive runs forward,
+from a source toward where the air goes.</p></td>
+<td><p>none</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-24</span></code> to <code class="docutils literal notranslate"><span class="pre">-72</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">numpar</span></code></p></td>
+<td><p>Particles released per simulation. More particles sample the
+turbulence better and take longer.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2500</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1000</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">krand</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
+<td><p>How HYSPLIT draws its random numbers. <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">2</span></code> with a <code class="docutils literal notranslate"><span class="pre">seed</span></code>
+makes the particles the same on every run.</p></td>
+<td><p>chosen by HYSPLIT</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code> and <code class="docutils literal notranslate"><span class="pre">42</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="choosing_settings.html"><span class="doc">Choosing Settings</span></a> says how we choose each for a study, and what
+HYSPLIT chooses for you when you leave the others out.</p>
+</section>
+<section id="variants">
+<h2>Variants<a class="headerlink" href="#variants" title="Link to this heading">#</a></h2>
+<p>Every release runs once per variant. A variant has a name, a met, and any
+settings that differ from the model’s block, which are the variant’s
+<a class="reference internal" href="../getting_started/glossary.html#term-defaults"><span class="xref std std-term">defaults</span></a>. Only the variants listed run, and an entry with no
+overrides (<code class="docutils literal notranslate"><span class="pre">hrrr:</span> <span class="pre">{}</span></code>) runs the model’s block unchanged. Add entries to
+run the same releases under other settings:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">variants</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hrrr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w">                     </span><span class="c1"># the model block, with the hrrr met</span>
+<span class="w">  </span><span class="nt">hrrr-zi08</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">ziscale</span><span class="p">:</span><span class="w"> </span><span class="nv">0.8</span><span class="p p-Indicator">}</span><span class="w">    </span><span class="c1"># mixed-layer height times 0.8</span>
+<span class="w">  </span><span class="nt">hrrr-np3k</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">numpar</span><span class="p">:</span><span class="w"> </span><span class="nv">3000</span><span class="p p-Indicator">}</span><span class="w">    </span><span class="c1"># three times the particles</span>
+</pre></div>
+</div>
+<p>One release under one variant is a <a class="reference internal" href="../getting_started/glossary.html#term-simulation"><span class="xref std std-term">simulation</span></a>, so 100 releases and
+three variants make 300 simulations. A variant may set:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">met</span></code></dt><dd><p>Which met to use. A variant named after a met, as <code class="docutils literal notranslate"><span class="pre">hrrr</span></code> is here,
+uses that met; any other name needs <code class="docutils literal notranslate"><span class="pre">met:</span> <span class="pre">hrrr</span></code> when <code class="docutils literal notranslate"><span class="pre">mets</span></code> has more
+than one entry. The names in these examples start with the met’s only
+by habit.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">realizations</span></code></dt><dd><p>Run the variant <code class="docutils literal notranslate"><span class="pre">N</span></code> times, as realizations <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">-</span> <span class="pre">1</span></code> of one
+ensemble, each with its own random numbers. With <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">2</span></code> and a
+<code class="docutils literal notranslate"><span class="pre">seed</span></code>, realization <code class="docutils literal notranslate"><span class="pre">k</span></code> runs with <code class="docutils literal notranslate"><span class="pre">seed</span> <span class="pre">+</span> <span class="pre">k</span></code>, so the ensemble can
+be made again. Raising <code class="docutils literal notranslate"><span class="pre">N</span></code> later only adds realizations.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">model</span></code></dt><dd><p>Which block under <code class="docutils literal notranslate"><span class="pre">models</span></code> it runs. You need it only when <code class="docutils literal notranslate"><span class="pre">models</span></code>
+has more than one entry.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">stages</span></code></dt><dd><p>The settings of a stage this variant changes, under the stage’s name,
+or null for a variant without that stage (<a class="reference internal" href="#stages">Stages</a>).</p>
+</dd>
+<dt>Any other key</dt><dd><p>A setting of the variant’s transport model (<code class="docutils literal notranslate"><span class="pre">numpar</span></code>, <code class="docutils literal notranslate"><span class="pre">ziscale</span></code>,
+<code class="docutils literal notranslate"><span class="pre">n_hours</span></code>), which replaces the model block’s value for this variant
+only.</p>
+</dd>
+</dl>
+<p>Variant names may use lowercase letters, digits, and hyphens, and must
+start with a letter or digit, because they become folder names. Met names
+follow the same rule.</p>
+</section>
+<section id="stages">
+<h2>Stages<a class="headerlink" href="#stages" title="Link to this heading">#</a></h2>
+<p>Most projects have no stage: they make particles, which you then read
+(<a class="reference internal" href="particles.html"><span class="doc">Reading And Plotting Particles</span></a>). A <a class="reference internal" href="../getting_started/glossary.html#term-stage"><span class="xref std std-term">stage</span></a> makes one more file per simulation from
+its particles, after the transport model runs. runtraj has none built in: a
+stage comes from another package, and <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> names its class by
+import path, in a block named for the stage. PYSTILT’s footprint is an
+example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">stages</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">footprint</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">class</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stilt.footprint.FootprintStage</span>
+<span class="w">    </span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">xmin</span><span class="p">:</span><span class="w"> </span><span class="nv">-113.0</span><span class="p p-Indicator">,</span><span class="nt"> xmax</span><span class="p">:</span><span class="w"> </span><span class="nv">-110.5</span><span class="p p-Indicator">,</span><span class="nt"> ymin</span><span class="p">:</span><span class="w"> </span><span class="nv">40.0</span><span class="p p-Indicator">,</span><span class="nt"> ymax</span><span class="p">:</span><span class="w"> </span><span class="nv">42.0</span><span class="p p-Indicator">,</span><span class="nt"> xres</span><span class="p">:</span><span class="w"> </span><span class="nv">0.01</span><span class="p p-Indicator">,</span><span class="nt"> yres</span><span class="p">:</span><span class="w"> </span><span class="nv">0.01</span><span class="p p-Indicator">}</span>
+
+<span class="nt">variants</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hrrr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">  </span><span class="nt">hrrr-coarse</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">stages</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">footprint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">xres</span><span class="p">:</span><span class="w"> </span><span class="nv">0.05</span><span class="p p-Indicator">,</span><span class="nt"> yres</span><span class="p">:</span><span class="w"> </span><span class="nv">0.05</span><span class="p p-Indicator">}}}}</span>
+<span class="w">  </span><span class="nt">hrrr-particles</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">stages</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">footprint</span><span class="p">:</span><span class="w"> </span><span class="nv">null</span><span class="p p-Indicator">}}</span><span class="w">   </span><span class="c1"># particles only</span>
+</pre></div>
+</div>
+<p>Every setting after <code class="docutils literal notranslate"><span class="pre">class</span></code> belongs to the stage; its own documentation
+lists them. A stage’s results go to a tree of the output directory named
+for its block (<code class="docutils literal notranslate"><span class="pre">footprint/</span></code> here), and <code class="docutils literal notranslate"><span class="pre">project.status()</span></code> gets a column
+of that name.</p>
+<p>Running the transport model is the slow part of a simulation; a stage
+usually takes seconds. Variants that differ only in their stage settings,
+such as <code class="docutils literal notranslate"><span class="pre">hrrr</span></code> and <code class="docutils literal notranslate"><span class="pre">hrrr-coarse</span></code> above, have the same transport
+settings, so the model runs once per release for both, and each makes its
+own stage file from the shared particles. There is nothing to declare:
+runtraj sees that the settings that decide the particles are equal. Add
+such a variant to a finished project and run again, and only the new stage
+files are made.</p>
+</section>
+<section id="reruns-skip-finished-work">
+<h2>Reruns skip finished work<a class="headerlink" href="#reruns-skip-finished-work" title="Link to this heading">#</a></h2>
+<p>Before running, runtraj checks which simulations are finished and runs
+only the rest. A simulation is complete when the result files its variant
+makes exist in the output directory: the particle file, and the file of
+each of its stages. If the particle file is missing, the transport model
+runs again, and the stage files of every variant that shares those
+particles are made again from the new ones.</p>
+<p>So after an interruption, a failed Slurm task, or a new variant, run the
+project again and only what is missing runs. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> says what is
+left (<a class="reference internal" href="checking.html"><span class="doc">Checking A Run</span></a>). To run everything again, pass
+<code class="docutils literal notranslate"><span class="pre">skip_existing=False</span></code> to <code class="docutils literal notranslate"><span class="pre">project.run()</span></code>, or <code class="docutils literal notranslate"><span class="pre">--no-skip</span></code> to
+<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code>.</p>
+</section>
+<section id="changing-a-setting">
+<h2>Changing a setting<a class="headerlink" href="#changing-a-setting" title="Link to this heading">#</a></h2>
+<p>Edit <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and run again. Each result is kept in a
+<a class="reference internal" href="../getting_started/glossary.html#term-settings-folder"><span class="xref std std-term">settings folder</span></a> named for the settings it was made with, so a
+changed setting, including one the variant inherits from the model block or
+a setting of its met, points the variant at a folder that does not exist
+yet. The next run fills it, for every release, and the old folder stays as
+it was.</p>
+<p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> lists every settings folder in the output directory, how
+many result files it holds, which variants use it, and how a folder this
+project does not use differs from the variant of its name. Here a project
+with two variants, <code class="docutils literal notranslate"><span class="pre">hrrr</span></code> and <code class="docutils literal notranslate"><span class="pre">hrrr-zi08:</span> <span class="pre">{ziscale:</span> <span class="pre">0.8}</span></code>, ran, and then
+<code class="docutils literal notranslate"><span class="pre">numpar</span></code> went from 200 to 400 in its <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> block, which both
+variants inherit:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ runtraj status ./my_project
+Project: /data/my_project  total=8  complete=0  failed=0  interrupted=0  pending=8
+  hrrr: total=4  complete=0  failed=0  interrupted=0  pending=4
+  hrrr-zi08: total=4  complete=0  failed=0  interrupted=0  pending=4
+Output: /data/my_project/output
+  Used by this project: none yet
+  Not used by this project (changed settings, a dropped variant, or another project sharing this output; runtraj never deletes one):
+    particles  settings=hrrr-2e01ed       4 files  numpar: 200 (config: 400)
+    particles  settings=hrrr-zi08-3ca0e9  4 files  numpar: 200 (config: 400)
+</pre></div>
+</div>
+<p>Every simulation is pending again, and the two old folders are listed with
+the setting that changed. The next run fills two new folders, which then
+appear under “Used by this project”. The counts at the top are simulations;
+a folder’s count is files, and one particles folder can serve several
+variants. In Python the same table is <code class="docutils literal notranslate"><span class="pre">project.folders()</span></code>.</p>
+<p>To keep both results, give the new settings a new name instead: add
+<code class="docutils literal notranslate"><span class="pre">hrrr-np400:</span> <span class="pre">{numpar:</span> <span class="pre">400}</span></code> and leave <code class="docutils literal notranslate"><span class="pre">hrrr</span></code> as it was. Only the new
+variant runs, and you can read both side by side (<a class="reference internal" href="particles.html"><span class="doc">Reading And Plotting Particles</span></a>).</p>
+<p>Some settings do not change a result, so changing them makes no new folder:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">execution</span></code> (including <code class="docutils literal notranslate"><span class="pre">timeout</span></code> and <code class="docutils literal notranslate"><span class="pre">keep_workdir</span></code>) and <code class="docutils literal notranslate"><span class="pre">output</span></code></p></li>
+<li><p>HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">directory</span></code>. What it holds is recorded instead: the checksum
+of <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> and of each data table, so another build or table is a
+new folder.</p></li>
+<li><p>where the met files are (<code class="docutils literal notranslate"><span class="pre">directory</span></code> and <code class="docutils literal notranslate"><span class="pre">subgrid_dir</span></code>)</p></li>
+</ul>
+<p>Taking a variant out of <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> does not delete its results.
+runtraj never deletes a folder, because another project may share the
+output directory. When you are sure, delete a folder by hand.</p>
+</section>
+<section id="opening-a-project-again">
+<h2>Opening a project again<a class="headerlink" href="#opening-a-project-again" title="Link to this heading">#</a></h2>
+<p>After the project is made, the folder is all you need:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">runtraj</span>
+
+<span class="n">project</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s2">"./my_project"</span><span class="p">)</span>
+<span class="n">project</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>   <span class="c1"># one row per simulation, with a "state" column</span>
+</pre></div>
+</div>
+<p>Opening a project only reads it. A <code class="docutils literal notranslate"><span class="pre">Project</span></code> reads <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> once,
+so after editing it, open the project again. To add releases, add them and
+run:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">project</span><span class="o">.</span><span class="n">add_releases</span><span class="p">(</span><span class="n">new_releases</span><span class="p">)</span>     <span class="c1"># returns the ids of the new ones</span>
+<span class="n">project</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>New releases are appended to <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> in the file’s own columns.
+Releases already in the file are left as they are (<a class="reference internal" href="releases.html"><span class="doc">Releases</span></a>).</p>
+<p>When a run fails or its particles look wrong, <a class="reference internal" href="checking.html"><span class="doc">Checking A Run</span></a> says where to
+look.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">User Guide</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="releases.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Releases</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-project-folder">The project folder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-typical-config-yaml">A typical config.yaml</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-project-in-python">The same project in Python</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-settings-most-people-change">The settings most people change</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variants">Variants</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stages">Stages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reruns-skip-finished-work">Reruns skip finished work</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#changing-a-setting">Changing a setting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#opening-a-project-again">Opening a project again</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/guides/projects.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

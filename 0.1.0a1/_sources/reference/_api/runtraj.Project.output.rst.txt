@@ -1,0 +1,6 @@
+runtraj.Project.output
+======================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.output

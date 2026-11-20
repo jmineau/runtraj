@@ -1,0 +1,6 @@
+runtraj.Release.geometry
+========================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Release.geometry

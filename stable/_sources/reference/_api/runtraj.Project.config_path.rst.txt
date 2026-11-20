@@ -1,0 +1,6 @@
+runtraj.Project.config\_path
+============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.config_path

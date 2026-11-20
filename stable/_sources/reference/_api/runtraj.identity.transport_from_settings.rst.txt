@@ -1,0 +1,6 @@
+﻿runtraj.identity.transport\_from\_settings
+==========================================
+
+.. currentmodule:: runtraj.identity
+
+.. autofunction:: transport_from_settings

@@ -1,0 +1,6 @@
+runtraj.Project.simulations
+===========================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.simulations
