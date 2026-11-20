@@ -25,6 +25,7 @@ from __future__ import annotations
 import os
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -151,7 +152,8 @@ def sample_field(
         nearest level, so a point above the top level takes the top level.
     times : array-like, optional
         Time of each point, as datetimes or date strings, with none
-        missing. Required when the field has a ``time``
+        missing. A time with a time zone is converted to UTC, which the
+        field's times are taken to be in. Required when the field has a ``time``
         dimension. By default matched to the nearest time, so times
         outside the field's span take the first or last step. See
         ``step_starts``.
@@ -216,7 +218,7 @@ def sample_field(
             raise TypeError(
                 f"times must be datetimes or date strings; got numbers ({raw.dtype})."
             )
-        stamps = pd.DatetimeIndex(pd.to_datetime(raw))
+        stamps = _utc(pd.DatetimeIndex(pd.to_datetime(raw)))
         if len(stamps) != len(xs):
             raise ValueError("times must have the same length as x and y.")
         missing = np.asarray(stamps.isna())
@@ -252,6 +254,13 @@ def sample_field(
         indexers["time"] = xr.DataArray(it, dims="points")
     sampled = field.isel(indexers).to_numpy().astype(float)
     return np.where(inside & ~np.isnan(sampled), sampled, fill_value)
+
+
+def _utc(times: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Return *times* in UTC without a time zone, as met and fields label theirs."""
+    if times.tz is not None:
+        return times.tz_convert("UTC").tz_localize(None)
+    return times
 
 
 def _check_z_top(particles: pd.DataFrame, z_top: float | None) -> None:
@@ -295,9 +304,9 @@ _R_DRY = 287.04
 #: not import HYSPLIT's package).
 _DEFAULT_Z_TOP = 25000.0
 
-#: Met to sample: the paths of ARL files, or one Dataset in
+#: Met to sample: the paths of ARL files (or one path), or one Dataset in
 #: :func:`arlmet.open_dataset`'s layout, such as a converter's output.
-Met = Iterable[str | os.PathLike[str]] | xr.Dataset
+Met = str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | xr.Dataset
 
 
 @contextmanager
@@ -308,6 +317,13 @@ def _opened(met: Met) -> Iterator[list[Any]]:
     if isinstance(met, xr.Dataset):
         yield [met]
         return
+    if isinstance(met, (str, os.PathLike)):
+        if Path(met).is_dir():
+            raise ValueError(
+                f"met is a folder, {met}. Give the met files a run read, such "
+                "as particles_metadata(path).met_files."
+            )
+        met = [met]
     handles = [arlmet.File(path) for path in met]
     if not handles:
         raise ValueError("No met files were given.")
@@ -413,10 +429,11 @@ def sample_met(
     Parameters
     ----------
     particles : pandas.DataFrame
-        A particle table with ``lon``, ``lat``, ``zagl``, and ``time``.
+        A particle table with ``lon``, ``lat``, ``zagl``, and ``time``
+        (UTC; a time with a time zone is converted to UTC).
         ``sim.particles`` has ``time``. For a table a transport model
         returned, add it: the release time plus ``age`` minutes.
-    met : iterable of path-like, or xarray.Dataset
+    met : path-like, iterable of path-like, or xarray.Dataset
         ARL met files that cover the particles' times, such as the files the
         run read (``met_files`` of :class:`runtraj.models.ModelRun` or of
         :func:`runtraj.particles.particles_metadata`), or met in another
@@ -511,7 +528,7 @@ def sample_met(
         # PRES is sampled as the pressure the met has (checked just above).
         names = [(pressure or v) if v == "PRES" else v for v in variables]
         met_times = _met_times(sources)
-        times = pd.DatetimeIndex(particles["time"])
+        times = _utc(pd.DatetimeIndex(particles["time"]))
         before, after, weight = _bracket(met_times, times)
         # Each row is sampled at the met time before it and, unless it is on
         # a met time, at the one after. One call samples both.
@@ -698,7 +715,7 @@ def calc_pbl_height(
     ----------
     particles : pandas.DataFrame
         A particle table with ``lon``, ``lat``, and ``time``.
-    met : iterable of path-like, or xarray.Dataset
+    met : path-like, iterable of path-like, or xarray.Dataset
         ARL met files that cover the particles' times, or met in another
         format as one Dataset in :func:`arlmet.open_dataset`'s layout, as
         :func:`sample_met` takes. What it needs depends on *method*:
@@ -807,7 +824,9 @@ def calc_pbl_height(
                 "the met lacks."
             )
         met_times = _met_times(sources)
-        before, after, weight = _bracket(met_times, pd.DatetimeIndex(particles["time"]))
+        before, after, weight = _bracket(
+            met_times, _utc(pd.DatetimeIndex(particles["time"]))
+        )
         header = _header(sources[0])
         reads = _grid_points_read(
             header.grid,

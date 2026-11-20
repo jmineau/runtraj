@@ -669,7 +669,7 @@ def test_release_from_dict_multipoint_round_trip():
 def test_read_releases_missing_required_columns_raises(tmp_path):
     csv = tmp_path / "releases.csv"
     csv.write_text("time,lat,lon\n2023-01-01 12:00:00,40.77,-111.85\n")
-    with pytest.raises(ValueError, match="must contain columns"):
+    with pytest.raises(ValueError, match="no altitude column"):
         read_releases(csv)
 
 
@@ -1469,3 +1469,28 @@ def test_read_releases_takes_a_release_listed_twice_with_the_same_labels(tmp_pat
 def test_multipoint_release_refuses_points_that_are_not_a_list(points, message):
     with pytest.raises(ValueError, match=message):
         MultiPointRelease(time="2023-07-15 18:00", **points)
+
+
+def test_read_releases_names_an_empty_file(tmp_path):
+    path = tmp_path / "releases.csv"
+    path.write_text("")
+    with pytest.raises(ValueError, match="releases.csv is empty"):
+        read_releases(path)
+
+
+def test_read_releases_names_the_row_of_a_height_that_is_not_a_number(tmp_path):
+    path = tmp_path / "releases.csv"
+    path.write_text(
+        "time,longitude,latitude,altitude\n"
+        "2023-07-15 18:00,-111.8,40.7,10\n"
+        "2023-07-15 18:00,-111.8,40.7,ten\n"
+    )
+    with pytest.raises(ValueError, match="row 1: altitude must be a number; got 'ten'"):
+        read_releases(path)
+
+
+def test_read_releases_names_a_missing_column_and_the_names_it_takes(tmp_path):
+    path = tmp_path / "releases.csv"
+    path.write_text("time,lon,lat,height\n2023-07-15 18:00,-111.8,40.7,10\n")
+    with pytest.raises(ValueError, match="no altitude column.*zagl.*'height'"):
+        read_releases(path)

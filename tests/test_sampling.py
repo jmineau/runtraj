@@ -866,3 +866,29 @@ def test_a_z_top_that_is_not_the_runs_top_in_meters_is_refused(
     met = _met_file(tmp_path / "met.arl")
     with pytest.raises(ValueError, match=message):
         getattr(sampling, function)(_particles_at([_T0], [100.0]), [met], z_top=z_top)
+
+
+def test_sample_field_reads_a_time_with_a_zone_in_utc():
+    utc = sample_field(_hourly(), [-111.0], [41.0], times=["2023-07-15 01:00"])
+    local = pd.Timestamp("2023-07-14 19:00", tz="America/Denver")
+    assert sample_field(_hourly(), [-111.0], [41.0], times=[local]) == utc
+
+
+def test_sample_met_reads_particle_times_with_a_zone_in_utc(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0], [100.0])
+    aware = particles.assign(time=particles["time"].dt.tz_localize("UTC"))
+    got = sample_met(aware, [met], columns=["pres"])["pres"]
+    want = sample_met(particles, [met], columns=["pres"])["pres"]
+    np.testing.assert_allclose(got, want)
+
+
+def test_sample_met_takes_one_met_file_and_refuses_a_folder(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0], [100.0])
+    one = sample_met(particles, met, columns=["pres"])["pres"]
+    np.testing.assert_allclose(
+        one, sample_met(particles, [met], columns=["pres"])["pres"]
+    )
+    with pytest.raises(ValueError, match="is a folder"):
+        sample_met(particles, tmp_path, columns=["pres"])

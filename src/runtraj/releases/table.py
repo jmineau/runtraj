@@ -163,10 +163,16 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
         different releases with one id. Also for a misnamed
         ``altitude_ref`` column (:func:`releases_from_frame`).
     """
+    found = [str(c) for c in frame.columns]
     frame, _ = _normalize_columns(frame)
     required = ("time", "longitude", "latitude", "altitude")
-    if any(c not in frame.columns for c in required):
-        raise ValueError(f"Release table must contain columns: {list(required)}")
+    missing = [c for c in required if c not in frame.columns]
+    if missing:
+        accepted = "; ".join(f"{c}: {', '.join(ALIASES[c])}" for c in missing)
+        raise ValueError(
+            f"The release table has no {' or '.join(missing)} column. The names "
+            f"read as one are ({accepted}); its columns are {found}."
+        )
     clash = [c for c in frame.columns if c in ROW_COLUMNS]
     if clash:
         raise ValueError(
@@ -174,9 +180,6 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
             "those names. Rename the column."
         )
     n = len(frame)
-    lon = frame["longitude"].to_numpy(dtype=float)
-    lat = frame["latitude"].to_numpy(dtype=float)
-    alt = frame["altitude"].to_numpy(dtype=float)
     ref = frame["altitude_ref"].astype(str).str.lower().to_numpy()
     # Group keys as text: a file that mixes numeric and string ids must not
     # split one release into two. Without a group column, every row is a release.
@@ -196,6 +199,18 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
             )
             raise ValueError(f"{label}: {message}")
 
+    def numbers(column: str) -> np.ndarray:
+        """Return *column* as floats, calling *fail* on a row that is not a number."""
+        values = pd.to_numeric(frame[column], errors="coerce").to_numpy(dtype=float)
+        text = frame[column].notna().to_numpy() & np.isnan(values)
+        if text.any():
+            got = frame[column].to_numpy()[np.flatnonzero(text)[0]]
+            fail(text, f"{column} must be a number; got {got!r}.")
+        return values
+
+    lon = numbers("longitude")
+    lat = numbers("latitude")
+    alt = numbers("altitude")
     time = _times(frame["time"], fail)
     fail(~np.isin(ref, ("agl", "msl")), "altitude_ref must be 'agl' or 'msl'.")
     for bad, message in point_errors(lon, lat, alt, ref):
@@ -451,7 +466,8 @@ def check_distinct_ids(releases: Iterable[Release]) -> None:
             continue
         if other != r:
             raise ValueError(
-                f"Two different releases share the id {r.id!r}: {other!r} and {r!r}."
+                f"Two different releases share the id {r.id!r}: {other!r} at "
+                f"{other.time} and {r!r} at {r.time}."
             )
         if other.attrs != r.attrs:
             raise ValueError(
@@ -468,7 +484,14 @@ def check_distinct_ids(releases: Iterable[Release]) -> None:
 
 def read_release_frame(path: str | Path | IO[str]) -> pd.DataFrame:
     """Read a releases CSV as a table, with ``group`` and ``time`` as text, without building releases."""
-    header = pd.read_csv(path, nrows=0).columns
+    try:
+        header = pd.read_csv(path, nrows=0).columns
+    except pd.errors.EmptyDataError:
+        name = path if isinstance(path, (str, Path)) else "The releases file"
+        raise ValueError(
+            f"{name} is empty. A releases file needs a header row, such as "
+            "time,longitude,latitude,altitude, and a row per release."
+        ) from None
     if hasattr(path, "seek"):
         path.seek(0)
     # With type inference, pandas types each chunk of a large file on its
