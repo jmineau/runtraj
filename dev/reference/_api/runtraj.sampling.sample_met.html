@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=08d58490"></script>
+    <script src="../../_static/documentation_options.js?v=96111c33"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev1+g9758d997c" />
+  <meta name="docsearch:version" content="0.1.0a3.dev2+g4d7b75b37" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -826,7 +826,7 @@
 HYSPLIT writes from the met this way. Each row is sampled at its
 <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, and <code class="docutils literal notranslate"><span class="pre">time</span></code>: bilinear across the met’s
 grid and linear in height between the internal levels of a HYSPLIT run
-with the top <em>z_top</em> (<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.sample_points.html#arlmet.sample_points" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.sample_points()</span></code></a>), then linear in time
+with the top <em>z_top</em> (<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.sample_points.html#arlmet.sample_points" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.sample_points()</span></code></a>), then linear in time
 between the two met times around the particle’s, as HYSPLIT does. Each column comes
 from these ARL variables:</p>
 <ul class="simple">
@@ -855,7 +855,7 @@ returned, add it: the release time plus <code class="docutils literal notranslat
 <li><p><strong>met</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]] | <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span>) – ARL met files that cover the particles’ times, such as the files the
 run read (<code class="docutils literal notranslate"><span class="pre">met_files</span></code> of <a class="reference internal" href="runtraj.models.ModelRun.html#runtraj.models.ModelRun" title="runtraj.models.ModelRun"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.ModelRun</span></code></a> or of
 <a class="reference internal" href="runtraj.particles.particles_metadata.html#runtraj.particles.particles_metadata" title="runtraj.particles.particles_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.particles.particles_metadata()</span></code></a>), or met in another
-format as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout
+format as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout
 (<a class="reference internal" href="runtraj.models.open_met.html#runtraj.models.open_met" title="runtraj.models.open_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.models.open_met()</span></code></a>, or an arlmet converter’s output).</p></li>
 <li><p><strong>columns</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – The columns to add.</p></li>
 <li><p><strong>z_top</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The top of the run’s domain in meters (<code class="docutils literal notranslate"><span class="pre">z_top</span></code> of

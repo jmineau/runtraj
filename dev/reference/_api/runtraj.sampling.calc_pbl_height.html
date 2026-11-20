@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=08d58490"></script>
+    <script src="../../_static/documentation_options.js?v=96111c33"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev1+g9758d997c" />
+  <meta name="docsearch:version" content="0.1.0a3.dev2+g4d7b75b37" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -820,12 +820,33 @@
 <h1>runtraj.sampling.calc_pbl_height<a class="headerlink" href="#runtraj-sampling-calc-pbl-height" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.sampling.calc_pbl_height">
-<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">calc_pbl_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#calc_pbl_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.calc_pbl_height" title="Link to this definition">#</a></dt>
-<dd><p>Return the mixed-layer height at each particle, found from the met’s profile as HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code> finds it.</p>
-<p>This is HYSPLIT’s default way to find the mixed layer, ported from its
-source (<code class="docutils literal notranslate"><span class="pre">stbanl.f</span></code>, Holtslag and Boville, 1993). Going up the column,
-the mixed layer ends where the bulk Richardson number between the
-lowest level and the level reached passes 0.25:</p>
+<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">calc_pbl_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hysplit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#calc_pbl_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.calc_pbl_height" title="Link to this definition">#</a></dt>
+<dd><p>Return the mixed-layer height at each particle, found from the met as a transport model finds it.</p>
+<p>The mixed layer a stage reads should be the one the particles were
+mixed in, and each transport model finds it in its own way. Choose the
+<em>method</em> of the run the particles came from:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hysplit&quot;</span></code> (the default): HYSPLIT’s default, <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>. Going
+up the column, the mixed layer ends where the bulk Richardson number
+between the lowest level and the level reached passes 0.25 (below).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hysplit_temperature&quot;</span></code>: HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">1</span></code>. The top is the
+highest level whose potential temperature is within 2 K of the
+column’s lowest.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;met&quot;</span></code>: the met’s own boundary-layer height <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>, as HYSPLIT
+uses it with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code>: FLEXPART’s Richardson method (below), for a FLEXPART
+run on ERA5 model levels. FLEXPART on GFS uses the met’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>
+instead; give it <code class="docutils literal notranslate"><span class="pre">&quot;met&quot;</span></code>.</p></li>
+</ul>
+<p>HYSPLIT finds the height at each met grid point and met time, and a
+particle takes the nearest grid point’s height at the met times before
+and after it, linear in time. The three HYSPLIT methods do the same, on
+HYSPLIT’s internal levels for a run with the top <em>z_top</em>. They apply
+no minimum, as HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmix0</span></code> does: take <code class="docutils literal notranslate"><span class="pre">numpy.maximum</span></code> with
+yours. Each height is at least a little above the lowest internal
+level, as in HYSPLIT.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;hysplit&quot;</span></code> is ported from HYSPLIT’s source (<code class="docutils literal notranslate"><span class="pre">stbanl.f</span></code>, Holtslag
+and Boville, 1993):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Ri = g · (θ(z) − θ₁ − θₑ) · (z − z₁) / ((θ₁ + θₑ) · |V(z) − V₁|²)
 </pre></div>
 </div>
@@ -834,68 +855,115 @@ HYSPLIT’s lowest internal level. θₑ, the temperature excess of rising
 air, is <code class="docutils literal notranslate"><span class="pre">8.5</span> <span class="pre">u*</span> <span class="pre">θ*</span> <span class="pre">/</span> <span class="pre">(u*³</span> <span class="pre">+</span> <span class="pre">0.6</span> <span class="pre">w*³)^(1/3)</span></code> in unstable air and 0
 otherwise, with the friction velocity <code class="docutils literal notranslate"><span class="pre">u*</span></code> (<code class="docutils literal notranslate"><span class="pre">USTR</span></code>) and the
 friction temperature <code class="docutils literal notranslate"><span class="pre">θ*</span></code> from the sensible heat flux (<code class="docutils literal notranslate"><span class="pre">SHTF</span></code>) at
-the ground. The height is interpolated to where Ri is 0.25.</p>
-<p>HYSPLIT computes the height at each met grid point and met time; a
-particle takes the nearest grid point’s height at the met times before
-and after it, linear in time. So does this function, on HYSPLIT’s
-internal levels for a run with the top <em>z_top</em>. It applies no minimum,
-as HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmix0</span></code> does: take <code class="docutils literal notranslate"><span class="pre">numpy.maximum</span></code> with yours. A
-column with no height where Ri reaches 0.25 gets the second-highest
-internal level, as in HYSPLIT.</p>
-<p>On three 6-hour HRRR runs from Salt Lake City, the height it finds,
-kept at least 150 m, has a median ratio of 0.999 to 1.000 to the
-<code class="docutils literal notranslate"><span class="pre">mlht</span></code> HYSPLIT wrote with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>, and 73 to 94 % of rows are
-within 2 %.</p>
-<p>A Dataset gives the met’s own values. HYSPLIT reads the ARL file
-written from it, whose values are packed: in mountains <code class="docutils literal notranslate"><span class="pre">SHGT</span></code> can
-move by a few meters. In a deep, nearly neutral afternoon layer, a few
-meters near the ground move the height by hundreds of meters, most of
-all on pressure levels, whose first level above the ground can be only
-meters above HYSPLIT’s lowest internal level. On two hours of ERA5
-pressure levels over Salt Lake City in July, the height from the
-Dataset had a median ratio of 0.91 to HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">mlht</span></code>. From the ARL
-file HYSPLIT read, the median ratio was 0.999, with 99 % of rows within
-2 %. To compare with a HYSPLIT run, give the files it read.</p>
+the ground. The height is interpolated to where Ri is 0.25. A column
+with no height where Ri reaches 0.25 gets the second-highest internal
+level, as in HYSPLIT.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> is ported from FLEXPART 11’s <code class="docutils literal notranslate"><span class="pre">richardson</span></code>
+(<code class="docutils literal notranslate"><span class="pre">getfields_mod.f90</span></code>, after Vogelezang and Holtslag, 1996). It works
+on the met’s own levels, with heights integrated up from 2 m, and
+measures from the 2 m virtual potential temperature θᵥ₂ (<code class="docutils literal notranslate"><span class="pre">T02M</span></code>,
+<code class="docutils literal notranslate"><span class="pre">DP2M</span></code>) and the wind of the lowest level V₁:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Ri = g · (θᵥ(z) − θᵥ₂ − θₑ) · (z − 2) / ((θᵥ₂ + θₑ) · max(|V(z) − V₁|² + 100 u*², 0.1))
+</pre></div>
+</div>
+<p>The top is where Ri first passes 0.25 in a layer that is not unstable,
+found to a twentieth of the layer. In unstable air the temperature
+excess θₑ = 8.5 H / (cₚ w*), with H the upward heat flux and w* the
+convective velocity of that top, is added and the top found again, up
+to three times. The height is kept between 100 and 4500 m, as
+FLEXPART keeps it. A particle takes the greatest height of the four
+grid points around it at the met times before and after it, as
+FLEXPART does by default. FLEXPART’s <code class="docutils literal notranslate"><span class="pre">LSUBGRID:</span> <span class="pre">1</span></code> raises the height
+by a subgrid-orography excess; that is left out, since the converted
+met holds no subgrid orography, and FLEXPART leaves it off by default.</p>
+<p>On three 6-hour HRRR runs from Salt Lake City, <code class="docutils literal notranslate"><span class="pre">&quot;hysplit&quot;</span></code>, kept at
+least 150 m, has a median ratio of 0.999 to 1.000 to the <code class="docutils literal notranslate"><span class="pre">mlht</span></code>
+HYSPLIT wrote with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>, and 73 to 94 % of rows are within 2 %.
+On a 24-hour FLEXPART 11 run on ERA5 model levels from Salt Lake City,
+<code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> matched the mixed layer FLEXPART found (Notes).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>particles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span>) – A particle table with <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, and <code class="docutils literal notranslate"><span class="pre">time</span></code>.</p></li>
-<li><p><strong>met</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]] | <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span>) – ARL met files that cover the particles’ times, or met in another
-format as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, as
-<a class="reference internal" href="runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a> takes. It needs <code class="docutils literal notranslate"><span class="pre">TEMP</span></code>, <code class="docutils literal notranslate"><span class="pre">UWND</span></code>, <code class="docutils literal notranslate"><span class="pre">VWND</span></code> and
-<code class="docutils literal notranslate"><span class="pre">SHGT</span></code>, the sensible heat flux <code class="docutils literal notranslate"><span class="pre">SHTF</span></code>, the friction velocity
-<code class="docutils literal notranslate"><span class="pre">USTR</span></code> or the momentum fluxes <code class="docutils literal notranslate"><span class="pre">UMOF</span></code> and <code class="docutils literal notranslate"><span class="pre">VMOF</span></code>, and the
-pressure: <code class="docutils literal notranslate"><span class="pre">PRES</span></code>, or a vertical axis it follows from.</p></li>
+<li><p><strong>met</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]] | <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span>) – <p>ARL met files that cover the particles’ times, or met in another
+format as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, as
+<a class="reference internal" href="runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a> takes. What it needs depends on <em>method</em>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hysplit&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">TEMP</span></code>, <code class="docutils literal notranslate"><span class="pre">UWND</span></code>, <code class="docutils literal notranslate"><span class="pre">VWND</span></code> and <code class="docutils literal notranslate"><span class="pre">SHGT</span></code>, the
+sensible heat flux <code class="docutils literal notranslate"><span class="pre">SHTF</span></code>, the friction velocity <code class="docutils literal notranslate"><span class="pre">USTR</span></code> or the
+momentum fluxes <code class="docutils literal notranslate"><span class="pre">UMOF</span></code> and <code class="docutils literal notranslate"><span class="pre">VMOF</span></code>, and the pressure:
+<code class="docutils literal notranslate"><span class="pre">PRES</span></code>, or a vertical axis it follows from.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;hysplit_temperature&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">TEMP</span></code>, <code class="docutils literal notranslate"><span class="pre">SHGT</span></code> and the pressure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;met&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">PBLH</span></code> and <code class="docutils literal notranslate"><span class="pre">SHGT</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">TEMP</span></code>, <code class="docutils literal notranslate"><span class="pre">SPHU</span></code>, <code class="docutils literal notranslate"><span class="pre">UWND</span></code>, <code class="docutils literal notranslate"><span class="pre">VWND</span></code>, the
+pressure, and at the ground <code class="docutils literal notranslate"><span class="pre">PRSS</span></code>, <code class="docutils literal notranslate"><span class="pre">T02M</span></code>, <code class="docutils literal notranslate"><span class="pre">DP2M</span></code>,
+<code class="docutils literal notranslate"><span class="pre">U10M</span></code>, <code class="docutils literal notranslate"><span class="pre">V10M</span></code>, <code class="docutils literal notranslate"><span class="pre">USTR</span></code> and <code class="docutils literal notranslate"><span class="pre">SHTF</span></code>.</p></li>
+</ul>
+</p></li>
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – How the mixed layer is found: the transport model and its method.</p></li>
 <li><p><strong>z_top</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The top of the domain in meters, which sets HYSPLIT’s internal
-levels (<code class="docutils literal notranslate"><span class="pre">z_top</span></code> of <a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitConfig</span></code></a>).</p></li>
+levels (<code class="docutils literal notranslate"><span class="pre">z_top</span></code> of <a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitConfig</span></code></a>).
+<code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> reads the met’s own levels and ignores it.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The mixed-layer height at each row, in m above ground. A row off
 the met’s grid is NaN. A met time that lacks the surface fluxes,
 as a GFS analysis (<code class="docutils literal notranslate"><span class="pre">f000</span></code>) does without the previous cycle’s
-forecast, has no height: a row at that time is NaN, and a row
-between it and a met time with the fluxes takes the height of the
-other time. (HYSPLIT refuses such met, so there is no <code class="docutils literal notranslate"><span class="pre">mlht</span></code> of
-its own to compare.)</p>
+forecast, has no height from <code class="docutils literal notranslate"><span class="pre">&quot;hysplit&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code>: a row
+at that time is NaN, and a row between it and a met time with the
+fluxes takes the height of the other time. (HYSPLIT refuses such
+met, so there is no <code class="docutils literal notranslate"><span class="pre">mlht</span></code> of its own to compare.) A column where
+<code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> finds no top in the met’s levels has none, where
+FLEXPART stops.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>particles</em> has no <code class="docutils literal notranslate"><span class="pre">time</span></code> column or a row is outside the
-    files’ times.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><strong>KeyError</strong></a> – If the met lacks a variable it needs.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>method</em> is not one of the four, <em>particles</em> has no <code class="docutils literal notranslate"><span class="pre">time</span></code>
+    column, or a row is outside the files’ times.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><strong>KeyError</strong></a> – If the met lacks a variable the method needs.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>A Dataset gives the met’s own values. HYSPLIT reads the ARL file
+written from it, whose values are packed: in mountains <code class="docutils literal notranslate"><span class="pre">SHGT</span></code> can
+move by a few meters. In a deep, nearly neutral afternoon layer, a few
+meters near the ground move the <code class="docutils literal notranslate"><span class="pre">&quot;hysplit&quot;</span></code> height by hundreds of
+meters, most of all on pressure levels, whose first level above the
+ground can be only meters above HYSPLIT’s lowest internal level. On two
+hours of ERA5 pressure levels over Salt Lake City in July, the height
+from the Dataset had a median ratio of 0.91 to HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">mlht</span></code>. From
+the ARL file HYSPLIT read, the median ratio was 0.999, with 99 % of rows
+within 2 %. To compare with a HYSPLIT run, give the files it read.</p>
+<p>FLEXPART writes a particle’s <code class="docutils literal notranslate"><span class="pre">hmix</span></code> interpolated from the grid
+points’ heights (bilinear across the grid, linear in time), not the
+greatest of them it mixes the particle in, so <code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> is at
+least the <code class="docutils literal notranslate"><span class="pre">hmix</span></code> it wrote at most rows. Interpolated the same way, the
+grid points’ heights <code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> finds had a median ratio of 1.000
+to the <code class="docutils literal notranslate"><span class="pre">hmix</span></code> of the run above, with 80 % of 24,000 rows within 2 %
+and 94 % within 10 %. The rest comes from the converted met, which
+differs from what FLEXPART reads in two small ways: an ARL hybrid level
+keeps its pressure offset to the whole hPa, and <code class="docutils literal notranslate"><span class="pre">USTR</span></code> is found with
+the density of dry air at 2 m, where FLEXPART uses moist air.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">particles_metadata</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">sim</span><span class="o">.</span><span class="n">particles_path</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlht</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">sampling</span><span class="o">.</span><span class="n">calc_pbl_height</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A FLEXPART run on ERA5, with the met its transport model opens:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">met</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">open_met</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">"flexpart"</span><span class="p">,</span> <span class="n">met_config</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">bounds</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlht</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">sampling</span><span class="o">.</span><span class="n">calc_pbl_height</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">particles</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"flexpart"</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
