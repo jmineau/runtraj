@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Architecture &#8212; runtraj 0.1.0a2</title>
+    <title>Architecture &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -518,17 +518,20 @@ HYSPLIT’s files.</p>
   stages.py       the Stage protocol, get_stage, check_stage
   releases/       release classes, releases.csv, shared validation
   particles/      the particle table and files, release heights, particles.runtraj
-  models/         the TransportModel and TransportConfig protocols, MODELS, get_model
+  models/         the TransportModel and TransportConfig protocols, MODELS, get_model, check_model
     hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
-  execution/      ExecutionConfig, the runner (plan, local run, Slurm submit), the worker
+  execution/      ExecutionConfig, the runner (plan, local run, Slurm submit), the worker,
+                  kubernetes (the indexed Job, the hourly CronJob), inputs (copies to a bucket, the lock), schedule
   transforms/     particle transforms, each multiplying the weight column
   sampling.py     sample_field, sample_met, calc_pbl_height: fields and met read at points
   meteorology.py, spatial.py, visualization.py, exceptions.py
 </pre></div>
 </div>
 <p>The import contracts in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (<code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">imports</span></code>) hold this
-shape: the modules are in layers, only <code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models</span></code> imports
-HYSPLIT’s package, and the project config reads no results and runs nothing.</p>
+shape: the modules are in layers, only <code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models</span></code> imports a
+transport model’s package (such as HYSPLIT’s, <code class="docutils literal notranslate"><span class="pre">runtraj.models.hysplit</span></code>),
+no model’s package imports another’s, and the project config reads no
+results and runs nothing.</p>
 </section>
 <section id="how-a-run-goes">
 <h2>How a run goes<a class="headerlink" href="#how-a-run-goes" title="Link to this heading">#</a></h2>

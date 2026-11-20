@@ -1,0 +1,6 @@
+﻿runtraj.execution.schedule.hourly\_releases
+===========================================
+
+.. currentmodule:: runtraj.execution.schedule
+
+.. autofunction:: hourly_releases

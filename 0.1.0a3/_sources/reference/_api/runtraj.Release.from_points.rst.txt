@@ -1,0 +1,5 @@
+runtraj.Release.from\_points
+============================
+
+.. currentmodule:: runtraj
+.. automethod:: Release.from_points

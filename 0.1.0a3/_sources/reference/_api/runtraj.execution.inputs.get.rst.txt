@@ -1,0 +1,6 @@
+﻿runtraj.execution.inputs.get
+============================
+
+.. currentmodule:: runtraj.execution.inputs
+
+.. autofunction:: get

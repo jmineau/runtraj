@@ -1,0 +1,6 @@
+runtraj.Project.variants
+========================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.variants

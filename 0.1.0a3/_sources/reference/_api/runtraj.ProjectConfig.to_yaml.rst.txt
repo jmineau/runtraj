@@ -1,0 +1,5 @@
+runtraj.ProjectConfig.to\_yaml
+==============================
+
+.. currentmodule:: runtraj
+.. automethod:: ProjectConfig.to_yaml

@@ -2,8 +2,11 @@ In Containers (Kubernetes)
 ==========================
 
 A project can run in many containers at once, such as the pods of a
-Kubernetes Job, without Slurm. Each container runs one share of the
-releases:
+Kubernetes Job, without Slurm. ``runtraj submit`` makes that Job for you
+(:ref:`kubernetes-submit`); the rest of this page is what each pod does,
+for a Job you write yourself or another scheduler.
+
+Each container runs one share of the releases:
 
 .. code-block:: bash
 
@@ -38,6 +41,150 @@ What every container needs
 - A compute root, where each run gets its workdir. Set
   ``RUNTRAJ_COMPUTE_ROOT`` to a folder on fast local disk, such as an
   ``emptyDir``.
+
+.. _kubernetes-submit:
+
+Submitting to Kubernetes
+------------------------
+
+With ``backend: kubernetes``, ``runtraj submit`` makes one indexed Job and
+creates it with ``kubectl``, on the cluster and namespace ``kubectl``
+points at. Each pod runs ``runtraj run <project> --task I/N``:
+
+.. code-block:: yaml
+
+   execution:
+     backend: kubernetes
+     kubernetes:
+       image: registry.example.org/runtraj-hysplit:1
+       completions: 20           # tasks, N
+       parallelism: 10           # pods running at once
+       cpus: 4                   # releases each pod runs at once
+       memory: 8Gi               # Kubernetes units: 8Gi, not 8G
+       inputs: s3://bucket/projects/my_project
+       secrets: [bucket-keys]    # a Secret holding the bucket's credentials
+       volumes:
+         - {claim_name: hrrr-arl, mount_path: /met, read_only: true}
+   output: s3://bucket/output
+
+.. code-block:: bash
+
+   runtraj submit /project
+
+It prints the Job's name; ``kubectl get job <name>`` follows it and
+``kubectl delete job <name>`` stops it. The manifest is kept in
+``_kubernetes/<date_time>_<id>/job.yaml`` in the project.
+
+We recommend putting the inputs on a bucket (``inputs``): ``runtraj submit``
+copies ``config.yaml``, ``releases.csv`` and ``tables/`` there, and each pod
+copies them to its own disk before it runs, so the pods need no shared
+volume for the project. The output directory must then be on a bucket too,
+or each pod would write its results to its own disk; ``runtraj submit``
+refuses that. Without ``inputs`` the pods open the project folder at the
+path it has where you submit, so it must be on a volume they mount at that
+path.
+
+``image`` is required. runtraj publishes no image: an image needs runtraj,
+HYSPLIT's ``hycs_std`` (downloaded from NOAA ARL; :doc:`../getting_started/installation`)
+and the packages of the stages the project names. Every pod must have the
+same ``hycs_std``, since its checksum is part of each run's settings.
+
+Each pod gets an ``emptyDir`` at ``/scratch`` as its ``TMPDIR``, where its
+copy of the inputs and its workdirs go, and one thread per worker. The Job
+retries a pod from its exit code (:ref:`exit-codes`): 3 is retried up to
+three times per task, 1 and 4 fail that task only, 2 fails the whole Job,
+and a pod evicted or preempted is retried without counting. Each pod is
+given the hash of ``config.yaml`` and ``releases.csv`` as they were
+submitted (``--inputs-hash``) and exits with 2 when what it reads differs:
+a ``releases.csv`` changed after submit would split the releases
+differently among the tasks. Submit again after changing them.
+
+A Job runs every unfinished release of the project and skips the complete
+ones, so ``runtraj submit`` on Kubernetes takes no ``--releases`` and no
+``--no-skip``. It does not fetch the met first: run ``runtraj fetch``
+before it (:ref:`fetch-once`) when the pods share the met volume.
+Afterwards ``runtraj status`` counts the project's simulations, as for any
+run, and lists the project's Jobs on the cluster ``kubectl`` points at:
+
+.. code-block:: text
+
+   Project: /project  total=480  complete=455  failed=5  interrupted=0  pending=20
+   Jobs:
+     runtraj-my-project-x7k2p  running  17 of 20 tasks done, 2 running, 1 failed (tasks 6)  started 2026-10-29T16:00:00Z
+
+A task counts as failed once Kubernetes gave up on it (after its retries,
+or at once for exit 1 or 4); ``kubectl logs`` of its pod says why, and the
+failed simulations each have a ``.failure.yaml``. The Jobs are found by the
+project's name and kept when they were made for this project's inputs, so
+another project of the same name is left out. When ``kubectl`` cannot list
+them, the line says why and the counts still print. ``runtraj status
+--json`` adds them as ``jobs``.
+
+.. _kubernetes-schedule:
+
+Running every hour
+------------------
+
+A project for fixed sites, such as towers, can run on its own every hour:
+each hour gets a release at each site once its met is out. List the sites in
+``sites.csv`` in the project folder, one row each:
+
+.. code-block:: text
+
+   name,longitude,latitude,altitude,altitude_ref
+   tower,-111.8476,40.7663,35,agl
+   valley,-112.1155,40.5385,5,
+
+``longitude``, ``latitude`` and ``altitude`` are required; ``altitude_ref``
+(``agl``, the default, or ``msl``) is optional, and other columns, such as a
+name, are ignored. The project needs no ``releases.csv`` to start. Then,
+with the same ``kubernetes`` block as for ``runtraj submit``:
+
+.. code-block:: bash
+
+   runtraj schedule /project
+
+It makes a Kubernetes CronJob, with ``kubectl apply``, and prints its name.
+At 15 minutes past each hour (UTC) the CronJob starts one pod, which runs
+``runtraj tick``. A tick
+
+1. adds a release at each site for each hour of the last day that is at
+   least ``--delay`` hours old (8 by default), and reaches back up to a week
+   further to close a gap after the newest hour ``releases.csv`` holds, as
+   after an outage;
+2. writes ``releases.csv`` back, to the bucket when the inputs are on one;
+3. runs those releases in the pod, as ``runtraj run --releases`` would, and
+   exits with ``runtraj run``'s code.
+
+Releases whose results exist are skipped, so each tick runs the new hour
+and any of the last day that failed before, such as an hour whose met was
+not out yet. We recommend the default delay for HRRR: NOAA's archive posts
+each 6-hour file about 40 minutes after its last hour, and a run also needs
+the hour after its release, so an hour's met is all there about 7 hours 40
+minutes later.
+
+With ``inputs`` set, ``runtraj schedule`` copies ``config.yaml``,
+``sites.csv`` and ``tables/`` there, and ``releases.csv`` only while the
+bucket has none: from then on the bucket's copy is the one each hour adds
+to, so read it there. Without ``inputs`` the pods open the project folder
+at its path here, as for ``runtraj submit``. A tick locks ``releases.csv``
+(a file ``.releases.csv.lock`` beside it) while it adds to it, so a tick
+run by hand to fill in a past day waits for the hourly one rather than
+writing over its hours:
+
+.. code-block:: bash
+
+   runtraj tick s3://bucket/projects/my_project --now 2026-10-01T00:00
+
+``--now`` is the time to act as if it were, in UTC; a time later than the
+clock is refused. Each hour's pod has 45 minutes, unless
+``active_deadline_seconds`` gives it another limit, and a pod still running
+holds back the next. Scheduling the project again, after editing
+``sites.csv`` or the ``kubernetes`` block, replaces its CronJob, which is
+named for the project and where its inputs are. The manifest is kept in
+``_kubernetes/<date_time>_<id>/cronjob.yaml`` in the project;
+``kubectl delete cronjob <name>`` stops the schedule. ``runtraj status``
+lists each hour's Job with the others.
 
 .. _fetch-once:
 

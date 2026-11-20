@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>The Particle Table &#8212; runtraj 0.1.0a2</title>
+    <title>The Particle Table &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -528,6 +528,8 @@
 <li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">The Particle Table</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.PARTICLE_SCHEMA.html">runtraj.particles.PARTICLE_SCHEMA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.check_particles.html">runtraj.particles.check_particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.release_metadata.html">runtraj.particles.release_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.stored_release.html">runtraj.particles.stored_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.add_release_heights.html">runtraj.particles.add_release_heights</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.sample_met.html">runtraj.sampling.sample_met</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html">runtraj.sampling.calc_pbl_height</a></li>
@@ -598,6 +600,8 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
 </ul>
@@ -646,6 +650,24 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html">runtraj.execution.kubernetes.job_manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.submit_job.html">runtraj.execution.kubernetes.submit_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.project_jobs.html">runtraj.execution.kubernetes.project_jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.job_summary.html">runtraj.execution.kubernetes.job_summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.push.html">runtraj.execution.inputs.push</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.pull.html">runtraj.execution.inputs.pull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.hash_inputs.html">runtraj.execution.inputs.hash_inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.schedule_job.html">runtraj.execution.kubernetes.schedule_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.cron_job_manifest.html">runtraj.execution.kubernetes.cron_job_manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.cron_job_name.html">runtraj.execution.kubernetes.cron_job_name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.add_due_releases.html">runtraj.execution.schedule.add_due_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.due_hours.html">runtraj.execution.schedule.due_hours</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.read_sites.html">runtraj.execution.schedule.read_sites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.hourly_releases.html">runtraj.execution.schedule.hourly_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.check_now.html">runtraj.execution.schedule.check_now</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.lock.html">runtraj.execution.inputs.lock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
@@ -670,13 +692,17 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model.html">runtraj.models.run_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.open_met.html">runtraj.models.open_met</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.check_model.html">runtraj.models.check_model</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.batched.html">runtraj.models.hysplit.HysplitModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.needs_workdir.html">runtraj.models.hysplit.HysplitModel.needs_workdir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.particle_files.html">runtraj.models.hysplit.HysplitModel.particle_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.check_met.html">runtraj.models.hysplit.HysplitModel.check_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.data_files.html">runtraj.models.hysplit.HysplitModel.data_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.downloads_met.html">runtraj.models.hysplit.HysplitModel.downloads_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.fetch_met.html">runtraj.models.hysplit.HysplitModel.fetch_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.release_rows.html">runtraj.models.hysplit.HysplitModel.release_rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.run.html">runtraj.models.hysplit.HysplitModel.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.sha256.html">runtraj.models.hysplit.HysplitModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.version.html">runtraj.models.hysplit.HysplitModel.version</a></li>
@@ -734,6 +760,14 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
 </ul>
 </details></li>
@@ -859,11 +893,15 @@ int32, and read back as float64.</p></td>
 <p>A model should write each particle’s release as a row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>. That
 row is where the particle started, so it says which release point of a
 multipoint release the particle left from, and which slab of a column
-release (<a class="reference internal" href="_api/runtraj.particles.add_release_heights.html#runtraj.particles.add_release_heights" title="runtraj.particles.add_release_heights"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_release_heights()</span></code></a>). HYSPLIT 5.1.0 writes no such row: its
-first row is one time step after release. For it, runtraj matches each
-particle to a release point from its first position, and takes a column’s
-particles to be released bottom to top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order. A HYSPLIT
-build that writes the release rows (<code class="docutils literal notranslate"><span class="pre">directory</span></code>) makes the matching exact.</p>
+release (<a class="reference internal" href="_api/runtraj.particles.add_release_heights.html#runtraj.particles.add_release_heights" title="runtraj.particles.add_release_heights"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_release_heights()</span></code></a>). A model that writes no such row
+says where each particle started through its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code>
+(<a class="reference internal" href="_api/runtraj.models.TransportModel.html#runtraj.models.TransportModel" title="runtraj.models.TransportModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransportModel</span></code></a>); without either, a column or
+multipoint release fails with the reason <code class="docutils literal notranslate"><span class="pre">NO_RELEASE_ROWS</span></code>.</p>
+<p>HYSPLIT 5.1.0 writes no release row: its first row is one time step after
+release. Its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code> matches each particle to a release point from
+its first position, and takes a column’s particles to be released bottom to
+top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order. A HYSPLIT build that writes the release rows
+(<code class="docutils literal notranslate"><span class="pre">directory</span></code>) makes the matching exact.</p>
 </section>
 <section id="columns-the-model-adds">
 <h2>Columns the model adds<a class="headerlink" href="#columns-the-model-adds" title="Link to this heading">#</a></h2>
@@ -964,6 +1002,24 @@ weighting and an averaging kernel also add <code class="docutils literal notrans
 </table>
 </div>
 </section>
+<section id="a-result-file-s-release">
+<h2>A result file’s release<a class="headerlink" href="#a-result-file-s-release" title="Link to this heading">#</a></h2>
+<p>A stage that writes a Parquet file of its own records the release in the
+file’s metadata with <a class="reference internal" href="_api/runtraj.particles.release_metadata.html#runtraj.particles.release_metadata" title="runtraj.particles.release_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">release_metadata()</span></code></a>, and
+<a class="reference internal" href="_api/runtraj.particles.stored_release.html#runtraj.particles.stored_release" title="runtraj.particles.stored_release"><code class="xref py py-func docutils literal notranslate"><span class="pre">stored_release()</span></code></a> reads it back from the file’s
+schema metadata. Neither names the metadata key, which is runtraj’s.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.particles.release_metadata.html#runtraj.particles.release_metadata" title="runtraj.particles.release_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">release_metadata</span></code></a></p></td>
+<td><p>Return the Parquet schema metadata that records <em>release</em> in a result file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.particles.stored_release.html#runtraj.particles.stored_release" title="runtraj.particles.stored_release"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stored_release</span></code></a></p></td>
+<td><p>Return the release a stored result file records in its metadata.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="after-a-run">
 <h2>After a run<a class="headerlink" href="#after-a-run" title="Link to this heading">#</a></h2>
 <p>After a run runtraj adds the release heights to any model’s particles.
@@ -999,14 +1055,22 @@ its domain, which a stored run records:</p>
 </div>
 <p>The sampled values differ a little from HYSPLIT’s own columns, by the
 amounts under <a class="reference internal" href="_api/runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a>’s Notes. <code class="docutils literal notranslate"><span class="pre">mlht</span></code> from <a class="reference internal" href="_api/runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a>
-is the met’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>. HYSPLIT’s default (<code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>) finds the mixed
-layer from the met’s profile instead, and <a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_pbl_height()</span></code></a> finds it
-the same way.</p>
+is the met’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>. A transport model may find the mixed layer from
+the met’s profile instead: HYSPLIT does by default (<code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>), and
+FLEXPART does on ERA5. <a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_pbl_height()</span></code></a> finds the mixed layer the
+way the run did; give it the run’s <code class="docutils literal notranslate"><span class="pre">method</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.sampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">calc_pbl_height</span>
+
+<span class="n">mlht</span> <span class="o">=</span> <span class="n">calc_pbl_height</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span><span class="p">)</span>  <span class="c1"># HYSPLIT, kmixd: 3</span>
+<span class="n">mlht</span> <span class="o">=</span> <span class="n">calc_pbl_height</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"hysplit_temperature"</span><span class="p">)</span>  <span class="c1"># kmixd: 1</span>
+<span class="n">mlht</span> <span class="o">=</span> <span class="n">calc_pbl_height</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"flexpart"</span><span class="p">)</span>  <span class="c1"># FLEXPART on ERA5</span>
+</pre></div>
+</div>
 <p>Met files that are not ARL files, such as GRIB, are read as one Dataset in
-<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, the way a converter in
+<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, the way a converter in
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">arlmet.converters</span></code> writes it. Both functions take that Dataset in
 place of the files, and sample it as they would sample the ARL file
-<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.write_dataset.html#arlmet.write_dataset" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.write_dataset()</span></code></a> would write from it. A transport model that
+<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.write_dataset.html#arlmet.write_dataset" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.write_dataset()</span></code></a> would write from it. A transport model that
 reads such files opens them for you: <a class="reference internal" href="_api/runtraj.models.open_met.html#runtraj.models.open_met" title="runtraj.models.open_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.models.open_met()</span></code></a> returns
 the Dataset, cropped to where the particles are, or the paths of ARL files
 as they are.</p>
@@ -1016,7 +1080,7 @@ as they are.</p>
 <td><p>Return the particles with met columns sampled at each particle's position.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_pbl_height</span></code></a></p></td>
-<td><p>Return the mixed-layer height at each particle, found from the met's profile as HYSPLIT's <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code> finds it.</p></td>
+<td><p>Return the mixed-layer height at each particle, found from the met as a transport model finds it.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1075,6 +1139,7 @@ as they are.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#columns-the-model-adds">Columns the model adds</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#columns-runtraj-adds">Columns runtraj adds</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-a-table">Checking a table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-result-file-s-release">A result file’s release</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#after-a-run">After a run</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#met-columns-for-a-model-that-writes-only-positions">Met columns for a model that writes only positions</a></li>
 </ul>

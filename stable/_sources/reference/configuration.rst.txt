@@ -40,6 +40,21 @@ names the line of the second.
 Each page below lists its fields with their defaults and is generated from
 the code.
 
+A config runs code
+------------------
+
+A ``class`` in a model's or a stage's block, and a transform's ``kind``,
+name a Python object by its import path. runtraj imports that module and
+calls the object, which is how a project uses a model or a stage from any
+installed package. runtraj does not check what the path names: any
+installed module is imported and any callable is called, even by
+``runtraj check``. So treat a ``config.yaml`` as you would a Python script,
+and run one only if you would run a script from the same person.
+
+A service that runs configs other people send should not pass their YAML to
+runtraj. Build the :class:`ProjectConfig` yourself from the fields you
+allow, with the import paths you choose.
+
 Every key
 ---------
 
@@ -116,7 +131,7 @@ Execution
 
 The keys under ``execution:`` (:doc:`../guides/running`). ``backend`` names
 where the project runs, and every setting of that place is in the block of
-its name. Only that block is read, so a config can hold both.
+its name. Only that block is read, so a config can hold several.
 
 .. config-model:: runtraj.execution.config.ExecutionConfig
 
@@ -133,6 +148,16 @@ The keys under ``execution: slurm: fetch:``, the Slurm resources of the job
 that gets the met files before a job array (:ref:`slurm-fetch`).
 
 .. config-model:: runtraj.execution.config.FetchConfig
+
+The keys under ``execution: kubernetes:``, a Kubernetes indexed Job
+(:ref:`kubernetes-submit`), in Kubernetes' own names and units.
+
+.. config-model:: runtraj.execution.config.KubernetesConfig
+
+The keys of one entry under ``execution: kubernetes: volumes:``, a
+PersistentVolumeClaim mounted in every pod.
+
+.. config-model:: runtraj.execution.config.Volume
 
 Boxes
 ~~~~~
@@ -164,6 +189,8 @@ can share one.
    execution.LocalConfig
    execution.SlurmConfig
    execution.FetchConfig
+   execution.KubernetesConfig
+   execution.Volume
    Bounds
 
 Parameters

@@ -1,0 +1,48 @@
+﻿runtraj.config.Variant
+======================
+
+.. currentmodule:: runtraj.config
+
+
+
+
+
+
+.. class-signature:: runtraj.config.Variant
+
+
+.. class-parameters:: runtraj.config.Variant
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~Variant.build
+   ~Variant.met_settings
+   ~Variant.particles_hash
+   ~Variant.readable_run_settings
+   ~Variant.realization_numbers
+   ~Variant.run_settings
+   ~Variant.stage_hashes
+   ~Variant.stage_order
+   ~Variant.stage_settings
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~Variant.stage
+   ~Variant.stage_hashes_on
+   ~Variant.transport_for
+
+
+

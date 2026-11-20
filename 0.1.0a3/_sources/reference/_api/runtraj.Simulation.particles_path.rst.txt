@@ -1,0 +1,6 @@
+runtraj.Simulation.particles\_path
+==================================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.particles_path

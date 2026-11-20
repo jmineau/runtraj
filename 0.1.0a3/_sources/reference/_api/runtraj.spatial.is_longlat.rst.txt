@@ -1,0 +1,6 @@
+﻿runtraj.spatial.is\_longlat
+===========================
+
+.. currentmodule:: runtraj.spatial
+
+.. autofunction:: is_longlat

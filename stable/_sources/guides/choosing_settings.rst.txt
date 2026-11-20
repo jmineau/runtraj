@@ -110,7 +110,8 @@ With them, two variants start from the same random numbers, so the
 difference between ``hrrr`` and ``hrrr-zi08`` comes from ``ziscale`` and
 not from a different draw. An ensemble (``realizations: N``,
 :doc:`projects`) runs realization ``k`` with ``seed + k``, so each gets its
-own draws. ``krand: 4`` seeds each run from the clock instead, so every run
+own draws. A ``seed`` must be 0 or more, because HYSPLIT would run a seed and
+its negative the same. ``krand: 4`` seeds each run from the clock instead, so every run
 differs and cannot be made again. ``krand`` in
 :doc:`../reference/configuration` lists every mode.
 

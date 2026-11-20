@@ -1,0 +1,5 @@
+runtraj.MultiPointRelease.coords
+================================
+
+.. currentmodule:: runtraj
+.. automethod:: MultiPointRelease.coords

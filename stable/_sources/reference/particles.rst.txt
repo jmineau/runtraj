@@ -44,11 +44,16 @@ The release row
 A model should write each particle's release as a row at ``age = 0``. That
 row is where the particle started, so it says which release point of a
 multipoint release the particle left from, and which slab of a column
-release (:func:`add_release_heights`). HYSPLIT 5.1.0 writes no such row: its
-first row is one time step after release. For it, runtraj matches each
-particle to a release point from its first position, and takes a column's
-particles to be released bottom to top in ``particle`` order. A HYSPLIT
-build that writes the release rows (``directory``) makes the matching exact.
+release (:func:`add_release_heights`). A model that writes no such row
+says where each particle started through its ``release_rows``
+(:class:`~runtraj.models.TransportModel`); without either, a column or
+multipoint release fails with the reason ``NO_RELEASE_ROWS``.
+
+HYSPLIT 5.1.0 writes no release row: its first row is one time step after
+release. Its ``release_rows`` matches each particle to a release point from
+its first position, and takes a column's particles to be released bottom to
+top in ``particle`` order. A HYSPLIT build that writes the release rows
+(``directory``) makes the matching exact.
 
 Columns the model adds
 ----------------------
@@ -130,6 +135,21 @@ Checking a table
    PARTICLE_SCHEMA
    check_particles
 
+A result file's release
+-----------------------
+
+A stage that writes a Parquet file of its own records the release in the
+file's metadata with :func:`~runtraj.particles.release_metadata`, and
+:func:`~runtraj.particles.stored_release` reads it back from the file's
+schema metadata. Neither names the metadata key, which is runtraj's.
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   release_metadata
+   stored_release
+
 After a run
 -----------
 
@@ -169,9 +189,18 @@ its domain, which a stored run records:
 
 The sampled values differ a little from HYSPLIT's own columns, by the
 amounts under :func:`sample_met`'s Notes. ``mlht`` from :func:`sample_met`
-is the met's ``PBLH``. HYSPLIT's default (``kmixd: 3``) finds the mixed
-layer from the met's profile instead, and :func:`calc_pbl_height` finds it
-the same way.
+is the met's ``PBLH``. A transport model may find the mixed layer from
+the met's profile instead: HYSPLIT does by default (``kmixd: 3``), and
+FLEXPART does on ERA5. :func:`calc_pbl_height` finds the mixed layer the
+way the run did; give it the run's ``method``:
+
+.. code-block:: python
+
+   from runtraj.sampling import calc_pbl_height
+
+   mlht = calc_pbl_height(sim.particles, meta.met_files)  # HYSPLIT, kmixd: 3
+   mlht = calc_pbl_height(sim.particles, meta.met_files, method="hysplit_temperature")  # kmixd: 1
+   mlht = calc_pbl_height(particles, met, method="flexpart")  # FLEXPART on ERA5
 
 Met files that are not ARL files, such as GRIB, are read as one Dataset in
 :func:`arlmet.open_dataset`'s layout, the way a converter in

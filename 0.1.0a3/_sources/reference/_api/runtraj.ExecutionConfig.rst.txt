@@ -1,0 +1,34 @@
+﻿runtraj.ExecutionConfig
+=======================
+
+.. currentmodule:: runtraj
+
+
+
+
+
+
+.. class-signature:: runtraj.ExecutionConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.ExecutionConfig
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~ExecutionConfig.cpus
+   ~ExecutionConfig.fetch
+
+
+
+
+

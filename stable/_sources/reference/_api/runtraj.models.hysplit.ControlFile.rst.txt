@@ -1,0 +1,30 @@
+﻿runtraj.models.hysplit.ControlFile
+==================================
+
+.. currentmodule:: runtraj.models.hysplit
+
+
+
+
+
+
+.. class-signature:: runtraj.models.hysplit.ControlFile
+
+
+.. class-parameters:: runtraj.models.hysplit.ControlFile
+
+
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~ControlFile.read
+   ~ControlFile.write
+
+
+

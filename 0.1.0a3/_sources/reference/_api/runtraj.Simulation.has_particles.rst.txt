@@ -1,0 +1,6 @@
+runtraj.Simulation.has\_particles
+=================================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.has_particles

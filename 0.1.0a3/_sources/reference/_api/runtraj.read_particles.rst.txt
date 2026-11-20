@@ -1,0 +1,6 @@
+﻿runtraj.read\_particles
+=======================
+
+.. currentmodule:: runtraj
+
+.. autofunction:: read_particles

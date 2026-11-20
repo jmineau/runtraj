@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>In Containers (Kubernetes) &#8212; runtraj 0.1.0a2</title>
+    <title>In Containers (Kubernetes) &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -496,8 +496,10 @@
   <section id="in-containers-kubernetes">
 <h1>In Containers (Kubernetes)<a class="headerlink" href="#in-containers-kubernetes" title="Link to this heading">#</a></h1>
 <p>A project can run in many containers at once, such as the pods of a
-Kubernetes Job, without Slurm. Each container runs one share of the
-releases:</p>
+Kubernetes Job, without Slurm. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> makes that Job for you
+(<a class="reference internal" href="#kubernetes-submit"><span class="std std-ref">Submitting to Kubernetes</span></a>); the rest of this page is what each pod does,
+for a Job you write yourself or another scheduler.</p>
+<p>Each container runs one share of the releases:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>run<span class="w"> </span>/project<span class="w"> </span>--task<span class="w"> </span><span class="m">3</span>/20
 </pre></div>
 </div>
@@ -529,6 +531,128 @@ than <code class="docutils literal notranslate"><span class="pre">config.yaml</s
 <code class="docutils literal notranslate"><span class="pre">RUNTRAJ_COMPUTE_ROOT</span></code> to a folder on fast local disk, such as an
 <code class="docutils literal notranslate"><span class="pre">emptyDir</span></code>.</p></li>
 </ul>
+</section>
+<section id="submitting-to-kubernetes">
+<span id="kubernetes-submit"></span><h2>Submitting to Kubernetes<a class="headerlink" href="#submitting-to-kubernetes" title="Link to this heading">#</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code>, <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> makes one indexed Job and
+creates it with <code class="docutils literal notranslate"><span class="pre">kubectl</span></code>, on the cluster and namespace <code class="docutils literal notranslate"><span class="pre">kubectl</span></code>
+points at. Each pod runs <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">&lt;project&gt;</span> <span class="pre">--task</span> <span class="pre">I/N</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">execution</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kubernetes</span>
+<span class="w">  </span><span class="nt">kubernetes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">registry.example.org/runtraj-hysplit:1</span>
+<span class="w">    </span><span class="nt">completions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w">           </span><span class="c1"># tasks, N</span>
+<span class="w">    </span><span class="nt">parallelism</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">           </span><span class="c1"># pods running at once</span>
+<span class="w">    </span><span class="nt">cpus</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w">                   </span><span class="c1"># releases each pod runs at once</span>
+<span class="w">    </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8Gi</span><span class="w">               </span><span class="c1"># Kubernetes units: 8Gi, not 8G</span>
+<span class="w">    </span><span class="nt">inputs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://bucket/projects/my_project</span>
+<span class="w">    </span><span class="nt">secrets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">bucket-keys</span><span class="p p-Indicator">]</span><span class="w">    </span><span class="c1"># a Secret holding the bucket's credentials</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">claim_name</span><span class="p">:</span><span class="w"> </span><span class="nv">hrrr-arl</span><span class="p p-Indicator">,</span><span class="nt"> mount_path</span><span class="p">:</span><span class="w"> </span><span class="nv">/met</span><span class="p p-Indicator">,</span><span class="nt"> read_only</span><span class="p">:</span><span class="w"> </span><span class="nv">true</span><span class="p p-Indicator">}</span>
+<span class="nt">output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3://bucket/output</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>submit<span class="w"> </span>/project
+</pre></div>
+</div>
+<p>It prints the Job’s name; <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">job</span> <span class="pre">&lt;name&gt;</span></code> follows it and
+<code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">job</span> <span class="pre">&lt;name&gt;</span></code> stops it. The manifest is kept in
+<code class="docutils literal notranslate"><span class="pre">_kubernetes/&lt;date_time&gt;_&lt;id&gt;/job.yaml</span></code> in the project.</p>
+<p>We recommend putting the inputs on a bucket (<code class="docutils literal notranslate"><span class="pre">inputs</span></code>): <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>
+copies <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">tables/</span></code> there, and each pod
+copies them to its own disk before it runs, so the pods need no shared
+volume for the project. The output directory must then be on a bucket too,
+or each pod would write its results to its own disk; <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>
+refuses that. Without <code class="docutils literal notranslate"><span class="pre">inputs</span></code> the pods open the project folder at the
+path it has where you submit, so it must be on a volume they mount at that
+path.</p>
+<p><code class="docutils literal notranslate"><span class="pre">image</span></code> is required. runtraj publishes no image: an image needs runtraj,
+HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> (downloaded from NOAA ARL; <a class="reference internal" href="../getting_started/installation.html"><span class="doc">Installation</span></a>)
+and the packages of the stages the project names. Every pod must have the
+same <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, since its checksum is part of each run’s settings.</p>
+<p>Each pod gets an <code class="docutils literal notranslate"><span class="pre">emptyDir</span></code> at <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> as its <code class="docutils literal notranslate"><span class="pre">TMPDIR</span></code>, where its
+copy of the inputs and its workdirs go, and one thread per worker. The Job
+retries a pod from its exit code (<a class="reference internal" href="#exit-codes"><span class="std std-ref">Exit codes</span></a>): 3 is retried up to
+three times per task, 1 and 4 fail that task only, 2 fails the whole Job,
+and a pod evicted or preempted is retried without counting. Each pod is
+given the hash of <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> as they were
+submitted (<code class="docutils literal notranslate"><span class="pre">--inputs-hash</span></code>) and exits with 2 when what it reads differs:
+a <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> changed after submit would split the releases
+differently among the tasks. Submit again after changing them.</p>
+<p>A Job runs every unfinished release of the project and skips the complete
+ones, so <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> on Kubernetes takes no <code class="docutils literal notranslate"><span class="pre">--releases</span></code> and no
+<code class="docutils literal notranslate"><span class="pre">--no-skip</span></code>. It does not fetch the met first: run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code>
+before it (<a class="reference internal" href="#fetch-once"><span class="std std-ref">Fetching the meteorology once</span></a>) when the pods share the met volume.
+Afterwards <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> counts the project’s simulations, as for any
+run, and lists the project’s Jobs on the cluster <code class="docutils literal notranslate"><span class="pre">kubectl</span></code> points at:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Project: /project  total=480  complete=455  failed=5  interrupted=0  pending=20
+Jobs:
+  runtraj-my-project-x7k2p  running  17 of 20 tasks done, 2 running, 1 failed (tasks 6)  started 2026-10-29T16:00:00Z
+</pre></div>
+</div>
+<p>A task counts as failed once Kubernetes gave up on it (after its retries,
+or at once for exit 1 or 4); <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span></code> of its pod says why, and the
+failed simulations each have a <code class="docutils literal notranslate"><span class="pre">.failure.yaml</span></code>. The Jobs are found by the
+project’s name and kept when they were made for this project’s inputs, so
+another project of the same name is left out. When <code class="docutils literal notranslate"><span class="pre">kubectl</span></code> cannot list
+them, the line says why and the counts still print. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span>
+<span class="pre">--json</span></code> adds them as <code class="docutils literal notranslate"><span class="pre">jobs</span></code>.</p>
+</section>
+<section id="running-every-hour">
+<span id="kubernetes-schedule"></span><h2>Running every hour<a class="headerlink" href="#running-every-hour" title="Link to this heading">#</a></h2>
+<p>A project for fixed sites, such as towers, can run on its own every hour:
+each hour gets a release at each site once its met is out. List the sites in
+<code class="docutils literal notranslate"><span class="pre">sites.csv</span></code> in the project folder, one row each:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>name,longitude,latitude,altitude,altitude_ref
+tower,-111.8476,40.7663,35,agl
+valley,-112.1155,40.5385,5,
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">longitude</span></code>, <code class="docutils literal notranslate"><span class="pre">latitude</span></code> and <code class="docutils literal notranslate"><span class="pre">altitude</span></code> are required; <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>
+(<code class="docutils literal notranslate"><span class="pre">agl</span></code>, the default, or <code class="docutils literal notranslate"><span class="pre">msl</span></code>) is optional, and other columns, such as a
+name, are ignored. The project needs no <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> to start. Then,
+with the same <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block as for <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>schedule<span class="w"> </span>/project
+</pre></div>
+</div>
+<p>It makes a Kubernetes CronJob, with <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">apply</span></code>, and prints its name.
+At 15 minutes past each hour (UTC) the CronJob starts one pod, which runs
+<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span></code>. A tick</p>
+<ol class="arabic simple">
+<li><p>adds a release at each site for each hour of the last day that is at
+least <code class="docutils literal notranslate"><span class="pre">--delay</span></code> hours old (8 by default), and reaches back up to a week
+further to close a gap after the newest hour <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> holds, as
+after an outage;</p></li>
+<li><p>writes <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> back, to the bucket when the inputs are on one;</p></li>
+<li><p>runs those releases in the pod, as <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--releases</span></code> would, and
+exits with <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code>’s code.</p></li>
+</ol>
+<p>Releases whose results exist are skipped, so each tick runs the new hour
+and any of the last day that failed before, such as an hour whose met was
+not out yet. We recommend the default delay for HRRR: NOAA’s archive posts
+each 6-hour file about 40 minutes after its last hour, and a run also needs
+the hour after its release, so an hour’s met is all there about 7 hours 40
+minutes later.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">inputs</span></code> set, <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">schedule</span></code> copies <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">sites.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">tables/</span></code> there, and <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> only while the
+bucket has none: from then on the bucket’s copy is the one each hour adds
+to, so read it there. Without <code class="docutils literal notranslate"><span class="pre">inputs</span></code> the pods open the project folder
+at its path here, as for <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>. A tick locks <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>
+(a file <code class="docutils literal notranslate"><span class="pre">.releases.csv.lock</span></code> beside it) while it adds to it, so a tick
+run by hand to fill in a past day waits for the hourly one rather than
+writing over its hours:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>tick<span class="w"> </span>s3://bucket/projects/my_project<span class="w"> </span>--now<span class="w"> </span><span class="m">2026</span>-10-01T00:00
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--now</span></code> is the time to act as if it were, in UTC; a time later than the
+clock is refused. Each hour’s pod has 45 minutes, unless
+<code class="docutils literal notranslate"><span class="pre">active_deadline_seconds</span></code> gives it another limit, and a pod still running
+holds back the next. Scheduling the project again, after editing
+<code class="docutils literal notranslate"><span class="pre">sites.csv</span></code> or the <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block, replaces its CronJob, which is
+named for the project and where its inputs are. The manifest is kept in
+<code class="docutils literal notranslate"><span class="pre">_kubernetes/&lt;date_time&gt;_&lt;id&gt;/cronjob.yaml</span></code> in the project;
+<code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">cronjob</span> <span class="pre">&lt;name&gt;</span></code> stops the schedule. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code>
+lists each hour’s Job with the others.</p>
 </section>
 <section id="fetching-the-meteorology-once">
 <span id="fetch-once"></span><h2>Fetching the meteorology once<a class="headerlink" href="#fetching-the-meteorology-once" title="Link to this heading">#</a></h2>
@@ -755,6 +879,8 @@ that drives the Job.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-every-container-needs">What every container needs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-to-kubernetes">Submitting to Kubernetes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-every-hour">Running every hour</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fetching-the-meteorology-once">Fetching the meteorology once</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-kubernetes-indexed-job">A Kubernetes indexed Job</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-codes">Exit codes</a></li>

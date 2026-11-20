@@ -1,0 +1,5 @@
+runtraj.Project.folders
+=======================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.folders

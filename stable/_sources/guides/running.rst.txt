@@ -72,6 +72,11 @@ variants. Set it to the number of CPU cores you can spare, because each
 HYSPLIT run uses one core. A Slurm run has its own ``cpus``, per array task,
 in the ``slurm`` block (:doc:`slurm`).
 
+Each process gets its share of the cores as ``OMP_NUM_THREADS``, 4 on a
+16-core machine with ``cpus: 4``, so a program that starts a thread per
+core does not start 16 in each. To choose another value, export
+``OMP_NUM_THREADS`` before the run; runtraj keeps it.
+
 A Python script that calls ``project.run()`` with ``cpus`` above 1 needs its
 code under ``if __name__ == "__main__":``. Python 3.14, macOS, and Windows
 start each worker by importing the script again, so anything at the top of the
@@ -170,10 +175,17 @@ Commands
    Submit the unfinished simulations to Slurm as a job array, and return as
    soon as it is submitted (:doc:`slurm`).
 
+``runtraj schedule <project>`` and ``runtraj tick <project>``
+   Run a project every hour on Kubernetes, for the sites in its
+   ``sites.csv``: ``schedule`` makes the CronJob, and ``tick`` is what each
+   hour's pod runs (:ref:`kubernetes-schedule`).
+
 ``runtraj status <project>``
    Count finished and remaining simulations, and the failed ones by reason.
    List the settings folders in the output directory and which variants
    use them. ``--json`` prints the same as JSON, for a program to read.
+   With ``backend: kubernetes``, it lists the project's Jobs too
+   (:ref:`kubernetes-submit`).
 
 Every command exits with 0 when all went well, 1 when some simulations
 failed or ``runtraj check`` found something, and 3 when a run was stopped

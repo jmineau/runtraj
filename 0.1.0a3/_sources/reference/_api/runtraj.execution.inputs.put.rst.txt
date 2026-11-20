@@ -1,0 +1,6 @@
+﻿runtraj.execution.inputs.put
+============================
+
+.. currentmodule:: runtraj.execution.inputs
+
+.. autofunction:: put

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtraj.sampling.sample_met &#8212; runtraj 0.1.0a2</title>
+    <title>runtraj.sampling.sample_met &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -528,6 +528,8 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../particles.html">The Particle Table</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="runtraj.particles.PARTICLE_SCHEMA.html">runtraj.particles.PARTICLE_SCHEMA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.particles.check_particles.html">runtraj.particles.check_particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.particles.release_metadata.html">runtraj.particles.release_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.particles.stored_release.html">runtraj.particles.stored_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.particles.add_release_heights.html">runtraj.particles.add_release_heights</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.sampling.sample_met</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.sampling.calc_pbl_height.html">runtraj.sampling.calc_pbl_height</a></li>
@@ -598,6 +600,8 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
 </ul>
@@ -646,6 +650,24 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.kubernetes.job_manifest.html">runtraj.execution.kubernetes.job_manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.kubernetes.submit_job.html">runtraj.execution.kubernetes.submit_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.kubernetes.project_jobs.html">runtraj.execution.kubernetes.project_jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.kubernetes.job_summary.html">runtraj.execution.kubernetes.job_summary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.push.html">runtraj.execution.inputs.push</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.pull.html">runtraj.execution.inputs.pull</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.hash_inputs.html">runtraj.execution.inputs.hash_inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.kubernetes.schedule_job.html">runtraj.execution.kubernetes.schedule_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.kubernetes.cron_job_manifest.html">runtraj.execution.kubernetes.cron_job_manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.kubernetes.cron_job_name.html">runtraj.execution.kubernetes.cron_job_name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.schedule.add_due_releases.html">runtraj.execution.schedule.add_due_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.schedule.due_hours.html">runtraj.execution.schedule.due_hours</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.schedule.read_sites.html">runtraj.execution.schedule.read_sites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.schedule.hourly_releases.html">runtraj.execution.schedule.hourly_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.schedule.check_now.html">runtraj.execution.schedule.check_now</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.lock.html">runtraj.execution.inputs.lock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
@@ -670,13 +692,17 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model.html">runtraj.models.run_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.open_met.html">runtraj.models.open_met</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.check_model.html">runtraj.models.check_model</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.batched.html">runtraj.models.hysplit.HysplitModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.needs_workdir.html">runtraj.models.hysplit.HysplitModel.needs_workdir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.particle_files.html">runtraj.models.hysplit.HysplitModel.particle_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_met.html">runtraj.models.hysplit.HysplitModel.check_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.data_files.html">runtraj.models.hysplit.HysplitModel.data_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.downloads_met.html">runtraj.models.hysplit.HysplitModel.downloads_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.fetch_met.html">runtraj.models.hysplit.HysplitModel.fetch_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.release_rows.html">runtraj.models.hysplit.HysplitModel.release_rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.run.html">runtraj.models.hysplit.HysplitModel.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.sha256.html">runtraj.models.hysplit.HysplitModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.version.html">runtraj.models.hysplit.HysplitModel.version</a></li>
@@ -734,6 +760,14 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
 </ul>
 </details></li>
@@ -819,7 +853,7 @@
 HYSPLIT writes from the met this way. Each row is sampled at its
 <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, and <code class="docutils literal notranslate"><span class="pre">time</span></code>: bilinear across the met’s
 grid and linear in height between the internal levels of a HYSPLIT run
-with the top <em>z_top</em> (<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.sample_points.html#arlmet.sample_points" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.sample_points()</span></code></a>), then linear in time
+with the top <em>z_top</em> (<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.sample_points.html#arlmet.sample_points" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.sample_points()</span></code></a>), then linear in time
 between the two met times around the particle’s, as HYSPLIT does. Each column comes
 from these ARL variables:</p>
 <ul class="simple">
@@ -835,20 +869,21 @@ the pressure of its vertical axis instead.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code> is <code class="docutils literal notranslate"><span class="pre">SHGT</span></code>, the terrain height, in m above sea level.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">pres</span></code> and <code class="docutils literal notranslate"><span class="pre">dens</span></code> follow what HYSPLIT reads, to the differences
-under Notes. <code class="docutils literal notranslate"><span class="pre">mlht</span></code> is the met’s: HYSPLIT’s is the
-met’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code> only with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>, and then it is at least <code class="docutils literal notranslate"><span class="pre">kmix0</span></code>;
-the default, <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>, finds the mixed layer from the profile, as
-<a class="reference internal" href="runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_pbl_height()</span></code></a> does.</p>
+under Notes. <code class="docutils literal notranslate"><span class="pre">mlht</span></code> is the met’s. HYSPLIT’s own <code class="docutils literal notranslate"><span class="pre">mlht</span></code> is the met’s
+<code class="docutils literal notranslate"><span class="pre">PBLH</span></code> (at least <code class="docutils literal notranslate"><span class="pre">kmix0</span></code>) only when HYSPLIT runs with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>;
+with HYSPLIT’s default, <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>, it finds the mixed layer from the
+profile, as <a class="reference internal" href="runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_pbl_height()</span></code></a> does.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>particles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span>) – A particle table with <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, and <code class="docutils literal notranslate"><span class="pre">time</span></code>.
+<li><p><strong>particles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span>) – A particle table with <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, and <code class="docutils literal notranslate"><span class="pre">time</span></code>
+(UTC; a time with a time zone is converted to UTC).
 <code class="docutils literal notranslate"><span class="pre">sim.particles</span></code> has <code class="docutils literal notranslate"><span class="pre">time</span></code>. For a table a transport model
 returned, add it: the release time plus <code class="docutils literal notranslate"><span class="pre">age</span></code> minutes.</p></li>
-<li><p><strong>met</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]] | <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span>) – ARL met files that cover the particles’ times, such as the files the
+<li><p><strong>met</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]] | <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span>) – ARL met files that cover the particles’ times, such as the files the
 run read (<code class="docutils literal notranslate"><span class="pre">met_files</span></code> of <a class="reference internal" href="runtraj.models.ModelRun.html#runtraj.models.ModelRun" title="runtraj.models.ModelRun"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.ModelRun</span></code></a> or of
 <a class="reference internal" href="runtraj.particles.particles_metadata.html#runtraj.particles.particles_metadata" title="runtraj.particles.particles_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.particles.particles_metadata()</span></code></a>), or met in another
-format as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout
+format as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout
 (<a class="reference internal" href="runtraj.models.open_met.html#runtraj.models.open_met" title="runtraj.models.open_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.models.open_met()</span></code></a>, or an arlmet converter’s output).</p></li>
 <li><p><strong>columns</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</span>) – The columns to add.</p></li>
 <li><p><strong>z_top</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The top of the run’s domain in meters (<code class="docutils literal notranslate"><span class="pre">z_top</span></code> of
@@ -870,7 +905,7 @@ grid is NaN.</p>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If a column is not one of the four or is in <em>particles</em> already
     (drop it first), <em>particles</em> has no <code class="docutils literal notranslate"><span class="pre">time</span></code> column, a row is outside
-    the files’ times, or <em>z_top</em> is not positive.</p></li>
+    the files’ times, or <em>z_top</em> is not positive or is below a particle.</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><strong>KeyError</strong></a> – If the met lacks a variable a column needs.</p></li>
 </ul>
 </dd>
@@ -881,7 +916,7 @@ summer, the sampled columns differ from the ones HYSPLIT wrote by:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code>: a few meters, since HYSPLIT reads the terrain where the
 particle was before its turbulent step.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mlht</span></code>: a median of 16 to 30 m, against a run with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">mlht</span></code>: a median of 16 to 30 m, against a HYSPLIT run with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>
 floored at <code class="docutils literal notranslate"><span class="pre">kmix0</span></code>. HYSPLIT reads the nearest grid point’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>;
 this function interpolates it.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pres</span></code>: a median of 0.02 hPa, 0.23 to 0.30 hPa at the 95th

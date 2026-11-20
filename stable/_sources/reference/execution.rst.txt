@@ -12,7 +12,13 @@ work underneath.
 - :func:`~runtraj.execution.submit` is what ``project.submit()`` calls. It
   writes a job array script (:func:`~runtraj.execution.job_script`) whose
   tasks each run ``runtraj run --task``, submits it with ``sbatch``, and
-  returns the job id at once.
+  returns the job id at once. With ``backend: kubernetes`` it makes an
+  indexed Job instead (:func:`~runtraj.execution.kubernetes.job_manifest`)
+  and creates it with ``kubectl``.
+- :func:`~runtraj.execution.kubernetes.schedule_job` is what ``runtraj
+  schedule`` calls: a CronJob (:func:`~runtraj.execution.kubernetes.cron_job_manifest`)
+  whose pod each hour runs ``runtraj tick``, which adds the hours now due
+  (:func:`~runtraj.execution.schedule.add_due_releases`) and runs them.
 - :func:`~runtraj.execution.worker.run_particles` runs the transport model for one
   :class:`~runtraj.Simulation` and writes its particles and log.
 - :func:`~runtraj.execution.worker.run_stages` runs the stages of the variants
@@ -76,6 +82,40 @@ Slurm job arrays
    runtraj.execution.job_script
    runtraj.execution.fetch_script
 
+Kubernetes indexed Jobs
+-----------------------
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.execution.kubernetes.job_manifest
+   runtraj.execution.kubernetes.submit_job
+   runtraj.execution.kubernetes.project_jobs
+   runtraj.execution.kubernetes.job_summary
+   runtraj.execution.inputs.push
+   runtraj.execution.inputs.pull
+   runtraj.execution.inputs.hash_inputs
+
+Running every hour
+------------------
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.execution.kubernetes.schedule_job
+   runtraj.execution.kubernetes.cron_job_manifest
+   runtraj.execution.kubernetes.cron_job_name
+   runtraj.execution.schedule.add_due_releases
+   runtraj.execution.schedule.due_hours
+   runtraj.execution.schedule.read_sites
+   runtraj.execution.schedule.hourly_releases
+   runtraj.execution.schedule.check_now
+   runtraj.execution.inputs.lock
+   runtraj.execution.inputs.get
+   runtraj.execution.inputs.put
+
 Transport model
 ----------------
 
@@ -84,7 +124,8 @@ HYSPLIT is the one built in, and CONTRIBUTING describes how to add
 another, named by its import path.
 A model fails a run that its meteorology does not cover, as
 ``MET_COVERAGE``. Particles that all leave the met's domain before the end
-of the run are a complete run.
+of the run are a complete run. Use :func:`~runtraj.models.check_model` in
+the tests of a model of your own.
 
 .. autosummary::
    :toctree: _api
@@ -98,6 +139,7 @@ of the run are a complete run.
    runtraj.models.run_model
    runtraj.models.run_model_many
    runtraj.models.open_met
+   runtraj.models.check_model
    runtraj.models.hysplit.HysplitModel
 
 Stages

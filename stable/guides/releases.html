@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Releases &#8212; runtraj 0.1.0a2</title>
+    <title>Releases &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -614,12 +614,13 @@ a hash of its points, so listing the same points in another order gives the
 same ID.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Every point must have its own horizontal location. HYSPLIT treats
-consecutive release points at the same latitude and longitude as one
-vertical line source, and releases particles only between the last two
-heights. Stacking several heights at one location would silently drop all
-but the top segment, so <a class="reference internal" href="../reference/_api/runtraj.MultiPointRelease.html#runtraj.MultiPointRelease" title="runtraj.MultiPointRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPointRelease</span></code></a> raises
-<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> instead.</p>
+<p>With HYSPLIT, every point must have its own horizontal location. HYSPLIT
+treats consecutive release points at the same latitude and longitude as
+one vertical line source, and releases particles only between the last
+two heights. Stacking several heights at one location would silently drop
+all but the top segment, so HYSPLIT refuses such a release: <code class="docutils literal notranslate"><span class="pre">runtraj</span>
+<span class="pre">check</span></code> lists it, and its run fails with the reason <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code>.
+Another transport model may run it.</p>
 <p>For a vertical column, use <a class="reference internal" href="../reference/_api/runtraj.ColumnRelease.html#runtraj.ColumnRelease" title="runtraj.ColumnRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnRelease</span></code></a>. For several separate
 heights at one location, run one <a class="reference internal" href="../reference/_api/runtraj.PointRelease.html#runtraj.PointRelease" title="runtraj.PointRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointRelease</span></code></a> per height (a
 distinct <code class="docutils literal notranslate"><span class="pre">group</span></code> in the CSV) and combine the results afterward.</p>

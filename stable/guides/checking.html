@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Checking A Run &#8212; runtraj 0.1.0a2</title>
+    <title>Checking A Run &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -551,42 +551,50 @@ executable; without <code class="docutils literal notranslate"><span class="pre"
 <td><p>Get HYSPLIT and set <code class="docutils literal notranslate"><span class="pre">directory</span></code> or <code class="docutils literal notranslate"><span class="pre">PATH</span></code>
 (<a class="reference internal" href="../getting_started/installation.html"><span class="doc">Installation</span></a>).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_directory</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">release_refused</span></code></p></td>
+<td><p>The transport model cannot run a release. HYSPLIT refuses a
+multipoint release whose points share a horizontal location, which
+it would join into a line source; such a run fails as
+<code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code>.</p></td>
+<td><p>For HYSPLIT, use a <code class="docutils literal notranslate"><span class="pre">ColumnRelease</span></code> for a vertical column, or one
+<code class="docutils literal notranslate"><span class="pre">PointRelease</span></code> per height (<a class="reference internal" href="releases.html"><span class="doc">Releases</span></a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_directory</span></code></p></td>
 <td><p>A met’s <code class="docutils literal notranslate"><span class="pre">directory</span></code> does not exist or holds no ARL file.</p></td>
 <td><p>Correct <code class="docutils literal notranslate"><span class="pre">directory</span></code> under <code class="docutils literal notranslate"><span class="pre">mets:</span></code>. A met with <code class="docutils literal notranslate"><span class="pre">download</span></code> makes
 its folder when a run needs it, so it is not checked.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_files</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_files</span></code></p></td>
 <td><p>A release’s run needs a met file that is not there, or files of two
 products hold one of its times. The message names the hours or the
 two files.</p></td>
 <td><p>Add the files, or keep each product in its own folder
 (<a class="reference internal" href="meteorology.html"><span class="doc">Meteorology</span></a>).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_domain</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_domain</span></code></p></td>
 <td><p>A release lies outside the grid of the met files its run starts in,
 where HYSPLIT cannot start particles. The grid is read from a file’s
 header.</p></td>
 <td><p>Use met files whose domain holds the release, or check the sign of
 its longitude.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_crop</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_crop</span></code></p></td>
 <td><p>With <code class="docutils literal notranslate"><span class="pre">subgrid_enable</span></code> on, a release lies outside
 <code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code>.</p></td>
 <td><p>Widen <code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code> to hold the whole run, not only the
 release.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_periods</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_periods</span></code></p></td>
 <td><p>A file the releases need holds one time period, which HYSPLIT
 cannot read.</p></td>
 <td><p>Use files that each hold at least two time periods.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_cut</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_cut</span></code></p></td>
 <td><p>A file the releases need ends partway through a time step, so it is
 damaged.</p></td>
 <td><p>Download or crop the file again.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> lacks <code class="docutils literal notranslate"><span class="pre">zsfc</span></code>, the terrain height, and a release
 given above sea level needs it. The message says why.</p></td>
 <td><p>Add <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> to <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> before the runs. It is a run setting,
@@ -730,8 +738,9 @@ reporting.</p>
 the folder HYSPLIT ran in, is kept under <code class="docutils literal notranslate"><span class="pre">scratch/</span></code> in the output
 directory, and <code class="docutils literal notranslate"><span class="pre">sim.kept_workdir</span></code> says where. For HYSPLIT it holds
 <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>, <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> and <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, enough to rerun <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> by
-hand. Set <code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">execution:</span></code> to keep every run’s
-workdir.</p>
+hand. The particle file is left out, since it can take hundreds of
+megabytes. Set <code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">execution:</span></code> to keep every
+run’s workdir whole, particle file included.</p>
 </section>
 <section id="my-particles-look-wrong">
 <h2>My particles look wrong<a class="headerlink" href="#my-particles-look-wrong" title="Link to this heading">#</a></h2>

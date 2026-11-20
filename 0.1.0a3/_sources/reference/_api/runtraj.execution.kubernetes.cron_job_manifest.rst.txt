@@ -1,0 +1,6 @@
+﻿runtraj.execution.kubernetes.cron\_job\_manifest
+================================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autofunction:: cron_job_manifest

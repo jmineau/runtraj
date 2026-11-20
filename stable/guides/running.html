@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running &#8212; runtraj 0.1.0a2</title>
+    <title>Running &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -566,6 +566,10 @@ processes runs one release at a time, with all of that release’s
 variants. Set it to the number of CPU cores you can spare, because each
 HYSPLIT run uses one core. A Slurm run has its own <code class="docutils literal notranslate"><span class="pre">cpus</span></code>, per array task,
 in the <code class="docutils literal notranslate"><span class="pre">slurm</span></code> block (<a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>).</p>
+<p>Each process gets its share of the cores as <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, 4 on a
+16-core machine with <code class="docutils literal notranslate"><span class="pre">cpus:</span> <span class="pre">4</span></code>, so a program that starts a thread per
+core does not start 16 in each. To choose another value, export
+<code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> before the run; runtraj keeps it.</p>
 <p>A Python script that calls <code class="docutils literal notranslate"><span class="pre">project.run()</span></code> with <code class="docutils literal notranslate"><span class="pre">cpus</span></code> above 1 needs its
 code under <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">&quot;__main__&quot;:</span></code>. Python 3.14, macOS, and Windows
 start each worker by importing the script again, so anything at the top of the
@@ -651,9 +655,15 @@ array (<a class="reference internal" href="containers.html"><span class="doc">In
 <dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Submit the unfinished simulations to Slurm as a job array, and return as
 soon as it is submitted (<a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>).</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">schedule</span> <span class="pre">&lt;project&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Run a project every hour on Kubernetes, for the sites in its
+<code class="docutils literal notranslate"><span class="pre">sites.csv</span></code>: <code class="docutils literal notranslate"><span class="pre">schedule</span></code> makes the CronJob, and <code class="docutils literal notranslate"><span class="pre">tick</span></code> is what each
+hour’s pod runs (<a class="reference internal" href="containers.html#kubernetes-schedule"><span class="std std-ref">Running every hour</span></a>).</p>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Count finished and remaining simulations, and the failed ones by reason.
 List the settings folders in the output directory and which variants
-use them. <code class="docutils literal notranslate"><span class="pre">--json</span></code> prints the same as JSON, for a program to read.</p>
+use them. <code class="docutils literal notranslate"><span class="pre">--json</span></code> prints the same as JSON, for a program to read.
+With <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code>, it lists the project’s Jobs too
+(<a class="reference internal" href="containers.html#kubernetes-submit"><span class="std std-ref">Submitting to Kubernetes</span></a>).</p>
 </dd>
 </dl>
 <p>Every command exits with 0 when all went well, 1 when some simulations

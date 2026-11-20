@@ -1,0 +1,5 @@
+runtraj.particles.ParticlesAccessor.endpoints
+=============================================
+
+.. currentmodule:: runtraj.particles
+.. automethod:: ParticlesAccessor.endpoints

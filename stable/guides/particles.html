@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Reading And Plotting Particles &#8212; runtraj 0.1.0a2</title>
+    <title>Reading And Plotting Particles &#8212; runtraj 0.1.0a3</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7e4d6dd2"></script>
+    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2" />
+  <meta name="docsearch:version" content="0.1.0a3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -704,6 +704,18 @@ observations merged with <code class="docutils literal notranslate"><span class=
 <code class="docutils literal notranslate"><span class="pre">project.simulations</span></code>. A simulation whose particles do not exist yet is
 left out. <code class="docutils literal notranslate"><span class="pre">columns=[&quot;particle&quot;,</span> <span class="pre">&quot;age&quot;,</span> <span class="pre">&quot;lon&quot;,</span> <span class="pre">&quot;lat&quot;]</span></code> reads only those
 columns, which is faster and takes less memory.</p>
+<p>Particle numbers start again in each simulation, so in such a table a
+trajectory is its <code class="docutils literal notranslate"><span class="pre">release</span></code>, <code class="docutils literal notranslate"><span class="pre">variant</span></code> and <code class="docutils literal notranslate"><span class="pre">realization</span></code> as well as
+its <code class="docutils literal notranslate"><span class="pre">particle</span></code>. <code class="docutils literal notranslate"><span class="pre">endpoints()</span></code>, <code class="docutils literal notranslate"><span class="pre">grid_exits()</span></code> and the transforms read
+it that way: each simulation is handled as if it were alone.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">both</span><span class="o">.</span><span class="n">runtraj</span><span class="o">.</span><span class="n">endpoints</span><span class="p">()</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"release"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+<span class="gh">Out[20]: </span>
+<span class="go">release</span>
+<span class="go">202101150600_-111.848_40.766_10    200</span>
+<span class="go">202101150700_-111.848_40.766_10    200</span>
+<span class="go">dtype: int64</span>
+</pre></div>
+</div>
 <p>Your own columns of <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> select one site or one campaign. With
 a <code class="docutils literal notranslate"><span class="pre">site</span></code> column and an ensemble variant named <code class="docutils literal notranslate"><span class="pre">hrrr-ens</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">site</span> <span class="o">=</span> <span class="n">sims</span><span class="p">[(</span><span class="n">sims</span><span class="o">.</span><span class="n">variant</span> <span class="o">==</span> <span class="s2">"hrrr"</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">sims</span><span class="o">.</span><span class="n">site</span> <span class="o">==</span> <span class="s2">"tower-1"</span><span class="p">)]</span>
@@ -711,7 +723,7 @@ a <code class="docutils literal notranslate"><span class="pre">site</span></code
 </pre></div>
 </div>
 <p>To work with each simulation of a selection, look it up by its row:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="k">for</span> <span class="n">release</span><span class="p">,</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">morning</span><span class="p">[[</span><span class="s2">"release"</span><span class="p">,</span> <span class="s2">"variant"</span><span class="p">]]</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="k">for</span> <span class="n">release</span><span class="p">,</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">morning</span><span class="p">[[</span><span class="s2">"release"</span><span class="p">,</span> <span class="s2">"variant"</span><span class="p">]]</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="gp">   ....: </span>    <span class="n">sim</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulation</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">))</span>
 <span class="gp">   ....: </span>
