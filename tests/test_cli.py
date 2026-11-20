@@ -727,6 +727,31 @@ def test_a_pod_runs_a_project_whose_inputs_are_on_a_bucket(
     assert options["task"] == (1, 2)
 
 
+@pytest.mark.parametrize("on_bucket", [True, False])
+def test_a_pod_with_fetch_gets_the_met_locked_where_the_inputs_are(
+    tmp_path, calls, monkeypatch, on_bucket
+):
+    from runtraj.execution.inputs import push
+
+    project = _project(tmp_path)
+    url = "memory://cli-fetch/projects/proj"
+    push(project.directory, url)
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "pod-tmp"))
+    fetched = []
+    monkeypatch.setattr(
+        "runtraj.cli.fetch_shared",
+        lambda opened, location: fetched.append((opened.directory, location)),
+    )
+    where = url if on_bucket else str(project.directory)
+
+    result = _invoke("run", where, "--task", "0/2", "--fetch")
+
+    assert result.exit_code == 0, result.output
+    [(directory, location)] = fetched
+    assert location == (url if on_bucket else str(project.directory))
+    assert [what for what, _ in calls] == ["run"]  # the share runs after it
+
+
 def test_a_pod_refuses_inputs_changed_after_submit(tmp_path, calls):
     project = _project(tmp_path)
 

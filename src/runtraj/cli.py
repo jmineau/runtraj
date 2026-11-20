@@ -72,7 +72,7 @@ from runtraj.execution import schedule as schedules
 from runtraj.execution.config import ExecutionConfig, check_url
 from runtraj.execution.inputs import hash_inputs, pull
 from runtraj.execution.kubernetes import project_jobs, schedule_job
-from runtraj.execution.runner import pending, resolve_compute_root
+from runtraj.execution.runner import fetch_shared, pending, resolve_compute_root
 from runtraj.project import STATES, Project
 
 #: Exit codes. 2 is also Click's own for an unknown option or command, so a
@@ -324,6 +324,19 @@ _TASK = typer.Option(
         "Run task I of N here, as one task of a job array: every Nth "
         "release of the project, starting at I (0 to N-1). Runs in this "
         "process whatever the backend."
+    ),
+)
+
+
+_FETCH = typer.Option(
+    False,
+    "--fetch",
+    help=(
+        "Before this task's share runs, get the met files of every "
+        "unfinished simulation, one task at a time (a lock where the inputs "
+        "are), as runtraj submit asks each pod of a Kubernetes Job to with "
+        "execution.kubernetes.fetch: tasks that share a met directory then "
+        "download each file once."
     ),
 )
 
@@ -583,6 +596,7 @@ def run(
     execution: Path | None = _EXECUTION,
     output: str | None = _OUTPUT,
     inputs_hash: str | None = _INPUTS_HASH,
+    fetch: bool = _FETCH,
 ) -> None:
     """
     Run every unfinished simulation in a project, and wait until they are done.
@@ -611,6 +625,7 @@ def run(
     """
     release_ids, rows = (None, None) if releases is None else _read_releases(releases)
     share = None if task is None else _parse_task(task)
+    given = project
     project = _local_inputs(project)
     if inputs_hash is not None:
         directory = _resolve_project(project)
@@ -634,6 +649,11 @@ def run(
         execution_file=execution,
         output=output,
     )
+    if fetch:
+        # Locked where every task reads the inputs: the bucket, or this folder.
+        fetch_shared(
+            opened, given if given and is_url(given) else str(opened.directory)
+        )
     _run_and_exit(opened, options, release_ids, share)
 
 

@@ -18,6 +18,7 @@ import hashlib
 import logging
 import os
 import socket
+import threading
 import time
 import uuid
 from collections.abc import Iterator
@@ -41,6 +42,9 @@ SITES = "sites.csv"
 LOCK_STALE_SECONDS = 300
 #: Seconds between a waiting program's looks at a lock.
 LOCK_POLL_SECONDS = 2
+#: Seconds between a holder's rewrites of its lock, which keep it from
+#: looking stale while the holder works for longer than :data:`LOCK_STALE_SECONDS`.
+LOCK_REFRESH_SECONDS = 60
 
 
 def hash_inputs(directory: str | Path) -> str:
@@ -284,7 +288,9 @@ def lock(url: str, name: str) -> Iterator[None]:
     it is not there (``open(..., "x")``: ``If-None-Match`` on S3,
     ``ifGenerationMatch=0`` on Google Cloud Storage, ``O_EXCL`` on a
     folder), and deleted at the end of the block. It says which host and
-    process holds it. A program that finds it waits, and takes it over if
+    process holds it. While the block runs, the holder rewrites it every
+    :data:`LOCK_REFRESH_SECONDS`, so a long hold (a pod downloading the met)
+    still looks alive. A program that finds it waits, and takes it over if
     it has not changed for :data:`LOCK_STALE_SECONDS` by its own clock, so
     a holder that crashed does not stop every later one.
 
@@ -305,8 +311,9 @@ def lock(url: str, name: str) -> Iterator[None]:
     -----
     A store that ignores ``If-None-Match`` (some older S3-compatible ones)
     lets two programs make the lock at once, so it does not protect there.
-    A holder slower than :data:`LOCK_STALE_SECONDS` can be taken over; it
-    then logs a warning when it finishes.
+    A holder that stops rewriting its lock for :data:`LOCK_STALE_SECONDS`
+    (a process paused that long) can be taken over; it then logs a warning
+    when it finishes.
 
     Examples
     --------
@@ -326,11 +333,14 @@ def lock(url: str, name: str) -> Iterator[None]:
         _acquire(fs, path, token)
     except Exception as error:
         raise OSError(f"cannot lock {name} at {url}: {error}") from error
+    held = _KeepAlive(fs, path, token)
+    held.start()
     try:
         yield
     finally:
+        held.stop()
         try:
-            if not _release(fs, path, token):
+            if not _release(fs, path, held.token):
                 logger.warning(
                     "%s was taken over while this program held it, so another "
                     "may have written %s at the same time.",
@@ -345,6 +355,48 @@ def lock(url: str, name: str) -> Iterator[None]:
                 LOCK_STALE_SECONDS,
                 exc_info=True,
             )
+
+
+class _KeepAlive(threading.Thread):
+    """
+    Rewrite a held lock every :data:`LOCK_REFRESH_SECONDS`, so waiters see it change.
+
+    Each rewrite holds a new token (the first with a count after it);
+    :attr:`token` is the latest, which the holder removes at the end. It
+    stops when the lock no longer holds its token, which means another
+    program took it over.
+    """
+
+    def __init__(self, fs: fsspec.AbstractFileSystem, path: str, token: str) -> None:
+        super().__init__(name=f"keep {path}", daemon=True)
+        self.fs, self.path, self.base, self.token = fs, path, token, token
+        self._done = threading.Event()
+        self._turn = threading.Lock()
+
+    def run(self) -> None:
+        """Rewrite the lock until :meth:`stop`, or until it was taken over."""
+        count = 0
+        while not self._done.wait(LOCK_REFRESH_SECONDS):
+            count += 1
+            with self._turn:
+                if self._done.is_set():
+                    return
+                try:
+                    if self.fs.read_text(self.path) != self.token:
+                        return  # taken over; the holder warns when it finishes
+                    token = f"{self.base} refresh {count}"
+                    self.fs.pipe_file(self.path, token.encode())
+                    self.token = token
+                except Exception:
+                    # A missed rewrite is retried at the next; waiters take
+                    # over only after LOCK_STALE_SECONDS without one.
+                    logger.debug("Could not rewrite %s", self.path, exc_info=True)
+
+    def stop(self) -> None:
+        """Stop rewriting, and wait for a rewrite under way to end."""
+        self._done.set()
+        with self._turn:
+            pass
 
 
 def _acquire(fs: fsspec.AbstractFileSystem, path: str, token: str) -> None:

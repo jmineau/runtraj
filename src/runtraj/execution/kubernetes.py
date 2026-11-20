@@ -43,6 +43,7 @@ from runtraj._paths import is_url
 from runtraj.execution.config import ExecutionConfig
 from runtraj.execution.inputs import RELEASES, has_file, hash_inputs, push
 from runtraj.execution.schedule import DELAY_HOURS, read_sites
+from runtraj.fetch import downloads
 
 if TYPE_CHECKING:
     from runtraj.project import Project
@@ -112,13 +113,20 @@ def pull_policy(image: str) -> str | None:
 
 
 def pod_args(
-    project: str, n_tasks: int, cpus: int, output: str, input_hash: str
+    project: str,
+    n_tasks: int,
+    cpus: int,
+    output: str,
+    input_hash: str,
+    fetch: bool = False,
 ) -> list[str]:
     """
     Return the command line each pod runs: ``runtraj run <project> --task I/N``.
 
     Kubernetes puts each pod's index in ``JOB_COMPLETION_INDEX`` and
-    replaces ``$(JOB_COMPLETION_INDEX)`` in the arguments with it.
+    replaces ``$(JOB_COMPLETION_INDEX)`` in the arguments with it. With
+    *fetch*, each pod first gets the met files, one pod at a time
+    (``--fetch``, :func:`runtraj.execution.runner.fetch_shared`).
 
     Examples
     --------
@@ -137,6 +145,7 @@ def pod_args(
         output,
         "--inputs-hash",
         input_hash,
+        *(["--fetch"] if fetch else []),
     ]
 
 
@@ -263,6 +272,7 @@ def job_manifest(
     *,
     output: str,
     input_hash: str,
+    fetch: bool = False,
 ) -> dict[str, Any]:
     """
     Return the indexed Job that runs a project in *n_tasks* pods, as a Kubernetes manifest.
@@ -289,12 +299,14 @@ def job_manifest(
         The output directory the pods write to.
     input_hash : str
         :func:`runtraj.execution.inputs.hash_inputs` of the inputs submitted.
+    fetch : bool
+        Each pod first gets the met files, one pod at a time (:func:`pod_args`).
     """
     kube = execution.kubernetes
     spec = _job_spec(
         name,
         execution,
-        pod_args(project, n_tasks, kube.cpus, output, input_hash),
+        pod_args(project, n_tasks, kube.cpus, output, input_hash, fetch),
         completions=n_tasks,
         parallelism=min(kube.parallelism or n_tasks, n_tasks),
         active_deadline_seconds=kube.active_deadline_seconds,
@@ -649,8 +661,9 @@ def submit_job(project: Project, pending: list[str], execution: ExecutionConfig)
     With ``inputs`` set, the project's inputs are copied there first
     (:func:`runtraj.execution.inputs.push`) and the pods open that URL;
     else they open the project folder at its path here, which must be on a
-    volume they mount. The Job has ``completions`` tasks, or fewer when
-    there are fewer releases. Its manifest is written to
+    volume they mount. With ``fetch`` set and a met that downloads, each
+    pod first gets the met files, one pod at a time (``--fetch``). The Job
+    has ``completions`` tasks, or fewer when there are fewer releases. Its manifest is written to
     ``_kubernetes/<date_time>_<id>/job.yaml`` in the project before it is
     created, and the Job's name to ``job.name`` beside it.
 
@@ -667,6 +680,8 @@ def submit_job(project: Project, pending: list[str], execution: ExecutionConfig)
     if kube.inputs is not None:
         push(project.directory, kube.inputs)
     n_tasks = max(1, min(kube.completions, len(pending)))
+    sims = project.simulations
+    variants = sims.loc[sims["release"].isin(pending), "variant"].unique()
     manifest = job_manifest(
         project.name,
         target,
@@ -674,6 +689,7 @@ def submit_job(project: Project, pending: list[str], execution: ExecutionConfig)
         n_tasks,
         output=output,
         input_hash=input_hash,
+        fetch=kube.fetch and downloads(project, variants),
     )
     folder = _keep(project, "job", manifest)
     name = kubectl_create(manifest)

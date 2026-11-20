@@ -258,7 +258,8 @@ def test_each_backends_settings_are_in_its_own_block():
         ({"partition": "compute"}, "execution: slurm:."),
         (
             {"fetch": False},
-            "execution: local: or execution: slurm:, for the backend it is for.",
+            "execution: local:, execution: slurm: or execution: kubernetes:, "
+            "for the backend it is for.",
         ),
     ],
 )

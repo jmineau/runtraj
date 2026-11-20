@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import threading
+import time
 from pathlib import Path
 from types import SimpleNamespace
 
 import fsspec
+import pandas as pd
 import pytest
 import yaml
 from pydantic import ValidationError
 
-from runtraj.execution import kubernetes, runner
+from runtraj.execution import inputs, kubernetes, runner
 from runtraj.execution.config import ExecutionConfig, KubernetesConfig
 from runtraj.execution.inputs import hash_inputs, pull, push
 from runtraj.project import Project
@@ -70,6 +73,7 @@ def test_cpus_and_fetch_come_from_the_kubernetes_block():
     execution = _execution(cpus=4)
     assert execution.cpus == 4
     assert execution.fetch is False
+    assert _execution(fetch=True).fetch is True
 
 
 def test_a_setting_beside_backend_names_the_kubernetes_block():
@@ -474,3 +478,107 @@ def test_listing_jobs_without_kubectl_says_so(tmp_path, monkeypatch):
     monkeypatch.setattr(kubernetes.shutil, "which", lambda name: None)
     with pytest.raises(FileNotFoundError, match="kubectl is not installed"):
         kubernetes.project_jobs(_project(tmp_path), _execution())
+
+
+# ---------------------------------------------------------------------------
+# Getting the met once, before the pods run
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("fetch", "downloads", "asked"),
+    [
+        (True, True, True),
+        (True, False, False),
+        (False, True, False),
+    ],
+)
+def test_the_pods_fetch_first_only_when_set_and_a_met_downloads(
+    tmp_path, kubectl, monkeypatch, fetch, downloads, asked
+):
+    monkeypatch.setattr(kubernetes, "downloads", lambda project, variants: downloads)
+
+    runner.submit(_project(tmp_path, 2), execution=_execution(fetch=fetch))
+
+    [job] = kubectl.created
+    args = job["spec"]["template"]["spec"]["containers"][0]["args"]
+    assert ("--fetch" in args) is asked
+
+
+@pytest.fixture
+def fetches(monkeypatch):
+    """Record each fetch the runner makes, and how many ran at once; ``downloads`` says whether a met downloads."""
+    state = SimpleNamespace(calls=[], at_once=0, most=0, downloads=True)
+    guard = threading.Lock()
+
+    def fetch_project(project, unrun):
+        with guard:
+            state.at_once += 1
+            state.most = max(state.most, state.at_once)
+        time.sleep(0.05)
+        state.calls.append(len(unrun))
+        with guard:
+            state.at_once -= 1
+        return pd.DataFrame(columns=["met", "file", "message"])
+
+    monkeypatch.setattr(runner, "fetch_project", fetch_project)
+    monkeypatch.setattr(runner, "downloads", lambda project, variants: state.downloads)
+    return state
+
+
+def test_tasks_that_share_the_inputs_fetch_one_at_a_time(
+    tmp_path, fetches, monkeypatch
+):
+    monkeypatch.setattr(inputs, "LOCK_POLL_SECONDS", 0.01)
+    project = _project(tmp_path, 3)
+    where = str(project.directory)
+    tasks = [
+        threading.Thread(target=runner.fetch_shared, args=(Project(where), where))
+        for _ in range(4)
+    ]
+    for task in tasks:
+        task.start()
+    for task in tasks:
+        task.join(10)
+
+    assert fetches.calls == [3, 3, 3, 3]  # each finds the 3 unfinished releases
+    assert fetches.most == 1
+    assert not (project.directory / ".fetch.lock").exists()
+
+
+def test_no_lock_and_no_fetch_when_no_met_downloads(tmp_path, fetches, monkeypatch):
+    fetches.downloads = False
+
+    def no_lock(*args):
+        raise AssertionError("locked")
+
+    monkeypatch.setattr(runner, "lock", no_lock)
+    project = _project(tmp_path, 1)
+
+    runner.fetch_shared(project, str(project.directory))
+
+    assert fetches.calls == []
+
+
+def test_a_held_lock_is_kept_alive_past_the_stale_time(tmp_path, monkeypatch):
+    """A pod downloading for longer than LOCK_STALE_SECONDS keeps its lock."""
+    # 20 rewrites per stale time, so a busy CI runner that misses some
+    # still keeps the lock; the hold is 2.5 stale times.
+    monkeypatch.setattr(inputs, "LOCK_POLL_SECONDS", 0.01)
+    monkeypatch.setattr(inputs, "LOCK_STALE_SECONDS", 1.0)
+    monkeypatch.setattr(inputs, "LOCK_REFRESH_SECONDS", 0.05)
+    order = []
+
+    def second():
+        with inputs.lock(str(tmp_path), "fetch"):
+            order.append("second")
+
+    with inputs.lock(str(tmp_path), "fetch"):
+        thread = threading.Thread(target=second)
+        thread.start()
+        time.sleep(2.5)
+        order.append("first")
+    thread.join(10)
+
+    assert order == ["first", "second"]
+    assert not (tmp_path / ".fetch.lock").exists()

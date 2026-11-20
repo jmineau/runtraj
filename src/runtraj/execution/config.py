@@ -331,6 +331,17 @@ class KubernetesConfig(BaseModel):
             "lets it run as long as its simulations take."
         ),
     )
+    fetch: bool = Field(
+        False,
+        description=(
+            "Get the met files once, before the pods run, for a met with "
+            "``download`` whose directory is on a volume every pod mounts: "
+            "each pod first gets the files of every unfinished simulation, "
+            "one pod at a time (a lock where the inputs are), so the first "
+            "downloads them and the others find them. Leave it ``false`` "
+            "when each pod has its own met directory."
+        ),
+    )
 
     @field_validator("memory")
     @classmethod
@@ -519,11 +530,11 @@ class ExecutionConfig(BaseModel):
         """
         Whether the met files are got first: ``fetch`` of the block ``backend`` names.
 
-        A Kubernetes Job has no fetch of its own; run ``runtraj fetch``
-        before it (:ref:`fetch-once`).
+        On Kubernetes each pod gets them before its share runs, one pod at a
+        time (:ref:`fetch-once`).
         """
         if self.backend == "kubernetes":
-            return False
+            return self.kubernetes.fetch
         return self.local.fetch if self.backend == "local" else self.slurm.fetch
 
 

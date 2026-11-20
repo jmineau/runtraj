@@ -33,6 +33,7 @@ import yaml
 from runtraj._paths import absolute, write_parquet
 from runtraj._transient import is_transient
 from runtraj.execution.config import ExecutionConfig, FetchConfig
+from runtraj.execution.inputs import lock
 from runtraj.fetch import downloads, fetch_project
 
 if TYPE_CHECKING:
@@ -207,7 +208,9 @@ def _to_fetch(
     return None if unrun.empty else unrun
 
 
-def _fetch_here(project: Project, unrun: pd.DataFrame) -> None:
+def _fetch_here(
+    project: Project, unrun: pd.DataFrame, setting: str = "execution.local.fetch"
+) -> None:
     """
     Get the met files of the *unrun* simulations in this process, before a local run's workers start.
 
@@ -216,7 +219,7 @@ def _fetch_here(project: Project, unrun: pd.DataFrame) -> None:
     logged: each run then tries again, and fails as it would have without
     the fetch. Any other error is raised.
     """
-    logger.info("Getting the met files first (execution.local.fetch).")
+    logger.info("Getting the met files first (%s).", setting)
     try:
         files = fetch_project(project, unrun)
     except Exception as error:
@@ -231,6 +234,47 @@ def _fetch_here(project: Project, unrun: pd.DataFrame) -> None:
             len(problems),
             problems.iloc[0],
         )
+
+
+#: The lock a task holds where the inputs are while it gets the met files (:func:`fetch_shared`).
+FETCH_LOCK = "fetch"
+
+
+def fetch_shared(project: Project, location: str) -> None:
+    """
+    Get the met files of every unfinished simulation, one task at a time, before this task's share runs.
+
+    For the tasks of one Job, such as pods that share a met directory on a
+    volume (``runtraj run --task I/N --fetch``, which ``runtraj submit``
+    gives each pod with ``execution.kubernetes.fetch``). Each holds the
+    lock :data:`FETCH_LOCK` at *location* while it fetches
+    (:func:`runtraj.execution.inputs.lock`), so the first downloads the
+    files and the others, waiting their turn, find them and download
+    nothing. Nothing is locked when no met downloads. As for a local run's
+    fetch, a file that could not be had, or a download a retry may get
+    past, is only logged: each run then tries again.
+
+    Parameters
+    ----------
+    project : Project
+        The project, opened here.
+    location : str
+        Where every task reads the project's inputs: the URL they were
+        copied to, or the project folder on a shared volume.
+
+    Raises
+    ------
+    OSError
+        If the lock cannot be made, such as a bucket that cannot be reached.
+    """
+    sims = project.simulations
+    if not downloads(project, sims["variant"].unique()):
+        return
+    with lock(location, FETCH_LOCK):
+        # Listed under the lock: what the task before got is not fetched again.
+        unrun = project._unrun(sims, skip_existing=True)
+        if not unrun.empty:
+            _fetch_here(project, unrun, "execution.kubernetes.fetch")
 
 
 def _status(project: Project, release_ids: list[str]) -> pd.DataFrame:
@@ -934,10 +978,12 @@ def _requeue() -> bool:
 
 
 __all__ = [
+    "FETCH_LOCK",
     "MAX_REQUEUES",
     "NOTICE_SECONDS",
     "RELIST_SECONDS",
     "fetch_script",
+    "fetch_shared",
     "job_script",
     "resolve_compute_root",
     "run",

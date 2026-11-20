@@ -93,6 +93,7 @@ Kubernetes indexed Jobs
    runtraj.execution.kubernetes.submit_job
    runtraj.execution.kubernetes.project_jobs
    runtraj.execution.kubernetes.job_summary
+   runtraj.execution.runner.fetch_shared
    runtraj.execution.inputs.push
    runtraj.execution.inputs.pull
    runtraj.execution.inputs.hash_inputs
