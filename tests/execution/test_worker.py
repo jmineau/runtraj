@@ -11,15 +11,17 @@ from typer.testing import CliRunner
 from runtraj import Project
 from runtraj.cli import app
 from runtraj.config import ProjectConfig
-from runtraj.exceptions import MeteorologyError, WorkerDied
+from runtraj.exceptions import MeteorologyError, SimulationError, WorkerDied
 from runtraj.execution import worker
 from runtraj.execution.config import ExecutionConfig
 from runtraj.execution.worker import run_release, run_releases
+from runtraj.models import ModelRun
 from runtraj.models.hysplit import HysplitConfig, Met, MetConfig
 from runtraj.output import Output
 from runtraj.releases import PointRelease, Release
+from runtraj.simulation import Simulation
 
-from ..fixtures.factories import make_met_config, make_project_config
+from ..fixtures.factories import make_met_config, make_project_config, make_variant
 from ..fixtures.models import TOY
 
 # ---------------------------------------------------------------------------
@@ -104,6 +106,121 @@ def _model(tmp_path, releases, **config_kwargs) -> Project:
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture
+def sim(release, met_config, params, output) -> Simulation:
+    """A simulation of the first release under one variant."""
+    variant = make_variant("hrrr", transport=params, met_config=met_config)
+    return Simulation(release, variant, output)
+
+
+def _write_particles(sim: Simulation) -> pd.DataFrame:
+    """Put a small particle file for *sim* in the output directory."""
+    particles = _particles(sim.release)
+    sim.output.write_particles(sim.variant, sim.release, particles, [])
+    return particles
+
+
+def test_run_particles_starts_in_an_empty_directory(
+    sim, met, compute_root, monkeypatch
+):
+    """A directory left by a stopped job is cleared before the model runs."""
+    workdir = compute_root / sim.release.id / sim.variant.name
+    workdir.mkdir(parents=True)
+    (workdir / "PARTICLE_STILT.DAT").write_text("left over\n")
+    seen: list[list[str]] = []
+
+    class _Model:
+        name = "hysplit"
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            seen.append(sorted(p.name for p in workdir.iterdir()))
+            raise RuntimeError("stop here")
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    with pytest.raises(RuntimeError):
+        worker.run_particles(sim, workdir=workdir)
+    assert seen == [[]]
+
+
+def test_a_run_stopped_partway_leaves_its_start_in_the_log(
+    sim, met, compute_root, monkeypatch
+):
+    """The log is written when the run starts, so a cut-off run reads as interrupted."""
+
+    class _Model:
+        name = "hysplit"
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            raise KeyboardInterrupt  # SIGTERM from Slurm, mid-run
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    with pytest.raises(KeyboardInterrupt):
+        worker.run_particles(sim, workdir=compute_root / "w")
+
+    assert "runtraj started this run" in sim.log
+    assert not sim.has_particles and sim.failure is None
+
+
+def test_a_model_that_needs_no_workdir_gets_none(sim, met, compute_root, monkeypatch):
+    seen: list = []
+
+    class _Model:
+        name = "hysplit"
+        needs_workdir = False
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            seen.append(workdir)
+            raise SimulationError("stop here", log="model log\n")
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr(worker, "get_model", lambda name: _Model())
+    workdir = compute_root / sim.release.id / sim.variant.name
+    with pytest.raises(SimulationError):
+        worker.run_particles(sim, workdir=workdir)
+
+    assert seen == [None]
+    assert not workdir.exists()
+    assert sim.log == "model log\n"
+    assert sim.kept_workdir is None or not sim.kept_workdir.exists()
+
+
+def test_run_particles_keeps_no_empty_scratch_copy(sim, met, compute_root, monkeypatch):
+    """A run that fails before writing anything, such as on missing met, leaves no scratch copy."""
+
+    class _Model:
+        name = "hysplit"
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            raise MeteorologyError("No met file for 2023-01-01 11:00.")
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    with pytest.raises(MeteorologyError):
+        worker.run_particles(
+            sim, workdir=compute_root / sim.release.id / sim.variant.name
+        )
+
+    kept = sim.output.kept_workdir(sim.variant, sim.release.id)
+    assert kept is None or not kept.exists()
+    assert not (compute_root / sim.release.id / sim.variant.name).exists()
+
+
+def test_run_particles_without_particles_is_a_simulation_error(
+    sim, met, compute_root, monkeypatch
+):
+    class _Model:
+        name = "hysplit"
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            return ModelRun(particles=pd.DataFrame(), met_files=[])
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    with pytest.raises(SimulationError) as caught:
+        worker.run_particles(
+            sim, workdir=compute_root / sim.release.id / sim.variant.name
+        )
+    assert caught.value.reason == "NO_PARTICLE_DATA"
+
+
 # ---------------------------------------------------------------------------
 # run_release: variants that share particles run as one group
 # ---------------------------------------------------------------------------
@@ -168,6 +285,90 @@ def test_runs_that_share_a_compute_root_never_share_a_workdir(
     assert list(compute_root.iterdir()) == []
 
 
+def test_each_run_gets_a_new_workdir_named_after_its_simulation(
+    tmp_path, release, monkeypatch
+):
+    project = _model(
+        tmp_path, [release], krand=4, variants={"hrrr": {"realizations": 2}}
+    )
+    compute_root = tmp_path / "compute"
+    workdirs: list = []
+
+    def fake(sim, *, workdir, keep_workdir=False, timeout=None):
+        workdirs.append(workdir)
+        raise RuntimeError("stop here")
+
+    monkeypatch.setattr(worker, "run_particles", fake)
+    for _ in range(2):  # the same simulations again
+        run_release(project, str(release.id), compute_root=compute_root)
+
+    assert len(set(workdirs)) == 4
+    assert {w.parent for w in workdirs} == {compute_root}
+    names = sorted(w.name.rsplit("_", 1)[0] for w in workdirs)
+    assert names == [f"{release.id}_hrrr_{k}" for k in (0, 0, 1, 1)]
+
+
+def test_the_execution_settings_given_reach_the_run(tmp_path, release, monkeypatch):
+    """An override passed in, not config.yaml's, sets the timeout and keep_workdir."""
+    project = _model(tmp_path, [release])
+    seen: dict = {}
+
+    def fake(sim, **kwargs):
+        seen.update(kwargs)
+        return _write_particles(sim)
+
+    monkeypatch.setattr(worker, "run_particles", fake)
+    override = ExecutionConfig(timeout=42, keep_workdir=True)
+    _run_release(project, release, execution=override)
+
+    assert (seen["timeout"], seen["keep_workdir"]) == (42, True)
+
+
+def test_run_release_takes_timeout_and_keep_workdir_from_execution(
+    tmp_path, release, monkeypatch
+):
+    project = _model(
+        tmp_path, [release], execution={"timeout": 120, "keep_workdir": True}
+    )
+    seen: list[dict] = []
+
+    def fake(sim, **kwargs):
+        seen.append(kwargs)
+        return _write_particles(sim)
+
+    monkeypatch.setattr(worker, "run_particles", fake)
+    _run_release(project, release)
+
+    assert seen and all(k["timeout"] == 120 and k["keep_workdir"] for k in seen)
+
+
+def test_run_release_stops_on_preemption_with_what_finished_written(
+    tmp_path, release, monkeypatch
+):
+    project = _model(
+        tmp_path,
+        [release],
+        variants={"hrrr": {}, "hrrr-s2": {"numpar": 50}, "zi08": {"ziscale": 0.8}},
+    )
+
+    def fake(sim, **kwargs):
+        if sim.variant.name == "zi08":
+            raise KeyboardInterrupt
+        return _write_particles(sim)
+
+    monkeypatch.setattr(worker, "run_particles", fake)
+
+    with pytest.raises(KeyboardInterrupt):
+        _run_release(project, release)
+
+    st = project.status()
+    assert dict(zip(st.variant, st.state, strict=True)) == {
+        "hrrr": "complete",
+        "hrrr-s2": "complete",
+        "zi08": "pending",
+    }
+
+
 # ---------------------------------------------------------------------------
 # run_release: failures are recorded with the simulation
 # ---------------------------------------------------------------------------
@@ -226,6 +427,34 @@ def test_runtraj_run_still_exits_1_for_a_simulation_that_failed(
     )
     result = CliRunner().invoke(app, ["run", str(project.directory)])
     assert result.exit_code == 1, result.output
+
+
+def test_a_failed_run_keeps_its_log_and_working_directory(
+    tmp_path, release, monkeypatch
+):
+    project = _model(tmp_path, [release])
+    sim = project.simulation(str(release.id), "hrrr")
+
+    class _Model:
+        name = "hysplit"
+
+        def run(self, release, params, met, window, workdir=None, timeout=None):
+            (workdir / "CONTROL").write_text("...")
+            raise SimulationError(
+                "HYSPLIT failed (FORTRAN_RUNTIME_ERROR).",
+                reason="FORTRAN_RUNTIME_ERROR",
+                log="hycs_std said something\n",
+            )
+
+    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    _run_release(project, release)
+
+    failure = sim.failure
+    assert failure is not None and failure["reason"] == "FORTRAN_RUNTIME_ERROR"
+    assert set(failure) == {"stage", "reason", "message", "time"}
+    assert "hycs_std said" in sim.log
+    assert sim.kept_workdir is not None
+    assert (sim.kept_workdir / "CONTROL").exists()
 
 
 # ---------------------------------------------------------------------------

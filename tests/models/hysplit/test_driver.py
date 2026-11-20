@@ -19,8 +19,10 @@ from runtraj.models.hysplit import (
 from runtraj.models.hysplit.config import FIXED_SETUP, HYSPLIT_VARSIWANT
 from runtraj.models.hysplit.control import ControlFile
 from runtraj.models.hysplit.driver import (
+    MET_STOP_CELLS,
     PARTICLE_FILE,
     cells_from_edge,
+    check_met_stop,
     setup_entries,
     setup_seed,
     winderrtf,
@@ -726,6 +728,95 @@ def test_a_global_grid_has_no_east_or_west_side():
 
     # Half a cell east of the seam and 90 cells from each pole.
     assert cells[0] == pytest.approx(90.0)
+
+
+def _stopped_at(minute: float, *positions: tuple[float, float, float]):
+    """
+    Particles that each stop *minute* minutes back, at a (lon, lat, zagl) of *positions*.
+
+    Each starts at the grid's middle and has a row at the release and one at
+    the stop, as HYSPLIT writes every time step of each.
+    """
+    import pandas as pd
+
+    rows = []
+    for i, (lon, lat, zagl) in enumerate(positions, start=1):
+        rows.append((i, -1.0, *MIDDLE, 10.0))
+        rows.append((i, -float(minute), lon, lat, zagl))
+    return pd.DataFrame(rows, columns=["particle", "age", "lon", "lat", "zagl"])
+
+
+def _check(particles, n_hours: int = -24, grid=None) -> None:
+    check_met_stop(particles, n_hours, grid or _grid())
+
+
+def test_a_run_the_met_stopped_inside_the_domain_fails():
+    """HYSPLIT can stop every particle where the met ran out and report a complete run."""
+    particles = _stopped_at(360, (*MIDDLE, 100.0), (40.0, 10.0, 500.0))
+
+    with pytest.raises(SimulationError, match="the met ran out") as caught:
+        _check(particles)
+
+    assert caught.value.reason == FailureReason.MET_COVERAGE
+    message = str(caught.value)
+    assert "6.0 h into the 24 h run" in message
+    assert "up to 24.5 grid cells inside" in message
+
+
+@pytest.mark.parametrize(
+    "position",
+    [
+        (21.5, 14.5, 10.0),  # 1.5 cells from the west side
+        (67.5, 14.5, 10.0),  # 1.5 from the east side
+        (44.5, -8.5, 10.0),  # 1.5 from the south side
+        (44.5, 37.0, 10.0),  # 2.0 from the north side
+    ],
+)
+def test_particles_that_stop_within_two_cells_of_an_edge_left_the_domain(position):
+    """A particle that leaves the domain ends 1 to 2 cells from its edge."""
+    _check(_stopped_at(13 * 60, position))
+
+
+def test_one_particle_more_than_the_limit_inside_fails_the_run():
+    inside = MET_STOP_CELLS + 1
+    particles = _stopped_at(
+        13 * 60, (21.5, 14.5, 10.0), (20.0 + inside, 14.5, 10.0), (67.5, 14.5, 10.0)
+    )
+
+    with pytest.raises(SimulationError) as caught:
+        _check(particles)
+    assert caught.value.reason == FailureReason.MET_COVERAGE
+
+
+def test_a_particle_near_the_domain_top_still_fails_the_run():
+    """HYSPLIT keeps particles from rising above the top, so the top cannot end a run."""
+    with pytest.raises(SimulationError):
+        _check(_stopped_at(13 * 60, (*MIDDLE, 24900.0)))
+
+
+def test_only_the_particles_at_the_last_time_step_count():
+    """A particle that stopped earlier inside the domain is not where the run stopped."""
+    import pandas as pd
+
+    at_the_edge = _stopped_at(13 * 60, (21.5, 14.5, 10.0))
+    earlier_inside = _stopped_at(6 * 60, (*MIDDLE, 10.0)).assign(particle=2)
+
+    _check(pd.concat([at_the_edge, earlier_inside]))
+
+
+def test_a_run_that_reaches_n_hours_is_not_checked():
+    _check(_stopped_at(24 * 60, (*MIDDLE, 10.0)))
+
+
+def test_a_forward_run_is_checked_the_same():
+    particles = _stopped_at(360, (*MIDDLE, 10.0)).assign(age=lambda df: df["age"].abs())
+
+    with pytest.raises(SimulationError):
+        _check(particles, n_hours=24)
+
+
+def test_particles_without_positions_are_not_checked():
+    _check(_stopped_at(360, (*MIDDLE, 10.0)).drop(columns="lat"))
 
 
 def _rows_inside(minute: int) -> list[list[float]]:
