@@ -22,6 +22,9 @@ pytest.importorskip("eccodes")
 
 from ...fixtures.grib import write_gfs
 
+# Most runs here are on the GFS stand-in; the warning has its own test.
+pytestmark = pytest.mark.filterwarnings("ignore:FLEXPART 11 does not mix:UserWarning")
+
 SAMPLE = Path(__file__).parent / "data" / "partoutput_20230601180000_init.nc"
 RELEASE = PointRelease(
     time="2023-06-01 18:00", longitude=-111.848, latitude=40.766, altitude=25
@@ -231,6 +234,18 @@ def test_run_writes_the_inputs_and_reads_the_particles(checkout, gfs, tmp_path):
     ]
     assert (workdir / "options" / "SPECIES" / "SPECIES_001").is_file()
     assert (workdir / "options" / "IGBP_int1.dat").is_symlink()
+
+
+@pytest.mark.filterwarnings("default:FLEXPART 11 does not mix:UserWarning")
+def test_run_on_gfs_warns_that_flexpart_does_not_mix(checkout, gfs, tmp_path):
+    with pytest.warns(UserWarning, match="does not mix its particles on GFS"):
+        FlexpartModel().run(
+            RELEASE,
+            config(checkout),
+            FlexpartMetConfig(directory=gfs),
+            WINDOW,
+            tmp_path,
+        )
 
 
 def test_run_trajectories_returns_flexpart_s_particles(checkout, gfs, tmp_path):

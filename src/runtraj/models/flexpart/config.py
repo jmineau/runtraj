@@ -219,8 +219,8 @@ class FlexpartMetConfig(BaseModel):
             "as flex_extract writes it, which needs ``eta: true`` in the "
             "model's block. On GFS, FLEXPART 11 derives the surface heat flux "
             "and stress itself, and at a mountain site at midday they came "
-            "out near zero, so its particles did not mix: check a GFS run "
-            "against ERA5 before relying on it."
+            "out near zero, so its particles did not mix: a run on GFS warns "
+            "so, and results that depend on mixing need ERA5."
         ),
     )
     directory: Path = Field(
