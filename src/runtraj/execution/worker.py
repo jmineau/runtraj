@@ -655,6 +655,26 @@ _POOL_EXECUTION: ExecutionConfig | None = None
 _POOL_SKIP: bool = True
 
 
+def _available_cpus() -> int:
+    """Return the CPUs this process may run on, which a scheduler may have limited."""
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count() or 1
+
+
+def _share_threads(workers: int) -> None:
+    """
+    Set ``OMP_NUM_THREADS`` in this pool worker to its share of the CPUs, unless the run set it.
+
+    The transport model and the programs it starts read it, so *workers*
+    processes on as many CPUs do not each start a thread per CPU. A Slurm
+    task's script sets it (:func:`~runtraj.execution.runner.job_script`), and
+    a value set before the run is kept.
+    """
+    if "OMP_NUM_THREADS" not in os.environ:
+        os.environ["OMP_NUM_THREADS"] = str(max(1, _available_cpus() // workers))
+
+
 def _init_pool_worker(
     project: str,
     output: str,
@@ -670,6 +690,7 @@ def _init_pool_worker(
     worker that gets it ends the transport model run it is in the middle
     of and exits (:func:`_pool_run`). It ignores
     Ctrl-C, which the terminal also sends to it: the parent answers that.
+    It gets its share of the CPUs as ``OMP_NUM_THREADS`` (:func:`_share_threads`).
 
     *rows* are the release rows the parent took in place of
     ``releases.csv`` (a Slurm task's), if any.
@@ -679,6 +700,7 @@ def _init_pool_worker(
     global _POOL_PROJECT, _POOL_COMPUTE_ROOT, _POOL_EXECUTION, _POOL_SKIP
     signal.signal(signal.SIGTERM, _exit_worker)
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+    _share_threads(execution.cpus)
     _POOL_PROJECT = Project(project, output=output)
     if rows is not None:
         _POOL_PROJECT._take_rows(rows)

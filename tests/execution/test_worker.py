@@ -710,3 +710,43 @@ def test_a_dead_pool_worker_is_found_by_looking_at_the_workers(alive, died):
 # ---------------------------------------------------------------------------
 # A batched transport model
 # ---------------------------------------------------------------------------
+
+
+def test_a_pool_worker_gets_its_share_of_the_cpus_as_omp_num_threads(monkeypatch):
+    monkeypatch.setenv("OMP_NUM_THREADS", "unset below")
+    monkeypatch.delenv("OMP_NUM_THREADS")
+    monkeypatch.setattr(worker, "_available_cpus", lambda: 16)
+    worker._share_threads(4)
+    assert worker.os.environ["OMP_NUM_THREADS"] == "4"
+
+
+def test_a_pool_worker_gets_one_thread_when_workers_outnumber_the_cpus(monkeypatch):
+    monkeypatch.setenv("OMP_NUM_THREADS", "unset below")
+    monkeypatch.delenv("OMP_NUM_THREADS")
+    monkeypatch.setattr(worker, "_available_cpus", lambda: 2)
+    worker._share_threads(8)
+    assert worker.os.environ["OMP_NUM_THREADS"] == "1"
+
+
+def test_a_pool_worker_keeps_the_omp_num_threads_the_run_set(monkeypatch):
+    monkeypatch.setenv("OMP_NUM_THREADS", "3")
+    monkeypatch.setattr(worker, "_available_cpus", lambda: 16)
+    worker._share_threads(4)
+    assert worker.os.environ["OMP_NUM_THREADS"] == "3"
+
+
+def test_the_pool_initializer_shares_the_cpus(
+    tmp_path, release, monkeypatch, fake_pool
+):
+    model = _model(tmp_path, [release])
+    monkeypatch.setenv("OMP_NUM_THREADS", "unset below")
+    monkeypatch.delenv("OMP_NUM_THREADS")
+    monkeypatch.setattr(worker, "_available_cpus", lambda: 8)
+    worker._init_pool_worker(
+        str(model.directory),
+        str(model.output.directory),
+        str(tmp_path / "scratch"),
+        ExecutionConfig(local={"cpus": 2}),
+        True,
+    )
+    assert worker.os.environ["OMP_NUM_THREADS"] == "4"

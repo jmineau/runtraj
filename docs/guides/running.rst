@@ -72,6 +72,11 @@ variants. Set it to the number of CPU cores you can spare, because each
 HYSPLIT run uses one core. A Slurm run has its own ``cpus``, per array task,
 in the ``slurm`` block (:doc:`slurm`).
 
+Each process gets its share of the cores as ``OMP_NUM_THREADS``, 4 on a
+16-core machine with ``cpus: 4``, so a program that starts a thread per
+core does not start 16 in each. To choose another value, export
+``OMP_NUM_THREADS`` before the run; runtraj keeps it.
+
 A Python script that calls ``project.run()`` with ``cpus`` above 1 needs its
 code under ``if __name__ == "__main__":``. Python 3.14, macOS, and Windows
 start each worker by importing the script again, so anything at the top of the
