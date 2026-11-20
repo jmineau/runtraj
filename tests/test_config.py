@@ -576,3 +576,21 @@ def test_a_relative_met_folder_starts_from_the_project(tmp_path):
     )
 
     assert config.resolve(tmp_path)["hrrr"].met_config.directory == tmp_path / "met"
+
+
+@pytest.mark.parametrize("readme", [False, True], ids=["no-folder", "no-arl-file"])
+def test_a_met_whose_files_cannot_be_found_is_a_meteorology_error(tmp_path, readme):
+    from runtraj.exceptions import MeteorologyError
+    from runtraj.models.hysplit import MetConfig
+
+    directory = tmp_path / "missing"
+    if readme:
+        directory.mkdir()
+        (directory / "README").write_text("not an ARL file")
+    cfg = ProjectConfig(
+        **blocks(mets={"hrrr": MetConfig(directory=directory)}, variants={"hrrr": {}})
+    )
+    variant = cfg.resolve()["hrrr"]
+    with pytest.raises(MeteorologyError, match="Met 'hrrr'") as error:
+        _ = variant.met_settings
+    assert isinstance(error.value, FileNotFoundError)

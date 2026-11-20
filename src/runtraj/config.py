@@ -44,6 +44,7 @@ from pydantic import (
 )
 
 from runtraj._paths import absolute
+from runtraj.exceptions import MeteorologyError
 from runtraj.execution.config import ExecutionConfig
 from runtraj.identity import canonical, run_settings, settings_hash, stage_hash
 from runtraj.models import (
@@ -200,13 +201,14 @@ class Variant:
 
         Raises
         ------
-        FileNotFoundError
-            If the met's directory holds no file to read its product from.
+        runtraj.exceptions.MeteorologyError
+            If the met's directory does not exist or holds no file to read
+            its product from.
         """
         try:
             return self.met_config.settings()
         except FileNotFoundError as error:
-            raise FileNotFoundError(f"Met {self.met!r}: {error}") from None
+            raise MeteorologyError(f"Met {self.met!r}: {error}") from None
 
     @cached_property
     def build(self) -> ModelInfo:

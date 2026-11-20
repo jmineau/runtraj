@@ -53,8 +53,14 @@ class SimulationError(RuntrajError, RuntimeError):
         self.log = log
 
 
-class MeteorologyError(SimulationError):
-    """The meteorology files a simulation needs could not be found or staged."""
+class MeteorologyError(SimulationError, FileNotFoundError):
+    """
+    The meteorology files a simulation needs could not be found or staged.
+
+    Raised when a met's directory does not exist or holds no met file, and
+    when the files do not cover a run. It is also a ``FileNotFoundError``,
+    so either name catches it.
+    """
 
     reason = "MET_COVERAGE"
 
