@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=590f3691"></script>
+    <script src="../../../_static/documentation_options.js?v=9b553ea8"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev21+gc70fc78ff" />
+  <meta name="docsearch:version" content="0.1.0a3.dev22+gd58abd972" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -591,6 +591,32 @@
 
 
 
+<div class="viewcode-block" id="release_metadata">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.particles.release_metadata.html#runtraj.particles.release_metadata">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">release_metadata</span><span class="p">(</span><span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the Parquet schema metadata that records *release* in a result file.</span>
+
+<span class="sd">    A stage that writes its own Parquet file merges this into the file's</span>
+<span class="sd">    metadata, so that :func:`stored_release` reads the release back and the</span>
+<span class="sd">    file is found as the release's.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    release : Release</span>
+<span class="sd">        The release the file was made for.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The metadata entries, to merge with the file's other entries.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span><span class="sa">b</span><span class="s2">"runtraj:release"</span><span class="p">:</span> <span class="n">release</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">()}</span></div>
+
+
+
+<div class="viewcode-block" id="stored_release">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.particles.stored_release.html#runtraj.particles.stored_release">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">stored_release</span><span class="p">(</span><span class="n">meta</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Release</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the release a stored result file records in its metadata.</span>
@@ -613,7 +639,8 @@
         <span class="k">return</span> <span class="n">Release</span><span class="o">.</span><span class="n">from_json</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="sa">b</span><span class="s2">"runtraj:release"</span><span class="p">])</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">":receptor"</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">OLD_FILE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="sa">f</span><span class="s2">"The file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> does not record its release."</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> does not record its release."</span><span class="p">)</span></div>
+
 
 
 <span class="c1">#: The message for a stored file that holds ``receptor`` where it now holds ``release``.</span>
@@ -775,7 +802,7 @@
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="sa">b</span><span class="s2">"runtraj:release"</span><span class="p">:</span> <span class="n">release</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+        <span class="o">**</span><span class="n">release_metadata</span><span class="p">(</span><span class="n">release</span><span class="p">),</span>
         <span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
         <span class="sa">b</span><span class="s2">"runtraj:met_files"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">met_files</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
         <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>

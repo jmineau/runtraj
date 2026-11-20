@@ -135,6 +135,21 @@ Checking a table
    PARTICLE_SCHEMA
    check_particles
 
+A result file's release
+-----------------------
+
+A stage that writes a Parquet file of its own records the release in the
+file's metadata with :func:`~runtraj.particles.release_metadata`, and
+:func:`~runtraj.particles.stored_release` reads it back from the file's
+schema metadata. Neither names the metadata key, which is runtraj's.
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   release_metadata
+   stored_release
+
 After a run
 -----------
 

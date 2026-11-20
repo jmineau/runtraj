@@ -1,0 +1,5 @@
+runtraj.models.hysplit.ControlFile.write
+========================================
+
+.. currentmodule:: runtraj.models.hysplit
+.. automethod:: ControlFile.write

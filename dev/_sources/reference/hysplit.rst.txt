@@ -94,6 +94,22 @@ the input files of a run. A project run then adds the release heights
    runtraj.models.hysplit.run_hycs_std
    runtraj.models.hysplit.read_particle_dat
 
+Reading the input files
+-----------------------
+
+:class:`~runtraj.models.hysplit.ControlFile` holds what a ``CONTROL`` file
+says, and :meth:`~runtraj.models.hysplit.ControlFile.read` reads one.
+:func:`~runtraj.models.hysplit.read_namelist` reads a ``SETUP.CFG`` into a
+dict by lowercase name. Use them to look at the input files of a run that
+was made without runtraj.
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.models.hysplit.ControlFile
+   runtraj.models.hysplit.read_namelist
+
 Releases
 --------
 

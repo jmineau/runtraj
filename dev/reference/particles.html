@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=590f3691"></script>
+    <script src="../_static/documentation_options.js?v=9b553ea8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev21+gc70fc78ff" />
+  <meta name="docsearch:version" content="0.1.0a3.dev22+gd58abd972" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -528,6 +528,8 @@
 <li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">The Particle Table</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.PARTICLE_SCHEMA.html">runtraj.particles.PARTICLE_SCHEMA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.check_particles.html">runtraj.particles.check_particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.release_metadata.html">runtraj.particles.release_metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.stored_release.html">runtraj.particles.stored_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.particles.add_release_heights.html">runtraj.particles.add_release_heights</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.sample_met.html">runtraj.sampling.sample_met</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.sampling.calc_pbl_height.html">runtraj.sampling.calc_pbl_height</a></li>
@@ -756,6 +758,12 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
@@ -992,6 +1000,24 @@ weighting and an averaging kernel also add <code class="docutils literal notrans
 </table>
 </div>
 </section>
+<section id="a-result-file-s-release">
+<h2>A result file’s release<a class="headerlink" href="#a-result-file-s-release" title="Link to this heading">#</a></h2>
+<p>A stage that writes a Parquet file of its own records the release in the
+file’s metadata with <a class="reference internal" href="_api/runtraj.particles.release_metadata.html#runtraj.particles.release_metadata" title="runtraj.particles.release_metadata"><code class="xref py py-func docutils literal notranslate"><span class="pre">release_metadata()</span></code></a>, and
+<a class="reference internal" href="_api/runtraj.particles.stored_release.html#runtraj.particles.stored_release" title="runtraj.particles.stored_release"><code class="xref py py-func docutils literal notranslate"><span class="pre">stored_release()</span></code></a> reads it back from the file’s
+schema metadata. Neither names the metadata key, which is runtraj’s.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.particles.release_metadata.html#runtraj.particles.release_metadata" title="runtraj.particles.release_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">release_metadata</span></code></a></p></td>
+<td><p>Return the Parquet schema metadata that records <em>release</em> in a result file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.particles.stored_release.html#runtraj.particles.stored_release" title="runtraj.particles.stored_release"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stored_release</span></code></a></p></td>
+<td><p>Return the release a stored result file records in its metadata.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="after-a-run">
 <h2>After a run<a class="headerlink" href="#after-a-run" title="Link to this heading">#</a></h2>
 <p>After a run runtraj adds the release heights to any model’s particles.
@@ -1111,6 +1137,7 @@ as they are.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#columns-the-model-adds">Columns the model adds</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#columns-runtraj-adds">Columns runtraj adds</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-a-table">Checking a table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-result-file-s-release">A result file’s release</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#after-a-run">After a run</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#met-columns-for-a-model-that-writes-only-positions">Met columns for a model that writes only positions</a></li>
 </ul>
