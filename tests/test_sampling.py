@@ -596,6 +596,33 @@ def test_no_met_files_is_a_clear_error(function):
         function(_particles_at([_T0], [100.0]), [])
 
 
+def test_calc_pbl_height_names_every_missing_variable_with_pres(tmp_path):
+    met = arlmet.open_dataset(_met_file(tmp_path / "met.arl", winds=True))
+
+    with pytest.raises(KeyError, match="'PRES', 'SHTF'"):
+        sampling.calc_pbl_height(
+            _particles_at([_T0], [100.0]), met.drop_vars(["PRES", "SHTF"])
+        )
+
+
+def test_a_variable_only_some_files_hold_counts_as_missing(tmp_path):
+    """SPHU in one file but not the next: dry air at every time, not a KeyError."""
+    first = _met_file(tmp_path / "first.arl")
+    later = arlmet.open_dataset(first).drop_vars("SPHU").load()
+    later = later.assign_coords(time=later["time"] + pd.Timedelta(hours=2))
+    arlmet.write_dataset(later, tmp_path / "later.arl")
+    particles = _particles_at([_T0, _T1 + pd.Timedelta(hours=1)], [100.0] * 2)
+
+    sampled = sample_met(particles, [first, tmp_path / "later.arl"], columns=["dens"])
+
+    dry = sample_met(particles.iloc[1:], later, columns=["dens"])
+    np.testing.assert_allclose(sampled["dens"].iloc[1], dry["dens"].iloc[0])
+    dry_first = sample_met(
+        particles.iloc[:1], arlmet.open_dataset(first).drop_vars("SPHU"), ["dens"]
+    )
+    np.testing.assert_allclose(sampled["dens"].iloc[0], dry_first["dens"].iloc[0])
+
+
 def test_met_without_sphu_gives_the_density_of_dry_air(tmp_path):
     met = arlmet.open_dataset(_met_file(tmp_path / "met.arl"))
     particles = _particles_at([_T0], [100.0])

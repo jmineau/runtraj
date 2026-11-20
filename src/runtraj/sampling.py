@@ -291,42 +291,46 @@ def _met_times(sources: list[Any]) -> pd.DatetimeIndex:
     return pd.DatetimeIndex(sorted(times))
 
 
+def _header(source: Any) -> Any:
+    """Return what holds the grid, source and vertical axis of opened met: the file, or a Dataset's ``arl`` accessor."""
+    return source.arl if isinstance(source, xr.Dataset) else source
+
+
 def _met_variables(sources: list[Any]) -> set[str]:
-    """Return the names of the variables the opened met holds."""
-    names: set[str] = set()
+    """
+    Return the names of the variables every source of the opened met holds.
+
+    A variable that only some of the files hold cannot be sampled at every
+    met time, so it counts as missing.
+    """
+    held: list[set[str]] = []
     for source in sources:
         if isinstance(source, xr.Dataset):
-            names.update(str(name) for name in source.data_vars)
+            held.append({str(name) for name in source.data_vars})
         else:
-            names.update(record.variable for record in source.records)
-    return names
+            held.append({record.variable for record in source.records})
+    return set.intersection(*held)
 
 
-def _pressure_variable(sources: list[Any], names: set[str]) -> str:
+def _pressure_variable(sources: list[Any], names: set[str]) -> str | None:
     """
-    Return what to sample for the pressure: the met's ``PRES`` field, or arlmet's ``"pressure"``.
+    Return what to sample for the pressure: the met's ``PRES`` field, arlmet's ``"pressure"``, or ``None``.
 
     A file with ``PRES`` on its levels, such as HRRR's, gives the pressure
     HYSPLIT reads. A file on pressure levels (GFS) or hybrid levels (ERA5)
     has none: its pressure comes from its vertical axis, which arlmet's
     virtual ``"pressure"`` reads. Terrain-following levels and WRF's hybrid
-    levels give no pressure without ``PRES``.
+    levels give no pressure without ``PRES``, so met with such a file and
+    no ``PRES`` in every file has none (``None``).
     """
     import arlmet
 
     if "PRES" in names:
         return "PRES"
-    first = sources[0]
-    axis = (
-        first.arl.vertical_axis
-        if isinstance(first, xr.Dataset)
-        else first.vertical_axis
-    )
-    if isinstance(axis, arlmet.TerrainAxis | arlmet.WrfAxis):
-        raise KeyError(
-            f"Met on {axis.coord_system} levels needs a PRES field for the "
-            "pressure, which it lacks."
-        )
+    for source in sources:
+        axis = _header(source).vertical_axis
+        if isinstance(axis, arlmet.TerrainAxis | arlmet.WrfAxis):
+            return None
     return "pressure"
 
 
@@ -453,10 +457,17 @@ def sample_met(
         available = _met_variables(sources)
         if "SPHU" not in available:
             variables = [v for v in variables if v != "SPHU"]
-        pressure = (
-            _pressure_variable(sources, available) if "PRES" in variables else "PRES"
-        )
-        names = [pressure if v == "PRES" else v for v in variables]
+        pressure = _pressure_variable(sources, available)
+        missing = set(variables) - available - {"PRES"}
+        if "PRES" in variables and pressure is None:
+            missing.add("PRES")
+        if missing:
+            raise KeyError(
+                f"sample_met needs the met variables {sorted(missing)}, which the "
+                "met lacks."
+            )
+        # PRES is sampled as the pressure the met has (checked just above).
+        names = [(pressure or v) if v == "PRES" else v for v in variables]
         met_times = _met_times(sources)
         times = pd.DatetimeIndex(particles["time"])
         before, after, weight = _bracket(met_times, times)
@@ -603,7 +614,8 @@ def calc_pbl_height(
         as a GFS analysis (``f000``) does without the previous cycle's
         forecast, has no height: a row at that time is NaN, and a row
         between it and a met time with the fluxes takes the height of the
-        other time.
+        other time. (HYSPLIT refuses such met, so there is no ``mlht`` of
+        its own to compare.)
 
     Raises
     ------
@@ -630,23 +642,23 @@ def calc_pbl_height(
         )
     with _opened(met) as sources:
         first = sources[0]
-        dataset = isinstance(first, xr.Dataset)
         names = _met_variables(sources)
         pressure = _pressure_variable(sources, names)
         momentum = ["USTR"] if "USTR" in names else ["UMOF", "VMOF"]
-        missing = sorted({"TEMP", "UWND", "VWND", "SHGT", "SHTF", *momentum} - names)
-        if missing:
+        missing = {"TEMP", "UWND", "VWND", "SHGT", "SHTF", *momentum} - names
+        if missing or pressure is None:
+            if pressure is None:
+                missing.add("PRES")
             raise KeyError(
-                f"calc_pbl_height needs the met variables {missing}, which the "
-                "met lacks."
+                f"calc_pbl_height needs the met variables {sorted(missing)}, which "
+                "the met lacks."
             )
         met_times = _met_times(sources)
         before, after, weight = _bracket(met_times, pd.DatetimeIndex(particles["time"]))
 
         # One column per met grid point and met time, at the nearest grid point.
-        met_grid = first.arl.grid if dataset else first.grid
-        source = first.arl.source if dataset else first.source
-        x, y = met_grid.fractional_indices(
+        header = _header(first)
+        x, y = header.grid.fractional_indices(
             particles["lon"].to_numpy(dtype=float),
             particles["lat"].to_numpy(dtype=float),
         )
@@ -720,7 +732,7 @@ def calc_pbl_height(
 
         ustar = np.hypot(component("UMOF"), component("VMOF"))
     heat = ground["SHTF"].to_numpy(dtype=float)
-    if source.strip() == "ETA":
+    if header.source.strip() == "ETA":
         heat = -heat  # NAM's (ETA's) flux is positive downward (prfcom.f)
     zmix = _richardson_mixed_layer(zz, theta, uu, vv, density, ustar, heat, ks)
     # Without the fluxes the stability is unknown: no height, rather than
