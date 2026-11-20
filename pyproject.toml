@@ -71,6 +71,7 @@ dev = [
     # The extras, spelled out: the floors job resolves the group with `uv pip
     # compile`, which would look for `runtraj[complete]` on PyPI.
     "arlmet[archives]>=0.1.0b12,<0.2",
+    "cfgrib>=0.9.14",  # the flexpart extra: GRIB met for the particles
     "eccodes>=2.39",  # the flexpart extra: GRIB met
     "eccodeslib>=2.39; platform_system != 'Windows'",
     "cartopy>=0.26",
