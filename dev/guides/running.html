@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=ca5d891d"></script>
+    <script src="../_static/documentation_options.js?v=35e18cd1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev18+g75a49a422" />
+  <meta name="docsearch:version" content="0.1.0a3.dev19+g8c999f71a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -654,6 +654,10 @@ array (<a class="reference internal" href="containers.html"><span class="doc">In
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Submit the unfinished simulations to Slurm as a job array, and return as
 soon as it is submitted (<a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">schedule</span> <span class="pre">&lt;project&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Run a project every hour on Kubernetes, for the sites in its
+<code class="docutils literal notranslate"><span class="pre">sites.csv</span></code>: <code class="docutils literal notranslate"><span class="pre">schedule</span></code> makes the CronJob, and <code class="docutils literal notranslate"><span class="pre">tick</span></code> is what each
+hour’s pod runs (<a class="reference internal" href="containers.html#kubernetes-schedule"><span class="std std-ref">Running every hour</span></a>).</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Count finished and remaining simulations, and the failed ones by reason.
 List the settings folders in the output directory and which variants

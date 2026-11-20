@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=ca5d891d"></script>
+    <script src="../_static/documentation_options.js?v=35e18cd1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev18+g75a49a422" />
+  <meta name="docsearch:version" content="0.1.0a3.dev19+g8c999f71a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -653,6 +653,17 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.push.html">runtraj.execution.inputs.push</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.pull.html">runtraj.execution.inputs.pull</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.hash_inputs.html">runtraj.execution.inputs.hash_inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.schedule_job.html">runtraj.execution.kubernetes.schedule_job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.cron_job_manifest.html">runtraj.execution.kubernetes.cron_job_manifest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.cron_job_name.html">runtraj.execution.kubernetes.cron_job_name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.add_due_releases.html">runtraj.execution.schedule.add_due_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.due_hours.html">runtraj.execution.schedule.due_hours</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.read_sites.html">runtraj.execution.schedule.read_sites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.hourly_releases.html">runtraj.execution.schedule.hourly_releases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.schedule.check_now.html">runtraj.execution.schedule.check_now</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.lock.html">runtraj.execution.inputs.lock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
@@ -835,6 +846,10 @@ tasks each run <code class="docutils literal notranslate"><span class="pre">runt
 returns the job id at once. With <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code> it makes an
 indexed Job instead (<a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html#runtraj.execution.kubernetes.job_manifest" title="runtraj.execution.kubernetes.job_manifest"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_manifest()</span></code></a>)
 and creates it with <code class="docutils literal notranslate"><span class="pre">kubectl</span></code>.</p></li>
+<li><p><a class="reference internal" href="_api/runtraj.execution.kubernetes.schedule_job.html#runtraj.execution.kubernetes.schedule_job" title="runtraj.execution.kubernetes.schedule_job"><code class="xref py py-func docutils literal notranslate"><span class="pre">schedule_job()</span></code></a> is what <code class="docutils literal notranslate"><span class="pre">runtraj</span>
+<span class="pre">schedule</span></code> calls: a CronJob (<a class="reference internal" href="_api/runtraj.execution.kubernetes.cron_job_manifest.html#runtraj.execution.kubernetes.cron_job_manifest" title="runtraj.execution.kubernetes.cron_job_manifest"><code class="xref py py-func docutils literal notranslate"><span class="pre">cron_job_manifest()</span></code></a>)
+whose pod each hour runs <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span></code>, which adds the hours now due
+(<a class="reference internal" href="_api/runtraj.execution.schedule.add_due_releases.html#runtraj.execution.schedule.add_due_releases" title="runtraj.execution.schedule.add_due_releases"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_due_releases()</span></code></a>) and runs them.</p></li>
 <li><p><a class="reference internal" href="_api/runtraj.execution.worker.run_particles.html#runtraj.execution.worker.run_particles" title="runtraj.execution.worker.run_particles"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_particles()</span></code></a> runs the transport model for one
 <a class="reference internal" href="_api/runtraj.Simulation.html#runtraj.Simulation" title="runtraj.Simulation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation</span></code></a> and writes its particles and log.</p></li>
 <li><p><a class="reference internal" href="_api/runtraj.execution.worker.run_stages.html#runtraj.execution.worker.run_stages" title="runtraj.execution.worker.run_stages"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_stages()</span></code></a> runs the stages of the variants
@@ -940,6 +955,47 @@ Slurm job array by its id.</p>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.inputs.hash_inputs.html#runtraj.execution.inputs.hash_inputs" title="runtraj.execution.inputs.hash_inputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.inputs.hash_inputs</span></code></a></p></td>
 <td><p>Return a content hash of a project folder's <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="running-every-hour">
+<h2>Running every hour<a class="headerlink" href="#running-every-hour" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.kubernetes.schedule_job.html#runtraj.execution.kubernetes.schedule_job" title="runtraj.execution.kubernetes.schedule_job"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.kubernetes.schedule_job</span></code></a></p></td>
+<td><p>Make the CronJob that runs a project every hour, for the sites in its <code class="docutils literal notranslate"><span class="pre">sites.csv</span></code>, and return its name.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.kubernetes.cron_job_manifest.html#runtraj.execution.kubernetes.cron_job_manifest" title="runtraj.execution.kubernetes.cron_job_manifest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.kubernetes.cron_job_manifest</span></code></a></p></td>
+<td><p>Return the CronJob that runs <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span></code> for a project every hour.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.kubernetes.cron_job_name.html#runtraj.execution.kubernetes.cron_job_name" title="runtraj.execution.kubernetes.cron_job_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.kubernetes.cron_job_name</span></code></a></p></td>
+<td><p>Return the name of a project's CronJob: <code class="docutils literal notranslate"><span class="pre">runtraj-&lt;name&gt;-&lt;hash&gt;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.schedule.add_due_releases.html#runtraj.execution.schedule.add_due_releases" title="runtraj.execution.schedule.add_due_releases"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.schedule.add_due_releases</span></code></a></p></td>
+<td><p>Add the releases now due to a project's <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>, and return the ids of all that are due.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.schedule.due_hours.html#runtraj.execution.schedule.due_hours" title="runtraj.execution.schedule.due_hours"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.schedule.due_hours</span></code></a></p></td>
+<td><p>Return the hours a tick at <em>now</em> covers, oldest first, in UTC.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.schedule.read_sites.html#runtraj.execution.schedule.read_sites" title="runtraj.execution.schedule.read_sites"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.schedule.read_sites</span></code></a></p></td>
+<td><p>Return the sites in a project's <code class="docutils literal notranslate"><span class="pre">sites.csv</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.schedule.hourly_releases.html#runtraj.execution.schedule.hourly_releases" title="runtraj.execution.schedule.hourly_releases"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.schedule.hourly_releases</span></code></a></p></td>
+<td><p>Return a release at each site at each hour, hour by hour.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.schedule.check_now.html#runtraj.execution.schedule.check_now" title="runtraj.execution.schedule.check_now"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.schedule.check_now</span></code></a></p></td>
+<td><p>Return <em>now</em> in UTC without a time zone, or the clock's time when it is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.inputs.lock.html#runtraj.execution.inputs.lock" title="runtraj.execution.inputs.lock"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.inputs.lock</span></code></a></p></td>
+<td><p>Hold a lock on the file <em>name</em> at <em>url</em> while the <code class="docutils literal notranslate"><span class="pre">with</span></code> block runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.inputs.get.html#runtraj.execution.inputs.get" title="runtraj.execution.inputs.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.inputs.get</span></code></a></p></td>
+<td><p>Copy one file from <em>url</em> into a project folder, the reverse of <code class="xref py py-func docutils literal notranslate"><span class="pre">put()</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.inputs.put.html#runtraj.execution.inputs.put" title="runtraj.execution.inputs.put"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.inputs.put</span></code></a></p></td>
+<td><p>Copy one file of a project folder to <em>url</em>, such as a <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> that grew.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1069,6 +1125,7 @@ write one. Use <a class="reference internal" href="_api/runtraj.stages.check_sta
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workers">Workers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#slurm-job-arrays">Slurm job arrays</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kubernetes-indexed-jobs">Kubernetes indexed Jobs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-every-hour">Running every hour</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transport-model">Transport model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stages">Stages</a></li>
 </ul>

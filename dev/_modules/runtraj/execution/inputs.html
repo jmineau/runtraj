@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=ca5d891d"></script>
+    <script src="../../../_static/documentation_options.js?v=35e18cd1"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev18+g75a49a422" />
+  <meta name="docsearch:version" content="0.1.0a3.dev19+g8c999f71a" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -451,27 +451,46 @@
 <span></span><span class="sd">"""</span>
 <span class="sd">Copying a project's inputs to and from a bucket, for pods that do not share a disk.</span>
 
-<span class="sd">A project's inputs are its ``config.yaml``, its ``releases.csv`` and its</span>
-<span class="sd">``tables/`` folder. :func:`push` copies them to a bucket (or any folder</span>
-<span class="sd">fsspec can reach) when a Kubernetes Job is submitted, and each pod copies</span>
-<span class="sd">them back to its own disk with :func:`pull`. The output directory is never</span>
-<span class="sd">copied: the workers write results straight to it, wherever it is.</span>
+<span class="sd">A project's inputs are its ``config.yaml``, its ``releases.csv``, its</span>
+<span class="sd">``tables/`` folder, and the ``sites.csv`` of a project run every hour</span>
+<span class="sd">(:mod:`runtraj.execution.schedule`). :func:`push` copies them to a bucket</span>
+<span class="sd">(or any folder fsspec can reach) when a Kubernetes Job is submitted, and</span>
+<span class="sd">each pod copies them back to its own disk with :func:`pull`. The output</span>
+<span class="sd">directory is never copied: the workers write results straight to it,</span>
+<span class="sd">wherever it is. A program that changes one of these files where it is, as</span>
+<span class="sd">each hour's pod adds to ``releases.csv``, holds :func:`lock` while it does.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">UTC</span><span class="p">,</span> <span class="n">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">fsspec</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fsspec.implementations.local</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+<span class="c1">#: The file of a project's releases.</span>
+<span class="n">RELEASES</span> <span class="o">=</span> <span class="s2">"releases.csv"</span>
 <span class="c1">#: The files of a project folder a run reads.</span>
-<span class="n">INPUT_FILES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"config.yaml"</span><span class="p">,</span> <span class="s2">"releases.csv"</span><span class="p">)</span>
+<span class="n">INPUT_FILES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"config.yaml"</span><span class="p">,</span> <span class="n">RELEASES</span><span class="p">)</span>
 <span class="c1">#: The folder of extra input tables (``Project.add_table``), copied when present.</span>
 <span class="n">TABLES</span> <span class="o">=</span> <span class="s2">"tables"</span>
+<span class="c1">#: The places a schedule adds a release at each hour, copied when present.</span>
+<span class="n">SITES</span> <span class="o">=</span> <span class="s2">"sites.csv"</span>
+<span class="c1">#: Seconds a lock may stay the same before a program waiting for it takes it over.</span>
+<span class="n">LOCK_STALE_SECONDS</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="c1">#: Seconds between a waiting program's looks at a lock.</span>
+<span class="n">LOCK_POLL_SECONDS</span> <span class="o">=</span> <span class="mi">2</span>
 
 
 <div class="viewcode-block" id="hash_inputs">
@@ -505,13 +524,13 @@
 
 <div class="viewcode-block" id="push">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.execution.inputs.push.html#runtraj.execution.inputs.push">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">push</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Copy a project's inputs to *url*.</span>
 
-<span class="sd">    Copies ``config.yaml``, ``releases.csv`` and, when the project has one,</span>
-<span class="sd">    ``tables/``. Files already at *url* are replaced; files there that the</span>
-<span class="sd">    project no longer has are left.</span>
+<span class="sd">    Copies ``config.yaml``, ``releases.csv`` and, when the project has them,</span>
+<span class="sd">    ``sites.csv`` and ``tables/``. Files already at *url* are replaced;</span>
+<span class="sd">    files there that the project no longer has are left.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -519,6 +538,9 @@
 <span class="sd">        The project folder on this machine.</span>
 <span class="sd">    url : str</span>
 <span class="sd">        Where to copy them, such as ``s3://bucket/projects/my_project``.</span>
+<span class="sd">    releases : bool</span>
+<span class="sd">        Copy ``releases.csv``. A schedule leaves it out once the bucket has</span>
+<span class="sd">        one, since each hour's pod adds to the copy there.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -528,16 +550,21 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    FileNotFoundError</span>
-<span class="sd">        If *directory* has no ``config.yaml`` or ``releases.csv``.</span>
+<span class="sd">        If *directory* has no ``config.yaml``, or no ``releases.csv`` when</span>
+<span class="sd">        *releases* is true.</span>
 <span class="sd">    """</span>
     <span class="n">directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">INPUT_FILES</span><span class="p">:</span>
+    <span class="n">required</span> <span class="o">=</span> <span class="n">INPUT_FILES</span> <span class="k">if</span> <span class="n">releases</span> <span class="k">else</span> <span class="n">INPUT_FILES</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2"> is not a project: it has no </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
     <span class="n">fs</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">url_to_fs</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
     <span class="n">fs</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">INPUT_FILES</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="o">*</span><span class="n">required</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">([</span><span class="n">SITES</span><span class="p">]</span> <span class="k">if</span> <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">SITES</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]),</span>
+    <span class="p">]</span>
     <span class="n">names</span> <span class="o">+=</span> <span class="p">[</span>
         <span class="n">path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">directory</span> <span class="o">/</span> <span class="n">TABLES</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">"*"</span><span class="p">))</span>
@@ -574,6 +601,9 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Copy a project's inputs from *url* into *directory*, the reverse of :func:`push`.</span>
 
+<span class="sd">    A ``releases.csv`` is not required: a project run every hour has none</span>
+<span class="sd">    until its first hour is added. ``sites.csv`` is copied when present.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    url : str</span>
@@ -589,7 +619,7 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    FileNotFoundError</span>
-<span class="sd">        If *url* has no ``config.yaml`` or ``releases.csv``.</span>
+<span class="sd">        If *url* has no ``config.yaml``.</span>
 <span class="sd">    OSError</span>
 <span class="sd">        If *url* cannot be read, such as a refused connection, a timeout or</span>
 <span class="sd">        expired credentials: unlike a missing project, a retry may get past</span>
@@ -599,12 +629,15 @@
     <span class="n">fs</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">url_to_fs</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">INPUT_FILES</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">_exists</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No project at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">: it has no </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_exists</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">INPUT_FILES</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No project at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">: it has no </span><span class="si">{</span><span class="n">INPUT_FILES</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">INPUT_FILES</span><span class="p">:</span>
-            <span class="n">fs</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">name</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">INPUT_FILES</span><span class="p">,</span> <span class="n">SITES</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">INPUT_FILES</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="n">_exists</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+                <span class="n">fs</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">name</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># A copy from an earlier pull must not stand in for a file that is gone.</span>
+                <span class="p">(</span><span class="n">directory</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_exists</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">TABLES</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"directory"</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">remote</span> <span class="ow">in</span> <span class="n">fs</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">TABLES</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
                 <span class="n">local</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">/</span> <span class="n">remote</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2">/"</span><span class="p">)</span>
@@ -620,7 +653,231 @@
 
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"INPUT_FILES"</span><span class="p">,</span> <span class="s2">"TABLES"</span><span class="p">,</span> <span class="s2">"hash_inputs"</span><span class="p">,</span> <span class="s2">"pull"</span><span class="p">,</span> <span class="s2">"push"</span><span class="p">]</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_file</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Whether the project at *url* has the file *name*, such as ``releases.csv``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    OSError</span>
+<span class="sd">        If *url* cannot be read; a missing file is ``False``, not an error.</span>
+<span class="sd">    """</span>
+    <span class="n">fs</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">url_to_fs</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_exists</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_atomic_put_file</span><span class="p">(</span><span class="n">fs</span><span class="p">:</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">AbstractFileSystem</span><span class="p">,</span> <span class="n">lpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Copy *lpath* to *rpath* on *fs*, atomically when *fs* is local.</span>
+
+<span class="sd">    ``fs.put_file`` truncates *rpath* and then writes it, so on a local</span>
+<span class="sd">    filesystem or a mounted volume a reader that opens *rpath* meanwhile</span>
+<span class="sd">    sees a half-written file. Here it is copied to a temporary name in the</span>
+<span class="sd">    same folder and ``os.replace``'d onto *rpath*, which is atomic on one</span>
+<span class="sd">    filesystem. S3 and Google Cloud Storage replace the whole object in one</span>
+<span class="sd">    request already, so there it is written directly.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">implementations</span><span class="o">.</span><span class="n">local</span><span class="o">.</span><span class="n">LocalFileSystem</span><span class="p">):</span>
+        <span class="n">fs</span><span class="o">.</span><span class="n">put_file</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">rpath</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rpath</span><span class="si">}</span><span class="s2">.tmp-</span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">fs</span><span class="o">.</span><span class="n">put_file</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">rpath</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+            <span class="n">fs</span><span class="o">.</span><span class="n">rm_file</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="k">raise</span>
+
+
+<div class="viewcode-block" id="put">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.inputs.put.html#runtraj.execution.inputs.put">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Copy one file of a project folder to *url*, such as a ``releases.csv`` that grew.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    directory : str or Path</span>
+<span class="sd">        The project folder on this machine.</span>
+<span class="sd">    url : str</span>
+<span class="sd">        Where the project's inputs are, as :func:`push` copied them.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The file, relative to the project folder.</span>
+<span class="sd">    """</span>
+    <span class="n">fs</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">url_to_fs</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">_atomic_put_file</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span><span class="p">),</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.inputs.get.html#runtraj.execution.inputs.get">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Copy one file from *url* into a project folder, the reverse of :func:`put`.</span>
+
+<span class="sd">    Returns whether *url* has the file. When it has none, the folder's own</span>
+<span class="sd">    copy is removed, so an old copy cannot stand in for it.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    OSError</span>
+<span class="sd">        If *url* cannot be read.</span>
+<span class="sd">    """</span>
+    <span class="n">fs</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">url_to_fs</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">remote</span><span class="p">,</span> <span class="n">local</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_exists</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">remote</span><span class="p">):</span>
+        <span class="n">local</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">fs</span><span class="o">.</span><span class="n">get_file</span><span class="p">(</span><span class="n">remote</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">local</span><span class="p">))</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="lock">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.inputs.lock.html#runtraj.execution.inputs.lock">[docs]</a>
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">lock</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Hold a lock on the file *name* at *url* while the ``with`` block runs.</span>
+
+<span class="sd">    Hold it around reading a file, changing it and writing it back, so a</span>
+<span class="sd">    second program doing the same waits for the first instead of writing</span>
+<span class="sd">    over its change. Each hour's pod of a schedule holds it on</span>
+<span class="sd">    ``releases.csv`` while it copies the file (:func:`get`), adds its hours,</span>
+<span class="sd">    and copies it back (:func:`put`).</span>
+
+<span class="sd">    The lock is a small file ``.&lt;name&gt;.lock`` next to *name*, made only if</span>
+<span class="sd">    it is not there (``open(..., "x")``: ``If-None-Match`` on S3,</span>
+<span class="sd">    ``ifGenerationMatch=0`` on Google Cloud Storage, ``O_EXCL`` on a</span>
+<span class="sd">    folder), and deleted at the end of the block. It says which host and</span>
+<span class="sd">    process holds it. A program that finds it waits, and takes it over if</span>
+<span class="sd">    it has not changed for :data:`LOCK_STALE_SECONDS` by its own clock, so</span>
+<span class="sd">    a holder that crashed does not stop every later one.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    url : str</span>
+<span class="sd">        Where the project's inputs are: a URL, or a folder.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The file to lock, relative to the project folder.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    OSError</span>
+<span class="sd">        If the lock cannot be made or read, such as a refused connection or</span>
+<span class="sd">        expired credentials.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    A store that ignores ``If-None-Match`` (some older S3-compatible ones)</span>
+<span class="sd">    lets two programs make the lock at once, so it does not protect there.</span>
+<span class="sd">    A holder slower than :data:`LOCK_STALE_SECONDS` can be taken over; it</span>
+<span class="sd">    then logs a warning when it finishes.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import fsspec</span>
+<span class="sd">    &gt;&gt;&gt; fs = fsspec.filesystem("memory")</span>
+<span class="sd">    &gt;&gt;&gt; with lock("memory://lock-example/project", "releases.csv"):</span>
+<span class="sd">    ...     fs.exists("/lock-example/project/.releases.csv.lock")</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; fs.exists("/lock-example/project/.releases.csv.lock")</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="n">fs</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">url_to_fs</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="si">}</span><span class="s2">/.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.lock"</span>
+    <span class="n">stamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%SZ"</span><span class="p">)</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span><span class="si">}</span><span class="s2"> pid </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span><span class="si">}</span><span class="s2"> since </span><span class="si">{</span><span class="n">stamp</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_acquire</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cannot lock </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_release</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"</span><span class="si">%s</span><span class="s2"> was taken over while this program held it, so another "</span>
+                    <span class="s2">"may have written </span><span class="si">%s</span><span class="s2"> at the same time."</span><span class="p">,</span>
+                    <span class="n">path</span><span class="p">,</span>
+                    <span class="n">name</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># What the block wrote is written; a lock left behind is taken over later.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"Could not remove </span><span class="si">%s</span><span class="s2">; it is taken over after </span><span class="si">%d</span><span class="s2"> s."</span><span class="p">,</span>
+                <span class="n">path</span><span class="p">,</span>
+                <span class="n">LOCK_STALE_SECONDS</span><span class="p">,</span>
+                <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_acquire</span><span class="p">(</span><span class="n">fs</span><span class="p">:</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">AbstractFileSystem</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Make the lock file *path* holding *token*, waiting while another holds it.</span>
+
+<span class="sd">    A lock is stale when it reads the same for :data:`LOCK_STALE_SECONDS` on</span>
+<span class="sd">    this program's own clock (``time.monotonic``), so no two clocks have to</span>
+<span class="sd">    agree; a stale lock is removed and made again.</span>
+<span class="sd">    """</span>
+    <span class="n">fs</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">seen</span><span class="p">,</span> <span class="n">since</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">fs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">held</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># released while we looked: try again</span>
+        <span class="k">if</span> <span class="n">held</span> <span class="o">!=</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Waiting for </span><span class="si">%s</span><span class="s2">, held by </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">held</span><span class="p">)</span>
+            <span class="n">seen</span><span class="p">,</span> <span class="n">since</span> <span class="o">=</span> <span class="n">held</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">since</span> <span class="o">&gt;=</span> <span class="n">LOCK_STALE_SECONDS</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"Taking over </span><span class="si">%s</span><span class="s2">, the same for </span><span class="si">%d</span><span class="s2"> s: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">LOCK_STALE_SECONDS</span><span class="p">,</span> <span class="n">held</span>
+            <span class="p">)</span>
+            <span class="n">_release</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">held</span><span class="p">)</span>
+            <span class="n">seen</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">continue</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">LOCK_POLL_SECONDS</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_release</span><span class="p">(</span><span class="n">fs</span><span class="p">:</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">AbstractFileSystem</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Remove the lock file *path* if it still holds *token*; return whether it did.</span>
+
+<span class="sd">    Reading first keeps a program from removing a lock another has taken</span>
+<span class="sd">    over since.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="n">token</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">fs</span><span class="o">.</span><span class="n">rm_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"INPUT_FILES"</span><span class="p">,</span>
+    <span class="s2">"RELEASES"</span><span class="p">,</span>
+    <span class="s2">"SITES"</span><span class="p">,</span>
+    <span class="s2">"TABLES"</span><span class="p">,</span>
+    <span class="s2">"get"</span><span class="p">,</span>
+    <span class="s2">"has_file"</span><span class="p">,</span>
+    <span class="s2">"hash_inputs"</span><span class="p">,</span>
+    <span class="s2">"lock"</span><span class="p">,</span>
+    <span class="s2">"pull"</span><span class="p">,</span>
+    <span class="s2">"push"</span><span class="p">,</span>
+    <span class="s2">"put"</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
 
                 </article>

@@ -1,0 +1,6 @@
+﻿runtraj.execution.schedule.read\_sites
+======================================
+
+.. currentmodule:: runtraj.execution.schedule
+
+.. autofunction:: read_sites

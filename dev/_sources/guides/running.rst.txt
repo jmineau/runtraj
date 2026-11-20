@@ -175,6 +175,11 @@ Commands
    Submit the unfinished simulations to Slurm as a job array, and return as
    soon as it is submitted (:doc:`slurm`).
 
+``runtraj schedule <project>`` and ``runtraj tick <project>``
+   Run a project every hour on Kubernetes, for the sites in its
+   ``sites.csv``: ``schedule`` makes the CronJob, and ``tick`` is what each
+   hour's pod runs (:ref:`kubernetes-schedule`).
+
 ``runtraj status <project>``
    Count finished and remaining simulations, and the failed ones by reason.
    List the settings folders in the output directory and which variants
