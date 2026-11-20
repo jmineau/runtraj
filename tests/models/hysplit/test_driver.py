@@ -3,6 +3,7 @@
 import datetime as dt
 from pathlib import Path
 
+import numpy as np
 import pytest
 from pydantic import ValidationError
 
@@ -254,6 +255,51 @@ def test_read_particle_dat_rejects_other_columns(tmp_path):
 
     with pytest.raises(ValueError, match="6 columns, expected 2"):
         read_particle_dat(dat, ["time", "indx"])
+
+
+def test_read_particle_dat_reads_the_values_numpy_reads(tmp_path):
+    # HYSPLIT's own layout: the release location on the first line, then
+    # right-aligned columns of varying width and digits ("-1.", "1471.0836",
+    # "0.0004907309"). Every value must be the float64 numpy.loadtxt reads.
+    rng = np.random.default_rng(59)
+    formats = [
+        "{:10.0f}.",
+        "{:9.0f}.",
+        "{:11.4f}",
+        "{:10.4f}",
+        "{:10.4f}",
+        "{:10.3f}",
+        "{:14.4f}",
+        "{:10.4f}",
+        "{:10.2f}",
+        "{:13.10f}",
+    ]
+    lines = ["   40.5000000      -112.000000       5.00000000    "]
+    for _ in range(2000):
+        values = rng.uniform(-200, 2000, len(formats)) * rng.choice([1, 1e-4])
+        lines.append(
+            " ".join(f.format(v) for f, v in zip(formats, values, strict=True))
+        )
+    dat = tmp_path / PARTICLE_FILE
+    dat.write_text("\n".join(lines) + "\n")
+
+    names = [
+        "time",
+        "indx",
+        "long",
+        "lati",
+        "zagl",
+        "sigw",
+        "zsfc",
+        "temp",
+        "pres",
+        "foot",
+    ]
+    df = read_particle_dat(dat, names)
+
+    expected = np.loadtxt(dat, skiprows=1)
+    assert df.dtypes.eq(np.float64).all()
+    np.testing.assert_array_equal(df.to_numpy(), expected, strict=True)
 
 
 def test_read_particle_dat_of_an_empty_file_is_an_empty_table(tmp_path):

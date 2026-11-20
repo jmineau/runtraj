@@ -13,7 +13,6 @@ import os
 import shutil
 import signal
 import subprocess
-import warnings
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -170,6 +169,13 @@ def _tables_here(path: Path) -> bytes:
 #: (:data:`runtraj.particles.PARTICLE_SCHEMA`); the rest keep HYSPLIT's.
 PARTICLE_COLUMNS = {"indx": "particle", "time": "age", "long": "lon", "lati": "lat"}
 
+# Before pandas 3 the C reader's default float parser can differ from Python's
+# in the last digit, and ``round_trip`` reads every value exactly; pandas 3
+# parses exactly by default and deprecates the argument.
+_EXACT_FLOATS: dict[str, Any] = (
+    {"float_precision": "round_trip"} if int(pd.__version__.split(".")[0]) < 3 else {}
+)
+
 
 def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
     """
@@ -200,24 +206,28 @@ def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
     """
     path = Path(path)
     names = [PARTICLE_COLUMNS.get(name, name) for name in columns]
-    # numpy.loadtxt reads large files much faster than pandas and handles
-    # HYSPLIT's variable-width spacing.
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            message="loadtxt: input contained no data",
-            category=UserWarning,
+    # pandas' C reader splits HYSPLIT's variable-width spacing and reads a
+    # day's file three times faster than numpy.loadtxt, with the same values.
+    # The first line is the release location, not a header.
+    try:
+        particles = pd.read_csv(
+            path,
+            sep=r"\s+",
+            skiprows=1,
+            header=None,
+            dtype=np.float64,
+            **_EXACT_FLOATS,
         )
-        values = np.loadtxt(path, skiprows=1, ndmin=2)
-
-    if values.size == 0:
+    except pd.errors.EmptyDataError:
         return pd.DataFrame(columns=pd.Index(names))
-    if values.shape[1] != len(names):
+
+    if particles.shape[1] != len(names):
         raise ValueError(
-            f"{path.name} has {values.shape[1]} columns, expected {len(names)} "
+            f"{path.name} has {particles.shape[1]} columns, expected {len(names)} "
             f"from varsiwant={list(columns)!r}."
         )
-    return pd.DataFrame(values, columns=pd.Index(names))
+    particles.columns = pd.Index(names)
+    return particles
 
 
 # -- what each input file holds -----------------------------------------------
