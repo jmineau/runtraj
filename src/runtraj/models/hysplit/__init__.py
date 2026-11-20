@@ -1,6 +1,7 @@
 """HYSPLIT, the transport model: its config and its met config, writing its input files, and running ``hycs_std``."""
 
 from .config import HysplitConfig
+from .control import ControlFile
 from .driver import (
     data_tables,
     find_hycs_std,
@@ -11,8 +12,10 @@ from .driver import (
 from .failures import FailureReason
 from .met import Met, MetConfig
 from .model import HysplitModel
+from .namelist import read_namelist
 
 __all__ = [
+    "ControlFile",
     "FailureReason",
     "HysplitConfig",
     "HysplitModel",
@@ -20,6 +23,7 @@ __all__ = [
     "MetConfig",
     "data_tables",
     "find_hycs_std",
+    "read_namelist",
     "read_particle_dat",
     "run_hycs_std",
     "write_inputs",

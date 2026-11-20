@@ -14,6 +14,8 @@ from runtraj.particles.table import (
     particles_from_table,
     particles_metadata,
     read_particles,
+    release_metadata,
+    stored_release,
     write_particles,
 )
 
@@ -26,5 +28,7 @@ __all__ = [
     "particles_from_table",
     "particles_metadata",
     "read_particles",
+    "release_metadata",
+    "stored_release",
     "write_particles",
 ]

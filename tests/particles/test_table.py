@@ -767,3 +767,26 @@ def test_the_core_refuses_release_rows_without_each_particle_once(change, messag
 
     with pytest.raises(ValueError, match=message):
         _add_release_heights(p, _COLUMN, rows)
+
+
+def test_stored_release_reads_what_release_metadata_writes():
+    from runtraj.particles import release_metadata, stored_release
+    from runtraj.releases import PointRelease
+
+    release = PointRelease(
+        time=dt.datetime(2023, 1, 1, 12),
+        longitude=-111.85,
+        latitude=40.77,
+        altitude=5.0,
+    )
+
+    meta = release_metadata(release)
+
+    assert stored_release(meta, "a.parquet") == release
+
+
+def test_stored_release_names_a_file_that_records_no_release():
+    from runtraj.particles import stored_release
+
+    with pytest.raises(ValueError, match="a.parquet does not record its release"):
+        stored_release({}, "a.parquet")

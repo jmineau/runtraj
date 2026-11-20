@@ -135,6 +135,27 @@ def particles_metadata(path: str | Path | UPath) -> ParticleMetadata:
     )
 
 
+def release_metadata(release: Release) -> dict[bytes, bytes]:
+    """
+    Return the Parquet schema metadata that records *release* in a result file.
+
+    A stage that writes its own Parquet file merges this into the file's
+    metadata, so that :func:`stored_release` reads the release back and the
+    file is found as the release's.
+
+    Parameters
+    ----------
+    release : Release
+        The release the file was made for.
+
+    Returns
+    -------
+    dict
+        The metadata entries, to merge with the file's other entries.
+    """
+    return {b"runtraj:release": release.to_json().encode()}
+
+
 def stored_release(meta: Mapping[bytes, bytes], path: str | Path | UPath) -> Release:
     """
     Return the release a stored result file records in its metadata.
@@ -314,7 +335,7 @@ def write_particles(
         ),
     )
     meta = {
-        b"runtraj:release": release.to_json().encode(),
+        **release_metadata(release),
         b"runtraj:settings": json.dumps(dict(settings)).encode(),
         b"runtraj:met_files": json.dumps([str(p) for p in met_files]).encode(),
         **(metadata or {}),

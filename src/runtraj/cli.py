@@ -83,9 +83,12 @@ from runtraj.project import STATES, Project
 EXIT_COMPLETE, EXIT_FAILED, EXIT_USAGE, EXIT_INTERRUPTED, EXIT_BUG = 0, 1, 2, 3, 4
 
 
-class _Group(TyperGroup):
+class ExitCodeGroup(TyperGroup):
     """
-    The ``runtraj`` command group, which ends a command that raised in an exit code.
+    The class of a command group (a Typer app with commands under it), which ends a command that raised in an exit code.
+
+    ``runtraj`` is built from it (``typer.Typer(cls=ExitCodeGroup)``), and so
+    can another package's command that adds to runtraj's, such as ``stilt``.
 
     Python's own exit code for an uncaught error is 1, which is also the
     code of a run whose simulations failed. A driver that decides on a
@@ -125,7 +128,7 @@ app = typer.Typer(
     name="runtraj",
     help="Run simulations and check on a project.",
     no_args_is_help=True,
-    cls=_Group,
+    cls=ExitCodeGroup,
 )
 
 logger = logging.getLogger(__name__)
