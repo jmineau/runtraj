@@ -205,7 +205,7 @@ rest itself:
    * - ``SETUP.CFG`` ``IVMAX``
      - The number of ``varsiwant`` names
    * - ``SETUP.CFG`` ``SEED``
-     - ``seed``, written as ``-(abs(seed) + 1)``
+     - ``seed``, written as ``-(seed + 1)``
    * - ``SETUP.CFG`` ``WINDERRTF``, ``ZICONTROLTF``
      - The wind and mixed-layer error settings, and ``ziscale``
    * - ``SETUP.CFG`` ``ICHEM``, ``IDSP``

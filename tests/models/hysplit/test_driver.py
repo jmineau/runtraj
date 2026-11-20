@@ -923,7 +923,7 @@ def test_setup_cfg_includes_the_seed_when_configured(tmp_path, point_release):
     content = _setup_cfg(
         tmp_path, point_release, HysplitConfig(n_hours=-24, seed=17, krand=2)
     )
-    assert "seed=-18" in content  # -(|seed|+1): the value HYSPLIT honours
+    assert "seed=-18" in content  # -(seed+1): the value HYSPLIT honours
     assert "winderrtf=0" in content
 
 
@@ -1424,12 +1424,17 @@ def test_setup_cfg_can_hold_the_entries_it_held_when_they_were_fixed():
 
 
 def test_setup_entries_map_seed_to_negative_namelist_value():
-    # HYSPLIT's ran1 re-initializes only from a negative value; -(|seed|+1)
+    # HYSPLIT's ran1 re-initializes only from a negative value; -(seed+1)
     # keeps every seed distinct and off the unseeded default (state 1).
     assert setup_entries(HysplitConfig(n_hours=-24, seed=17, krand=2))["seed"] == -18
-    assert setup_entries(HysplitConfig(n_hours=-24, seed=-17, krand=2))["seed"] == -18
     assert setup_entries(HysplitConfig(n_hours=-24, seed=0, krand=2))["seed"] == -1
     assert setup_seed(42) == -43
+
+
+def test_every_realization_of_a_seed_gets_its_own_namelist_value():
+    config = HysplitConfig(n_hours=-24, seed=0, krand=2)
+    seeds = [setup_entries(r)["seed"] for r in config.realizations(4)]
+    assert seeds == [-1, -2, -3, -4]
 
 
 def test_the_driver_names_only_real_settings_outside_setup_cfg():

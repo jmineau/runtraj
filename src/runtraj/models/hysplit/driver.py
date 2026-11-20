@@ -258,17 +258,26 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
 
 def setup_seed(seed: int) -> int:
     """
-    Return the ``SEED`` value written to ``SETUP.CFG`` for a user seed.
+    Return the ``SEED`` value written to ``SETUP.CFG`` for a *seed* of 0 or more.
 
     HYSPLIT sets its generator state to ``-1 + SEED``. Under ``krand=2`` it
     reinitializes only from a negative state, and every state of -1 or more
-    gives the same stream. Writing ``-(|seed| + 1)`` puts the state at
-    ``-(|seed| + 2)``. That is negative, different for each ``|seed|``, and
-    never the unseeded default (``SEED = 0``). A patched HYSPLIT that uses
+    gives the same stream. Writing ``-(seed + 1)`` puts the state at
+    ``-(seed + 2)``. That is negative, different for each seed, and never
+    the unseeded default (``SEED = 0``). A patched HYSPLIT that uses
     ``SEED`` directly maps a negative ``SEED`` to the same state, so the
-    value works with both builds.
+    value works with both builds. :class:`~runtraj.models.hysplit.HysplitConfig`
+    refuses a negative seed, which this mapping would give the same ``SEED``
+    as its positive.
+
+    Examples
+    --------
+    >>> setup_seed(0)
+    -1
+    >>> setup_seed(42)
+    -43
     """
-    return -(abs(seed) + 1)
+    return -(seed + 1)
 
 
 def release_locations(locations: Sequence[tuple[float, float, float]]) -> int:

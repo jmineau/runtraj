@@ -5,6 +5,8 @@ from pydantic import ValidationError
 
 from runtraj.models.hysplit import HysplitConfig
 
+from ...fixtures.factories import make_project_config
+
 
 def test_winderrtf_partial_xy_raises():
     with pytest.raises(ValidationError):
@@ -60,6 +62,37 @@ def test_ziscale_rejects_multiple_per_simulation_lists():
 def test_seed_requires_krand_2(krand):
     with pytest.raises(ValueError, match="requires krand=2"):
         HysplitConfig(n_hours=-24, seed=1, krand=krand)
+
+
+@pytest.mark.parametrize("seed", [-1, -2, -17])
+def test_a_negative_seed_is_refused(seed):
+    # -(abs(seed) + 1) gave a seed and its negative the same run, and the
+    # realizations of seed=-2 (-2, -1, 0, 1) repeated one another.
+    with pytest.raises(ValueError, match="must be 0 or more"):
+        HysplitConfig(n_hours=-24, seed=seed, krand=2)
+
+
+@pytest.mark.parametrize("seed", [0, 1, 17])
+def test_a_seed_of_0_or_more_is_accepted(seed):
+    assert HysplitConfig(n_hours=-24, seed=seed, krand=2).seed == seed
+
+
+def test_realizations_of_an_accepted_seed_never_go_negative():
+    # A seed of 0 or more plus k, for k from 0, stays 0 or more.
+    config = HysplitConfig(n_hours=-24, seed=0, krand=2)
+    assert [r.seed for r in config.realizations(5)] == [0, 1, 2, 3, 4]
+
+
+def test_a_project_with_a_negative_seed_and_realizations_is_refused(tmp_path):
+    # seed=-2 with 4 realizations ran seeds -2, -1, 0, 1, so two were the same run.
+    with pytest.raises(ValueError, match="must be 0 or more"):
+        make_project_config(
+            tmp_path,
+            n_hours=-1,
+            krand=2,
+            seed=-2,
+            variants={"hrrr": {"realizations": 4}},
+        )
 
 
 @pytest.mark.parametrize("krand", [0, 1, 2, 3, 4, 10, 11, 12, 13])

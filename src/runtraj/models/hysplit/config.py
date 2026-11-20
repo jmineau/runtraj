@@ -364,12 +364,13 @@ class HysplitConfig(TransportConfig):
             "Random seed for a reproducible run. Different seeds give "
             "different runs. Requires ``krand: 2``. HYSPLIT 5.1.0 "
             "ignores the seed under ``krand`` 4 and 10 to 13, and under 1 uses "
-            "it only for the initial turbulent velocity. runtraj writes it to "
-            "``SETUP.CFG`` as ``-(abs(seed) + 1)``, because HYSPLIT reseeds its "
-            "generator only from a negative value and gives every ``SEED`` of "
-            "0 or more the same stream. Realization ``k`` of a variant runs "
-            "with ``seed + k``, so realization 0 shares the unperturbed run's "
-            "seed."
+            "it only for the initial turbulent velocity. Must be 0 or more: "
+            "runtraj writes it to ``SETUP.CFG`` as ``-(seed + 1)``, because "
+            "HYSPLIT reseeds its generator only from a negative value and "
+            "gives every ``SEED`` of 0 or more the same stream, so a seed "
+            "and its negative would give the same run. Realization ``k`` of "
+            "a variant runs with ``seed + k``, so realization 0 shares the "
+            "unperturbed run's seed."
         ),
     )
     krnd: int = Field(
@@ -726,7 +727,15 @@ class HysplitConfig(TransportConfig):
 
     @model_validator(mode="after")
     def _validate_seed(self) -> Self:
-        """Require ``krand=2`` when a seed is set."""
+        """Require a seed of 0 or more, and ``krand=2``, when a seed is set."""
+        if self.seed is not None and self.seed < 0:
+            raise ValueError(
+                f"seed={self.seed} must be 0 or more: runtraj writes the seed "
+                "to SETUP.CFG as -(seed + 1) because HYSPLIT reseeds only from "
+                "a negative value, so a seed and its negative would give the "
+                "same run, and the realizations of a negative seed would "
+                "repeat one another. Use a seed of 0 or more."
+            )
         if self.seed is not None and self.krand != 2:
             got = "krand unset" if self.krand is None else f"krand={self.krand}"
             raise ValueError(
