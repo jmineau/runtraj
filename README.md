@@ -19,7 +19,8 @@
 runtraj runs particle dispersion models at scale. You describe where and when particles are
 released and the settings to run them under, and it runs the transport model once for each,
 on your machine or as a Slurm job array, and keeps the particles where you can find them again.
-[HYSPLIT](https://www.ready.noaa.gov/HYSPLIT.php) is the model built in; another model, and
+[HYSPLIT](https://www.ready.noaa.gov/HYSPLIT.php) is the model it runs unless you name another, and
+FLEXPART 11 is built in beside it; any other model, and
 what is made from the particles afterwards, plug in by the import path of a class.
 
 runtraj is not a model: it runs one, for every release and every set of settings, and

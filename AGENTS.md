@@ -22,7 +22,8 @@ building, releasing) and [docs/development/architecture.rst](docs/development/ar
 runtraj runs particle dispersion models at scale: projects of releases and
 variants, settings folders, completion by file, `run` and `submit`,
 realizations, the met catalog, and the transport models. It is not a model.
-**HYSPLIT** is the model built in; another model, and what is made from the
+**HYSPLIT** is the model a variant runs unless it names another, and
+**FLEXPART 11** is built in beside it; any other model, and what is made from the
 particles after a run (a **stage**), plug in by the import path of a class.
 It is alpha software: **there are no backward-compatibility guarantees
 before v1.0**, so prefer the clean design over a compatibility shim.
@@ -147,7 +148,7 @@ each stage to read the files its settings name, and the model its version.
   see `runtraj._paths`. A local output must stay as fast: time a large listing.
 - **Identity is content.** runtraj never deletes or overwrites a results folder.
 - **The CLI stays thin.** Orchestration does not belong in `cli.py`.
-- **ARL met I/O goes through [arlmet](https://github.com/jmineau/arl-met)**; FLEXPART's GRIB, through eccodes.
+- **ARL met I/O goes through [arlmet](https://github.com/jmineau/arl-met)**; FLEXPART's GRIB, through eccodes (valid times) and cfgrib with arlmet's converters (`open_met`).
 - **runtraj ships no HYSPLIT file**: `directory/exec/hycs_std` and `bdyfiles/`, else `PATH`. The trajectory mode runs `exec/hyts_std`, found and hashed the same way. The SHA-256
   of `hycs_std` is in the particles hash, read on first use (`Variant.build`); its
   printed version is recorded as `model_version`, never hashed. Without `hycs_std` a
@@ -296,6 +297,8 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   starts a trajectory at every `CONTROL` location (no line source: a column
   release is refused), and drops a location outside the met's domain and
   numbers the rest from 1, which fails the run.
+- **FLEXPART ends some failed runs with exit status 0** (a Fortran `STOP`), so `run_flexpart` also
+  needs its closing line. Its settings are refused where FLEXPART would change them itself (`cblflag`).
 - **Realizations are an axis**: `realizations: N` is one variant with a
   `realization` column and `realization=k/` partitions, run with `seed + k`.
   HYSPLIT gets `SEED = -(|seed| + 1)` (`setup_seed`), and `seed` needs `krand: 2`.

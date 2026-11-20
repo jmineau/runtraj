@@ -32,9 +32,10 @@ import path of its class, so the config, the settings records, the output
 directory and the worker reach them without importing them by name. A
 model provides :class:`runtraj.models.TransportModel`; a stage, which
 makes one file per release after the model runs, provides
-:class:`runtraj.stages.Stage`. HYSPLIT is the model built in, and its
-package (:mod:`runtraj.models.hysplit`) is the only code that knows
-HYSPLIT's files.
+:class:`runtraj.stages.Stage`. HYSPLIT and FLEXPART are the models built
+in, and each one's package (:mod:`runtraj.models.hysplit`,
+:mod:`runtraj.models.flexpart`) is the only code that knows that model's
+files.
 
 Module map
 ----------

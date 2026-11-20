@@ -41,6 +41,9 @@ to do something, start with the :doc:`../guides/index` instead.
 :doc:`hysplit`
    The low-level HYSPLIT driver.
 
+:doc:`flexpart`
+   Running FLEXPART 11: its build, its met, and its particles.
+
 :doc:`exceptions`
    The exceptions runtraj raises.
 
@@ -58,4 +61,5 @@ to do something, start with the :doc:`../guides/index` instead.
    execution
    project
    hysplit
+   flexpart
    exceptions
