@@ -13,8 +13,9 @@ particle. Units are not converted.
 :func:`sample_met` reads met at particle positions as HYSPLIT does, for
 the columns HYSPLIT writes from the met (``mlht``, ``dens``, ``pres``,
 ``zsfc``), which a transport model that writes only positions leaves out.
-:func:`calc_pbl_height` finds the mixed-layer height from the met's
-profile, as HYSPLIT does by default. Both read ARL files, or met in another
+:func:`calc_pbl_height` finds the mixed-layer height from the met, as the
+transport model of the run did (HYSPLIT's ``kmixd``, or FLEXPART's
+method). Both read ARL files, or met in another
 format converted by arlmet (:func:`runtraj.models.open_met` opens a run's
 met files the way its transport model reads them).
 """
@@ -543,20 +544,78 @@ _SURFACE_LAYER_TOP = 75.0
 #: The bulk Richardson number at the top of the mixed layer (``stbanl.f``).
 _CRITICAL_RICHARDSON = 0.25
 
+#: FLEXPART's constants for the mixed layer (``par_mod.f90`` and
+#: ``richardson`` in ``getfields_mod.f90``): gravity in m s⁻², the gas
+#: constant and heat capacity of dry air in J kg⁻¹ K⁻¹, the weight ``b`` of
+#: u*² in the wind shear and ``bs`` of the temperature excess, and the
+#: least and greatest mixed-layer height in m.
+_FLEXPART_GRAV = 9.81
+_FLEXPART_R_AIR = 287.05
+_FLEXPART_CP = 1004.6
+_FLEXPART_B = 100.0
+_FLEXPART_BS = 8.5
+_FLEXPART_HMIX_MIN = 100.0
+_FLEXPART_HMIX_MAX = 4500.0
+
+#: The met variables each method of :func:`calc_pbl_height` reads, besides
+#: the pressure (``PRES`` or the vertical axis) the profile methods need.
+#: ``hysplit`` also needs ``USTR`` or ``UMOF`` and ``VMOF``.
+_PBL_VARIABLES: dict[str, set[str]] = {
+    "hysplit": {"TEMP", "UWND", "VWND", "SHGT", "SHTF"},
+    "hysplit_temperature": {"TEMP", "SHGT"},
+    "met": {"PBLH", "SHGT"},
+    "flexpart": {
+        "TEMP",
+        "SPHU",
+        "UWND",
+        "VWND",
+        "PRSS",
+        "T02M",
+        "DP2M",
+        "U10M",
+        "V10M",
+        "USTR",
+        "SHTF",
+    },
+}
+
 
 def calc_pbl_height(
     particles: pd.DataFrame,
     met: Met,
     *,
+    method: str = "hysplit",
     z_top: float = _DEFAULT_Z_TOP,
 ) -> np.ndarray:
     """
-    Return the mixed-layer height at each particle, found from the met's profile as HYSPLIT's ``kmixd: 3`` finds it.
+    Return the mixed-layer height at each particle, found from the met as a transport model finds it.
 
-    This is HYSPLIT's default way to find the mixed layer, ported from its
-    source (``stbanl.f``, Holtslag and Boville, 1993). Going up the column,
-    the mixed layer ends where the bulk Richardson number between the
-    lowest level and the level reached passes 0.25::
+    The mixed layer a stage reads should be the one the particles were
+    mixed in, and each transport model finds it in its own way. Choose the
+    *method* of the run the particles came from:
+
+    - ``"hysplit"`` (the default): HYSPLIT's default, ``kmixd: 3``. Going
+      up the column, the mixed layer ends where the bulk Richardson number
+      between the lowest level and the level reached passes 0.25 (below).
+    - ``"hysplit_temperature"``: HYSPLIT's ``kmixd: 1``. The top is the
+      highest level whose potential temperature is within 2 K of the
+      column's lowest.
+    - ``"met"``: the met's own boundary-layer height ``PBLH``, as HYSPLIT
+      uses it with ``kmixd: 0``.
+    - ``"flexpart"``: FLEXPART's Richardson method (below), for a FLEXPART
+      run on ERA5 model levels. FLEXPART on GFS uses the met's ``PBLH``
+      instead; give it ``"met"``.
+
+    HYSPLIT finds the height at each met grid point and met time, and a
+    particle takes the nearest grid point's height at the met times before
+    and after it, linear in time. The three HYSPLIT methods do the same, on
+    HYSPLIT's internal levels for a run with the top *z_top*. They apply
+    no minimum, as HYSPLIT's ``kmix0`` does: take ``numpy.maximum`` with
+    yours. Each height is at least a little above the lowest internal
+    level, as in HYSPLIT.
+
+    ``"hysplit"`` is ported from HYSPLIT's source (``stbanl.f``, Holtslag
+    and Boville, 1993)::
 
         Ri = g · (θ(z) − θ₁ − θₑ) · (z − z₁) / ((θ₁ + θₑ) · |V(z) − V₁|²)
 
@@ -565,31 +624,34 @@ def calc_pbl_height(
     air, is ``8.5 u* θ* / (u*³ + 0.6 w*³)^(1/3)`` in unstable air and 0
     otherwise, with the friction velocity ``u*`` (``USTR``) and the
     friction temperature ``θ*`` from the sensible heat flux (``SHTF``) at
-    the ground. The height is interpolated to where Ri is 0.25.
+    the ground. The height is interpolated to where Ri is 0.25. A column
+    with no height where Ri reaches 0.25 gets the second-highest internal
+    level, as in HYSPLIT.
 
-    HYSPLIT computes the height at each met grid point and met time; a
-    particle takes the nearest grid point's height at the met times before
-    and after it, linear in time. So does this function, on HYSPLIT's
-    internal levels for a run with the top *z_top*. It applies no minimum,
-    as HYSPLIT's ``kmix0`` does: take ``numpy.maximum`` with yours. A
-    column with no height where Ri reaches 0.25 gets the second-highest
-    internal level, as in HYSPLIT.
+    ``"flexpart"`` is ported from FLEXPART 11's ``richardson``
+    (``getfields_mod.f90``, after Vogelezang and Holtslag, 1996). It works
+    on the met's own levels, with heights integrated up from 2 m, and
+    measures from the 2 m virtual potential temperature θᵥ₂ (``T02M``,
+    ``DP2M``) and the wind of the lowest level V₁::
 
-    On three 6-hour HRRR runs from Salt Lake City, the height it finds,
-    kept at least 150 m, has a median ratio of 0.999 to 1.000 to the
-    ``mlht`` HYSPLIT wrote with ``kmixd: 3``, and 73 to 94 % of rows are
-    within 2 %.
+        Ri = g · (θᵥ(z) − θᵥ₂ − θₑ) · (z − 2) / ((θᵥ₂ + θₑ) · max(|V(z) − V₁|² + 100 u*², 0.1))
 
-    A Dataset gives the met's own values. HYSPLIT reads the ARL file
-    written from it, whose values are packed: in mountains ``SHGT`` can
-    move by a few meters. In a deep, nearly neutral afternoon layer, a few
-    meters near the ground move the height by hundreds of meters, most of
-    all on pressure levels, whose first level above the ground can be only
-    meters above HYSPLIT's lowest internal level. On two hours of ERA5
-    pressure levels over Salt Lake City in July, the height from the
-    Dataset had a median ratio of 0.91 to HYSPLIT's ``mlht``. From the ARL
-    file HYSPLIT read, the median ratio was 0.999, with 99 % of rows within
-    2 %. To compare with a HYSPLIT run, give the files it read.
+    The top is where Ri first passes 0.25 in a layer that is not unstable,
+    found to a twentieth of the layer. In unstable air the temperature
+    excess θₑ = 8.5 H / (cₚ w*), with H the upward heat flux and w* the
+    convective velocity of that top, is added and the top found again, up
+    to three times. The height is kept between 100 and 4500 m, as
+    FLEXPART keeps it. A particle takes the greatest height of the four
+    grid points around it at the met times before and after it, as
+    FLEXPART does by default. FLEXPART's ``LSUBGRID: 1`` raises the height
+    by a subgrid-orography excess; that is left out, since the converted
+    met holds no subgrid orography, and FLEXPART leaves it off by default.
+
+    On three 6-hour HRRR runs from Salt Lake City, ``"hysplit"``, kept at
+    least 150 m, has a median ratio of 0.999 to 1.000 to the ``mlht``
+    HYSPLIT wrote with ``kmixd: 3``, and 73 to 94 % of rows are within 2 %.
+    On a 24-hour FLEXPART 11 run on ERA5 model levels from Salt Lake City,
+    ``"flexpart"`` matched the mixed layer FLEXPART found (Notes).
 
     Parameters
     ----------
@@ -598,13 +660,23 @@ def calc_pbl_height(
     met : iterable of path-like, or xarray.Dataset
         ARL met files that cover the particles' times, or met in another
         format as one Dataset in :func:`arlmet.open_dataset`'s layout, as
-        :func:`sample_met` takes. It needs ``TEMP``, ``UWND``, ``VWND`` and
-        ``SHGT``, the sensible heat flux ``SHTF``, the friction velocity
-        ``USTR`` or the momentum fluxes ``UMOF`` and ``VMOF``, and the
-        pressure: ``PRES``, or a vertical axis it follows from.
+        :func:`sample_met` takes. What it needs depends on *method*:
+
+        - ``"hysplit"``: ``TEMP``, ``UWND``, ``VWND`` and ``SHGT``, the
+          sensible heat flux ``SHTF``, the friction velocity ``USTR`` or the
+          momentum fluxes ``UMOF`` and ``VMOF``, and the pressure:
+          ``PRES``, or a vertical axis it follows from.
+        - ``"hysplit_temperature"``: ``TEMP``, ``SHGT`` and the pressure.
+        - ``"met"``: ``PBLH`` and ``SHGT``.
+        - ``"flexpart"``: ``TEMP``, ``SPHU``, ``UWND``, ``VWND``, the
+          pressure, and at the ground ``PRSS``, ``T02M``, ``DP2M``,
+          ``U10M``, ``V10M``, ``USTR`` and ``SHTF``.
+    method : {"hysplit", "hysplit_temperature", "met", "flexpart"}, default "hysplit"
+        How the mixed layer is found: the transport model and its method.
     z_top : float, default 25000
         The top of the domain in meters, which sets HYSPLIT's internal
         levels (``z_top`` of :class:`runtraj.models.hysplit.HysplitConfig`).
+        ``"flexpart"`` reads the met's own levels and ignores it.
 
     Returns
     -------
@@ -612,18 +684,44 @@ def calc_pbl_height(
         The mixed-layer height at each row, in m above ground. A row off
         the met's grid is NaN. A met time that lacks the surface fluxes,
         as a GFS analysis (``f000``) does without the previous cycle's
-        forecast, has no height: a row at that time is NaN, and a row
-        between it and a met time with the fluxes takes the height of the
-        other time. (HYSPLIT refuses such met, so there is no ``mlht`` of
-        its own to compare.)
+        forecast, has no height from ``"hysplit"`` or ``"flexpart"``: a row
+        at that time is NaN, and a row between it and a met time with the
+        fluxes takes the height of the other time. (HYSPLIT refuses such
+        met, so there is no ``mlht`` of its own to compare.) A column where
+        ``"flexpart"`` finds no top in the met's levels has none, where
+        FLEXPART stops.
 
     Raises
     ------
     ValueError
-        If *particles* has no ``time`` column or a row is outside the
-        files' times.
+        If *method* is not one of the four, *particles* has no ``time``
+        column, or a row is outside the files' times.
     KeyError
-        If the met lacks a variable it needs.
+        If the met lacks a variable the method needs.
+
+    Notes
+    -----
+    A Dataset gives the met's own values. HYSPLIT reads the ARL file
+    written from it, whose values are packed: in mountains ``SHGT`` can
+    move by a few meters. In a deep, nearly neutral afternoon layer, a few
+    meters near the ground move the ``"hysplit"`` height by hundreds of
+    meters, most of all on pressure levels, whose first level above the
+    ground can be only meters above HYSPLIT's lowest internal level. On two
+    hours of ERA5 pressure levels over Salt Lake City in July, the height
+    from the Dataset had a median ratio of 0.91 to HYSPLIT's ``mlht``. From
+    the ARL file HYSPLIT read, the median ratio was 0.999, with 99 % of rows
+    within 2 %. To compare with a HYSPLIT run, give the files it read.
+
+    FLEXPART writes a particle's ``hmix`` interpolated from the grid
+    points' heights (bilinear across the grid, linear in time), not the
+    greatest of them it mixes the particle in, so ``"flexpart"`` is at
+    least the ``hmix`` it wrote at most rows. Interpolated the same way, the
+    grid points' heights ``"flexpart"`` finds had a median ratio of 1.000
+    to the ``hmix`` of the run above, with 80 % of 24,000 rows within 2 %
+    and 94 % within 10 %. The rest comes from the converted met, which
+    differs from what FLEXPART reads in two small ways: an ARL hybrid level
+    keeps its pressure offset to the whole hPa, and ``USTR`` is found with
+    the density of dry air at 2 m, where FLEXPART uses moist air.
 
     Examples
     --------
@@ -633,93 +731,223 @@ def calc_pbl_height(
     >>> mlht = runtraj.sampling.calc_pbl_height(
     ...     sim.particles, meta.met_files
     ... )  # doctest: +SKIP
-    """
-    import arlmet
 
+    A FLEXPART run on ERA5, with the met its transport model opens:
+
+    >>> met = runtraj.models.open_met(
+    ...     "flexpart", met_config, files, bounds
+    ... )  # doctest: +SKIP
+    >>> mlht = runtraj.sampling.calc_pbl_height(
+    ...     particles, met, method="flexpart"
+    ... )  # doctest: +SKIP
+    """
+    if method not in _PBL_VARIABLES:
+        raise ValueError(
+            f"calc_pbl_height has no method {method!r}; choose one of "
+            f"{list(_PBL_VARIABLES)}."
+        )
     if "time" not in particles.columns:
         raise ValueError(
             "calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."
         )
     with _opened(met) as sources:
-        first = sources[0]
         names = _met_variables(sources)
         pressure = _pressure_variable(sources, names)
-        momentum = ["USTR"] if "USTR" in names else ["UMOF", "VMOF"]
-        missing = {"TEMP", "UWND", "VWND", "SHGT", "SHTF", *momentum} - names
-        if missing or pressure is None:
-            if pressure is None:
-                missing.add("PRES")
+        needed = set(_PBL_VARIABLES[method])
+        if method == "hysplit":
+            needed |= {"USTR"} if "USTR" in names else {"UMOF", "VMOF"}
+        missing = needed - names
+        if method != "met" and pressure is None:
+            missing.add("PRES")
+        if missing:
             raise KeyError(
                 f"calc_pbl_height needs the met variables {sorted(missing)}, which "
                 "the met lacks."
             )
         met_times = _met_times(sources)
         before, after, weight = _bracket(met_times, pd.DatetimeIndex(particles["time"]))
-
-        # One column per met grid point and met time, at the nearest grid point.
-        header = _header(first)
-        x, y = header.grid.fractional_indices(
+        header = _header(sources[0])
+        reads = _grid_points_read(
+            header.grid,
             particles["lon"].to_numpy(dtype=float),
             particles["lat"].to_numpy(dtype=float),
-        )
-        rows = pd.DataFrame(
-            {
-                "i": np.rint(x),
-                "j": np.rint(y),
-                "lon": particles["lon"].to_numpy(dtype=float),
-                "lat": particles["lat"].to_numpy(dtype=float),
-            }
-        )
-        later = weight > 0
-        both = pd.concat(
-            [rows.assign(time=before), rows[later].assign(time=after[later])],
-            ignore_index=True,
+            before,
+            after,
+            weight,
+            around=method == "flexpart",
         )
         key = ["i", "j", "time"]
-        columns = both.dropna(subset=["i", "j"]).drop_duplicates(subset=key)
+        columns = reads[[*key, "lon", "lat"]].drop_duplicates(subset=key)
         columns = columns.reset_index(drop=True)
+        if method == "flexpart":
+            zmix = _flexpart_columns(sources, columns, header, str(pressure))
+        else:
+            zmix = _hysplit_columns(
+                sources, columns, header, names, pressure, method, z_top
+            )
+    columns["zmix"] = zmix
+    reads = reads.merge(columns[[*key, "zmix"]], on=key, how="left")
 
-        levels = arlmet.internal_levels(first, model_top=z_top)
-        heights = levels.heights
-        ground = arlmet.sample_points(
-            sources,
-            columns[["lon", "lat", "time"]].assign(z=0.0),
-            ["SHGT", "SHTF", *momentum],
-            z_kind="agl",
-            method="nearest",
-            model_top=z_top,
-        )
-        # The internal levels above each column's ground, (columns, levels).
-        zz = levels.heights_at(ground["SHGT"].to_numpy(dtype=float))
-        n_col, n_lev = zz.shape
-        at_levels = pd.DataFrame(
-            {
-                "lon": np.repeat(columns["lon"].to_numpy(), n_lev),
-                "lat": np.repeat(columns["lat"].to_numpy(), n_lev),
-                "time": np.repeat(columns["time"].to_numpy(), n_lev),
-                "z": zz.ravel(),
-            }
-        )
-        profile_variables = ["TEMP", pressure, "UWND", "VWND"]
+    n = len(particles)
+    if method == "flexpart":
+        # The greatest height of the grid points around, at both met times.
+        most = reads.groupby("row")["zmix"].max()
+        return most.reindex(range(n)).to_numpy(dtype=float)
+
+    # Each row takes its grid point's height at the met times around it.
+    out = np.full(n, np.nan)
+    after_value = np.full(n, np.nan)
+    first = ~reads["late"].to_numpy()
+    out[reads["row"].to_numpy()[first]] = reads["zmix"].to_numpy()[first]
+    after_value[reads["row"].to_numpy()[~first]] = reads["zmix"].to_numpy()[~first]
+    later = weight > 0
+    w = weight[later]
+    before_value, after_value = out[later], after_value[later]
+    # Between a met time with a height and one without (a GFS analysis has
+    # no fluxes), the row takes the height it has.
+    out[later] = np.where(
+        np.isnan(before_value),
+        after_value,
+        np.where(
+            np.isnan(after_value),
+            before_value,
+            (1.0 - w) * before_value + w * after_value,
+        ),
+    )
+    return out
+
+
+def _grid_points_read(
+    grid: Any,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    before: np.ndarray,
+    after: np.ndarray,
+    weight: np.ndarray,
+    *,
+    around: bool,
+) -> pd.DataFrame:
+    """
+    Return the met grid points and times each row reads its height from.
+
+    One table row per read: the particle's ``row``, the grid point's ``i``,
+    ``j``, ``lon`` and ``lat``, the met ``time``, and ``late`` for the met
+    time after the particle's. A row reads the nearest grid point, or with
+    *around* the four around it, at the met time before it and, unless it
+    is on a met time, the one after. A grid point off the grid is not read.
+    """
+    x, y = grid.fractional_indices(lon, lat)
+    if around:
+        x0, y0 = np.floor(x), np.floor(y)
+        corners = [(x0, y0), (x0 + 1, y0), (x0, y0 + 1), (x0 + 1, y0 + 1)]
+    else:
+        corners = [(np.rint(x), np.rint(y))]
+    rows = np.arange(len(lon))
+    later = weight > 0
+    parts = []
+    for i, j in corners:
+        for late, keep, time in (
+            (False, rows, before),
+            (True, rows[later], after[later]),
+        ):
+            parts.append(
+                pd.DataFrame(
+                    {
+                        "row": keep,
+                        "i": i[keep],
+                        "j": j[keep],
+                        "time": time,
+                        "late": late,
+                    }
+                )
+            )
+    reads = pd.concat(parts, ignore_index=True)
+    if grid.wraps_lon:
+        reads["i"] = reads["i"] % grid.nx
+    on_grid = (
+        reads["i"].between(0, grid.nx - 1) & reads["j"].between(0, grid.ny - 1)
+    ).to_numpy()
+    reads = reads[on_grid].reset_index(drop=True)
+    i = reads["i"].to_numpy(dtype=int)
+    j = reads["j"].to_numpy(dtype=int)
+    coords = grid.calculate_coords()
+    lons, lats = coords["lon"][1], coords["lat"][1]
+    if lons.ndim == 1:
+        reads["lon"], reads["lat"] = lons[i], lats[j]
+    else:
+        reads["lon"], reads["lat"] = lons[j, i], lats[j, i]
+    return reads
+
+
+def _hysplit_columns(
+    sources: list[Any],
+    columns: pd.DataFrame,
+    header: Any,
+    names: set[str],
+    pressure: str | None,
+    method: str,
+    z_top: float,
+) -> np.ndarray:
+    """Return the mixed-layer height of each grid point and met time in *columns*, as HYSPLIT's *method* finds it."""
+    import arlmet
+
+    momentum = ["USTR"] if "USTR" in names else ["UMOF", "VMOF"]
+    ground_variables = {
+        "hysplit": ["SHGT", "SHTF", *momentum],
+        "hysplit_temperature": ["SHGT"],
+        "met": ["SHGT", "PBLH"],
+    }[method]
+    levels = arlmet.internal_levels(sources[0], model_top=z_top)
+    ground = arlmet.sample_points(
+        sources,
+        columns[["lon", "lat", "time"]].assign(z=0.0),
+        ground_variables,
+        z_kind="agl",
+        method="nearest",
+        model_top=z_top,
+    )
+    # The internal levels above each column's ground, (columns, levels).
+    zz = levels.heights_at(ground["SHGT"].to_numpy(dtype=float))
+    n_col, n_lev = zz.shape
+    # Always a little above the lowest level, as in HYSPLIT.
+    floor = zz[:, 0] + (zz[:, 1] - zz[:, 0]) / 1000.0 if n_lev >= 2 else zz[:, 0]
+    if method == "met":
+        return np.maximum(ground["PBLH"].to_numpy(dtype=float), floor)
+
+    at_levels = pd.DataFrame(
+        {
+            "lon": np.repeat(columns["lon"].to_numpy(), n_lev),
+            "lat": np.repeat(columns["lat"].to_numpy(), n_lev),
+            "time": np.repeat(columns["time"].to_numpy(), n_lev),
+            "z": zz.ravel(),
+        }
+    )
+    profile_variables = ["TEMP", str(pressure)]
+    if method == "hysplit":
+        profile_variables += ["UWND", "VWND"]
         if "SPHU" in names:
             profile_variables.append("SPHU")
-        profile = arlmet.sample_points(
-            sources,
-            at_levels,
-            profile_variables,
-            z_kind="agl",
-            method="nearest",
-            model_top=z_top,
-        )
+    profile = arlmet.sample_points(
+        sources,
+        at_levels,
+        profile_variables,
+        z_kind="agl",
+        method="nearest",
+        model_top=z_top,
+    )
 
     def grid(name: str) -> np.ndarray:
         return profile[name].to_numpy(dtype=float).reshape(n_col, n_lev)
 
-    temp, pres, uu, vv = grid("TEMP"), grid(pressure), grid("UWND"), grid("VWND")
-    sphu = grid("SPHU") if "SPHU" in profile_variables else np.zeros_like(temp)
+    temp, pres = grid("TEMP"), grid(str(pressure))
     theta = temp * (1000.0 / pres) ** 0.286
+    if method == "hysplit_temperature":
+        return np.maximum(_temperature_mixed_layer(zz, theta), floor)
+
+    uu, vv = grid("UWND"), grid("VWND")
+    sphu = grid("SPHU") if "SPHU" in profile_variables else np.zeros_like(temp)
     density = 100.0 * pres / (_R_DRY * temp * (1.0 + 0.61 * sphu))
-    ks = max(int(np.sum(heights <= _SURFACE_LAYER_TOP)), 1) - 1
+    ks = max(int(np.sum(levels.heights <= _SURFACE_LAYER_TOP)), 1) - 1
     if "USTR" in momentum:
         ustar = np.maximum(ground["USTR"].to_numpy(dtype=float), 0.0001)
     else:
@@ -738,27 +966,196 @@ def calc_pbl_height(
     # Without the fluxes the stability is unknown: no height, rather than
     # the stable one a missing heat flux would give.
     zmix[~(np.isfinite(heat) & np.isfinite(ustar))] = np.nan
+    return zmix
 
-    # Each row takes its grid point's height at the met times around it.
-    columns["zmix"] = zmix
-    found = both.merge(columns[[*key, "zmix"]], on=key, how="left")["zmix"]
-    value = found.to_numpy(dtype=float)
-    n = len(particles)
-    out = value[:n].copy()
-    w = weight[later]
-    before_value, after_value = out[later], value[n:]
-    # Between a met time with a height and one without (a GFS analysis has
-    # no fluxes), the row takes the height it has.
-    out[later] = np.where(
-        np.isnan(before_value),
-        after_value,
-        np.where(
-            np.isnan(after_value),
-            before_value,
-            (1.0 - w) * before_value + w * after_value,
-        ),
+
+def _temperature_mixed_layer(zz: np.ndarray, theta: np.ndarray) -> np.ndarray:
+    """
+    Return the mixed-layer height of each column, as ``stbanl.f`` finds it for ``kmixd: 1``.
+
+    *zz* (m above ground) and *theta* (potential temperature, K) are
+    ``(columns, levels)``. Going down from the top, the mixed layer ends at
+    the first level whose potential temperature is within 2 K of the
+    column's lowest.
+    """
+    n_lev = zz.shape[1]
+    within = theta <= np.nanmin(theta, axis=1, keepdims=True) + 2.0
+    top = n_lev - 1 - np.argmax(within[:, ::-1], axis=1)
+    return np.take_along_axis(zz, top[:, None], axis=1)[:, 0]
+
+
+def _flexpart_columns(
+    sources: list[Any], columns: pd.DataFrame, header: Any, pressure: str
+) -> np.ndarray:
+    """Return the mixed-layer height of each grid point and met time in *columns*, as FLEXPART's ``richardson`` finds it."""
+    import arlmet
+
+    ground_variables = ["PRSS", "T02M", "DP2M", "U10M", "V10M", "USTR", "SHTF"]
+    ground = arlmet.sample_points(
+        sources,
+        columns[["lon", "lat", "time"]].assign(z=0.0),
+        ground_variables,
+        z_kind="native",
+        method="nearest",
     )
-    return out
+    # The met's own levels; level 0 is the ground.
+    n_lev = len(header.vertical_axis.levels) - 1
+    at_levels = pd.DataFrame(
+        {
+            "lon": np.repeat(columns["lon"].to_numpy(), n_lev),
+            "lat": np.repeat(columns["lat"].to_numpy(), n_lev),
+            "time": np.repeat(columns["time"].to_numpy(), n_lev),
+            "z": np.tile(np.arange(1.0, n_lev + 1.0), len(columns)),
+        }
+    )
+    variables = ["TEMP", "SPHU", "UWND", "VWND", pressure]
+    profile = arlmet.sample_points(
+        sources, at_levels, variables, z_kind="native", method="nearest"
+    )
+
+    def grid(name: str) -> np.ndarray:
+        return profile[name].to_numpy(dtype=float).reshape(len(columns), n_lev)
+
+    def at_ground(name: str) -> np.ndarray:
+        return ground[name].to_numpy(dtype=float)
+
+    heat = at_ground("SHTF")
+    if header.source.strip() == "ETA":
+        heat = -heat  # positive downward in NAM's (ETA's) files
+    zmix = _flexpart_mixed_layer(
+        100.0 * grid(pressure),
+        grid("TEMP"),
+        grid("SPHU"),
+        grid("UWND"),
+        grid("VWND"),
+        100.0 * at_ground("PRSS"),
+        at_ground("T02M"),
+        at_ground("DP2M"),
+        at_ground("U10M"),
+        at_ground("V10M"),
+        at_ground("USTR"),
+        heat,
+    )
+    zmix[~(np.isfinite(heat) & np.isfinite(at_ground("USTR")))] = np.nan
+    return zmix
+
+
+def _saturation_vapor_pressure(t: np.ndarray) -> np.ndarray:
+    """Return the saturation vapor pressure over water in Pa at *t* in K, by Goff and Gratch, as FLEXPART's ``ew``."""
+    y = 373.16 / t
+    a = -7.90298 * (y - 1.0) + 5.02808 * 0.43429 * np.log(y)
+    c = -1.3816 * (-1.0 + 10.0 ** ((1.0 - 1.0 / y) * 11.344)) / 1e7
+    d = 8.1328 * (-1.0 + 10.0 ** ((1.0 - y) * 3.49149)) / 1e3
+    return 101324.6 * 10.0 ** (a + c + d)
+
+
+def _flexpart_mixed_layer(
+    pres: np.ndarray,
+    temp: np.ndarray,
+    sphu: np.ndarray,
+    uu: np.ndarray,
+    vv: np.ndarray,
+    psfc: np.ndarray,
+    t2: np.ndarray,
+    td2: np.ndarray,
+    u10: np.ndarray,
+    v10: np.ndarray,
+    ustar: np.ndarray,
+    heat: np.ndarray,
+) -> np.ndarray:
+    """
+    Return the mixed-layer height of each column, as FLEXPART's ``richardson`` finds it.
+
+    *pres* (Pa), *temp* (K), *sphu* (kg kg⁻¹), *uu* and *vv* (m s⁻¹) are
+    ``(columns, levels)`` on the met's levels from the lowest up; *psfc*
+    (Pa), *t2* and *td2* (K), *u10* and *v10* (m s⁻¹), *ustar* (m s⁻¹) and
+    *heat*, the sensible heat flux (W m⁻², positive upward), are per
+    column. A level at or below the ground (its pressure at least
+    *psfc*) is passed over. A column with no top is NaN.
+    """
+    g, cp = _FLEXPART_GRAV, _FLEXPART_CP
+    kappa = _FLEXPART_R_AIR / cp
+    n_col = pres.shape[0]
+    # The levels above the ground first in each column; the rest are NaN.
+    above = pres < psfc[:, None]
+    order = np.argsort(~above, axis=1, kind="stable")
+
+    def compact(a: np.ndarray) -> np.ndarray:
+        return np.where(
+            np.take_along_axis(above, order, axis=1),
+            np.take_along_axis(a, order, axis=1),
+            np.nan,
+        )
+
+    pres, temp, sphu, uu, vv = (compact(a) for a in (pres, temp, sphu, uu, vv))
+    tv = temp * (1.0 + 0.608 * sphu)
+    theta = tv * (100000.0 / pres) ** kappa
+
+    # Heights, integrated up from 2 m with the virtual temperature.
+    tv2 = t2 * (1.0 + 0.378 * _saturation_vapor_pressure(td2) / psfc)
+    const = _FLEXPART_R_AIR / g
+    z = np.empty_like(pres)
+    pold, tvold, zold = psfc, tv2, np.full(n_col, 2.0)
+    for k in range(pres.shape[1]):
+        log_p = np.log(pold / pres[:, k])
+        with np.errstate(divide="ignore", invalid="ignore"):
+            layer = np.where(
+                np.abs(tv[:, k] - tvold) > 0.2,
+                const * log_p * (tv[:, k] - tvold) / np.log(tv[:, k] / tvold),
+                const * log_p * tv[:, k],
+            )
+        z[:, k] = zold + layer
+        pold, tvold, zold = pres[:, k], tv[:, k], z[:, k]
+
+    # Each layer's lower edge: the 2 m level below the lowest model level.
+    shear = _FLEXPART_B * ustar**2
+    u_below = np.column_stack([u10, uu[:, :-1]])
+    v_below = np.column_stack([v10, vv[:, :-1]])
+    z_below = np.column_stack([np.full(n_col, 2.0), z[:, :-1]])
+    rows = np.arange(n_col)
+
+    def richardson(theta_at, z_at, u_at, v_at, thetaref):
+        du = (u_at - uu[:, :1]) ** 2 + (v_at - vv[:, :1]) ** 2 + shear[:, None]
+        return g / thetaref * (theta_at - thetaref) * (z_at - 2.0) / np.maximum(du, 0.1)
+
+    excess = np.zeros(n_col)
+    h = np.full(n_col, np.nan)
+    going = np.ones(n_col, dtype=bool)
+    for _ in range(3):
+        thetaref = (tv2 * (100000.0 / psfc) ** kappa + excess)[:, None]
+        theta_below = np.column_stack([thetaref[:, 0], theta[:, :-1]])
+        ri = richardson(theta, z, uu, vv, thetaref)
+        # The first level where Ri passes 0.25 above a layer that is not unstable.
+        top = (ri > _CRITICAL_RICHARDSON) & (theta_below < theta)
+        found = top.any(axis=1)
+        k = np.argmax(top, axis=1)
+        # Then the first twentieth of that layer where it passes.
+        frac = np.arange(1, 21) / 20.0
+        zl = z_below[rows, k][:, None] + frac * (z[rows, k] - z_below[rows, k])[:, None]
+        thetal = (
+            theta_below[rows, k][:, None]
+            + frac * (theta[rows, k] - theta_below[rows, k])[:, None]
+        )
+        ul = (
+            u_below[rows, k][:, None] + frac * (uu[rows, k] - u_below[rows, k])[:, None]
+        )
+        vl = (
+            v_below[rows, k][:, None] + frac * (vv[rows, k] - v_below[rows, k])[:, None]
+        )
+        ril = richardson(thetal, zl, ul, vl, thetaref)
+        crossed = ril > _CRITICAL_RICHARDSON
+        step = np.where(crossed.any(axis=1), np.argmax(crossed, axis=1), 19)
+        new_h = np.where(found, zl[rows, step], np.nan)
+        h = np.where(going, new_h, h)
+        # In unstable air, again with the temperature excess of rising air.
+        unstable = going & found & (heat > 0)
+        with np.errstate(invalid="ignore"):
+            wst = (h * g / thetaref[:, 0] * heat / cp) ** 0.333
+            excess = np.where(unstable, _FLEXPART_BS * heat / cp / wst, excess)
+        going = unstable
+        if not going.any():
+            break
+    return np.clip(h, _FLEXPART_HMIX_MIN, _FLEXPART_HMIX_MAX)
 
 
 def _richardson_mixed_layer(

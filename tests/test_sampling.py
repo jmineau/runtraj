@@ -478,6 +478,161 @@ def test_richardson_mixed_layer_without_a_crossing_is_the_second_highest_level()
     assert _richardson_column(heat=-20.0, theta_top=300.0)[0] == pytest.approx(2990.0)
 
 
+def _flexpart_column(heat: float, lapse_above: float = 0.0, below_ground: bool = False):
+    """
+    One column on 50 m levels: dry-adiabatic to 1000 m, isothermal above, no wind, and u* 0.3 m/s.
+
+    The wind shear is then FLEXPART's 100 u*² = 9 m² s⁻², the 2 m dew
+    point of 250 K adds 0.09 K to the reference virtual potential
+    temperature, and without the temperature excess Ri =
+    g (θ − θ₂)(z − 2) / (θ₂ · 9) passes 0.25 where
+    (0.0098 (z − 1000) − 0.09)(z − 2) = 68.8, at about 1016 m. With
+    *lapse_above* the air above 1000 m is dry-adiabatic too. With
+    *below_ground* a level under the ground comes first.
+    """
+    from runtraj.sampling import _flexpart_mixed_layer
+
+    z = np.arange(0.0, 3001.0, 1.0)
+    temp = 300.0 - 0.00976 * np.minimum(z, 1000.0)
+    temp -= lapse_above * np.maximum(z - 1000.0, 0.0)
+    pres = 1e5 * np.exp(
+        -np.concatenate(
+            [[0.0], np.cumsum(9.81 / (287.05 * (temp[1:] + temp[:-1]) / 2))]
+        )
+    )
+    levels = np.arange(50, 3001, 50)
+    pres, temp = pres[levels], temp[levels]
+    if below_ground:
+        pres, temp = np.concatenate([[100500.0], pres]), np.concatenate([[301.0], temp])
+    calm = np.zeros((1, len(pres)))
+
+    def one(value: float) -> np.ndarray:
+        return np.array([value])
+
+    return _flexpart_mixed_layer(
+        pres[None, :],
+        temp[None, :],
+        calm,
+        calm,
+        calm,
+        one(1e5),
+        one(300.0 - 0.00976 * 2.0),
+        one(250.0),
+        one(0.0),
+        one(0.0),
+        one(0.3),
+        one(heat),
+    )
+
+
+def test_flexpart_mixed_layer_ends_where_the_richardson_number_passes_a_quarter():
+    # Found to a twentieth of the 50 m layer it falls in.
+    assert _flexpart_column(heat=-20.0)[0] == pytest.approx(1016.0, abs=3.0)
+
+
+def test_flexpart_mixed_layer_is_deeper_in_unstable_air():
+    assert _flexpart_column(heat=200.0)[0] > _flexpart_column(heat=-20.0)[0] + 20
+
+
+def test_flexpart_mixed_layer_passes_over_a_level_below_the_ground():
+    assert _flexpart_column(heat=-20.0, below_ground=True)[0] == pytest.approx(
+        _flexpart_column(heat=-20.0)[0]
+    )
+
+
+def test_flexpart_mixed_layer_without_a_top_is_nan():
+    # Neutral air all the way up: FLEXPART stops there.
+    assert np.isnan(_flexpart_column(heat=-20.0, lapse_above=0.00976)[0])
+
+
+def test_flexpart_mixed_layer_is_at_least_100_m():
+    from runtraj.sampling import _flexpart_mixed_layer
+
+    # Stable from the first level: the top is in the lowest layer.
+    pres = np.array([[99000.0, 98000.0, 97000.0]])
+    temp = np.array([[300.0, 302.0, 304.0]])
+    calm = np.zeros_like(pres)
+    one = np.ones(1)
+    h = _flexpart_mixed_layer(
+        pres,
+        temp,
+        calm,
+        calm,
+        calm,
+        1e5 * one,
+        295.0 * one,
+        250.0 * one,
+        0 * one,
+        0 * one,
+        0.1 * one,
+        -20.0 * one,
+    )
+    assert h[0] == 100.0
+
+
+def test_temperature_mixed_layer_is_the_highest_level_within_2_k_of_the_lowest():
+    from runtraj.sampling import _temperature_mixed_layer
+
+    zz = np.array([[10.0, 100.0, 500.0, 900.0, 1500.0]])
+    theta = np.array([[301.0, 300.0, 301.5, 302.5, 305.0]])
+    assert _temperature_mixed_layer(zz, theta)[0] == 500.0
+
+
+@pytest.mark.parametrize(
+    ("around", "expected"),
+    [(False, {(5, 6)}), (True, {(5, 5), (6, 5), (5, 6), (6, 6)})],
+    ids=["nearest", "around"],
+)
+def test_grid_points_read_are_the_nearest_or_the_four_around(
+    tmp_path, around, expected
+):
+    """FLEXPART takes the greatest height of the four grid points around a particle."""
+    from runtraj.sampling import _grid_points_read
+
+    met = arlmet.open_dataset(_met_file(tmp_path / "met.arl"))
+    t = np.array([_T0.to_datetime64()])
+
+    reads = _grid_points_read(
+        met.arl.grid,
+        np.array([25.3]),
+        np.array([-4.4]),
+        t,
+        t,
+        np.zeros(1),
+        around=around,
+    )
+
+    assert set(zip(reads["i"], reads["j"], strict=True)) == expected
+    np.testing.assert_allclose(reads["lon"], 20.0 + reads["i"])
+    np.testing.assert_allclose(reads["lat"], -10.0 + reads["j"])
+
+
+def test_calc_pbl_height_refuses_an_unknown_method(tmp_path):
+    met = _met_file(tmp_path / "met.arl", winds=True)
+
+    with pytest.raises(ValueError, match="no method 'kmixd3'"):
+        sampling.calc_pbl_height(_particles_at([_T0], [100.0]), [met], method="kmixd3")
+
+
+def test_calc_pbl_height_met_is_the_met_pblh_linear_in_time(tmp_path):
+    """The file's PBLH goes from 500 to 800 m in the hour."""
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0, _T0 + pd.Timedelta(minutes=20)], [100.0, 100.0])
+
+    mlht = sampling.calc_pbl_height(particles, [met], method="met")
+
+    np.testing.assert_allclose(mlht, [500.0, 600.0], rtol=1e-5)
+
+
+def test_calc_pbl_height_names_what_flexpart_needs(tmp_path):
+    met = _met_file(tmp_path / "met.arl", winds=True)
+
+    with pytest.raises(KeyError, match="DP2M.*PRSS.*T02M.*U10M.*V10M"):
+        sampling.calc_pbl_height(
+            _particles_at([_T0], [100.0]), [met], method="flexpart"
+        )
+
+
 def test_calc_pbl_height_names_the_variables_the_files_lack(tmp_path):
     met = _met_file(tmp_path / "met.arl")
 
@@ -509,13 +664,16 @@ def test_sample_met_reads_a_dataset_as_the_file_it_was_read_from(tmp_path):
     pd.testing.assert_frame_equal(from_dataset, sample_met(particles, [met]))
 
 
-def test_calc_pbl_height_reads_a_dataset_as_the_file_it_was_read_from(tmp_path):
+@pytest.mark.parametrize("method", ["hysplit", "hysplit_temperature", "met"])
+def test_calc_pbl_height_reads_a_dataset_as_the_file_it_was_read_from(tmp_path, method):
     met = _met_file(tmp_path / "met.arl", winds=True)
     particles = _particles_at([_T0, _T0 + pd.Timedelta(minutes=30)], [100.0, 100.0])
 
-    from_dataset = sampling.calc_pbl_height(particles, arlmet.open_dataset(met))
+    from_dataset = sampling.calc_pbl_height(
+        particles, arlmet.open_dataset(met), method=method
+    )
 
-    from_files = sampling.calc_pbl_height(particles, [met])
+    from_files = sampling.calc_pbl_height(particles, [met], method=method)
     assert np.isfinite(from_files).all()
     np.testing.assert_array_equal(from_dataset, from_files)
 

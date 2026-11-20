@@ -28,7 +28,9 @@ known differences pass:
     not traced.
 
 HYSPLIT's default, ``kmixd: 3``, finds the mixed layer from the met's
-profile; :func:`runtraj.sampling.calc_pbl_height` finds it the same way.
+profile, and ``kmixd: 1`` from its temperature alone;
+:func:`runtraj.sampling.calc_pbl_height` finds it each way, and as the met's
+``PBLH`` (``kmixd: 0``).
 """
 
 from __future__ import annotations
@@ -154,18 +156,25 @@ def test_a_run_with_another_top_is_sampled_with_that_top(met_dir, tmp_path):
 
 @integration
 @pytest.mark.parametrize(
+    ("method", "kmixd"),
+    [("hysplit", 3), ("hysplit_temperature", 1), ("met", 0)],
+)
+@pytest.mark.parametrize(
     "time",
     [dt.datetime(2021, 1, 14, 22), REFERENCE_TIME, REFERENCE_SUMMER_TIME],
     ids=["winter-day", "winter-night", "summer"],
 )
-def test_calc_pbl_height_finds_the_mixed_layer_hysplit_finds(met_dir, tmp_path, time):
-    """HYSPLIT's ``mlht`` with ``kmixd: 3`` is the Richardson-number height, at least ``kmix0``."""
+def test_calc_pbl_height_finds_the_mixed_layer_hysplit_finds(
+    met_dir, tmp_path, time, method, kmixd
+):
+    """HYSPLIT's ``mlht`` is the height its ``kmixd`` finds, at least ``kmix0``."""
     release = PointRelease(time=time, longitude=-112.0, latitude=40.5, altitude=5.0)
     config = HysplitConfig(
         n_hours=-6,
         numpar=200,
         krand=2,
         seed=42,
+        kmixd=kmixd,
         kmix0=KMIX0,
         varsiwant=["time", "indx", "long", "lati", "zagl", "mlht"],
     )
@@ -176,12 +185,12 @@ def test_calc_pbl_height_finds_the_mixed_layer_hysplit_finds(met_dir, tmp_path, 
         time=pd.Timestamp(time) + pd.to_timedelta(run.particles["age"], unit="min")
     )
 
-    ours = np.maximum(calc_pbl_height(hysplit, run.met_files), KMIX0)
+    ours = np.maximum(calc_pbl_height(hysplit, run.met_files, method=method), KMIX0)
 
     ratio = ours / hysplit["mlht"].to_numpy()
     close = np.mean(np.abs(ratio - 1) < 0.02)
     print(
-        f"\ncalc_pbl_height / HYSPLIT's mlht: median {np.median(ratio):.4f}, "
+        f"\ncalc_pbl_height ({method}) / HYSPLIT's mlht: median {np.median(ratio):.4f}, "
         f"5-95 % {np.quantile(ratio, 0.05):.3f} to {np.quantile(ratio, 0.95):.3f}, "
         f"rows within 2 % {close:.3f}"
     )

@@ -169,9 +169,18 @@ its domain, which a stored run records:
 
 The sampled values differ a little from HYSPLIT's own columns, by the
 amounts under :func:`sample_met`'s Notes. ``mlht`` from :func:`sample_met`
-is the met's ``PBLH``. HYSPLIT's default (``kmixd: 3``) finds the mixed
-layer from the met's profile instead, and :func:`calc_pbl_height` finds it
-the same way.
+is the met's ``PBLH``. A transport model may find the mixed layer from
+the met's profile instead: HYSPLIT does by default (``kmixd: 3``), and
+FLEXPART does on ERA5. :func:`calc_pbl_height` finds the mixed layer the
+way the run did; give it the run's ``method``:
+
+.. code-block:: python
+
+   from runtraj.sampling import calc_pbl_height
+
+   mlht = calc_pbl_height(sim.particles, meta.met_files)  # HYSPLIT, kmixd: 3
+   mlht = calc_pbl_height(sim.particles, meta.met_files, method="hysplit_temperature")  # kmixd: 1
+   mlht = calc_pbl_height(particles, met, method="flexpart")  # FLEXPART on ERA5
 
 Met files that are not ARL files, such as GRIB, are read as one Dataset in
 :func:`arlmet.open_dataset`'s layout, the way a converter in
