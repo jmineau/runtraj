@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=14e928f7"></script>
+    <script src="../../../../_static/documentation_options.js?v=950fa46e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev23+gbcfe8401a" />
+  <meta name="docsearch:version" content="0.1.0a3.dev24+gb87dbc772" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -900,7 +900,9 @@
             <span class="k">raise</span> <span class="n">MeteorologyError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"No met file in </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">_spans</span><span class="p">(</span><span class="n">cover</span><span class="o">.</span><span class="n">gaps</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
                 <span class="sa">f</span><span class="s2">"The run covers </span><span class="si">{</span><span class="n">earlier</span><span class="si">:</span><span class="s2">%Y-%m-%d %H:%M</span><span class="si">}</span><span class="s2"> to "</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">later</span><span class="si">:</span><span class="s2">%Y-%m-%d %H:%M</span><span class="si">}</span><span class="s2">."</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">later</span><span class="si">:</span><span class="s2">%Y-%m-%d %H:%M</span><span class="si">}</span><span class="s2">. Put ARL met files that cover it in "</span>
+                <span class="s2">"that folder, or set download: on the met to fetch them from "</span>
+                <span class="s2">"NOAA's archive (needs the download extra)."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">cover</span><span class="o">.</span><span class="n">files</span></div>
 
