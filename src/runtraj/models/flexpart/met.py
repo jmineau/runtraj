@@ -195,6 +195,45 @@ def open_gfs(
     return from_gfs(datasets, bbox=bbox)
 
 
+def open_era5(files: Iterable[str | os.PathLike[str]]) -> xr.Dataset:
+    """
+    Return flex_extract's ERA5 *files* as one Dataset in :func:`arlmet.open_dataset`'s layout.
+
+    Each file is opened with cfgrib and the lot converted by
+    :func:`arlmet.converters.from_flex_extract`, which puts the fields that
+    flex_extract writes on two longitude conventions on one, reads its
+    fluxes as the rates they are, and finds the friction velocity from the
+    surface stress as FLEXPART does. The files hold no boundary layer
+    height, so the Dataset has no ``PBLH``.
+
+    Notes
+    -----
+    The whole grid is kept: flex_extract's files are already cropped to the
+    domain they were retrieved for, and the converter reads every field into
+    memory.
+
+    Raises
+    ------
+    ImportError
+        If cfgrib is not installed (the ``flexpart`` extra).
+    ValueError
+        If there are no files, or the converter refuses them (no model
+        levels, no surface pressure, grids that differ).
+    """
+    try:
+        import cfgrib
+        from arlmet.converters import from_flex_extract
+    except ImportError as err:
+        raise ImportError(
+            "Opening GRIB met for the particles needs cfgrib: "
+            'pip install "runtraj[flexpart]"'
+        ) from err
+    datasets = [ds for path in files for ds in cfgrib.open_datasets(str(path))]
+    if not datasets:
+        raise ValueError("No GRIB files to open.")
+    return from_flex_extract(datasets)
+
+
 def _cell_size(ds: xr.Dataset) -> float:
     """Return the larger of the grid's latitude and longitude spacings, in degrees."""
     steps = [
@@ -230,5 +269,6 @@ __all__ = [
     "grib_grid",
     "grib_valid_time",
     "nxshift",
+    "open_era5",
     "open_gfs",
 ]

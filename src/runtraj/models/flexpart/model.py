@@ -17,7 +17,7 @@ from runtraj.models import ModelRun
 
 from .config import FlexpartConfig, FlexpartMetConfig, flexpart_version
 from .inputs import write_inputs
-from .met import catalog, files_for, open_gfs
+from .met import catalog, files_for, open_era5, open_gfs
 from .output import read_partoutput
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class FlexpartModel:
     runs the checkout's executable there, and reads its particle output
     (:func:`~runtraj.models.flexpart.read_partoutput`). The particles
     carry FLEXPART's ``mlht`` and ``dens`` at each particle, for a stage to
-    read. :meth:`open_met` opens a run's GFS files for
+    read. :meth:`open_met` opens a run's GFS or ERA5 files for
     :mod:`runtraj.sampling`, to read other met at the particles.
     """
 
@@ -97,24 +97,18 @@ class FlexpartModel:
         """
         Return the GRIB *files* a run read as one Dataset in :func:`arlmet.open_dataset`'s layout, cropped to *bounds*.
 
-        The met config says what the files are: GFS files are converted with
-        :func:`arlmet.converters.from_gfs`
-        (:func:`~runtraj.models.flexpart.met.open_gfs`), so that the met can
-        be read at the particles (:mod:`runtraj.sampling`).
-
-        Raises
-        ------
-        NotImplementedError
-            For ERA5: flex_extract's files hold the surface fields on two
-            longitude conventions, its fluxes as rates under ERA5's names
-            for hourly totals, and no friction velocity or boundary layer
-            height, which arlmet's ERA5 converter does not read yet.
+        The met config says what the files are, so that the met can be read
+        at the particles (:mod:`runtraj.sampling`). GFS files are converted
+        with :func:`arlmet.converters.from_gfs`
+        (:func:`~runtraj.models.flexpart.met.open_gfs`). ERA5 files, as
+        flex_extract writes them, are converted with
+        :func:`arlmet.converters.from_flex_extract`
+        (:func:`~runtraj.models.flexpart.met.open_era5`); they are already
+        cropped to their domain, so *bounds* is not used, and they hold no
+        boundary layer height.
         """
         if met.source == "era5":
-            raise NotImplementedError(
-                "Reading FLEXPART's ERA5 met at particles is not supported yet: "
-                "arlmet's ERA5 converter does not read flex_extract's files."
-            )
+            return open_era5(files)
         return open_gfs(files, bounds)
 
     def run(
