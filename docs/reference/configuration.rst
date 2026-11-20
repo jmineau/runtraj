@@ -40,6 +40,21 @@ names the line of the second.
 Each page below lists its fields with their defaults and is generated from
 the code.
 
+A config runs code
+------------------
+
+A ``class`` in a model's or a stage's block, and a transform's ``kind``,
+name a Python object by its import path. runtraj imports that module and
+calls the object, which is how a project uses a model or a stage from any
+installed package. runtraj does not check what the path names: any
+installed module is imported and any callable is called, even by
+``runtraj check``. So treat a ``config.yaml`` as you would a Python script,
+and run one only if you would run a script from the same person.
+
+A service that runs configs other people send should not pass their YAML to
+runtraj. Build the :class:`ProjectConfig` yourself from the fields you
+allow, with the import paths you choose.
+
 Every key
 ---------
 
