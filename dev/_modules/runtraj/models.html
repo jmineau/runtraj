@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=038360d0"></script>
+    <script src="../../_static/documentation_options.js?v=392852a2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2.dev1+g473061fbe" />
+  <meta name="docsearch:version" content="0.1.0a2.dev9+g0bfc3bf6b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -462,12 +462,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Self</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._plugins</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_class</span>
@@ -477,6 +479,7 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">Release</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span>
 
 
 <div class="viewcode-block" id="ModelRun">
@@ -673,6 +676,15 @@
 <span class="sd">        each run from downloading its own. ``runtraj submit`` submits a fetch</span>
 <span class="sd">        job before the job array only when it is true for a met the</span>
 <span class="sd">        unfinished simulations use. A model without it downloads nothing.</span>
+<span class="sd">    open_met : callable, optional</span>
+<span class="sd">        ``open_met(met, files, bounds)``, for a model whose met files are</span>
+<span class="sd">        not ARL files: returns *files*, the met files a run read, as one</span>
+<span class="sd">        :class:`xarray.Dataset` in :func:`arlmet.open_dataset`'s layout,</span>
+<span class="sd">        such as an arlmet converter's output, cropped to *bounds* (a</span>
+<span class="sd">        :class:`runtraj.Bounds`, or ``None`` for the whole grid).</span>
+<span class="sd">        :func:`open_met` calls it, so that the met is read at particles</span>
+<span class="sd">        (:mod:`runtraj.sampling`) without guessing its format from the</span>
+<span class="sd">        files. A model without it reads ARL files.</span>
 <span class="sd">    """</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -860,6 +872,60 @@
             <span class="s2">"mypkg.models.MyModel."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">factory</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="open_met">
+<a class="viewcode-back" href="../../reference/_api/runtraj.models.open_met.html#runtraj.models.open_met">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">open_met</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">met</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">files</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">bounds</span><span class="p">:</span> <span class="n">Bounds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the met files of a run of the transport model *name* as :mod:`runtraj.sampling` reads them.</span>
+
+<span class="sd">    A model whose met files are not ARL files opens them itself, with its</span>
+<span class="sd">    met config *met*, as one Dataset in :func:`arlmet.open_dataset`'s</span>
+<span class="sd">    layout (its ``open_met``, :class:`TransportModel`); for any other model,</span>
+<span class="sd">    HYSPLIT included, the files are ARL files and are returned as paths.</span>
+<span class="sd">    Either can be passed to :func:`runtraj.sampling.sample_met` and</span>
+<span class="sd">    :func:`runtraj.sampling.calc_pbl_height`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The transport model the run used (:func:`get_model`).</span>
+<span class="sd">    met : BaseModel</span>
+<span class="sd">        The run's met, of the model's ``met_config_class``.</span>
+<span class="sd">    files : iterable of path-like</span>
+<span class="sd">        The met files the run read (``met_files`` of :class:`ModelRun` or</span>
+<span class="sd">        of :func:`runtraj.particles.particles_metadata`).</span>
+<span class="sd">    bounds : Bounds, optional</span>
+<span class="sd">        Where the particles are. A model that opens its files reads only</span>
+<span class="sd">        this part of the grid, plus a margin of its own. ``None`` reads the</span>
+<span class="sd">        whole grid.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of Path or xarray.Dataset</span>
+<span class="sd">        The files, or the Dataset the model opened.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; meta = runtraj.particles.particles_metadata(</span>
+<span class="sd">    ...     sim.particles_path</span>
+<span class="sd">    ... )  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; met = runtraj.models.open_met(</span>
+<span class="sd">    ...     "hysplit", variant.met_config, meta.met_files</span>
+<span class="sd">    ... )  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; runtraj.sampling.sample_met(sim.particles, met)  # doctest: +SKIP</span>
+<span class="sd">    """</span>
+    <span class="n">hook</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">get_model</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s2">"open_met"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hook</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">hook</span><span class="p">(</span><span class="n">met</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="n">bounds</span><span class="p">)</span></div>
 
 
 
@@ -1093,6 +1159,7 @@
     <span class="s2">"TransportConfig"</span><span class="p">,</span>
     <span class="s2">"TransportModel"</span><span class="p">,</span>
     <span class="s2">"get_model"</span><span class="p">,</span>
+    <span class="s2">"open_met"</span><span class="p">,</span>
     <span class="s2">"run_model"</span><span class="p">,</span>
     <span class="s2">"run_model_many"</span><span class="p">,</span>
     <span class="s2">"run_trajectories"</span><span class="p">,</span>

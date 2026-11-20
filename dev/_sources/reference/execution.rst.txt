@@ -97,6 +97,7 @@ of the run are a complete run.
    runtraj.models.get_model
    runtraj.models.run_model
    runtraj.models.run_model_many
+   runtraj.models.open_met
    runtraj.models.hysplit.HysplitModel
 
 Stages

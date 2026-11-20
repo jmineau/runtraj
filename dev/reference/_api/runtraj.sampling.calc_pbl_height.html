@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=038360d0"></script>
+    <script src="../../_static/documentation_options.js?v=392852a2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a2.dev1+g473061fbe" />
+  <meta name="docsearch:version" content="0.1.0a2.dev9+g0bfc3bf6b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -669,6 +669,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.get_model.html">runtraj.models.get_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model.html">runtraj.models.run_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.open_met.html">runtraj.models.open_met</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.batched.html">runtraj.models.hysplit.HysplitModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.needs_workdir.html">runtraj.models.hysplit.HysplitModel.needs_workdir</a></li>
@@ -812,7 +813,7 @@
 <h1>runtraj.sampling.calc_pbl_height<a class="headerlink" href="#runtraj-sampling-calc-pbl-height" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.sampling.calc_pbl_height">
-<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">calc_pbl_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#calc_pbl_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.calc_pbl_height" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">calc_pbl_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#calc_pbl_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.calc_pbl_height" title="Link to this definition">#</a></dt>
 <dd><p>Return the mixed-layer height at each particle, found from the met’s profile as HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code> finds it.</p>
 <p>This is HYSPLIT’s default way to find the mixed layer, ported from its
 source (<code class="docutils literal notranslate"><span class="pre">stbanl.f</span></code>, Holtslag and Boville, 1993). Going up the column,
@@ -838,21 +839,38 @@ internal level, as in HYSPLIT.</p>
 kept at least 150 m, has a median ratio of 0.999 to 1.000 to the
 <code class="docutils literal notranslate"><span class="pre">mlht</span></code> HYSPLIT wrote with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>, and 73 to 94 % of rows are
 within 2 %.</p>
+<p>A Dataset gives the met’s own values. HYSPLIT reads the ARL file
+written from it, whose values are packed: in mountains <code class="docutils literal notranslate"><span class="pre">SHGT</span></code> can
+move by a few meters. In a deep, nearly neutral afternoon layer, a few
+meters near the ground move the height by hundreds of meters, most of
+all on pressure levels, whose first level above the ground can be only
+meters above HYSPLIT’s lowest internal level. On two hours of ERA5
+pressure levels over Salt Lake City in July, the height from the
+Dataset had a median ratio of 0.91 to HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">mlht</span></code>. From the ARL
+file HYSPLIT read, the median ratio was 0.999, with 99 % of rows within
+2 %. To compare with a HYSPLIT run, give the files it read.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>particles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span>) – A particle table with <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, and <code class="docutils literal notranslate"><span class="pre">time</span></code>.</p></li>
-<li><p><strong>files</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span>) – ARL met files that cover the particles’ times, with <code class="docutils literal notranslate"><span class="pre">TEMP</span></code>,
-<code class="docutils literal notranslate"><span class="pre">PRES</span></code>, <code class="docutils literal notranslate"><span class="pre">UWND</span></code>, <code class="docutils literal notranslate"><span class="pre">VWND</span></code> and <code class="docutils literal notranslate"><span class="pre">SHGT</span></code>, the sensible heat flux
-<code class="docutils literal notranslate"><span class="pre">SHTF</span></code>, and the friction velocity <code class="docutils literal notranslate"><span class="pre">USTR</span></code> or the momentum fluxes
-<code class="docutils literal notranslate"><span class="pre">UMOF</span></code> and <code class="docutils literal notranslate"><span class="pre">VMOF</span></code>.</p></li>
+<li><p><strong>met</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]] | <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span>) – ARL met files that cover the particles’ times, or met in another
+format as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b12)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, as
+<a class="reference internal" href="runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a> takes. It needs <code class="docutils literal notranslate"><span class="pre">TEMP</span></code>, <code class="docutils literal notranslate"><span class="pre">UWND</span></code>, <code class="docutils literal notranslate"><span class="pre">VWND</span></code> and
+<code class="docutils literal notranslate"><span class="pre">SHGT</span></code>, the sensible heat flux <code class="docutils literal notranslate"><span class="pre">SHTF</span></code>, the friction velocity
+<code class="docutils literal notranslate"><span class="pre">USTR</span></code> or the momentum fluxes <code class="docutils literal notranslate"><span class="pre">UMOF</span></code> and <code class="docutils literal notranslate"><span class="pre">VMOF</span></code>, and the
+pressure: <code class="docutils literal notranslate"><span class="pre">PRES</span></code>, or a vertical axis it follows from.</p></li>
 <li><p><strong>z_top</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The top of the domain in meters, which sets HYSPLIT’s internal
 levels (<code class="docutils literal notranslate"><span class="pre">z_top</span></code> of <a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitConfig</span></code></a>).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The mixed-layer height at each row, in m above ground. A row off
-the met’s grid is NaN.</p>
+the met’s grid is NaN. A met time that lacks the surface fluxes,
+as a GFS analysis (<code class="docutils literal notranslate"><span class="pre">f000</span></code>) does without the previous cycle’s
+forecast, has no height: a row at that time is NaN, and a row
+between it and a met time with the fluxes takes the height of the
+other time. (HYSPLIT refuses such met, so there is no <code class="docutils literal notranslate"><span class="pre">mlht</span></code> of
+its own to compare.)</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
@@ -861,7 +879,7 @@ the met’s grid is NaN.</p>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>particles</em> has no <code class="docutils literal notranslate"><span class="pre">time</span></code> column or a row is outside the
     files’ times.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><strong>KeyError</strong></a> – If the files lack a variable it needs.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><strong>KeyError</strong></a> – If the met lacks a variable it needs.</p></li>
 </ul>
 </dd>
 </dl>
