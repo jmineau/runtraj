@@ -32,6 +32,10 @@ can find them again.
   transport models, both plugged in by the import path of a class.
 - Particle transforms for a lifetime, deposition, oxidation, pressure
   weighting and an averaging kernel.
+- Met sampling: the met's mixed-layer height, air density, pressure and
+  ground height at each particle, read from ARL files as HYSPLIT reads them
+  (`runtraj.sampling.sample_met`), and HYSPLIT's mixed-layer height computed
+  from the met's profile (`calc_pbl_height`).
 - Running: `runtraj run` (or `Project.run()`) on your computer, `runtraj
   submit` as a Slurm job array, and `runtraj status`. A simulation is complete
   when its files exist, so an interrupted run picks up where it stopped.
