@@ -12,6 +12,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/runtraj.svg)](https://pypi.org/project/runtraj/)
 [![Python Version](https://img.shields.io/pypi/pyversions/runtraj.svg)](https://pypi.org/project/runtraj/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24384235.svg)](https://doi.org/10.5281/zenodo.24384235)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pyrefly](https://img.shields.io/badge/types-pyrefly-blue.svg)](https://pyrefly.org)
 
@@ -136,6 +137,12 @@ stages:
   footprint:
     class: stilt.footprint.FootprintStage   # PYSTILT's footprint
 ```
+
+## Citing
+
+If you use runtraj in published work, please cite it through its
+[Zenodo DOI](https://doi.org/10.5281/zenodo.24384235), which always points to the latest release.
+GitHub's "Cite this repository" gives the reference from `CITATION.cff`.
 
 ## Use of AI coding agents
 

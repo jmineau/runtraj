@@ -1,6 +1,10 @@
 runtraj
 =======
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.24384235.svg
+   :target: https://doi.org/10.5281/zenodo.24384235
+   :alt: DOI
+
 .. rst-class:: hero-copy
 
 runtraj runs particle dispersion models at scale. Give it the times and
@@ -57,6 +61,9 @@ positions, not concentration grids.
 
 Run HYSPLIT on its own? :doc:`guides/hysplit_users` maps ``CONTROL`` and
 ``SETUP.CFG`` to runtraj's settings.
+
+If you use runtraj in published work, please cite it through its
+`Zenodo DOI <https://doi.org/10.5281/zenodo.24384235>`_, which always points to the latest release.
 
 .. toctree::
    :hidden:

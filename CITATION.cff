@@ -2,6 +2,9 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 title: "runtraj"
+# The concept DOI always resolves to the latest release. GitHub's "Cite this
+# repository" reads `doi`; `identifiers` is kept for tools that prefer it.
+doi: "10.5281/zenodo.24384235"
 abstract: "Run particle dispersion models at scale."
 authors:
   - family-names: Mineau
@@ -12,6 +15,10 @@ authors:
 license: MIT
 repository-code: "https://github.com/jmineau/runtraj"
 url: "https://jmineau.github.io/runtraj/"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24384235"
+    description: "The concept DOI for all versions of runtraj."
 keywords:
   - hysplit
   - particle-dispersion
