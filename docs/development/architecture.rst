@@ -61,8 +61,10 @@ Module map
      meteorology.py, spatial.py, visualization.py, exceptions.py
 
 The import contracts in ``pyproject.toml`` (``just imports``) hold this
-shape: the modules are in layers, only :mod:`runtraj.models` imports
-HYSPLIT's package, and the project config reads no results and runs nothing.
+shape: the modules are in layers, only :mod:`runtraj.models` imports a
+transport model's package (such as HYSPLIT's, ``runtraj.models.hysplit``),
+no model's package imports another's, and the project config reads no
+results and runs nothing.
 
 How a run goes
 --------------

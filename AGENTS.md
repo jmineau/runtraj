@@ -106,8 +106,9 @@ stage after the ones it `reads` and again when one of those was remade
 
 The import contracts in `pyproject.toml` (`just imports`) hold this shape: an
 exhaustive `layers` contract (a new top-level module fails until placed), only
-`runtraj.models` imports HYSPLIT's package, and the project config reads no
-results and runs nothing. Slurm tasks rebuild the project in another process,
+`runtraj.models` imports a model's package (`runtraj.models.<name>`, such as
+HYSPLIT's), no model's package imports another's, and the project config reads
+no results and runs nothing. Slurm tasks rebuild the project in another process,
 so anything a worker needs must be in the project or the output directory.
 
 `ProjectConfig` is `config.yaml`'s blocks, and no setting sits outside one: `mets`,

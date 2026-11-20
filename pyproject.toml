@@ -147,19 +147,35 @@ layers = [
     "_paths | exceptions | _transient",
 ]
 
-# HYSPLIT is one transport model, reached through runtraj.models.get_model.
-# Its package is the only place that knows HYSPLIT's files and behaviour, so
-# a second model does not have to touch the core.
+# A transport model built in, such as HYSPLIT, is a package under
+# runtraj.models, reached through runtraj.models.get_model. Its package is
+# the only place that knows the model's files and behavior, so another
+# model does not have to touch the core. Every module under runtraj.models
+# counts as a model's package: code the models share goes in
+# runtraj/models/__init__.py or elsewhere in the core, not beside them.
 [[tool.importlinter.contracts]]
-name = "Only runtraj.models imports HYSPLIT's package"
+name = "Only runtraj.models imports a transport model's package"
 type = "forbidden"
 source_modules = ["runtraj.*"]
-forbidden_modules = ["runtraj.models.hysplit"]
+forbidden_modules = ["runtraj.models.*"]
 # get_model imports a model's package when asked for it; that is the boundary.
 ignore_imports = [
-    "runtraj.models -> runtraj.models.hysplit",
+    "runtraj.models -> runtraj.models.*",
 ]
 allow_indirect_imports = true
+
+# Each transport model stands alone: what two models share belongs in the
+# core, behind the transport model protocol.
+[[tool.importlinter.contracts]]
+name = "A transport model's package imports no other model's"
+type = "independence"
+modules = ["runtraj.models.*"]
+# Each model imports runtraj.models for the protocol, and get_model imports
+# each model: a path between two models through it is not one importing the
+# other.
+ignore_imports = [
+    "runtraj.models -> runtraj.models.*",
+]
 
 # Config classes do no I/O when they validate, so a config.yaml loads
 # offline. Asking a transport model its build, or a stage to read the files
@@ -178,7 +194,7 @@ forbidden_modules = [
     "runtraj.output",
     "runtraj.project",
     "runtraj.simulation",
-    "runtraj.models.hysplit",
+    "runtraj.models.*",
 ]
 allow_indirect_imports = true
 
