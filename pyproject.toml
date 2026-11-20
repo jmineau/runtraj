@@ -26,7 +26,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "arlmet>=0.1.0b10",
+    "arlmet>=0.1.0b12",
     "numpy>=1.26",  # cartopy 0.26 needs it
     "pandas>=2.1",  # xarray 2024.10 needs it
     "pyarrow>=14.0",
@@ -46,7 +46,7 @@ visualization = [
     "matplotlib>=3.7",
 ]
 download = [
-    "arlmet[archives]>=0.1.0b10",
+    "arlmet[archives]>=0.1.0b12",
 ]
 complete = [
     "runtraj[visualization]",
@@ -58,7 +58,7 @@ complete = [
 dev = [
     # The extras, spelled out: the floors job resolves the group with `uv pip
     # compile`, which would look for `runtraj[complete]` on PyPI.
-    "arlmet[archives]>=0.1.0b10",
+    "arlmet[archives]>=0.1.0b12",
     "cartopy>=0.26",
     "cf-xarray>=0.10",  # the CF trajectory export is read back with it
     "netcdf4>=1.6.5",  # and written to a file in its tests
