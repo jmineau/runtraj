@@ -1,0 +1,6 @@
+runtraj.Release.location\_id
+============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Release.location_id

@@ -1,0 +1,5 @@
+runtraj.ColumnRelease.coords
+============================
+
+.. currentmodule:: runtraj
+.. automethod:: ColumnRelease.coords

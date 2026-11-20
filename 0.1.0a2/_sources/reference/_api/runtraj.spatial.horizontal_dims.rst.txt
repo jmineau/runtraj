@@ -1,0 +1,6 @@
+﻿runtraj.spatial.horizontal\_dims
+================================
+
+.. currentmodule:: runtraj.spatial
+
+.. autofunction:: horizontal_dims

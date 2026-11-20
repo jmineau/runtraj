@@ -1,0 +1,5 @@
+runtraj.Release.coords
+======================
+
+.. currentmodule:: runtraj
+.. automethod:: Release.coords

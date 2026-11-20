@@ -1,0 +1,32 @@
+﻿runtraj.Bounds
+==============
+
+.. currentmodule:: runtraj
+
+
+
+
+
+
+.. class-signature:: runtraj.Bounds
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.Bounds
+
+
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~Bounds.contains
+
+
+

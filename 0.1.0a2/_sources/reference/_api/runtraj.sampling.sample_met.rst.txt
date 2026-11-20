@@ -1,0 +1,6 @@
+﻿runtraj.sampling.sample\_met
+============================
+
+.. currentmodule:: runtraj.sampling
+
+.. autofunction:: sample_met

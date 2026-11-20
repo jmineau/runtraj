@@ -1,0 +1,6 @@
+﻿runtraj.models.open\_met
+========================
+
+.. currentmodule:: runtraj.models
+
+.. autofunction:: open_met

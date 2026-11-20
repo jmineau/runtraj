@@ -173,6 +173,15 @@ is the met's ``PBLH``. HYSPLIT's default (``kmixd: 3``) finds the mixed
 layer from the met's profile instead, and :func:`calc_pbl_height` finds it
 the same way.
 
+Met files that are not ARL files, such as GRIB, are read as one Dataset in
+:func:`arlmet.open_dataset`'s layout, the way a converter in
+:mod:`arlmet.converters` writes it. Both functions take that Dataset in
+place of the files, and sample it as they would sample the ARL file
+:func:`arlmet.write_dataset` would write from it. A transport model that
+reads such files opens them for you: :func:`runtraj.models.open_met` returns
+the Dataset, cropped to where the particles are, or the paths of ARL files
+as they are.
+
 .. autosummary::
    :toctree: _api
    :nosignatures:

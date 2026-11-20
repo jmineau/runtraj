@@ -1,0 +1,6 @@
+runtraj.config.Variant.particles\_hash
+======================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.particles_hash

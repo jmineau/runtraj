@@ -1,0 +1,6 @@
+runtraj.Project.plot
+====================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.plot
