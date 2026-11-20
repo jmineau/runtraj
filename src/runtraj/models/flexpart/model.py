@@ -9,6 +9,7 @@ import os
 import signal
 import subprocess
 import tempfile
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,6 +35,20 @@ SUCCESS = "CONGRATULATIONS"
 
 #: The lines of FLEXPART's output kept in a failure's message.
 TAIL_LINES = 20
+
+
+#: The warning a FLEXPART run on GFS gives. FLEXPART 11 works out GFS's
+#: surface heat flux and stress from the 2 m and 10 m values against its
+#: lowest level, which GFS diagnoses from that same layer, so they come out
+#: near zero: at a mountain site at midday, 0 W m-2 and 0.0001 N m-2
+#: against ERA5's -228 W m-2 and 0.40 N m-2. With no turbulence the
+#: particles stayed at a median 8 m in a 1000 m mixed layer.
+GFS_WARNING = (
+    "FLEXPART 11 does not mix its particles on GFS: it derives GFS's surface "
+    "heat flux and stress from the 2 m and 10 m values, which come out near "
+    "zero, so the particles stay near the ground. Run on ERA5 for results "
+    "that depend on mixing."
+)
 
 
 class FlexpartModel:
@@ -135,7 +150,15 @@ class FlexpartModel:
             when it finished but wrote no particle file.
         ValueError
             If the met is ERA5 and the config does not run the eta build.
+
+        Warns
+        -----
+        UserWarning
+            If the met is GFS, once in each process: FLEXPART 11 does not
+            mix its particles on GFS.
         """
+        if met.source == "gfs":
+            warnings.warn(GFS_WARNING, UserWarning, stacklevel=2)
         if met.source == "era5" and not config.eta:
             raise ValueError(
                 "FLEXPART reads ERA5 only with its eta build: set eta: true in "
