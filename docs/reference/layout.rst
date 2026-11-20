@@ -55,8 +55,9 @@ The ``logs/`` tree follows the folders of the results:
   particles were fine. It is removed when the result is written.
 
 ``scratch/`` holds kept workdirs, one folder per simulation, under the
-particles' settings folder. A failed run's workdir is kept, and with
-``keep_workdir: true`` under ``execution:`` every run's is.
+particles' settings folder. A failed run's workdir is kept without the
+transport model's particle file, and with ``keep_workdir: true`` under
+``execution:`` every run's is, whole.
 
 The ``particles/`` and ``footprint/`` trees hold only Parquet files and
 ``_settings.yaml``, so each reads as one dataset. A stage from another

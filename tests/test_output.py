@@ -426,3 +426,16 @@ def test_an_ensembles_realizations_are_partitions_of_one_folder(tmp_path):
         out.path("particles", VARIANT, release.id, 0)
     table = out.table("particles", ensemble, realization=0)
     assert set(table.column("release").to_pylist()) == {release.id}
+
+
+def test_a_kept_workdir_can_leave_out_named_files(tmp_path):
+    out = Output(tmp_path / "output")
+    rid = release_at().id
+    workdir = tmp_path / "work"
+    (workdir / "sub").mkdir(parents=True)
+    (workdir / "CONTROL").write_text("x")
+    (workdir / "PARTICLES").write_text("big")
+    (workdir / "sub" / "PARTICLES").write_text("not at the top")
+    kept = out.keep_workdir(VARIANT, rid, workdir, leave_out={"PARTICLES"})
+    assert sorted(p.name for p in kept.iterdir()) == ["CONTROL", "sub"]
+    assert (kept / "sub" / "PARTICLES").exists()

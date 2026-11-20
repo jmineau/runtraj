@@ -131,6 +131,8 @@ class HysplitModel:
     met_config_class = MetConfig
     #: HYSPLIT writes its inputs and outputs as files in a directory.
     needs_workdir = True
+    #: Its particle file, left out of a failed run's kept workdir.
+    particle_files = (PARTICLE_FILE,)
     #: One hycs_std process per release.
     batched = False
 

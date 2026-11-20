@@ -59,7 +59,7 @@ import logging
 import os
 import shutil
 import warnings
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -1137,25 +1137,35 @@ class Output:
         release_id: str,
         workdir: Path,
         realization: int | None = None,
+        leave_out: Collection[str] = (),
     ) -> Path | UPath:
         """
         Copy a run's working directory to :meth:`kept_workdir`, replacing an earlier copy.
 
         A failed run's is kept, so CONTROL, SETUP.CFG, and the model's own
-        output can be read after the job ends.
+        output can be read after the job ends. The files named in
+        *leave_out*, at the top of *workdir*, are not copied.
         """
         scratch = self._made("particles", "scratch", variant, realization)
         kept = scratch / _date_dir(release_id) / release_id
+
+        def skip(folder: str, names: list[str]) -> list[str]:
+            return (
+                [n for n in names if n in leave_out] if Path(folder) == workdir else []
+            )
+
         if isinstance(kept, Path):
             shutil.rmtree(kept, ignore_errors=True)
             kept.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(workdir, kept, symlinks=True)
+            shutil.copytree(workdir, kept, symlinks=True, ignore=skip)
             return kept
         # An object store keeps no links, so the met files the working
         # directory links to are left out.
         if kept.exists():
             kept.fs.rm(kept.path, recursive=True)
         for file in sorted(workdir.rglob("*")):
+            if file.parent == workdir and file.name in leave_out:
+                continue
             if file.is_file() and not file.is_symlink():
                 (kept / file.relative_to(workdir).as_posix()).write_bytes(
                     file.read_bytes()

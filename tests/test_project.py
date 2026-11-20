@@ -726,3 +726,25 @@ def test_a_table_written_with_a_receptor_column_is_named_as_renamed(tmp_path):
 
     with pytest.raises(ValueError, match="now named 'release'"):
         project.add_table("kernels", pd.DataFrame({"release": ["b"], "weight": [1.0]}))
+
+
+@pytest.mark.parametrize("keep_workdir", [False, True])
+def test_a_failed_runs_kept_workdir_leaves_out_its_particle_file(
+    tmp_path, monkeypatch, keep_workdir
+):
+    from runtraj.exceptions import SimulationError
+    from runtraj.execution import ExecutionConfig
+    from runtraj.models.hysplit.driver import PARTICLE_FILE
+
+    def fail(model, release, transport, met, workdir, **kwargs):
+        (workdir / "CONTROL").write_text("inputs")
+        (workdir / PARTICLE_FILE).write_text("a partial particle file")
+        raise SimulationError("the run stopped", reason="MET_COVERAGE")
+
+    monkeypatch.setattr("runtraj.execution.worker.run_model", fail)
+    project = _project(tmp_path, [_release(12)])
+    _run(project, execution=ExecutionConfig(keep_workdir=keep_workdir))
+
+    kept = project.simulation(_release(12).id, "hrrr").kept_workdir
+    assert (kept / "CONTROL").read_text() == "inputs"
+    assert (kept / PARTICLE_FILE).exists() == keep_workdir

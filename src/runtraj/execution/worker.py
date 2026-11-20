@@ -190,7 +190,8 @@ def run_particles(
     (:func:`runtraj.models.run_model`), with the variant's met. Its log is written to the output
     directory whether the run succeeds or fails. The working directory is
     then removed, unless the run failed or *keep_workdir* is set, in which
-    case it is copied under the output directory's ``scratch/`` first.
+    case it is copied under the output directory's ``scratch/`` first. A
+    failed run's copy leaves out the model's ``particle_files``.
 
     Parameters
     ----------
@@ -218,7 +219,8 @@ def run_particles(
         missing.
     """
     output, rid = sim.output, sim.release.id
-    needs_workdir = getattr(get_model(sim.variant.model), "needs_workdir", True)
+    model = get_model(sim.variant.model)
+    needs_workdir = getattr(model, "needs_workdir", True)
     if needs_workdir:
         # The model runs in an empty directory. The runner gives each run a
         # new one, but a caller can hand over a directory that a stopped run
@@ -258,7 +260,12 @@ def run_particles(
             # writing anything, such as on missing meteorology, has nothing
             # to look at.
             if (keep_workdir or not succeeded) and any(workdir.iterdir()):
-                output.keep_workdir(sim.variant, rid, workdir, sim.realization)
+                # A failed run's particle files can be large, and the
+                # model's inputs and logs say why it failed.
+                leave_out = () if keep_workdir else getattr(model, "particle_files", ())
+                output.keep_workdir(
+                    sim.variant, rid, workdir, sim.realization, leave_out=leave_out
+                )
             shutil.rmtree(workdir, ignore_errors=True)
 
 

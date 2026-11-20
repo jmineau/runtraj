@@ -455,7 +455,7 @@ class ExecutionConfig(BaseModel):
         description=(
             "Keep every run's workdir, as the transport model left it, under "
             "``scratch/`` in the output directory. A failed run's is always "
-            "kept."
+            "kept, without the model's particle file unless this is set."
         ),
     )
 
