@@ -567,6 +567,17 @@ def calc_pbl_height(
     ``mlht`` HYSPLIT wrote with ``kmixd: 3``, and 73 to 94 % of rows are
     within 2 %.
 
+    A Dataset gives the met's own values. HYSPLIT reads the ARL file
+    written from it, whose values are packed: in mountains ``SHGT`` can
+    move by a few meters. In a deep, nearly neutral afternoon layer, a few
+    meters near the ground move the height by hundreds of meters, most of
+    all on pressure levels, whose first level above the ground can be only
+    meters above HYSPLIT's lowest internal level. On two hours of ERA5
+    pressure levels over Salt Lake City in July, the height from the
+    Dataset had a median ratio of 0.91 to HYSPLIT's ``mlht``. From the ARL
+    file HYSPLIT read, the median ratio was 0.999, with 99 % of rows within
+    2 %. To compare with a HYSPLIT run, give the files it read.
+
     Parameters
     ----------
     particles : pandas.DataFrame
