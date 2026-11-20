@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1b68a9d0"></script>
+    <script src="../_static/documentation_options.js?v=f0cdcb6d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev3+g28d172834" />
+  <meta name="docsearch:version" content="0.1.0a3.dev4+g3a68bc798" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -848,6 +848,19 @@ block: YAML would keep the last of two, so runtraj refuses the file and
 names the line of the second.
 Each page below lists its fields with their defaults and is generated from
 the code.</p>
+<section id="a-config-runs-code">
+<h2>A config runs code<a class="headerlink" href="#a-config-runs-code" title="Link to this heading">#</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">class</span></code> in a model’s or a stage’s block, and a transform’s <code class="docutils literal notranslate"><span class="pre">kind</span></code>,
+name a Python object by its import path. runtraj imports that module and
+calls the object, which is how a project uses a model or a stage from any
+installed package. runtraj does not check what the path names: any
+installed module is imported and any callable is called, even by
+<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code>. So treat a <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> as you would a Python script,
+and run one only if you would run a script from the same person.</p>
+<p>A service that runs configs other people send should not pass their YAML to
+runtraj. Build the <a class="reference internal" href="_api/runtraj.ProjectConfig.html#runtraj.ProjectConfig" title="runtraj.ProjectConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectConfig</span></code></a> yourself from the fields you
+allow, with the import paths you choose.</p>
+</section>
 <section id="every-key">
 <h2>Every key<a class="headerlink" href="#every-key" title="Link to this heading">#</a></h2>
 <p>These tables are generated from the code, so they always match the
@@ -1698,6 +1711,7 @@ their settings folder.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-config-runs-code">A config runs code</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#every-key">Every key</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-level">Top level</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hysplit">HYSPLIT</a></li>
