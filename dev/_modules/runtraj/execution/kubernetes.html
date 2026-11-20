@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=9b553ea8"></script>
+    <script src="../../../_static/documentation_options.js?v=14e928f7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev22+gd58abd972" />
+  <meta name="docsearch:version" content="0.1.0a3.dev23+gbcfe8401a" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -477,6 +477,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
@@ -962,9 +963,139 @@
             <span class="s2">"config.yaml to a bucket, or give --output s3://..., with "</span>
             <span class="s2">"execution.kubernetes.inputs set."</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="n">kube</span><span class="o">.</span><span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">kube</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">),</span> <span class="n">output</span>
-    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span> <span class="n">output</span>
+    <span class="k">return</span> <span class="n">_target</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">execution</span><span class="p">),</span> <span class="n">output</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_target</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return what the pods open: the inputs' URL, or the project folder's real path."""</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">execution</span><span class="o">.</span><span class="n">kubernetes</span><span class="o">.</span><span class="n">inputs</span>
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">inputs</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">count_indexes</span><span class="p">(</span><span class="n">indexes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return how many task indexes a Job's list of them holds, such as ``0-3,7``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; count_indexes("0-3,7")</span>
+<span class="sd">    5</span>
+<span class="sd">    &gt;&gt;&gt; count_indexes(None)</span>
+<span class="sd">    0</span>
+<span class="sd">    """</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="p">(</span><span class="n">indexes</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">part</span><span class="p">:</span>
+            <span class="n">first</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">last</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">last</span> <span class="ow">or</span> <span class="n">first</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">first</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">total</span>
+
+
+<div class="viewcode-block" id="job_summary">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.kubernetes.job_summary.html#runtraj.execution.kubernetes.job_summary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">job_summary</span><span class="p">(</span><span class="n">job</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return what ``runtraj status`` shows of one Job, from ``kubectl get jobs -o json``.</span>
+
+<span class="sd">    ``state`` is ``complete``, ``failed``, ``suspended`` or ``running``, and</span>
+<span class="sd">    ``reason`` is Kubernetes' reason for a failed Job, such as</span>
+<span class="sd">    ``FailedIndexes`` or ``DeadlineExceeded``. ``tasks`` is the Job's</span>
+<span class="sd">    ``completions``; ``done``, ``failed`` and ``running`` count its tasks,</span>
+<span class="sd">    and ``failed_tasks`` lists the ones that gave up as Kubernetes writes</span>
+<span class="sd">    them (``1,4-6``).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; job = {</span>
+<span class="sd">    ...     "metadata": {"name": "runtraj-towers-x7k2p"},</span>
+<span class="sd">    ...     "spec": {"completions": 8},</span>
+<span class="sd">    ...     "status": {"completedIndexes": "0-5", "failedIndexes": "7", "active": 1},</span>
+<span class="sd">    ... }</span>
+<span class="sd">    &gt;&gt;&gt; summary = job_summary(job)</span>
+<span class="sd">    &gt;&gt;&gt; summary["state"], summary["done"], summary["failed_tasks"]</span>
+<span class="sd">    ('running', 6, '7')</span>
+<span class="sd">    """</span>
+    <span class="n">spec</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"spec"</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">job</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">c</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]:</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"conditions"</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"True"</span>
+    <span class="p">}</span>
+    <span class="n">reason</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">"Complete"</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="s2">"complete"</span>
+    <span class="k">elif</span> <span class="s2">"Failed"</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="s2">"failed"</span><span class="p">,</span> <span class="n">conditions</span><span class="p">[</span><span class="s2">"Failed"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reason"</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"suspend"</span><span class="p">):</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="s2">"suspended"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="s2">"running"</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">job</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">][</span><span class="s2">"name"</span><span class="p">],</span>
+        <span class="s2">"state"</span><span class="p">:</span> <span class="n">state</span><span class="p">,</span>
+        <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
+        <span class="s2">"created"</span><span class="p">:</span> <span class="n">job</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"creationTimestamp"</span><span class="p">),</span>
+        <span class="s2">"tasks"</span><span class="p">:</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"completions"</span><span class="p">),</span>
+        <span class="s2">"done"</span><span class="p">:</span> <span class="n">count_indexes</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"completedIndexes"</span><span class="p">)),</span>
+        <span class="s2">"failed"</span><span class="p">:</span> <span class="n">count_indexes</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"failedIndexes"</span><span class="p">)),</span>
+        <span class="s2">"failed_tasks"</span><span class="p">:</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"failedIndexes"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"running"</span><span class="p">:</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"active"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="project_jobs">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.kubernetes.project_jobs.html#runtraj.execution.kubernetes.project_jobs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">project_jobs</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the summaries of a project's Jobs on the cluster, oldest first (:func:`job_summary`).</span>
+
+<span class="sd">    These are the indexed Jobs of ``runtraj submit`` and the hourly Jobs of</span>
+<span class="sd">    ``runtraj schedule``, in the namespace of *execution*'s ``kubernetes``</span>
+<span class="sd">    block. ``kubectl`` selects them by the project's label, which is only</span>
+<span class="sd">    its name, so two projects can share it; a Job is kept only when its</span>
+<span class="sd">    annotation names where this project's pods open it (the inputs' URL,</span>
+<span class="sd">    or the folder's path).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If ``kubectl`` is not on ``PATH``.</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        If ``kubectl`` cannot list the Jobs; the message is its error.</span>
+<span class="sd">    """</span>
+    <span class="n">kubectl</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">"kubectl"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kubectl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">"kubectl is not installed, or not on PATH."</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">kubectl</span><span class="p">,</span>
+        <span class="s2">"get"</span><span class="p">,</span>
+        <span class="s2">"jobs"</span><span class="p">,</span>
+        <span class="s2">"-l"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">PROJECT_LABEL</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">label_value</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"-o"</span><span class="p">,</span>
+        <span class="s2">"json"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">namespace</span> <span class="o">=</span> <span class="n">execution</span><span class="o">.</span><span class="n">kubernetes</span><span class="o">.</span><span class="n">namespace</span>
+    <span class="k">if</span> <span class="n">namespace</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--namespace"</span><span class="p">,</span> <span class="n">namespace</span><span class="p">]</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">"kubectl could not list the Jobs: "</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">project_key</span><span class="p">(</span><span class="n">_target</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">execution</span><span class="p">))</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">job_summary</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)[</span><span class="s2">"items"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">project_key</span><span class="p">(</span>
+            <span class="n">item</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"annotations"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PROJECT_ANNOTATION</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="o">==</span> <span class="n">target</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">job</span><span class="p">:</span> <span class="n">job</span><span class="p">[</span><span class="s2">"created"</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_keep</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -1088,12 +1219,15 @@
     <span class="s2">"SCRATCH"</span><span class="p">,</span>
     <span class="s2">"TICK_DEADLINE"</span><span class="p">,</span>
     <span class="s2">"cron_job_manifest"</span><span class="p">,</span>
+    <span class="s2">"count_indexes"</span><span class="p">,</span>
     <span class="s2">"cron_job_name"</span><span class="p">,</span>
     <span class="s2">"job_manifest"</span><span class="p">,</span>
+    <span class="s2">"job_summary"</span><span class="p">,</span>
     <span class="s2">"kubectl_apply"</span><span class="p">,</span>
     <span class="s2">"kubectl_create"</span><span class="p">,</span>
     <span class="s2">"label_value"</span><span class="p">,</span>
     <span class="s2">"pod_args"</span><span class="p">,</span>
+    <span class="s2">"project_jobs"</span><span class="p">,</span>
     <span class="s2">"project_key"</span><span class="p">,</span>
     <span class="s2">"pull_policy"</span><span class="p">,</span>
     <span class="s2">"schedule_job"</span><span class="p">,</span>

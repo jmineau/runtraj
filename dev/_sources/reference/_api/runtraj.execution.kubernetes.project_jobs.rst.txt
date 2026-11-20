@@ -1,0 +1,6 @@
+﻿runtraj.execution.kubernetes.project\_jobs
+==========================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autofunction:: project_jobs

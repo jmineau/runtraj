@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=9b553ea8"></script>
+    <script src="../_static/documentation_options.js?v=14e928f7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev22+gd58abd972" />
+  <meta name="docsearch:version" content="0.1.0a3.dev23+gbcfe8401a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -584,7 +584,19 @@ ones, so <code class="docutils literal notranslate"><span class="pre">runtraj</s
 <code class="docutils literal notranslate"><span class="pre">--no-skip</span></code>. It does not fetch the met first: run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code>
 before it (<a class="reference internal" href="#fetch-once"><span class="std std-ref">Fetching the meteorology once</span></a>) when the pods share the met volume.
 Afterwards <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> counts the project’s simulations, as for any
-run.</p>
+run, and lists the project’s Jobs on the cluster <code class="docutils literal notranslate"><span class="pre">kubectl</span></code> points at:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Project: /project  total=480  complete=455  failed=5  interrupted=0  pending=20
+Jobs:
+  runtraj-my-project-x7k2p  running  17 of 20 tasks done, 2 running, 1 failed (tasks 6)  started 2026-10-29T16:00:00Z
+</pre></div>
+</div>
+<p>A task counts as failed once Kubernetes gave up on it (after its retries,
+or at once for exit 1 or 4); <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span></code> of its pod says why, and the
+failed simulations each have a <code class="docutils literal notranslate"><span class="pre">.failure.yaml</span></code>. The Jobs are found by the
+project’s name and kept when they were made for this project’s inputs, so
+another project of the same name is left out. When <code class="docutils literal notranslate"><span class="pre">kubectl</span></code> cannot list
+them, the line says why and the counts still print. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span>
+<span class="pre">--json</span></code> adds them as <code class="docutils literal notranslate"><span class="pre">jobs</span></code>.</p>
 </section>
 <section id="running-every-hour">
 <span id="kubernetes-schedule"></span><h2>Running every hour<a class="headerlink" href="#running-every-hour" title="Link to this heading">#</a></h2>
@@ -639,7 +651,8 @@ holds back the next. Scheduling the project again, after editing
 <code class="docutils literal notranslate"><span class="pre">sites.csv</span></code> or the <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block, replaces its CronJob, which is
 named for the project and where its inputs are. The manifest is kept in
 <code class="docutils literal notranslate"><span class="pre">_kubernetes/&lt;date_time&gt;_&lt;id&gt;/cronjob.yaml</span></code> in the project;
-<code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">cronjob</span> <span class="pre">&lt;name&gt;</span></code> stops the schedule.</p>
+<code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">delete</span> <span class="pre">cronjob</span> <span class="pre">&lt;name&gt;</span></code> stops the schedule. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code>
+lists each hour’s Job with the others.</p>
 </section>
 <section id="fetching-the-meteorology-once">
 <span id="fetch-once"></span><h2>Fetching the meteorology once<a class="headerlink" href="#fetching-the-meteorology-once" title="Link to this heading">#</a></h2>

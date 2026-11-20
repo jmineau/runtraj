@@ -184,6 +184,8 @@ Commands
    Count finished and remaining simulations, and the failed ones by reason.
    List the settings folders in the output directory and which variants
    use them. ``--json`` prints the same as JSON, for a program to read.
+   With ``backend: kubernetes``, it lists the project's Jobs too
+   (:ref:`kubernetes-submit`).
 
 Every command exits with 0 when all went well, 1 when some simulations
 failed or ``runtraj check`` found something, and 3 when a run was stopped
