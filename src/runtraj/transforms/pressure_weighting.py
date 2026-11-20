@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 if TYPE_CHECKING:
     from runtraj.releases import Release
 
-from runtraj.transforms._common import release_coordinate, weigh
+from runtraj.transforms._common import per_simulation, release_coordinate, weigh
 
 
 def particle_pwf(
@@ -49,7 +49,7 @@ def particle_pwf(
     Parameters
     ----------
     particles : pandas.DataFrame
-        Particle table with ``particle``, ``pres`` (hPa), and ``zagl`` (m), and
+        One simulation's particle table, with ``particle``, ``pres`` (hPa), and ``zagl`` (m), and
         optionally ``release_height``, the release height (m). Without ``release_height`` the
         first-step height is used. An MSL release also needs ``zsfc``, the
         terrain height (m above sea level).
@@ -181,12 +181,17 @@ class PressureWeighting(BaseModel):
         Return the particles with ``weight`` multiplied by the pressure weight.
 
         The release heights are in the release's ``altitude_ref``, and
-        taken to be above ground without a release.
+        taken to be above ground without a release. A table of several
+        simulations is weighted one simulation at a time.
         """
         altitude_ref = release.altitude_ref if release is not None else "agl"
-        xpres, pwf = particle_pwf(particles, self.surface_pressure, altitude_ref)
-        out = particles.copy()
-        ids = out["particle"].to_numpy()
-        out["xpres"] = xpres.reindex(ids).to_numpy()
-        out["pwf"] = pwf.reindex(ids).to_numpy()
-        return weigh(out, out["pwf"].to_numpy() * len(pwf))
+
+        def one(rows: pd.DataFrame) -> pd.DataFrame:
+            xpres, pwf = particle_pwf(rows, self.surface_pressure, altitude_ref)
+            out = rows.copy()
+            ids = out["particle"].to_numpy()
+            out["xpres"] = xpres.reindex(ids).to_numpy()
+            out["pwf"] = pwf.reindex(ids).to_numpy()
+            return weigh(out, out["pwf"].to_numpy() * len(pwf))
+
+        return per_simulation(particles, one)

@@ -14,6 +14,7 @@ import pandas as pd
 import xarray as xr
 
 from runtraj.particles._cf import to_cf_trajectories
+from runtraj.transforms._common import trajectory_columns
 
 if TYPE_CHECKING:
     from runtraj.spatial import Bounds
@@ -77,14 +78,17 @@ class ParticlesAccessor:
         -------
         pandas.DataFrame
             One row per particle, with every column of the particle table.
-            ``age`` is minutes since release and ``time`` the UTC time.
+            ``age`` is minutes since release and ``time`` the UTC time. A
+            table of several simulations, as ``Project.particles`` returns,
+            gives one row per particle of each.
         """
         p = self._particles.reset_index(drop=True)
         if p.empty:
             return p
         reach = p["age"].abs()
-        last = reach.groupby(p["particle"], sort=False).idxmax().to_numpy(dtype=int)
-        return p.iloc[last]
+        keys = [p[c] for c in trajectory_columns(p)]
+        last = reach.groupby(keys, sort=False, dropna=False).idxmax()
+        return p.iloc[last.to_numpy(dtype=int)]
 
     def grid_exits(self, bounds: Bounds) -> pd.DataFrame:
         """
@@ -123,7 +127,9 @@ class ParticlesAccessor:
         -------
         pandas.DataFrame
             One row per particle that left the box, ordered by ``particle``;
-            a particle that stayed inside is not in it. The columns are
+            a particle that stayed inside is not in it. The columns are the
+            table's ``release``, ``variant`` and ``realization`` columns, if
+            it has them, then
             ``particle``, ``edge`` (``"n"``, ``"e"``, ``"s"`` or ``"w"``,
             the side of the box it left by), ``lon`` and ``lat`` (degrees),
             ``zagl`` (meters), ``age`` (minutes since release) and, when the
@@ -151,9 +157,11 @@ class ParticlesAccessor:
         0         1    e -110.0  41.0  25.0 -90.0
         """
         p = self._particles
-        p = p.iloc[np.lexsort((p["age"].abs().to_numpy(), p["particle"].to_numpy()))]
-        p = p.reset_index(drop=True)
-        particle = p["particle"].to_numpy()
+        keys = trajectory_columns(p)
+        trajectory = p.groupby(keys, sort=True, dropna=False).ngroup().to_numpy()
+        order = np.lexsort((p["age"].abs().to_numpy(), trajectory))
+        p = p.iloc[order].reset_index(drop=True)
+        trajectory = trajectory[order]
         lon = p["lon"].to_numpy(dtype=float)
         lat = p["lat"].to_numpy(dtype=float)
 
@@ -170,11 +178,11 @@ class ParticlesAccessor:
             np.abs(y) > half_height + _EDGE_TOLERANCE
         )
         rows = np.flatnonzero(outside)
-        rows = rows[np.unique(particle[rows], return_index=True)[1]]
+        rows = rows[np.unique(trajectory[rows], return_index=True)[1]]
 
         # The row before it, inside the box; a particle that starts outside has none.
         before = np.maximum(rows - 1, 0)
-        has_before = (rows > 0) & (particle[before] == particle[rows])
+        has_before = (rows > 0) & (trajectory[before] == trajectory[rows])
         before = np.where(has_before, before, rows)
 
         # Where the step from `before` to `rows` crosses each edge, as a fraction of it.
@@ -223,7 +231,7 @@ class ParticlesAccessor:
         exit_lon = np.where(np.abs(exit_lon) > 180.0, _wrap_degrees(exit_lon), exit_lon)
         exits = pd.DataFrame(
             {
-                "particle": particle[rows],
+                **{c: p[c].to_numpy()[rows] for c in keys},
                 "edge": _EDGES[edge],
                 "lon": exit_lon,
                 "lat": at_edge("lat"),

@@ -1,8 +1,10 @@
 """
-What the transforms share: the weight column, a particle's value of a column at release, and the length of each time step.
+What the transforms share: the weight column, a particle's value of a column at release, the length of each time step, and how a table of several simulations is split.
 """
 
 from __future__ import annotations
+
+from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,43 @@ from numpy.typing import ArrayLike
 
 #: The particle column the transforms multiply: how much each row counts.
 WEIGHT = "weight"
+
+
+#: The columns that tell one simulation's particles from another's in a table
+#: that holds several, as ``Project.particles`` returns. Particle numbers
+#: start again in each simulation.
+SIMULATION_COLUMNS = ("release", "variant", "realization")
+
+
+def trajectory_columns(particles: pd.DataFrame) -> list[str]:
+    """
+    Return the columns that name one particle's trajectory in *particles*.
+
+    These are the simulation columns the table has (``release``,
+    ``variant``, ``realization``), then ``particle``. A table of one
+    simulation, which has none of them, gives ``["particle"]``.
+    """
+    return [c for c in SIMULATION_COLUMNS if c in particles.columns] + ["particle"]
+
+
+def per_simulation(
+    particles: pd.DataFrame, func: Callable[[pd.DataFrame], pd.DataFrame]
+) -> pd.DataFrame:
+    """
+    Return *func* applied to each simulation's rows of *particles*, in the table's order.
+
+    *func* takes and returns the rows of one simulation, with the same
+    index. A table of one simulation is passed to it whole.
+    """
+    keys = [c for c in SIMULATION_COLUMNS if c in particles.columns]
+    if not keys:
+        return func(particles)
+    groups = particles.groupby(keys, sort=False, dropna=False).indices
+    if len(groups) <= 1:
+        return func(particles)
+    positions = list(groups.values())
+    out = pd.concat([func(particles.iloc[rows]) for rows in positions])
+    return out.iloc[np.argsort(np.concatenate(positions), kind="stable")]
 
 
 def weigh(particles: pd.DataFrame, factor: ArrayLike) -> pd.DataFrame:
@@ -52,6 +91,9 @@ def release_coordinate(particles: pd.DataFrame, coordinate: str) -> pd.Series:
     such as ``pres``, change at every time step. The release value is taken
     from the row nearest the release time (smallest ``|time|``), or from the
     first row when there is no numeric ``age`` column.
+
+    *particles* are one simulation's: in a table of several, particle
+    numbers repeat. Split it by simulation first.
     """
     p = particles
     if "age" in p.columns and pd.api.types.is_numeric_dtype(p["age"]):
@@ -69,7 +111,9 @@ def step_minutes(particles: pd.DataFrame) -> pd.Series:
     Return the length of the time step that ends at each row, in minutes.
 
     A particle's rows are ordered by elapsed time (``|age|``); its first
-    row's step runs from the release (age 0).
+    row's step runs from the release (age 0). In a table of several
+    simulations, each trajectory is told apart by its ``release``,
+    ``variant`` and ``realization`` as well as its ``particle``.
 
     Parameters
     ----------
@@ -84,10 +128,10 @@ def step_minutes(particles: pd.DataFrame) -> pd.Series:
     missing = [c for c in ("particle", "age") if c not in particles.columns]
     if missing:
         raise ValueError(f"Particle DataFrame has no {missing} column(s).")
-    elapsed = particles["age"].abs().astype(float)
-    order = elapsed.groupby(particles["particle"]).rank(method="first")
-    rows = pd.DataFrame(
-        {"particle": particles["particle"], "elapsed": elapsed, "order": order}
-    ).sort_values(["particle", "order"])
-    step = rows.groupby("particle")["elapsed"].diff().fillna(rows["elapsed"])
-    return step.reindex(particles.index)
+    keys = trajectory_columns(particles)
+    elapsed = particles["age"].abs().to_numpy(dtype=float)
+    rows = particles[keys].reset_index(drop=True).assign(_elapsed=elapsed)
+    rows = rows.sort_values([*keys, "_elapsed"], kind="stable")
+    step = rows.groupby(keys, sort=False, dropna=False)["_elapsed"].diff()
+    step = step.fillna(rows["_elapsed"]).sort_index()
+    return pd.Series(step.to_numpy(), index=particles.index)

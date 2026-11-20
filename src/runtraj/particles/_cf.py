@@ -50,6 +50,15 @@ def to_cf_trajectories(particles: pd.DataFrame) -> xr.Dataset:
     table = particles.copy()
     table["time"] = _naive_utc(table["time"])
     if table.duplicated(["particle", "age"]).any():
+        several = [
+            c for c in ("release", "variant") if c in table and table[c].nunique() > 1
+        ]
+        if several:
+            raise ValueError(
+                f"The particle table holds several simulations (more than one "
+                f"{' and '.join(several)}), and particle numbers repeat in each. "
+                "Export one simulation at a time."
+            )
         raise ValueError("A particle has two rows at the same age.")
 
     # Rows from the release onward: |age| grows along obs, backward or forward.

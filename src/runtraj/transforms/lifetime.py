@@ -12,7 +12,7 @@ import pandas as pd
 from numpy.typing import ArrayLike
 from pydantic import BaseModel, ConfigDict, Field
 
-from runtraj.transforms._common import step_minutes, weigh
+from runtraj.transforms._common import step_minutes, trajectory_columns, weigh
 
 if TYPE_CHECKING:
     from runtraj.releases import Release
@@ -32,6 +32,8 @@ def survival(particles: pd.DataFrame, rate: ArrayLike) -> pd.Series:
     ----------
     particles : pandas.DataFrame
         The particle table, with ``particle`` and ``age`` (minutes) columns.
+        A table of several simulations tells each trajectory apart by its
+        ``release``, ``variant`` and ``realization`` as well.
     rate : array-like
         The loss rate at each row, in s⁻¹, aligned with ``particles``. Zero
         where there is no loss.
@@ -75,14 +77,15 @@ def survival(particles: pd.DataFrame, rate: ArrayLike) -> pd.Series:
     if np.isnan(k).any() or (k < 0).any():
         raise ValueError("rate must be zero or positive at every row, with no NaN.")
     step = step_minutes(particles)
-    loss = pd.Series(k * step.to_numpy() * 60.0, index=particles.index)
-    # Add the losses up from the release, one particle at a time.
-    elapsed = particles["age"].abs().to_numpy(dtype=float)
-    order = np.lexsort((elapsed, particles["particle"].to_numpy()))
-    cumulative = loss.iloc[order].groupby(particles["particle"].iloc[order]).cumsum()
-    return pd.Series(np.exp(-cumulative.to_numpy()), index=cumulative.index).reindex(
-        particles.index
-    )
+    # Add the losses up from the release, one trajectory at a time.
+    keys = trajectory_columns(particles)
+    rows = particles[keys].reset_index(drop=True)
+    rows = rows.assign(
+        _loss=k * step.to_numpy() * 60.0,
+        _elapsed=particles["age"].abs().to_numpy(dtype=float),
+    ).sort_values([*keys, "_elapsed"], kind="stable")
+    cumulative = rows.groupby(keys, sort=False, dropna=False)["_loss"].cumsum()
+    return pd.Series(np.exp(-cumulative.sort_index().to_numpy()), index=particles.index)
 
 
 class FirstOrderLifetime(BaseModel):

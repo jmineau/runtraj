@@ -163,3 +163,21 @@ def test_an_empty_table_gives_an_empty_result_with_the_columns():
     exits = _particles().runtraj.grid_exits(BOX)
     assert exits.empty
     assert list(exits.columns) == ["particle", "edge", "lon", "lat", "zagl", "age"]
+
+
+def test_endpoints_gives_one_row_per_particle_of_each_release():
+    a = _particles((1, -10, -111.0, 41.0, 5), (1, -20, -111.5, 41.0, 5))
+    b = _particles((1, -10, -111.0, 41.0, 5), (1, -20, -110.5, 41.0, 5))
+    both = pd.concat([a.assign(release="A"), b.assign(release="B")], ignore_index=True)
+    ends = both.runtraj.endpoints()
+    assert ends["release"].tolist() == ["A", "B"]
+    assert ends["lon"].tolist() == [-111.5, -110.5]
+
+
+def test_grid_exits_gives_each_releases_own_exit():
+    a = _particles((1, 0, -111.0, 41.0, 10), (1, -60, -109.0, 41.0, 10))
+    b = _particles((1, 0, -111.0, 41.0, 10), (1, -60, -113.0, 41.0, 10))
+    both = pd.concat([a.assign(release="A"), b.assign(release="B")], ignore_index=True)
+    exits = both.runtraj.grid_exits(BOX)
+    assert exits["release"].tolist() == ["A", "B"]
+    assert exits["edge"].tolist() == ["e", "w"]

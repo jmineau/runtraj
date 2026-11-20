@@ -181,6 +181,15 @@ observations merged with ``sims``, and so does a boolean mask over
 left out. ``columns=["particle", "age", "lon", "lat"]`` reads only those
 columns, which is faster and takes less memory.
 
+Particle numbers start again in each simulation, so in such a table a
+trajectory is its ``release``, ``variant`` and ``realization`` as well as
+its ``particle``. ``endpoints()``, ``grid_exits()`` and the transforms read
+it that way: each simulation is handled as if it were alone.
+
+.. ipython:: python
+
+   both.runtraj.endpoints().groupby("release").size()
+
 Your own columns of ``releases.csv`` select one site or one campaign. With
 a ``site`` column and an ensemble variant named ``hrrr-ens``:
 

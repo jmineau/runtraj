@@ -1285,3 +1285,62 @@ def test_ak_table_by_name_is_the_projects_table(tmp_path):
     _write_table(tmp_path / "tables" / "kernels.parquet", a, b)
     kernel = AveragingKernel(table="kernels")
     assert kernel.kernel(b, tmp_path) == ([0.0, 3000.0], [0.5, 0.5])
+
+
+# ---------------------------------------------------------------------------
+# A table of several simulations, as Project.particles returns
+# ---------------------------------------------------------------------------
+
+
+def _releases_a_and_b(a: pd.DataFrame, b: pd.DataFrame) -> pd.DataFrame:
+    """Return releases ``A`` and ``B`` in one table, particle numbers repeating."""
+    return pd.concat([a.assign(release="A"), b.assign(release="B")], ignore_index=True)
+
+
+def _trajectory(n: int = 6) -> pd.DataFrame:
+    """Return three particles of ``n`` ten-minute rows each."""
+    ages = -10.0 * np.arange(1, n + 1)
+    return pd.DataFrame({"particle": np.repeat([1, 2, 3], n), "age": np.tile(ages, 3)})
+
+
+def test_survival_adds_each_release_up_on_its_own():
+    one = _trajectory()
+    both = _releases_a_and_b(one, one)
+    rate = np.r_[np.full(len(one), 1e-4), np.full(len(one), 3e-4)]
+    got = survival(both, rate)
+    np.testing.assert_allclose(
+        got[both.release == "A"], survival(one, np.full(len(one), 1e-4))
+    )
+    np.testing.assert_allclose(
+        got[both.release == "B"], survival(one, np.full(len(one), 3e-4))
+    )
+
+
+def test_survival_does_not_depend_on_the_order_of_the_rows():
+    both = _releases_a_and_b(_trajectory(), _trajectory())
+    rate = pd.Series(np.where(both.release == "A", 1e-4, 3e-4), index=both.index)
+    shuffled = both.sample(frac=1.0, random_state=0)
+    got = survival(shuffled, rate.loc[shuffled.index])
+    np.testing.assert_allclose(got.sort_index(), survival(both, rate))
+
+
+def test_pressure_weighting_weighs_each_release_on_its_own():
+    a = _column_particles(5, z_top=3000.0)
+    b = _column_particles(5, z_top=9000.0)
+    both = PressureWeighting().apply(_releases_a_and_b(a, b))
+    alone = PressureWeighting().apply(b)
+    np.testing.assert_allclose(
+        both.loc[both.release == "B", "pwf"].to_numpy(), alone["pwf"].to_numpy()
+    )
+    assert both.index.equals(_releases_a_and_b(a, b).index)
+
+
+def test_averaging_kernel_reads_each_releases_own_heights():
+    a = _column_particles(3, z_top=1000.0)
+    b = _column_particles(3, z_top=3000.0)
+    kernel = AveragingKernel(levels=[0.0, 3000.0], values=[0.0, 1.0])
+    both = kernel.apply(_releases_a_and_b(a, b))
+    np.testing.assert_allclose(
+        both.loc[both.release == "B", "ak_weight"].to_numpy(),
+        kernel.apply(b)["ak_weight"].to_numpy(),
+    )

@@ -180,3 +180,12 @@ def test_an_empty_table_gives_an_empty_dataset(particles):
     ds = particles.iloc[:0].runtraj.to_cf_trajectories()
     assert dict(ds.sizes) == {"trajectory": 0, "obs": 0}
     assert ds.attrs["featureType"] == "trajectory"
+
+
+def test_a_table_of_two_releases_is_refused_by_name(particles):
+    both = pd.concat(
+        [particles.assign(release="A"), particles.assign(release="B")],
+        ignore_index=True,
+    )
+    with pytest.raises(ValueError, match="several simulations"):
+        both.runtraj.to_cf_trajectories()

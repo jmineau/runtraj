@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 if TYPE_CHECKING:
     from runtraj.releases import Release
 
-from runtraj.transforms._common import release_coordinate, weigh
+from runtraj.transforms._common import per_simulation, release_coordinate, weigh
 
 
 def ak_weights(
@@ -348,9 +348,18 @@ class AveragingKernel(BaseModel):
         release: Release | None = None,
         directory: str | Path | None = None,
     ) -> pd.DataFrame:
-        """Return the particles with ``weight`` multiplied by the averaging kernel."""
+        """
+        Return the particles with ``weight`` multiplied by the averaging kernel.
+
+        A table of several simulations is weighted one simulation at a time,
+        each with this release's kernel.
+        """
         levels, values = self.kernel(release, directory)
-        weights = ak_weights(particles, levels, values, self.coordinate)
-        out = particles.copy()
-        out["ak_weight"] = weights
-        return weigh(out, weights)
+
+        def one(rows: pd.DataFrame) -> pd.DataFrame:
+            weights = ak_weights(rows, levels, values, self.coordinate)
+            out = rows.copy()
+            out["ak_weight"] = weights
+            return weigh(out, weights)
+
+        return per_simulation(particles, one)
