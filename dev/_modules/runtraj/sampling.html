@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=81e7dfe4"></script>
+    <script src="../../_static/documentation_options.js?v=80cccd22"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev10+g3e50260fa" />
+  <meta name="docsearch:version" content="0.1.0a3.dev11+g55f83d08b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -499,7 +499,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    coords : numpy.ndarray</span>
-<span class="sd">        Cell centers along one axis, ascending or descending.</span>
+<span class="sd">        Cell centers along one axis, strictly ascending or strictly descending.</span>
 <span class="sd">    values : numpy.ndarray</span>
 <span class="sd">        Positions to look up.</span>
 
@@ -511,6 +511,13 @@
     <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">coords</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">coords</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Field coordinates must be a non-empty 1-D array."</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">steps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">steps</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Field coordinates must strictly increase or strictly decrease; "</span>
+            <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="n">coords</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="si">}{</span><span class="s1">' ...'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">coords</span><span class="o">.</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="s2">"Sort the field along that dimension and drop repeated values."</span>
+        <span class="p">)</span>
     <span class="n">ascending</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">coords</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">coords</span> <span class="k">if</span> <span class="n">ascending</span> <span class="k">else</span> <span class="n">coords</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -601,7 +608,8 @@
 <span class="sd">        vertical dimension. Required when the field has one. Matched to the</span>
 <span class="sd">        nearest level, so a point above the top level takes the top level.</span>
 <span class="sd">    times : array-like, optional</span>
-<span class="sd">        Time of each point. Required when the field has a ``time``</span>
+<span class="sd">        Time of each point, as datetimes or date strings, with none</span>
+<span class="sd">        missing. Required when the field has a ``time``</span>
 <span class="sd">        dimension. By default matched to the nearest time, so times</span>
 <span class="sd">        outside the field's span take the first or last step. See</span>
 <span class="sd">        ``step_starts``.</span>
@@ -629,6 +637,12 @@
 <span class="sd">        One value per point.</span>
 <span class="sd">    """</span>
     <span class="n">y_dim</span><span class="p">,</span> <span class="n">x_dim</span> <span class="o">=</span> <span class="n">horizontal_dims</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="n">y_dim</span><span class="p">,</span> <span class="n">x_dim</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">field</span><span class="o">.</span><span class="n">coords</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The field has no coordinates for its </span><span class="si">{</span><span class="s1">' and '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">missing</span><span class="p">))</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="s2">"dimensions, so a point cannot be placed in it. Assign them first."</span>
+        <span class="p">)</span>
     <span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
     <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">xs</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">ys</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
@@ -655,9 +669,20 @@
     <span class="k">if</span> <span class="s2">"time"</span> <span class="ow">in</span> <span class="n">field</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">times</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"field has a time dimension; pass times."</span><span class="p">)</span>
-        <span class="n">stamps</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">times</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()))</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">times</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">raw</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="s2">"biufc"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"times must be datetimes or date strings; got numbers (</span><span class="si">{</span><span class="n">raw</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">)."</span>
+            <span class="p">)</span>
+        <span class="n">stamps</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">raw</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stamps</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"times must have the same length as x and y."</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">stamps</span><span class="o">.</span><span class="n">isna</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"times holds </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">missing</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> missing value(s), the first "</span>
+                <span class="sa">f</span><span class="s2">"at position </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">missing</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">step_starts</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">IntervalIndex</span><span class="p">):</span>
@@ -686,6 +711,21 @@
     <span class="n">sampled</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">indexers</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">inside</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">sampled</span><span class="p">),</span> <span class="n">sampled</span><span class="p">,</span> <span class="n">fill_value</span><span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">z_top</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Refuse a *z_top* that is not positive, or below a particle, as one given in km would be."""</span>
+    <span class="k">if</span> <span class="n">z_top</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">z_top</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"z_top must be a positive height in meters; got </span><span class="si">{</span><span class="n">z_top</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"zagl"</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">):</span>
+        <span class="n">highest</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">particles</span><span class="p">[</span><span class="s2">"zagl"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">highest</span> <span class="o">&gt;</span> <span class="n">z_top</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"z_top is </span><span class="si">{</span><span class="n">z_top</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> m, below particles at up to </span><span class="si">{</span><span class="n">highest</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> m "</span>
+                <span class="s2">"above ground. z_top is the top of the run's domain in meters."</span>
+            <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_nearest_level</span><span class="p">(</span><span class="n">levels</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -864,7 +904,7 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If a column is not one of the four or is in *particles* already</span>
 <span class="sd">        (drop it first), *particles* has no ``time`` column, a row is outside</span>
-<span class="sd">        the files' times, or *z_top* is not positive.</span>
+<span class="sd">        the files' times, or *z_top* is not positive or is below a particle.</span>
 <span class="sd">    KeyError</span>
 <span class="sd">        If the met lacks a variable a column needs.</span>
 
@@ -904,6 +944,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"sample_met cannot sample </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">; it samples </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">_MET_VARIABLES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
+    <span class="n">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
     <span class="n">present</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">present</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1214,6 +1255,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">"calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."</span>
         <span class="p">)</span>
+    <span class="n">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">_opened</span><span class="p">(</span><span class="n">met</span><span class="p">)</span> <span class="k">as</span> <span class="n">sources</span><span class="p">:</span>
         <span class="n">names</span> <span class="o">=</span> <span class="n">_met_variables</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
         <span class="n">pressure</span> <span class="o">=</span> <span class="n">_pressure_variable</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>

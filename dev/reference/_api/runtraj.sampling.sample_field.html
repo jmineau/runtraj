@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=81e7dfe4"></script>
+    <script src="../../_static/documentation_options.js?v=80cccd22"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev10+g3e50260fa" />
+  <meta name="docsearch:version" content="0.1.0a3.dev11+g55f83d08b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -838,7 +838,8 @@ field.</p></li>
 <li><p><strong>z</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.ArrayLike" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArrayLike</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Vertical coordinate of each point, in the units of the field’s
 vertical dimension. Required when the field has one. Matched to the
 nearest level, so a point above the top level takes the top level.</p></li>
-<li><p><strong>times</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.ArrayLike" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArrayLike</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Time of each point. Required when the field has a <code class="docutils literal notranslate"><span class="pre">time</span></code>
+<li><p><strong>times</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/typing.html#numpy.typing.ArrayLike" title="(in NumPy v2.5)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArrayLike</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Time of each point, as datetimes or date strings, with none
+missing. Required when the field has a <code class="docutils literal notranslate"><span class="pre">time</span></code>
 dimension. By default matched to the nearest time, so times
 outside the field’s span take the first or last step. See
 <code class="docutils literal notranslate"><span class="pre">step_starts</span></code>.</p></li>

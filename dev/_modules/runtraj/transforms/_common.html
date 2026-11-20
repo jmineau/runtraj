@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=81e7dfe4"></script>
+    <script src="../../../_static/documentation_options.js?v=80cccd22"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev10+g3e50260fa" />
+  <meta name="docsearch:version" content="0.1.0a3.dev11+g55f83d08b" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -539,6 +539,32 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">elapsed_minutes</span><span class="p">(</span><span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return each row's time since release, ``|age|``, in minutes.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If there is no ``age`` column, or a row's is missing.</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If ``age`` is not a number of minutes, such as a timedelta.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"age"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Particle DataFrame has no 'age' column."</span><span class="p">)</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">age</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_bool_dtype</span><span class="p">(</span><span class="n">age</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The particles' age must be minutes since release, as numbers; got </span><span class="si">{</span><span class="n">age</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">age</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The particles' age is missing in </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">minutes</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> row(s)."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">minutes</span>
+
+
 <div class="viewcode-block" id="release_coordinate">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.transforms.release_coordinate.html#runtraj.transforms.release_coordinate">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">release_coordinate</span><span class="p">(</span><span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">coordinate</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
@@ -588,7 +614,7 @@
     <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Particle DataFrame has no </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> column(s)."</span><span class="p">)</span>
     <span class="n">keys</span> <span class="o">=</span> <span class="n">trajectory_columns</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
-    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">elapsed_minutes</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="n">keys</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">_elapsed</span><span class="o">=</span><span class="n">elapsed</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="o">*</span><span class="n">keys</span><span class="p">,</span> <span class="s2">"_elapsed"</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"stable"</span><span class="p">)</span>
     <span class="n">step</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">"_elapsed"</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span>

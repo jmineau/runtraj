@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=81e7dfe4"></script>
+    <script src="../../../_static/documentation_options.js?v=80cccd22"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev10+g3e50260fa" />
+  <meta name="docsearch:version" content="0.1.0a3.dev11+g55f83d08b" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -539,7 +539,8 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If a column is named ``r_idx``, the old name of ``group``.</span>
+<span class="sd">        If a column is named ``r_idx``, the old name of ``group``, or two</span>
+<span class="sd">        columns name one field, such as ``altitude`` and ``zagl``.</span>
 <span class="sd">    """</span>
     <span class="n">old</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"r_idx"</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">old</span><span class="p">:</span>
@@ -549,10 +550,13 @@
         <span class="p">)</span>
     <span class="n">spelling</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">aliases</span> <span class="ow">in</span> <span class="n">ALIASES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">:</span>
-                <span class="n">spelling</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
-                <span class="k">break</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The columns </span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2"> all name the release's </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">; keep one."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+            <span class="n">spelling</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">found</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">field</span> <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">spelling</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
     <span class="k">if</span> <span class="s2">"altitude_ref"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="n">implied</span> <span class="o">=</span> <span class="s2">"msl"</span> <span class="k">if</span> <span class="n">spelling</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"altitude"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"zmsl"</span> <span class="k">else</span> <span class="s2">"agl"</span>
@@ -893,14 +897,23 @@
 <span class="sd">    Raise if two different releases share an id.</span>
 
 <span class="sd">    An id names a release's result files, so two releases with one id</span>
-<span class="sd">    would overwrite each other. Equal releases listed twice are fine.</span>
+<span class="sd">    would overwrite each other. Equal releases listed twice are fine, but</span>
+<span class="sd">    not with different labels (``attrs``): only one set could be kept.</span>
 <span class="sd">    """</span>
     <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Release</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
         <span class="n">other</span> <span class="o">=</span> <span class="n">seen</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">r</span> <span class="ow">and</span> <span class="n">other</span> <span class="o">!=</span> <span class="n">r</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="n">r</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="o">!=</span> <span class="n">r</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Two different releases share the id </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">other</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">attrs</span> <span class="o">!=</span> <span class="n">r</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The release </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="si">!r}</span><span class="s2"> is listed twice with different labels, "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">attrs</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">attrs</span><span class="si">}</span><span class="s2">. Only one set can be kept: list it "</span>
+                <span class="s2">"once."</span>
             <span class="p">)</span>
 
 

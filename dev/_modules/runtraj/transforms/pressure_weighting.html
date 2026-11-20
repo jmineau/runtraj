@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=81e7dfe4"></script>
+    <script src="../../../_static/documentation_options.js?v=80cccd22"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev10+g3e50260fa" />
+  <meta name="docsearch:version" content="0.1.0a3.dev11+g55f83d08b" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -534,6 +534,12 @@
             <span class="p">)</span>
     <span class="n">pres</span> <span class="o">=</span> <span class="n">release_coordinate</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="s2">"pres"</span><span class="p">)</span>
     <span class="n">zagl</span> <span class="o">=</span> <span class="n">release_coordinate</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="s2">"zagl"</span><span class="p">)</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">pres</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span> <span class="o">|</span> <span class="n">zagl</span><span class="o">.</span><span class="n">isna</span><span class="p">())</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Pressure weighting reads each particle's first pres and zagl, and "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pres</span><span class="p">)</span><span class="si">}</span><span class="s2"> particles have none there."</span>
+        <span class="p">)</span>
 
     <span class="c1"># Particle heights in the release's own vertical reference, so the fit</span>
     <span class="c1"># can be evaluated at the release heights.</span>
