@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -709,8 +709,9 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The particle table, one row per particle per output step.</span>
 
-<span class="sd">        The columns are the variables in ``varsiwant``, under the particle</span>
-<span class="sd">        table's names (``particle``, ``age`` in minutes since release,</span>
+<span class="sd">        The columns are the variables the transport model writes (for</span>
+<span class="sd">        HYSPLIT, those its ``varsiwant`` names), under the particle table's</span>
+<span class="sd">        names (``particle``, ``age`` in minutes since release,</span>
 <span class="sd">        ``lon``, ``lat``, ``zagl``, ``foot``, ...), plus ``time`` (UTC)</span>
 <span class="sd">        and ``release_height`` (for column and multipoint releases). Read from the output directory on first</span>
 <span class="sd">        access and kept. Check</span>

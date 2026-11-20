@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -826,10 +826,11 @@
 <p>The weights come from the particles’ own first-step heights and
 pressures (see <a class="reference internal" href="runtraj.transforms.particle_pwf.html#runtraj.transforms.particle_pwf" title="runtraj.transforms.particle_pwf"><code class="xref py py-func docutils literal notranslate"><span class="pre">particle_pwf()</span></code></a>). They are multiplied by the
 number of particles, so a mean over the particles, as a stage takes,
-does not change with <code class="docutils literal notranslate"><span class="pre">numpar</span></code>. The particles of a multipoint release share their point’s
+does not change with the number of particles. The particles of a multipoint release share their point’s
 weight evenly. Adds <code class="docutils literal notranslate"><span class="pre">xpres</span></code> (release pressure, hPa) and <code class="docutils literal notranslate"><span class="pre">pwf</span></code>
-columns. Requires <code class="docutils literal notranslate"><span class="pre">pres</span></code> and <code class="docutils literal notranslate"><span class="pre">zagl</span></code> in <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code>, which are both
-in the default, and <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> for a release with <code class="docutils literal notranslate"><span class="pre">altitude_ref=&quot;msl&quot;</span></code>.</p>
+columns. Requires <code class="docutils literal notranslate"><span class="pre">pres</span></code> and <code class="docutils literal notranslate"><span class="pre">zagl</span></code> among the particle variables (both
+in HYSPLIT’s default <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code>), and <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> for a release with
+<code class="docutils literal notranslate"><span class="pre">altitude_ref=&quot;msl&quot;</span></code>.</p>
 </dd></dl>
 
 <section id="attributes">
@@ -837,7 +838,7 @@ in the default, and <code class="docutils literal notranslate"><span class="pre"
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="runtraj.transforms.PressureWeighting.reads_zsfc.html#runtraj.transforms.PressureWeighting.reads_zsfc" title="runtraj.transforms.PressureWeighting.reads_zsfc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reads_zsfc</span></code></a></p></td>
-<td><p>It reads <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> for a release above sea level, so a stage's check can say when <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> lacks it.</p></td>
+<td><p>It reads <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> for a release above sea level, so a stage's check can say when HYSPLIT's <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> lacks it.</p></td>
 </tr>
 </tbody>
 </table>

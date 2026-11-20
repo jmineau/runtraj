@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -496,10 +496,11 @@
 <span class="c1"># Variograms of wind errors, for setting up transport-error runs.</span>
 <span class="c1">#</span>
 <span class="c1"># HYSPLIT's wind-error perturbation needs the standard deviation of the</span>
-<span class="c1"># analysis wind error (``siguverr``) and its correlation scales in time</span>
-<span class="c1"># (``tluverr``), height (``zcoruverr``), and horizontal distance</span>
-<span class="c1"># (``horcoruverr``). Lin and Gerbig (2005, section 2.1) derive them from the</span>
-<span class="c1"># differences between analyzed and observed winds. The standard deviation</span>
+<span class="c1"># analysis wind error and its correlation scales in time, height, and</span>
+<span class="c1"># horizontal distance: HYSPLIT's ``siguverr``, ``tluverr``, ``zcoruverr``</span>
+<span class="c1"># and ``horcoruverr`` (HYSPLIT's SETUP.CFG). Lin and Gerbig (2005,</span>
+<span class="c1"># section 2.1) derive them from the differences between analyzed and</span>
+<span class="c1"># observed winds. The standard deviation</span>
 <span class="c1"># comes directly from the differences. Each scale comes from fitting the</span>
 <span class="c1"># exponential variogram ::</span>
 <span class="c1">#</span>

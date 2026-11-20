@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -843,10 +843,10 @@ the pressure of its vertical axis instead.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code> is <code class="docutils literal notranslate"><span class="pre">SHGT</span></code>, the terrain height, in m above sea level.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">pres</span></code> and <code class="docutils literal notranslate"><span class="pre">dens</span></code> follow what HYSPLIT reads, to the differences
-under Notes. <code class="docutils literal notranslate"><span class="pre">mlht</span></code> is the met’s: HYSPLIT’s is the
-met’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code> only with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>, and then it is at least <code class="docutils literal notranslate"><span class="pre">kmix0</span></code>;
-the default, <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>, finds the mixed layer from the profile, as
-<a class="reference internal" href="runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_pbl_height()</span></code></a> does.</p>
+under Notes. <code class="docutils literal notranslate"><span class="pre">mlht</span></code> is the met’s. HYSPLIT’s own <code class="docutils literal notranslate"><span class="pre">mlht</span></code> is the met’s
+<code class="docutils literal notranslate"><span class="pre">PBLH</span></code> (at least <code class="docutils literal notranslate"><span class="pre">kmix0</span></code>) only when HYSPLIT runs with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>;
+with HYSPLIT’s default, <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">3</span></code>, it finds the mixed layer from the
+profile, as <a class="reference internal" href="runtraj.sampling.calc_pbl_height.html#runtraj.sampling.calc_pbl_height" title="runtraj.sampling.calc_pbl_height"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_pbl_height()</span></code></a> does.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -889,7 +889,7 @@ summer, the sampled columns differ from the ones HYSPLIT wrote by:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code>: a few meters, since HYSPLIT reads the terrain where the
 particle was before its turbulent step.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">mlht</span></code>: a median of 16 to 30 m, against a run with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>
+<li><p><code class="docutils literal notranslate"><span class="pre">mlht</span></code>: a median of 16 to 30 m, against a HYSPLIT run with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>
 floored at <code class="docutils literal notranslate"><span class="pre">kmix0</span></code>. HYSPLIT reads the nearest grid point’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>;
 this function interpolates it.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pres</span></code>: a median of 0.02 hPa, 0.23 to 0.30 hPa at the 95th

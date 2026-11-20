@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -831,7 +831,7 @@ supplied. It is evaluated at each release height, and the spacing
 between neighboring release pressures gives the air mass each release
 height represents.</p>
 <p>HYSPLIT spreads column particles evenly over height, each placed at
-random within its own <code class="docutils literal notranslate"><span class="pre">1/numpar</span></code> slab. Each release height therefore
+random within its own slab, one slab per particle. Each release height therefore
 stands for the slab centered on it. Slab edges sit midway between
 neighboring release pressures, the ground closes the bottom slab, and the
 top slab extends above its release height as far as it does below.</p>
@@ -841,7 +841,7 @@ among them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>particles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span>) – Particle table with <code class="docutils literal notranslate"><span class="pre">particle</span></code>, <code class="docutils literal notranslate"><span class="pre">pres</span></code> (hPa), and <code class="docutils literal notranslate"><span class="pre">zagl</span></code> (m), and
+<li><p><strong>particles</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span>) – One simulation’s particle table, with <code class="docutils literal notranslate"><span class="pre">particle</span></code>, <code class="docutils literal notranslate"><span class="pre">pres</span></code> (hPa), and <code class="docutils literal notranslate"><span class="pre">zagl</span></code> (m), and
 optionally <code class="docutils literal notranslate"><span class="pre">release_height</span></code>, the release height (m). Without <code class="docutils literal notranslate"><span class="pre">release_height</span></code> the
 first-step height is used. An MSL release also needs <code class="docutils literal notranslate"><span class="pre">zsfc</span></code>, the
 terrain height (m above sea level).</p></li>

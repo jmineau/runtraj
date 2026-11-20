@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -470,7 +470,7 @@
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">Release</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.transforms._common</span><span class="w"> </span><span class="kn">import</span> <span class="n">release_coordinate</span><span class="p">,</span> <span class="n">weigh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.transforms._common</span><span class="w"> </span><span class="kn">import</span> <span class="n">per_simulation</span><span class="p">,</span> <span class="n">release_coordinate</span><span class="p">,</span> <span class="n">weigh</span>
 
 
 <div class="viewcode-block" id="particle_pwf">
@@ -492,7 +492,7 @@
 <span class="sd">    height represents.</span>
 
 <span class="sd">    HYSPLIT spreads column particles evenly over height, each placed at</span>
-<span class="sd">    random within its own ``1/numpar`` slab. Each release height therefore</span>
+<span class="sd">    random within its own slab, one slab per particle. Each release height therefore</span>
 <span class="sd">    stands for the slab centered on it. Slab edges sit midway between</span>
 <span class="sd">    neighboring release pressures, the ground closes the bottom slab, and the</span>
 <span class="sd">    top slab extends above its release height as far as it does below.</span>
@@ -504,7 +504,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    particles : pandas.DataFrame</span>
-<span class="sd">        Particle table with ``particle``, ``pres`` (hPa), and ``zagl`` (m), and</span>
+<span class="sd">        One simulation's particle table, with ``particle``, ``pres`` (hPa), and ``zagl`` (m), and</span>
 <span class="sd">        optionally ``release_height``, the release height (m). Without ``release_height`` the</span>
 <span class="sd">        first-step height is used. An MSL release also needs ``zsfc``, the</span>
 <span class="sd">        terrain height (m above sea level).</span>
@@ -530,7 +530,7 @@
         <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Pressure weighting requires the </span><span class="si">{</span><span class="n">col</span><span class="si">!r}</span><span class="s2"> particle variable; "</span>
-                <span class="s2">"include it in varsiwant."</span>
+                <span class="s2">"run the transport model with it (HYSPLIT: add it to varsiwant)."</span>
             <span class="p">)</span>
     <span class="n">pres</span> <span class="o">=</span> <span class="n">release_coordinate</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="s2">"pres"</span><span class="p">)</span>
     <span class="n">zagl</span> <span class="o">=</span> <span class="n">release_coordinate</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="s2">"zagl"</span><span class="p">)</span>
@@ -541,8 +541,8 @@
         <span class="k">if</span> <span class="s2">"zsfc"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">"Pressure weighting for a release with altitude_ref='msl' "</span>
-                <span class="s2">"requires the 'zsfc' particle variable; include it in "</span>
-                <span class="s2">"varsiwant."</span>
+                <span class="s2">"requires the 'zsfc' particle variable; run the transport model "</span>
+                <span class="s2">"with it (HYSPLIT: add it to varsiwant)."</span>
             <span class="p">)</span>
         <span class="n">zsfc</span> <span class="o">=</span> <span class="n">release_coordinate</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="s2">"zsfc"</span><span class="p">)</span>
         <span class="n">z_fit</span> <span class="o">=</span> <span class="n">zagl</span> <span class="o">+</span> <span class="n">zsfc</span>
@@ -607,16 +607,17 @@
 <span class="sd">    The weights come from the particles' own first-step heights and</span>
 <span class="sd">    pressures (see :func:`particle_pwf`). They are multiplied by the</span>
 <span class="sd">    number of particles, so a mean over the particles, as a stage takes,</span>
-<span class="sd">    does not change with ``numpar``. The particles of a multipoint release share their point's</span>
+<span class="sd">    does not change with the number of particles. The particles of a multipoint release share their point's</span>
 <span class="sd">    weight evenly. Adds ``xpres`` (release pressure, hPa) and ``pwf``</span>
-<span class="sd">    columns. Requires ``pres`` and ``zagl`` in ``varsiwant``, which are both</span>
-<span class="sd">    in the default, and ``zsfc`` for a release with ``altitude_ref="msl"``.</span>
+<span class="sd">    columns. Requires ``pres`` and ``zagl`` among the particle variables (both</span>
+<span class="sd">    in HYSPLIT's default ``varsiwant``), and ``zsfc`` for a release with</span>
+<span class="sd">    ``altitude_ref="msl"``.</span>
 <span class="sd">    """</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1">#: It reads ``zsfc`` for a release above sea level, so a stage's check</span>
-    <span class="c1">#: can say when ``varsiwant`` lacks it.</span>
+    <span class="c1">#: can say when HYSPLIT's ``varsiwant`` lacks it.</span>
     <span class="n">reads_zsfc</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"pressure_weighting"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"pressure_weighting"</span>
@@ -641,15 +642,20 @@
 <span class="sd">        Return the particles with ``weight`` multiplied by the pressure weight.</span>
 
 <span class="sd">        The release heights are in the release's ``altitude_ref``, and</span>
-<span class="sd">        taken to be above ground without a release.</span>
+<span class="sd">        taken to be above ground without a release. A table of several</span>
+<span class="sd">        simulations is weighted one simulation at a time.</span>
 <span class="sd">        """</span>
         <span class="n">altitude_ref</span> <span class="o">=</span> <span class="n">release</span><span class="o">.</span><span class="n">altitude_ref</span> <span class="k">if</span> <span class="n">release</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"agl"</span>
-        <span class="n">xpres</span><span class="p">,</span> <span class="n">pwf</span> <span class="o">=</span> <span class="n">particle_pwf</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_pressure</span><span class="p">,</span> <span class="n">altitude_ref</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">particles</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">ids</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        <span class="n">out</span><span class="p">[</span><span class="s2">"xpres"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xpres</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        <span class="n">out</span><span class="p">[</span><span class="s2">"pwf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwf</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">weigh</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="s2">"pwf"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">pwf</span><span class="p">))</span></div>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">one</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+            <span class="n">xpres</span><span class="p">,</span> <span class="n">pwf</span> <span class="o">=</span> <span class="n">particle_pwf</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_pressure</span><span class="p">,</span> <span class="n">altitude_ref</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"xpres"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xpres</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"pwf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwf</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">weigh</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="s2">"pwf"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">pwf</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">per_simulation</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">one</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

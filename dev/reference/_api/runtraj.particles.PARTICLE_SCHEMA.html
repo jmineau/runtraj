@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -823,8 +823,8 @@
 <dt class="sig sig-object py" id="runtraj.particles.PARTICLE_SCHEMA">
 <span class="sig-prename descclassname"><span class="pre">runtraj.particles.</span></span><span class="sig-name descname"><span class="pre">PARTICLE_SCHEMA</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">particle:</span> <span class="pre">int32</span> <span class="pre">age:</span> <span class="pre">int32</span> <span class="pre">lon:</span> <span class="pre">double</span> <span class="pre">lat:</span> <span class="pre">double</span> <span class="pre">zagl:</span> <span class="pre">double</span></span><a class="headerlink" href="#runtraj.particles.PARTICLE_SCHEMA" title="Link to this definition">#</a></dt>
 <dd><p>The columns every particle table has, as a particle file stores them:
-what a transport model’s run must return. <code class="docutils literal notranslate"><span class="pre">particle</span></code> is the particle number
-(1 to <code class="docutils literal notranslate"><span class="pre">numpar</span></code>), <code class="docutils literal notranslate"><span class="pre">age</span></code> the minutes since release (negative for a
+what a transport model’s run must return. <code class="docutils literal notranslate"><span class="pre">particle</span></code> is the number the
+transport model gives the particle, <code class="docutils literal notranslate"><span class="pre">age</span></code> the minutes since release (negative for a
 backward run), <code class="docutils literal notranslate"><span class="pre">lon</span></code> and <code class="docutils literal notranslate"><span class="pre">lat</span></code> the position in degrees, and <code class="docutils literal notranslate"><span class="pre">zagl</span></code>
 the height above ground in meters. The reference page on the particle
 table says what the other columns are.</p>

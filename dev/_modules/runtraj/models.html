@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1105,7 +1105,7 @@
 <span class="sd">        Time limit in seconds. ``None`` waits indefinitely.</span>
 <span class="sd">    **params</span>
 <span class="sd">        The transport model's parameters, such as ``n_hours`` and</span>
-<span class="sd">        ``numpar`` (:class:`runtraj.models.hysplit.HysplitConfig`).</span>
+<span class="sd">        HYSPLIT's ``numpar`` (:class:`runtraj.models.hysplit.HysplitConfig`).</span>
 <span class="sd">        ``n_hours`` is required; the others default to the model's own</span>
 <span class="sd">        values.</span>
 
@@ -1133,7 +1133,11 @@
 <span class="sd">    ...     time="2023-07-15 18:00", longitude=-111.848, latitude=40.766, altitude=10</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; particles = runtraj.run_trajectories(</span>
-<span class="sd">    ...     release, "/data/hrrr", n_hours=-24, numpar=200</span>
+<span class="sd">    ...     release,</span>
+<span class="sd">    ...     "/data/hrrr",</span>
+<span class="sd">    ...     model="hysplit",</span>
+<span class="sd">    ...     n_hours=-24,</span>
+<span class="sd">    ...     numpar=200,  # HYSPLIT's particle count</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
 <span class="sd">    """</span>
     <span class="n">transport_model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>

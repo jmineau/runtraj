@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -826,10 +826,10 @@
 <span class="sd">    - ``zsfc`` is ``SHGT``, the terrain height, in m above sea level.</span>
 
 <span class="sd">    ``pres`` and ``dens`` follow what HYSPLIT reads, to the differences</span>
-<span class="sd">    under Notes. ``mlht`` is the met's: HYSPLIT's is the</span>
-<span class="sd">    met's ``PBLH`` only with ``kmixd: 0``, and then it is at least ``kmix0``;</span>
-<span class="sd">    the default, ``kmixd: 3``, finds the mixed layer from the profile, as</span>
-<span class="sd">    :func:`calc_pbl_height` does.</span>
+<span class="sd">    under Notes. ``mlht`` is the met's. HYSPLIT's own ``mlht`` is the met's</span>
+<span class="sd">    ``PBLH`` (at least ``kmix0``) only when HYSPLIT runs with ``kmixd: 0``;</span>
+<span class="sd">    with HYSPLIT's default, ``kmixd: 3``, it finds the mixed layer from the</span>
+<span class="sd">    profile, as :func:`calc_pbl_height` does.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -875,7 +875,7 @@
 
 <span class="sd">    - ``zsfc``: a few meters, since HYSPLIT reads the terrain where the</span>
 <span class="sd">      particle was before its turbulent step.</span>
-<span class="sd">    - ``mlht``: a median of 16 to 30 m, against a run with ``kmixd: 0``</span>
+<span class="sd">    - ``mlht``: a median of 16 to 30 m, against a HYSPLIT run with ``kmixd: 0``</span>
 <span class="sd">      floored at ``kmix0``. HYSPLIT reads the nearest grid point's ``PBLH``;</span>
 <span class="sd">      this function interpolates it.</span>
 <span class="sd">    - ``pres``: a median of 0.02 hPa, 0.23 to 0.30 hPa at the 95th</span>
@@ -1064,8 +1064,8 @@
 <span class="sd">    - ``"hysplit_temperature"``: HYSPLIT's ``kmixd: 1``. The top is the</span>
 <span class="sd">      highest level whose potential temperature is within 2 K of the</span>
 <span class="sd">      column's lowest.</span>
-<span class="sd">    - ``"met"``: the met's own boundary-layer height ``PBLH``, as HYSPLIT</span>
-<span class="sd">      uses it with ``kmixd: 0``.</span>
+<span class="sd">    - ``"met"``: the met's own boundary-layer height ``PBLH``, as it is</span>
+<span class="sd">      used with HYSPLIT's ``kmixd: 0``.</span>
 <span class="sd">    - ``"flexpart"``: FLEXPART's Richardson method (below), for a FLEXPART</span>
 <span class="sd">      run on ERA5 model levels. FLEXPART on GFS uses the met's ``PBLH``</span>
 <span class="sd">      instead; give it ``"met"``.</span>
@@ -1436,7 +1436,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_temperature_mixed_layer</span><span class="p">(</span><span class="n">zz</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the mixed-layer height of each column, as ``stbanl.f`` finds it for ``kmixd: 1``.</span>
+<span class="sd">    Return the mixed-layer height of each column, as HYSPLIT's ``stbanl.f`` finds it for ``kmixd: 1``.</span>
 
 <span class="sd">    *zz* (m above ground) and *theta* (potential temperature, K) are</span>
 <span class="sd">    ``(columns, levels)``. Going down from the top, the mixed layer ends at</span>
@@ -1634,7 +1634,7 @@
     <span class="n">ks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the mixed-layer height of each column, as ``stbanl.f`` finds it for ``kmixd: 3``.</span>
+<span class="sd">    Return the mixed-layer height of each column, as HYSPLIT's ``stbanl.f`` finds it for ``kmixd: 3``.</span>
 
 <span class="sd">    *zz* (m above ground), *theta* (potential temperature, K), *uu* and</span>
 <span class="sd">    *vv* (m s⁻¹) and *density* (kg m⁻³) are ``(columns, levels)`` on the</span>

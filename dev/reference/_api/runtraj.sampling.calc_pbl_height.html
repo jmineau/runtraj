@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -833,8 +833,8 @@ between the lowest level and the level reached passes 0.25 (below).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;hysplit_temperature&quot;</span></code>: HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">1</span></code>. The top is the
 highest level whose potential temperature is within 2 K of the
 column’s lowest.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;met&quot;</span></code>: the met’s own boundary-layer height <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>, as HYSPLIT
-uses it with <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;met&quot;</span></code>: the met’s own boundary-layer height <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>, as it is
+used with HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmixd:</span> <span class="pre">0</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code>: FLEXPART’s Richardson method (below), for a FLEXPART
 run on ERA5 model levels. FLEXPART on GFS uses the met’s <code class="docutils literal notranslate"><span class="pre">PBLH</span></code>
 instead; give it <code class="docutils literal notranslate"><span class="pre">&quot;met&quot;</span></code>.</p></li>

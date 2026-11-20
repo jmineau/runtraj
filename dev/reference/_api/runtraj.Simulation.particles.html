@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=73ada6c5"></script>
+    <script src="../../_static/documentation_options.js?v=763442d7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3.dev6+gaf614e6d2" />
+  <meta name="docsearch:version" content="0.1.0a3.dev8+g22c7e7351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -826,8 +826,9 @@
 <dt class="sig sig-object py" id="runtraj.Simulation.particles">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Simulation.</span></span><span class="sig-name descname"><span class="pre">particles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><span class="pre">DataFrame</span></a></span><a class="reference internal" href="../../_modules/runtraj/simulation.html#Simulation.particles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.Simulation.particles" title="Link to this definition">#</a></dt>
 <dd><p>The particle table, one row per particle per output step.</p>
-<p>The columns are the variables in <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code>, under the particle
-table’s names (<code class="docutils literal notranslate"><span class="pre">particle</span></code>, <code class="docutils literal notranslate"><span class="pre">age</span></code> in minutes since release,
+<p>The columns are the variables the transport model writes (for
+HYSPLIT, those its <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> names), under the particle table’s
+names (<code class="docutils literal notranslate"><span class="pre">particle</span></code>, <code class="docutils literal notranslate"><span class="pre">age</span></code> in minutes since release,
 <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, <code class="docutils literal notranslate"><span class="pre">foot</span></code>, …), plus <code class="docutils literal notranslate"><span class="pre">time</span></code> (UTC)
 and <code class="docutils literal notranslate"><span class="pre">release_height</span></code> (for column and multipoint releases). Read from the output directory on first
 access and kept. Check
