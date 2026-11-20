@@ -6,6 +6,7 @@ import contextlib
 import datetime as dt
 import hashlib
 import os
+import resource
 import signal
 import subprocess
 import tempfile
@@ -149,7 +150,9 @@ class FlexpartModel:
             FLEXPART stopped without finishing, and ``NO_PARTICLE_DATA``
             when it finished but wrote no particle file.
         ValueError
-            If the met is ERA5 and the config does not run the eta build.
+            If the met is ERA5 and the config does not run the eta build, or
+            the met is GFS and it does: FLEXPART's documentation says the
+            eta build is intended for ECMWF data.
 
         Warns
         -----
@@ -157,13 +160,18 @@ class FlexpartModel:
             If the met is GFS, once in each process: FLEXPART 11 does not
             mix its particles on GFS.
         """
-        if met.source == "gfs":
-            warnings.warn(GFS_WARNING, UserWarning, stacklevel=2)
         if met.source == "era5" and not config.eta:
             raise ValueError(
                 "FLEXPART reads ERA5 only with its eta build: set eta: true in "
                 "the flexpart block and build src/FLEXPART_ETA."
             )
+        if met.source == "gfs" and config.eta:
+            raise ValueError(
+                "FLEXPART's eta build is intended for ECMWF data; GFS runs on "
+                "src/FLEXPART: set eta: false in the flexpart block."
+            )
+        if met.source == "gfs":
+            warnings.warn(GFS_WARNING, UserWarning, stacklevel=2)
         if workdir is None:
             with tempfile.TemporaryDirectory(prefix="runtraj-") as tmp:
                 return self.run(release, config, met, window, Path(tmp), timeout)
@@ -193,8 +201,11 @@ def run_flexpart(
     """
     Run the checkout's FLEXPART build (``config.executable``) in *workdir*, writing its output to ``flexpart.log``.
 
-    It runs with ``config.threads`` OpenMP threads. If this process is
-    interrupted while it waits, FLEXPART is stopped too.
+    It runs with ``config.threads`` OpenMP threads and its stack limit
+    raised as far as the system allows (FLEXPART's documentation asks for
+    ``ulimit -s unlimited``: with OpenMP, a small stack ends the run in a
+    segmentation fault). If this process is interrupted while it waits,
+    FLEXPART is stopped too.
 
     Raises
     ------
@@ -214,6 +225,7 @@ def run_flexpart(
             stderr=subprocess.STDOUT,
             env=env,
             start_new_session=True,
+            preexec_fn=_raise_stack_limit,
         ) as proc,
     ):
         try:
@@ -234,6 +246,12 @@ def run_flexpart(
             f"FLEXPART stopped with exit status {proc.returncode}:\n{tail}",
             reason="EXIT_STATUS",
         )
+
+
+def _raise_stack_limit() -> None:
+    """Raise this process's stack limit to its hard limit, as ``ulimit -s unlimited`` does where that is allowed."""
+    _, hard = resource.getrlimit(resource.RLIMIT_STACK)
+    resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
 
 
 def _terminate(proc: subprocess.Popen) -> None:
