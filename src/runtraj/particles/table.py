@@ -29,8 +29,8 @@ if TYPE_CHECKING:
 
 
 #: The columns every particle table has, as a particle file stores them:
-#: what a transport model's run must return. ``particle`` is the particle number
-#: (1 to ``numpar``), ``age`` the minutes since release (negative for a
+#: what a transport model's run must return. ``particle`` is the number the
+#: transport model gives the particle, ``age`` the minutes since release (negative for a
 #: backward run), ``lon`` and ``lat`` the position in degrees, and ``zagl``
 #: the height above ground in meters. The reference page on the particle
 #: table says what the other columns are.
@@ -376,7 +376,7 @@ def add_release_heights(particles: pd.DataFrame, release: Release) -> pd.DataFra
     The release row (``age = 0``) says where each particle started. For a
     multipoint release that is one of its points, and ``release_height`` is that
     point's altitude. For a column release it is inside one of the
-    ``numpar`` slabs the column is split into, and ``release_height`` is that slab's
+    slabs the column is split into, one per particle, and ``release_height`` is that slab's
     center: the slab is what the particle stands for, not the random
     height inside it. A model that writes no release row, such as HYSPLIT
     5.1.0, falls back to matching: a column's particles are
@@ -419,18 +419,18 @@ def _column_release_heights(p: pd.DataFrame, release: ColumnRelease) -> pd.Serie
     """
     Return each row's release height for a column release: the center of its particle's slab.
 
-    The column is split into ``numpar`` slabs of equal depth. With release
+    The column is split into slabs of equal depth, one per particle. With release
     rows, a particle's slab is the one its release height falls in;
     without them, particle ``particle`` is in slab ``particle``, as HYSPLIT
     releases them.
     """
-    numpar = int(p["particle"].max())
-    step = (release.top - release.bottom) / numpar
+    n_slabs = int(p["particle"].max())
+    step = (release.top - release.bottom) / n_slabs
     released = _release_rows(p)
     height = None if released is None else _height(released, release)
     if released is None or height is None:
         return (p["particle"] - 0.5) * step + release.bottom
-    slab = np.clip(np.floor((height - release.bottom) / step), 0, numpar - 1)
+    slab = np.clip(np.floor((height - release.bottom) / step), 0, n_slabs - 1)
     center = dict(
         zip(released["particle"], release.bottom + (slab + 0.5) * step, strict=True)
     )

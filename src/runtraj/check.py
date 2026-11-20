@@ -5,7 +5,7 @@ The check before a run: what would stop a project's simulations, found without r
 that it has releases, that the transport model's
 executable is there (HYSPLIT's ``hycs_std``), the met files each release needs,
 whether each release is inside the met's domain (or its crop, when it has
-one), whether ``varsiwant`` holds ``zsfc`` where the run needs it, and what each stage of a variant finds
+one), whether HYSPLIT's ``varsiwant`` holds ``zsfc`` where the run needs it, and what each stage of a variant finds
 wrong with its own inputs (:meth:`runtraj.stages.Stage.check`).
 ``Project.check`` and ``runtraj check`` call it.
 """
@@ -155,8 +155,8 @@ def _zsfc_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
     release's particles. A stage that reads it too says what goes wrong
     without it, in the ``zsfc_reasons`` of its settings.
     """
-    varsiwant = getattr(variant.transport, "varsiwant", None)
-    if varsiwant is None or "zsfc" in varsiwant:
+    variables = getattr(variant.transport, "varsiwant", None)  # HYSPLIT's setting
+    if variables is None or "zsfc" in variables:
         return
     above_sea_level = rows[rows["altitude_ref"] == "msl"]
     n_msl = above_sea_level["release"].nunique()
@@ -175,15 +175,15 @@ def _zsfc_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
     )
     if not (n_by_height or stage_reasons):
         return
-    key = ("zsfc", tuple(varsiwant), n_msl, n_by_height, stage_reasons)
-    message = _zsfc_message(varsiwant, n_msl, n_by_height, stage_reasons)
+    key = ("zsfc", tuple(variables), n_msl, n_by_height, stage_reasons)
+    message = _zsfc_message(variables, n_msl, n_by_height, stage_reasons)
     yield key, lambda: [("zsfc", None, message)]
 
 
 def _zsfc_message(
-    varsiwant: list[str], n_msl: int, n_by_height: int, stage_reasons: tuple[str, ...]
+    variables: list[str], n_msl: int, n_by_height: int, stage_reasons: tuple[str, ...]
 ) -> str:
-    """Say what needs ``zsfc`` and the line that adds it to ``varsiwant``."""
+    """Say what needs ``zsfc`` and the line that adds it to HYSPLIT's ``varsiwant``."""
     reasons = []
     if n_by_height:
         reasons.append(
@@ -194,10 +194,10 @@ def _zsfc_message(
         )
     reasons += stage_reasons
     releases = f"{n_msl} release is" if n_msl == 1 else f"{n_msl} releases are"
-    fix = ", ".join([*varsiwant, "zsfc"])
+    fix = ", ".join([*variables, "zsfc"])
     return (
-        f"zsfc is not in varsiwant, and {releases} above sea level: "
-        f"{'; '.join(reasons)}. Add it in config.yaml with varsiwant: [{fix}]. "
+        f"zsfc is not in HYSPLIT's varsiwant, and {releases} above sea level: "
+        f"{'; '.join(reasons)}. Add it in config.yaml with HYSPLIT's varsiwant: [{fix}]. "
         "That changes the settings folder, so the particles are made again"
     )
 

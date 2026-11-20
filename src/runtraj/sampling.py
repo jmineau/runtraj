@@ -365,10 +365,10 @@ def sample_met(
     - ``zsfc`` is ``SHGT``, the terrain height, in m above sea level.
 
     ``pres`` and ``dens`` follow what HYSPLIT reads, to the differences
-    under Notes. ``mlht`` is the met's: HYSPLIT's is the
-    met's ``PBLH`` only with ``kmixd: 0``, and then it is at least ``kmix0``;
-    the default, ``kmixd: 3``, finds the mixed layer from the profile, as
-    :func:`calc_pbl_height` does.
+    under Notes. ``mlht`` is the met's. HYSPLIT's own ``mlht`` is the met's
+    ``PBLH`` (at least ``kmix0``) only when HYSPLIT runs with ``kmixd: 0``;
+    with HYSPLIT's default, ``kmixd: 3``, it finds the mixed layer from the
+    profile, as :func:`calc_pbl_height` does.
 
     Parameters
     ----------
@@ -414,7 +414,7 @@ def sample_met(
 
     - ``zsfc``: a few meters, since HYSPLIT reads the terrain where the
       particle was before its turbulent step.
-    - ``mlht``: a median of 16 to 30 m, against a run with ``kmixd: 0``
+    - ``mlht``: a median of 16 to 30 m, against a HYSPLIT run with ``kmixd: 0``
       floored at ``kmix0``. HYSPLIT reads the nearest grid point's ``PBLH``;
       this function interpolates it.
     - ``pres``: a median of 0.02 hPa, 0.23 to 0.30 hPa at the 95th
@@ -600,8 +600,8 @@ def calc_pbl_height(
     - ``"hysplit_temperature"``: HYSPLIT's ``kmixd: 1``. The top is the
       highest level whose potential temperature is within 2 K of the
       column's lowest.
-    - ``"met"``: the met's own boundary-layer height ``PBLH``, as HYSPLIT
-      uses it with ``kmixd: 0``.
+    - ``"met"``: the met's own boundary-layer height ``PBLH``, as it is
+      used with HYSPLIT's ``kmixd: 0``.
     - ``"flexpart"``: FLEXPART's Richardson method (below), for a FLEXPART
       run on ERA5 model levels. FLEXPART on GFS uses the met's ``PBLH``
       instead; give it ``"met"``.
@@ -971,7 +971,7 @@ def _hysplit_columns(
 
 def _temperature_mixed_layer(zz: np.ndarray, theta: np.ndarray) -> np.ndarray:
     """
-    Return the mixed-layer height of each column, as ``stbanl.f`` finds it for ``kmixd: 1``.
+    Return the mixed-layer height of each column, as HYSPLIT's ``stbanl.f`` finds it for ``kmixd: 1``.
 
     *zz* (m above ground) and *theta* (potential temperature, K) are
     ``(columns, levels)``. Going down from the top, the mixed layer ends at
@@ -1169,7 +1169,7 @@ def _richardson_mixed_layer(
     ks: int,
 ) -> np.ndarray:
     """
-    Return the mixed-layer height of each column, as ``stbanl.f`` finds it for ``kmixd: 3``.
+    Return the mixed-layer height of each column, as HYSPLIT's ``stbanl.f`` finds it for ``kmixd: 3``.
 
     *zz* (m above ground), *theta* (potential temperature, K), *uu* and
     *vv* (m s⁻¹) and *density* (kg m⁻³) are ``(columns, levels)`` on the

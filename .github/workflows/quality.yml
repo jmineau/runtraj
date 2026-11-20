@@ -46,6 +46,21 @@ jobs:
         if: ${{ !cancelled() }}
         run: uv run just imports
 
+      - name: HYSPLIT's setting names stay in its package
+        if: ${{ !cancelled() }}
+        run: |
+          names='numpar|outdt|kmixd|maxpar|krand|ichem|varsiwant|siguverr|tluverr|zcoruverr|horcoruverr|sigzierr|tlzierr|horcorzierr'
+          # grep exits 1 when it finds nothing, and 2 on an error, which must fail.
+          found="$(grep -rniE "$names" src/runtraj --include='*.py')" || [ $? -eq 1 ]
+          # Only HYSPLIT's own package may use them freely; elsewhere the line's text must say HYSPLIT.
+          hits="$(printf '%s\n' "$found" | grep -v '^src/runtraj/models/hysplit/' | grep -vE '^[^:]+:[0-9]+:.*\bHYSPLIT\b')" || true
+          if [ -n "$hits" ]; then
+            echo "HYSPLIT's setting names outside runtraj/models/hysplit/, on lines that do not name HYSPLIT:"
+            echo "$hits"
+            echo "Move the code into HYSPLIT's package, or say the setting is HYSPLIT's on the same line."
+            exit 1
+          fi
+
       - name: Docstring coverage
         if: ${{ !cancelled() }}
         run: uv run just docstr

@@ -37,7 +37,7 @@ def particle_pwf(
     height represents.
 
     HYSPLIT spreads column particles evenly over height, each placed at
-    random within its own ``1/numpar`` slab. Each release height therefore
+    random within its own slab, one slab per particle. Each release height therefore
     stands for the slab centered on it. Slab edges sit midway between
     neighboring release pressures, the ground closes the bottom slab, and the
     top slab extends above its release height as far as it does below.
@@ -75,7 +75,7 @@ def particle_pwf(
         if col not in particles.columns:
             raise ValueError(
                 f"Pressure weighting requires the {col!r} particle variable; "
-                "include it in varsiwant."
+                "run the transport model with it (HYSPLIT: add it to varsiwant)."
             )
     pres = release_coordinate(particles, "pres")
     zagl = release_coordinate(particles, "zagl")
@@ -86,8 +86,8 @@ def particle_pwf(
         if "zsfc" not in particles.columns:
             raise ValueError(
                 "Pressure weighting for a release with altitude_ref='msl' "
-                "requires the 'zsfc' particle variable; include it in "
-                "varsiwant."
+                "requires the 'zsfc' particle variable; run the transport model "
+                "with it (HYSPLIT: add it to varsiwant)."
             )
         zsfc = release_coordinate(particles, "zsfc")
         z_fit = zagl + zsfc
@@ -149,16 +149,17 @@ class PressureWeighting(BaseModel):
     The weights come from the particles' own first-step heights and
     pressures (see :func:`particle_pwf`). They are multiplied by the
     number of particles, so a mean over the particles, as a stage takes,
-    does not change with ``numpar``. The particles of a multipoint release share their point's
+    does not change with the number of particles. The particles of a multipoint release share their point's
     weight evenly. Adds ``xpres`` (release pressure, hPa) and ``pwf``
-    columns. Requires ``pres`` and ``zagl`` in ``varsiwant``, which are both
-    in the default, and ``zsfc`` for a release with ``altitude_ref="msl"``.
+    columns. Requires ``pres`` and ``zagl`` among the particle variables (both
+    in HYSPLIT's default ``varsiwant``), and ``zsfc`` for a release with
+    ``altitude_ref="msl"``.
     """
 
     model_config = ConfigDict(frozen=True)
 
     #: It reads ``zsfc`` for a release above sea level, so a stage's check
-    #: can say when ``varsiwant`` lacks it.
+    #: can say when HYSPLIT's ``varsiwant`` lacks it.
     reads_zsfc: ClassVar[bool] = True
 
     kind: Literal["pressure_weighting"] = "pressure_weighting"

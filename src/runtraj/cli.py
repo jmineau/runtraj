@@ -250,7 +250,7 @@ def check(project: str | None = _PROJECT_ARG) -> None:
     the hours), that the first of them holds more than one time period,
     which HYSPLIT needs, and that each ends on a whole time step, that each
     release is inside the grid of the met files its run starts in (or inside
-    the crop box, when the met is cropped), that ``varsiwant`` holds ``zsfc``
+    the crop box, when the met is cropped), that HYSPLIT's ``varsiwant`` holds ``zsfc``
     when releases above sea level need it, and what each stage finds in its
     own settings.
     Nothing is run or downloaded. It opens only a met file or two, for

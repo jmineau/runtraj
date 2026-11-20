@@ -599,7 +599,7 @@ def run_trajectories(
         Time limit in seconds. ``None`` waits indefinitely.
     **params
         The transport model's parameters, such as ``n_hours`` and
-        ``numpar`` (:class:`runtraj.models.hysplit.HysplitConfig`).
+        HYSPLIT's ``numpar`` (:class:`runtraj.models.hysplit.HysplitConfig`).
         ``n_hours`` is required; the others default to the model's own
         values.
 
@@ -627,7 +627,11 @@ def run_trajectories(
     ...     time="2023-07-15 18:00", longitude=-111.848, latitude=40.766, altitude=10
     ... )
     >>> particles = runtraj.run_trajectories(
-    ...     release, "/data/hrrr", n_hours=-24, numpar=200
+    ...     release,
+    ...     "/data/hrrr",
+    ...     model="hysplit",
+    ...     n_hours=-24,
+    ...     numpar=200,  # HYSPLIT's particle count
     ... )  # doctest: +SKIP
     """
     transport_model = get_model(model)

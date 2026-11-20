@@ -923,7 +923,7 @@ class Project:
         - each release is inside the grid of the met files its run starts
           in, when the crop is off (``met_domain``), or inside the met's
           crop box, ``subgrid_bounds``, when it is on (``met_crop``);
-        - ``varsiwant`` holds ``zsfc`` when a release is above sea level
+        - HYSPLIT's ``varsiwant`` holds ``zsfc`` when a release is above sea level
           (``altitude_ref="msl"``) and a run reads it: the release heights
           of a multipoint release whose points are less than 1 km apart and
           at different altitudes, or what a stage says it reads (``zsfc``);

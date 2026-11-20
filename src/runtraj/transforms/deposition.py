@@ -41,7 +41,7 @@ def dry_deposition_survival(
     ----------
     particles : pandas.DataFrame
         The particle table, with ``particle``, ``age`` (minutes) and
-        ``zagl`` (m) columns and a row at every time step (``outdt: 0``).
+        ``zagl`` (m) columns and a row at every time step (HYSPLIT's ``outdt: 0``).
     velocity : float
         The dry deposition velocity, in m/s.
     surface_layer_depth : float, default 50.0
@@ -93,8 +93,8 @@ def dry_deposition_survival(
     if (step > MAX_STEP_MINUTES + 1e-6).any():
         raise ValueError(
             "Dry deposition needs a particle row at every one-minute time step; "
-            f"these rows are up to {step.max():g} minutes apart. Run with "
-            "outdt: 0."
+            f"these rows are up to {step.max():g} minutes apart. Have the "
+            "transport model write a row every minute (HYSPLIT: outdt: 0)."
         )
     below = particles["zagl"].to_numpy(dtype=float) < surface_layer_depth
     return survival(particles, np.where(below, velocity / surface_layer_depth, 0.0))

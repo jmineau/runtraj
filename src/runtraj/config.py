@@ -371,7 +371,7 @@ class ProjectConfig(BaseModel):
     --------
     >>> config = ProjectConfig(
     ...     mets={"hrrr": "/path/to/hrrr_arl"},
-    ...     models={"hysplit": {"n_hours": -24, "numpar": 200}},
+    ...     models={"hysplit": {"n_hours": -24, "numpar": 200}},  # HYSPLIT's settings
     ...     variants={"hrrr": {}, "hrrr-long": {"n_hours": -72}},
     ... )
     >>> list(config.variants)

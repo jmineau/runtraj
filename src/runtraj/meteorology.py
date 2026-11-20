@@ -43,10 +43,11 @@ def run_window(r_time: Any, n_hours: int) -> tuple[pd.Timestamp, pd.Timestamp]:
 # Variograms of wind errors, for setting up transport-error runs.
 #
 # HYSPLIT's wind-error perturbation needs the standard deviation of the
-# analysis wind error (``siguverr``) and its correlation scales in time
-# (``tluverr``), height (``zcoruverr``), and horizontal distance
-# (``horcoruverr``). Lin and Gerbig (2005, section 2.1) derive them from the
-# differences between analyzed and observed winds. The standard deviation
+# analysis wind error and its correlation scales in time, height, and
+# horizontal distance: HYSPLIT's ``siguverr``, ``tluverr``, ``zcoruverr``
+# and ``horcoruverr`` (HYSPLIT's SETUP.CFG). Lin and Gerbig (2005,
+# section 2.1) derive them from the differences between analyzed and
+# observed winds. The standard deviation
 # comes directly from the differences. Each scale comes from fitting the
 # exponential variogram ::
 #

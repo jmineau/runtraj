@@ -229,10 +229,6 @@ def test_a_toy_multipoint_release_may_repeat_a_location():
     assert set(particles["release_height"]) == {5.0, 50.0}
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="#44: the dry deposition error tells any model's user to set HYSPLIT's outdt",
-)
 def test_dry_deposition_on_hourly_toy_rows_names_no_hysplit_setting():
     particles = runtraj.run_trajectories(
         _release(), {"weather": "hrrr"}, model=TOY, n_hours=-2, step=60
@@ -244,10 +240,6 @@ def test_dry_deposition_on_hourly_toy_rows_names_no_hysplit_setting():
     assert "outdt" not in str(error.value).split("HYSPLIT")[0]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="#44: the pressure weighting error tells any model's user to set HYSPLIT's varsiwant",
-)
 def test_pressure_weighting_without_pres_names_no_hysplit_setting():
     release = ColumnRelease(
         time=NOON, longitude=-111.85, latitude=40.77, bottom=0, top=100

@@ -657,7 +657,9 @@ def test_dry_deposition_survival_counts_the_step_from_release():
 
 def test_dry_deposition_survival_refuses_hourly_rows():
     p = pd.DataFrame({"particle": [1, 1], "age": [-60.0, -120.0], "zagl": [10.0, 10.0]})
-    with pytest.raises(ValueError, match="outdt: 0"):
+    with pytest.raises(
+        ValueError, match=r"write a row every minute \(HYSPLIT: outdt: 0\)"
+    ):
         dry_deposition_survival(p, velocity=0.01)
 
 

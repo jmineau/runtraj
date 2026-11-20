@@ -80,12 +80,12 @@ class Oxidation(BaseModel):
     -----
     The temperature is the particles' ``temz`` column when they have it.
     Otherwise it is :math:`p / (\rho R_d)` from ``pres`` and ``dens``, which
-    are in the default ``varsiwant``, so particles already run need no
+    are in HYSPLIT's default ``varsiwant``, so particles already run need no
     rerun. That is the virtual temperature, above the temperature by about
     :math:`0.6 \, q T` in moist air. On a HYSPLIT run from Salt Lake City
     in January (HRRR, 72,000 rows) it was 0.5 to 0.9 K above HYSPLIT's
     ``temz`` (5th to 95th percentile), about 2 % in a rate with
-    ``e_over_r`` of 1775 K. Add ``temz`` to ``varsiwant`` when that matters.
+    ``e_over_r`` of 1775 K. Add ``temz`` to HYSPLIT's ``varsiwant`` when that matters.
 
     A field with a ``time`` dimension is matched to each row's nearest
     time, so a climatology must carry the dates of the run.

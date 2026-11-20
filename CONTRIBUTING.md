@@ -310,6 +310,12 @@ core on it (run, status, check, fetch, a stage, transforms), so a change
 that makes the core depend on something only HYSPLIT does fails there.
 Test a change to the core on the toy as well as on HYSPLIT.
 
+A check in the Code Quality workflow (`.github/workflows/quality.yml`) keeps
+HYSPLIT's setting names (`numpar`, `outdt`, `kmixd`, `varsiwant`, ...; the
+list is in the workflow) in `runtraj/models/hysplit/`. Elsewhere a line may name one only
+where its text also says HYSPLIT, in capitals, as a citation ("HYSPLIT's
+`kmixd: 3`"); code that needs the setting belongs in HYSPLIT's package.
+
 ## Adding a stage
 
 A stage is what is made from each simulation's results after the transport
