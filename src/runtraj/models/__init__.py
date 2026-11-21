@@ -190,10 +190,11 @@ class TransportModel(Protocol):
         Whether :meth:`run` is handed an empty directory for its files. True
         when the model does not say; a model that writes no files sets it
         False, and gets ``None``.
-    particle_files : tuple of str, optional
-        The names of the files in its workdir that hold the particles, such
-        as HYSPLIT's particle file. A failed run's workdir is kept without
-        them, since they can be large and are read into the particles
+    result_files : callable, optional
+        ``result_files(config)`` returns the names of the files in its
+        workdir that hold a run's result, such as HYSPLIT's particle file
+        or its ``cdump_<grid>`` files. A failed run's workdir is kept
+        without them, since they can be large and are read into the result
         anyway; ``keep_workdir: true`` keeps them. A model without it has
         every file kept.
     batched : bool, optional

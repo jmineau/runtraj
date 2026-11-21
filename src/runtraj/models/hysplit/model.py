@@ -139,8 +139,6 @@ class HysplitModel:
     met_config_class = MetConfig
     #: HYSPLIT writes its inputs and outputs as files in a directory.
     needs_workdir = True
-    #: Its particle file, left out of a failed run's kept workdir.
-    particle_files = (PARTICLE_FILE,)
     #: One hycs_std process per release.
     batched = False
 
@@ -154,6 +152,21 @@ class HysplitModel:
         'particles'
         """
         return config.mode
+
+    def result_files(self, config: HysplitConfig) -> tuple[str, ...]:
+        """
+        Return the files of a run with *config* that hold its result, left out of a failed run's kept workdir.
+
+        The particle file, or in concentration mode each grid's ``cdump_<name>``.
+
+        Examples
+        --------
+        >>> HysplitModel().result_files(HysplitConfig(n_hours=-24))
+        ('PARTICLE_STILT.DAT',)
+        """
+        if config.mode == "concentration":
+            return tuple(cdump_name(grid.name) for grid in config.grids)
+        return (PARTICLE_FILE,)
 
     def sha256(self, config: HysplitConfig) -> str:
         """

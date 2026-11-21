@@ -56,6 +56,13 @@ def test_the_model_makes_the_modes_result():
     assert HysplitModel().result(_concentration()) == "concentration"
 
 
+def test_a_failed_runs_kept_workdir_leaves_out_the_files_of_its_result():
+    assert HysplitModel().result_files(_concentration()) == ("cdump_local",)
+    assert HysplitModel().result_files(HysplitConfig(n_hours=-24)) == (
+        "PARTICLE_STILT.DAT",
+    )
+
+
 def test_a_concentration_record_reads_back_and_leaves_out_the_particle_settings():
     record = _concentration().settings()
     assert record["mode"] == "concentration"

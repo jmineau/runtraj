@@ -191,7 +191,7 @@ def run_particles(
     directory whether the run succeeds or fails. The working directory is
     then removed, unless the run failed or *keep_workdir* is set, in which
     case it is copied under the output directory's ``scratch/`` first. A
-    failed run's copy leaves out the model's ``particle_files``.
+    failed run's copy leaves out the model's ``result_files``.
 
     Parameters
     ----------
@@ -269,7 +269,8 @@ def run_particles(
             if (keep_workdir or not succeeded) and any(workdir.iterdir()):
                 # A failed run's particle files can be large, and the
                 # model's inputs and logs say why it failed.
-                leave_out = () if keep_workdir else getattr(model, "particle_files", ())
+                files = getattr(model, "result_files", None)
+                leave_out = files(sim.transport) if files and not keep_workdir else ()
                 output.keep_workdir(
                     sim.variant, rid, workdir, sim.realization, leave_out=leave_out
                 )
