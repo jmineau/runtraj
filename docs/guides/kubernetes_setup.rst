@@ -26,12 +26,22 @@ folder (``exec/hycs_std`` and ``bdyfiles/``), copied next to this
 .. code-block:: docker
 
    FROM python:3.13-slim
+   RUN apt-get update \
+       && apt-get install -y --no-install-recommends tini \
+       && rm -rf /var/lib/apt/lists/*
    RUN pip install --no-cache-dir "runtraj[download]" gcsfs
    COPY hysplit/ /opt/hysplit/
    ENV PATH=/opt/hysplit/exec:$PATH
+   RUN useradd --create-home --uid 10001 runtraj
+   USER 10001
+   ENTRYPOINT ["/usr/bin/tini", "--"]
 
 ``gcsfs`` reads and writes a Google Cloud Storage bucket; use ``s3fs`` for
-an S3 one. Add the package of each stage your project names, and pin the
+an S3 one. ``tini`` runs as process 1, passes Kubernetes' stop signal on to
+``runtraj`` (which exits with 3 and is retried) and reaps the finished
+HYSPLIT processes. The image runs as user 10001 rather than root, the group
+runtraj gives the pods' volumes (``fsGroup``), so a new volume is writable
+without further setup. Add the package of each stage your project names, and pin the
 versions you ran with. Then build it, and push it to a registry the cluster
 can pull from:
 
