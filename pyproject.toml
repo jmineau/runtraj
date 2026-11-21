@@ -26,7 +26,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "arlmet>=0.1.0b12,<0.2",
+    "arlmet>=0.1.0b13,<0.2",
     "fsspec>=2024.12.0",  # the first whose memory store opens a file with mode "x", as inputs.lock does
     "numpy>=1.26",  # cartopy 0.26 needs it
     "pandas>=2.1",  # xarray 2024.10 needs it
@@ -47,15 +47,22 @@ visualization = [
     "matplotlib>=3.7",
 ]
 download = [
-    "arlmet[archives]>=0.1.0b12,<0.2",
+    "arlmet[archives]>=0.1.0b13,<0.2",
 ]
 concentration = [
     "netcdf4>=1.6.5",  # a concentration result is a NetCDF file, a group per grid
+]
+flexpart = [
+    "cfgrib>=0.9.14",  # opens GRIB met for the particles, with arlmet's converters
+    "eccodes>=2.39",
+    # eccodes' pure-Python wheel does not name its C library, so uv leaves it out.
+    "eccodeslib>=2.39; platform_system != 'Windows'",
 ]
 complete = [
     "runtraj[visualization]",
     "runtraj[download]",
     "runtraj[concentration]",
+    "runtraj[flexpart]",
 ]
 
 [dependency-groups]
@@ -63,7 +70,10 @@ complete = [
 dev = [
     # The extras, spelled out: the floors job resolves the group with `uv pip
     # compile`, which would look for `runtraj[complete]` on PyPI.
-    "arlmet[archives]>=0.1.0b12,<0.2",
+    "arlmet[archives]>=0.1.0b13,<0.2",
+    "cfgrib>=0.9.14",  # the flexpart extra: GRIB met for the particles
+    "eccodes>=2.39",  # the flexpart extra: GRIB met
+    "eccodeslib>=2.39; platform_system != 'Windows'",
     "cartopy>=0.26",
     "cf-xarray>=0.10",  # the CF trajectory export is read back with it
     "netcdf4>=1.6.5",  # the concentration extra; the CF export's tests write a file with it

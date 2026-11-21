@@ -33,6 +33,8 @@ Extras add optional features. List them in the brackets, for example
      - Plotting (``.runtraj.plot.map()`` on particles, ``.plot.map()`` on releases), with coastlines and state borders from cartopy.
    * - ``download``
      - Downloading meteorology from NOAA.
+   * - ``flexpart``
+     - Reading GRIB meteorology, to run FLEXPART (:doc:`../reference/flexpart`).
    * - ``complete``
      - Everything above.
 
