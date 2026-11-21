@@ -90,13 +90,15 @@ jobs:
 
   # The integration tests replay real HYSPLIT runs recorded on the oldest
   # supported version and the newest (tests/recorded/hysplit/; CONTRIBUTING.md,
-  # "Testing against real HYSPLIT"). No HYSPLIT program is on the runner.
+  # "Testing against real HYSPLIT"). No HYSPLIT program is on the runner, so
+  # the replay runs wherever HYSPLIT does: Linux and macOS.
   integration:
-    name: Integration tests / HYSPLIT ${{ matrix.hysplit }} (recorded)
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os }} / Integration tests / HYSPLIT ${{ matrix.hysplit }} (recorded)
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest]
         hysplit: ["5.1.0", "5.4.2"]
     env:
       UV_NO_SYNC: "1"
@@ -124,7 +126,11 @@ jobs:
           # (the same key in docs.yml). The recorded HYSPLIT runs were recorded
           # on the files this fetch makes with the locked arlmet (their
           # recorded.yaml); a replay stops when the files here differ.
-          key: met-hrrr-2021-v2
+          # GitHub keeps a cache per operating system unless it is saved and
+          # restored with enableCrossOsArchive, as here, so the files one job
+          # downloads serve every job, macOS included.
+          key: met-hrrr-2021-v3
+          enableCrossOsArchive: true
 
       - name: Prewarm HRRR met cache
         if: steps.met-cache.outputs.cache-hit != 'true'
@@ -141,12 +147,13 @@ jobs:
         with:
           path: tests/met_cache
           key: ${{ steps.met-cache.outputs.cache-primary-key }}
+          enableCrossOsArchive: true
 
       - name: Run integration tests on the recorded runs
         env:
           RUNTRAJ_TEST_MET_DIR: ${{ github.workspace }}/tests/met_cache
-        # One worker per core (4 on ubuntu-latest); conftest.py groups the tests
-        # that share a HYSPLIT run.
+        # One worker per core (4 on ubuntu-latest, 3 on macos-latest);
+        # conftest.py groups the tests that share a HYSPLIT run.
         run: uv run just test-replay ${{ matrix.hysplit }} -v
 
   package:
