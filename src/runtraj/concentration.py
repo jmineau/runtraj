@@ -26,7 +26,7 @@ Each grid's Dataset has:
 
 A model may count each pollutant several times over, apart: HYSPLIT can
 keep the mass of each release location, or of each hour of emission, in a
-grid of its own (``ichem: 1`` and ``ichem: 10``). The variables then have
+grid of its own (HYSPLIT's ``ichem: 1`` and ``ichem: 10``). The variables then have
 one more dimension, before the four: ``source``, numbered from 1 in the
 order of the release's locations, or ``release_time``, the UTC time each
 part of the emission started.
