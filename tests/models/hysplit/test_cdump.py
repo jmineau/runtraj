@@ -112,3 +112,17 @@ def test_a_file_that_is_not_a_concentration_file_is_refused(tmp_path):
     path.write_bytes(b"not a HYSPLIT file at all")
     with pytest.raises(ValueError):
         read_cdump(path)
+
+
+def test_a_cmass_run_is_labeled_as_mass_not_concentration():
+    path = HERE / "average_cpack1"
+    concentration = read_cdump(path)
+    mass = read_cdump(path, cmass=1)
+    assert "m-3" in concentration["TRCA"].attrs["units"]
+    assert concentration["TRCA"].attrs["long_name"].startswith("TRCA concentration")
+    assert "m-3" not in mass["TRCA"].attrs["units"]
+    assert mass["TRCA"].attrs["units"].startswith("mass (")
+    assert mass["TRCB"].attrs["long_name"].startswith("TRCB mass in the cell")
+    # The coordinates say the same whatever the variables hold.
+    assert mass["lat"].attrs == concentration["lat"].attrs
+    np.testing.assert_array_equal(mass["TRCA"].values, concentration["TRCA"].values)

@@ -17,10 +17,12 @@ Each grid's Dataset has:
 - ``z``, the top of each level in meters above ground, ``0`` for the
   ground, where deposition is counted;
 - ``lat`` and ``lon``, the centers of the grid cells, in degrees;
-- one variable per pollutant, named by the pollutant: mass per cubic meter
-  in the pollutant's own mass unit (the unit of its emission rate per
-  hour), or mass per square meter at ``z = 0``. Cells HYSPLIT did not write
-  are zero.
+- one variable per pollutant, named by the pollutant, whose ``units`` and
+  ``long_name`` attributes say what it holds, which the model and its
+  settings decide: for HYSPLIT, mass per cubic meter in the pollutant's own
+  mass unit (the unit of its emission rate per hour), and mass per square
+  meter at ``z = 0``, or, with ``cmass: 1``, the mass in each cell. Cells
+  HYSPLIT did not write are zero.
 
 A transport model reads its own output into such grids (HYSPLIT's
 :func:`runtraj.models.hysplit.read_cdump`). :func:`write_concentration` and
@@ -51,12 +53,41 @@ CONCENTRATION_SUFFIX = ".nc"
 CONCENTRATION_DIMS = ("time", "z", "lat", "lon")
 
 
-def describe_grid(ds: xr.Dataset) -> xr.Dataset:
+def describe_grid(ds: xr.Dataset, units: str, long_name: str) -> xr.Dataset:
     """
     Give a grid's coordinates and variables their units and meanings, in place, and return it.
 
     A transport model that makes concentration calls it on each grid it
-    reads, so that every model's grids say the same.
+    reads, so that every model's grids say the same about the coordinates.
+    What the variables hold depends on the model and its settings, so the
+    model says it.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        A grid, with the coordinates of :data:`CONCENTRATION_DIMS` and
+        ``time_end``.
+    units : str
+        The ``units`` attribute of every variable.
+    long_name : str
+        The ``long_name`` attribute of every variable, where ``{name}`` is
+        the variable's own name.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> ds = xr.Dataset(
+    ...     {"TEST": (CONCENTRATION_DIMS, np.zeros((1, 1, 1, 1)))},
+    ...     coords={
+    ...         "time": [0],
+    ...         "time_end": ("time", [0]),
+    ...         "z": [100],
+    ...         "lat": [40.0],
+    ...         "lon": [-112.0],
+    ...     },
+    ... )
+    >>> describe_grid(ds, "mass m-3", "{name} concentration")["TEST"].attrs["long_name"]
+    'TEST concentration'
     """
     ds["time"].attrs = {"long_name": "start of the sample"}
     ds["time_end"].attrs = {"long_name": "end of the sample"}
@@ -73,10 +104,7 @@ def describe_grid(ds: xr.Dataset) -> xr.Dataset:
         "long_name": "longitude of the cell center",
     }
     for name in ds.data_vars:
-        ds[name].attrs = {
-            "long_name": f"{name} concentration, or deposition at z = 0",
-            "units": "mass m-3, mass m-2 at z = 0 (mass in the unit of the emission rate)",
-        }
+        ds[name].attrs = {"long_name": long_name.format(name=name), "units": units}
     return ds
 
 

@@ -52,7 +52,9 @@ deep, as hourly averages:
 the top of each level in meters above ground. Each pollutant is a variable
 of its own name. Its unit is the unit of mass of its ``rate`` per cubic
 meter, so with a rate in grams per hour, the concentration is in g/m³.
-The cells HYSPLIT did not write are zero. Where did the most pass in the
+With ``cmass: 1`` each cell holds the mass in it instead, in grams, and
+no deposition is counted at ``z = 0``; the variable's ``units`` and
+``long_name`` attributes say which you have. The cells HYSPLIT did not write are zero. Where did the most pass in the
 first hour?
 
 .. ipython:: python

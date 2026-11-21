@@ -400,7 +400,9 @@ class HysplitConfig(TransportConfig):
         0,
         description=(
             "Compute grid concentrations (0) or grid mass (1). "
-            "Read only for HYSPLIT's concentration grids (``mode: concentration``)."
+            "Read only for HYSPLIT's concentration grids (``mode: concentration``), "
+            "where 1 makes each cell hold mass, not mass per volume, and "
+            "counts no deposition at ``z = 0``."
         ),
     )
     conage: int = Field(

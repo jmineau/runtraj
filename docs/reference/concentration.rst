@@ -72,9 +72,12 @@ named as the grid is in ``config.yaml``. Each grid is a Dataset over
      - degrees
      - The centers of the grid's cells.
    * - one variable per pollutant
-     - mass m⁻³
-     - The concentration, in the unit of mass of the pollutant's emission
-       rate; at ``z = 0``, mass m⁻² deposited. Zero where the model wrote
+     - set by the model
+     - What the model counts, which its ``units`` and ``long_name``
+       attributes say. HYSPLIT's concentration: mass m⁻³ in the unit of
+       mass of the pollutant's emission rate, and at ``z = 0``, mass m⁻²
+       deposited. With ``cmass: 1``: the mass in each cell, in the same
+       unit of mass, and nothing at ``z = 0``. Zero where the model wrote
        nothing.
 
 The file of one release is NetCDF 4, a group per grid, which

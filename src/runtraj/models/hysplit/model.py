@@ -382,7 +382,7 @@ def _read_grids(workdir: Path, config: HysplitConfig) -> xr.DataTree:
                 reason=FailureReason.NO_CONCENTRATION_DATA,
             )
         try:
-            ds = read_cdump(path)
+            ds = read_cdump(path, config.cmass)
         except ValueError as error:
             raise SimulationError(
                 str(error), reason=FailureReason.NO_CONCENTRATION_DATA

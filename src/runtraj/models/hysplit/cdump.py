@@ -75,7 +75,7 @@ def _stamp(values: tuple[int, ...]) -> dt.datetime:
     return dt.datetime(_year(yy), mm, dd, hh, mn)
 
 
-def read_cdump(path: str | Path) -> xr.Dataset:
+def read_cdump(path: str | Path, cmass: int = 0) -> xr.Dataset:
     """
     Read one of HYSPLIT's binary concentration files (``cdump``) as a Dataset.
 
@@ -90,6 +90,10 @@ def read_cdump(path: str | Path) -> xr.Dataset:
     ----------
     path : str or Path
         The file ``hycs_std`` wrote.
+    cmass : int, default 0
+        The ``cmass`` setting the run had: 0 for concentrations, anything
+        else for the mass in each cell. The file does not say, and the
+        variables' ``units`` and ``long_name`` do.
 
     Returns
     -------
@@ -115,14 +119,14 @@ def read_cdump(path: str | Path) -> xr.Dataset:
     with path.open("rb") as handle:
         records = _Records(handle, path)
         try:
-            return _read_records(records, path)
+            return _read_records(records, path, cmass)
         except struct.error as error:
             raise ValueError(
                 f"{path} is not a HYSPLIT concentration file: {error}."
             ) from None
 
 
-def _read_records(records: _Records, path: Path) -> xr.Dataset:
+def _read_records(records: _Records, path: Path, cmass: int) -> xr.Dataset:
     """Read the records of a ``cdump`` file, as :func:`read_cdump` does."""
     head = records.need("header")
     met_model = head[:4].decode("ascii", errors="replace").strip()
@@ -182,7 +186,20 @@ def _read_records(records: _Records, path: Path) -> xr.Dataset:
         "met_model": met_model,
         "locations": json.dumps(locations),
     }
-    return describe_grid(ds)
+    if cmass:
+        # MASSUM, which hycs_std calls instead of CONSUM, adds each particle's
+        # mass to its cell: not per volume, and nothing at z = 0, where CONSUM
+        # counts deposition.
+        return describe_grid(
+            ds,
+            units="mass (in the unit of the emission rate)",
+            long_name="{name} mass in the cell; no deposition at z = 0",
+        )
+    return describe_grid(
+        ds,
+        units="mass m-3, mass m-2 at z = 0 (mass in the unit of the emission rate)",
+        long_name="{name} concentration, or deposition at z = 0",
+    )
 
 
 def _read_level(
