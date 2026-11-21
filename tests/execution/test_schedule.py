@@ -136,6 +136,11 @@ def test_read_sites_without_the_file(tmp_path):
     [
         ("longitude,latitude\n-111.8,40.7\n", "needs rows with columns"),
         ("longitude,latitude,altitude\n", "needs rows with columns"),
+        (
+            "lon,lat,alt\n-111.8,40.7,35\n",
+            r"needs rows with columns longitude, latitude, altitude; "
+            r"its columns are 'lon', 'lat', 'alt' and it has 1 rows",
+        ),
         ("longitude,latitude,altitude\nwest,40.7,5\n", "line 2: .*not all numbers"),
         ("longitude,latitude,altitude\n-111.8,40.7\n", r"line 2: no altitude\."),
         ("longitude,latitude,altitude\n-111.8,nan,35\n", "line 2: not all numbers"),
@@ -153,6 +158,29 @@ def test_read_sites_names_the_line_it_refuses(tmp_path, text, message):
     (tmp_path / "sites.csv").write_text(text)
     with pytest.raises(ValueError, match=f"sites.csv {message}"):
         schedule.read_sites(tmp_path)
+
+
+def test_read_sites_keeps_a_repeated_site_once_and_says_so(tmp_path, caplog):
+    (tmp_path / "sites.csv").write_text(
+        "name,longitude,latitude,altitude\n"
+        "tower,-111.8,40.7,35\n"
+        "valley,-112.1,40.5,5\n"
+        "tower again,-111.8,40.7,35\n"
+    )
+
+    sites = schedule.read_sites(tmp_path)
+
+    assert len(sites) == 2
+    assert "sites.csv line 4 repeats line 2" in caplog.text
+
+
+def test_the_same_place_at_two_altitudes_is_two_sites(tmp_path, caplog):
+    (tmp_path / "sites.csv").write_text(
+        "longitude,latitude,altitude\n-111.8,40.7,35\n-111.8,40.7,125\n"
+    )
+
+    assert len(schedule.read_sites(tmp_path)) == 2
+    assert [r for r in caplog.records if r.levelname == "WARNING"] == []
 
 
 def test_read_sites_takes_a_file_saved_with_a_byte_order_mark(tmp_path):
@@ -190,6 +218,35 @@ def test_push_and_pull_carry_sites_and_a_project_with_no_releases_yet(tmp_path, 
     pod = pull(bucket, tmp_path / "pod")
     assert (pod / "sites.csv").read_text() == SITES
     assert not (pod / "releases.csv").exists()
+
+
+def test_push_says_which_files_the_bucket_has_that_the_project_no_longer_has(
+    tmp_path, bucket, caplog
+):
+    project = _project(tmp_path)
+    (project.directory / "tables").mkdir()
+    (project.directory / "tables" / "old.parquet").write_text("x")
+    push(project.directory, bucket, releases=False)
+    caplog.clear()
+
+    (project.directory / "sites.csv").unlink()
+    (project.directory / "tables" / "old.parquet").unlink()
+    push(project.directory, bucket, releases=False)
+
+    assert "sites.csv, tables/old.parquet, which this project does not" in caplog.text
+    # It says, and leaves them: a push never deletes.
+    fs, root = fsspec.core.url_to_fs(bucket)
+    assert fs.exists(f"{root}/sites.csv")
+
+
+def test_push_of_a_project_that_matches_the_bucket_says_nothing(
+    tmp_path, bucket, caplog
+):
+    project = _project(tmp_path)
+    push(project.directory, bucket, releases=False)
+    push(project.directory, bucket, releases=False)
+
+    assert [r for r in caplog.records if r.levelname == "WARNING"] == []
 
 
 def test_a_tick_adds_the_last_day_at_each_site_and_puts_it_back(tmp_path, bucket):

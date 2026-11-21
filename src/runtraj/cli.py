@@ -751,7 +751,11 @@ _DELAY = typer.Option(
     schedules.DELAY_HOURS,
     "--delay",
     min=0,
-    help="Hours before an hour gets its releases: how long its met takes to appear.",
+    max=schedules.MAX_DELAY_HOURS,
+    help=(
+        "Hours before an hour gets its releases: how long its met takes to "
+        f"appear (at most {schedules.MAX_DELAY_HOURS}, a week)."
+    ),
 )
 
 
@@ -996,6 +1000,7 @@ def _status_data(
     return {
         "project": str(project.directory),
         "output": str(project.output.directory),
+        "output_exists": project.output.directory.exists(),
         "simulations": _state_counts(table["state"]),
         "variants": {
             name: _state_counts(table.loc[table.variant == name, "state"])
@@ -1089,7 +1094,13 @@ def _print_folders(project: Project, table: pd.DataFrame) -> None:
     """
     typer.echo(f"Output: {project.output.directory}")
     if table.empty:
-        typer.echo("  no settings folders yet")
+        if not project.output.directory.exists():
+            typer.echo(
+                "  this directory does not exist, so every simulation counts as "
+                "pending (a typo in --output, or nothing has run yet)"
+            )
+        else:
+            typer.echo("  no settings folders yet")
         return
     kind_width = max(len(k) for k in table["kind"])
     name_width = max(len(f) for f in table["folder"]) + len("settings=")

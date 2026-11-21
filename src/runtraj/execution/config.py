@@ -210,6 +210,41 @@ class SlurmConfig(BaseModel):
 _K8S_MEMORY = r"\d+(\.\d+)?(Ki|Mi|Gi|Ti|Pi|Ei)"
 
 
+#: Where each pod keeps its copy of the inputs and its runs' workdirs: an ``emptyDir``.
+SCRATCH = "/scratch"
+_DNS_LABEL = r"[a-z0-9]([-a-z0-9]*[a-z0-9])?"
+_DNS_SUBDOMAIN = rf"{_DNS_LABEL}(\.{_DNS_LABEL})*"
+
+
+def check_kube_name(value: str, kind: str, *, label: bool = False) -> str:
+    """
+    Return *value* if it is a Kubernetes name, else raise ``ValueError`` naming *kind*.
+
+    Kubernetes names its objects with lowercase letters, digits and ``-``
+    (and ``.`` between parts, except in a namespace, which is one *label*),
+    starting and ending with a letter or digit, so a name outside that
+    would be refused by ``kubectl`` only when the Job is made.
+
+    Examples
+    --------
+    >>> check_kube_name("hrrr-arl", "claim_name")
+    'hrrr-arl'
+    >>> check_kube_name("Bad_Name", "claim_name")
+    Traceback (most recent call last):
+    ...
+    ValueError: claim_name 'Bad_Name' is not a Kubernetes name: use lowercase letters, digits and '-', starting and ending with a letter or digit, such as 'bad-name'.
+    """
+    pattern, longest = (_DNS_LABEL, 63) if label else (_DNS_SUBDOMAIN, 253)
+    if len(value) <= longest and re.fullmatch(pattern, value):
+        return value
+    guess = re.sub(r"[^a-z0-9.]+", "-", value.lower()).strip("-.")
+    hint = f", such as {guess!r}" if guess and guess != value else ""
+    raise ValueError(
+        f"{kind} {value!r} is not a Kubernetes name: use lowercase letters, "
+        f"digits and '-', starting and ending with a letter or digit{hint}."
+    )
+
+
 class Volume(BaseModel):
     """
     A PersistentVolumeClaim mounted in every pod: one entry of ``volumes`` in the ``kubernetes`` block.
@@ -232,6 +267,32 @@ class Volume(BaseModel):
         False,
         description=("Mount it read-only, as for a met archive the pods only read."),
     )
+
+    @field_validator("claim_name")
+    @classmethod
+    def _claim_name(cls, value: str) -> str:
+        """Refuse a claim name Kubernetes would refuse, such as a path or ``''``."""
+        return check_kube_name(value, "claim_name")
+
+    @field_validator("mount_path")
+    @classmethod
+    def _mount_path(cls, value: str) -> str:
+        """Refuse a mount path with a ``:``, or that is ``/`` or the pods' scratch."""
+        if ":" in value:
+            raise ValueError(
+                f"mount_path {value!r} has a ':'; write the path alone and set "
+                "read_only for a read-only mount."
+            )
+        if value.rstrip("/") == "":
+            raise ValueError(
+                f"mount_path {value!r} is the pod's root; mount the volume in a folder."
+            )
+        if value.rstrip("/") == SCRATCH:
+            raise ValueError(
+                f"mount_path {value!r} is where each pod keeps its inputs and "
+                "workdirs; mount the volume at another path."
+            )
+        return value
 
 
 class KubernetesConfig(BaseModel):
@@ -342,6 +403,54 @@ class KubernetesConfig(BaseModel):
             "when each pod has its own met directory."
         ),
     )
+
+    @field_validator("image")
+    @classmethod
+    def _image(cls, value: str | None) -> str | None:
+        """Refuse an image that is empty or has a space."""
+        if value is not None and (not value or re.search(r"\s", value)):
+            raise ValueError(
+                f"image {value!r} is not an image name: it is empty or has a "
+                "space. Write it as in a Dockerfile's FROM, such as "
+                "registry.example.org/runtraj-hysplit:1."
+            )
+        return value
+
+    @field_validator("namespace")
+    @classmethod
+    def _namespace(cls, value: str | None) -> str | None:
+        """Refuse a namespace that is not a Kubernetes label."""
+        return (
+            value if value is None else check_kube_name(value, "namespace", label=True)
+        )
+
+    @field_validator("service_account")
+    @classmethod
+    def _service_account(cls, value: str | None) -> str | None:
+        """Refuse a service account that is not a Kubernetes name."""
+        return value if value is None else check_kube_name(value, "service_account")
+
+    @field_validator("secrets")
+    @classmethod
+    def _secrets(cls, value: list[str]) -> list[str]:
+        """Refuse a secret that is not a Kubernetes name."""
+        for name in value:
+            check_kube_name(name, "secrets entry")
+        return value
+
+    @model_validator(mode="after")
+    def _volumes_apart(self) -> Self:
+        """Refuse two volumes at one ``mount_path``."""
+        seen: dict[str, str] = {}
+        for volume in self.volumes:
+            path = volume.mount_path.rstrip("/")
+            if path in seen:
+                raise ValueError(
+                    f"volumes {seen[path]!r} and {volume.claim_name!r} are both "
+                    f"mounted at {path}; each needs its own mount_path."
+                )
+            seen[path] = volume.claim_name
+        return self
 
     @field_validator("memory")
     @classmethod

@@ -55,6 +55,9 @@ WINDOW_HOURS = 24
 #: longer outage is closed over the ticks that follow, each adding another
 #: week (:func:`due_hours`).
 MAX_BACKFILL_HOURS = 24 * 7
+#: The most ``--delay`` may be: a week. A longer delay is a typo (``100000`` is
+#: 11 years), and every hour it covers would be run against met that is not there yet.
+MAX_DELAY_HOURS = 24 * 7
 #: The columns ``sites.csv`` needs; ``altitude_ref`` (``agl`` or ``msl``) is optional.
 SITE_COLUMNS = ("longitude", "latitude", "altitude")
 
@@ -131,9 +134,15 @@ def read_sites(directory: str | Path) -> list[dict[str, Any]]:
     FileNotFoundError
         If the project has no ``sites.csv``.
     ValueError
-        If a column is missing, a value is empty or not a number, a site
-        would not make a valid release (a latitude beyond 90, say), or
-        there are no rows. The message names the line.
+        If a column is missing (the message names the columns the file
+        has), a value is empty or not a number, a site would not make a
+        valid release (a latitude beyond 90, say), or there are no rows.
+        The message names the line.
+
+    Warns
+    -----
+    A site that repeats an earlier line is kept once, and logged: its
+    releases would be the same ones.
     """
     path = Path(directory) / SITES
     if not path.is_file():
@@ -142,11 +151,18 @@ def read_sites(directory: str | Path) -> list[dict[str, Any]]:
             "to add a release at each hour (longitude, latitude, altitude)."
         )
     with path.open(newline="", encoding="utf-8-sig") as file:
-        rows = list(csv.DictReader(file))
-    missing = [c for c in SITE_COLUMNS if rows and c not in rows[0]]
+        reader = csv.DictReader(file)
+        rows = list(reader)
+    header = reader.fieldnames or []
+    missing = [c for c in SITE_COLUMNS if c not in header]
     if not rows or missing:
-        raise ValueError(f"{SITES} needs rows with columns {', '.join(SITE_COLUMNS)}.")
+        found = ", ".join(map(repr, header)) if header else "none"
+        raise ValueError(
+            f"{SITES} needs rows with columns {', '.join(SITE_COLUMNS)}; "
+            f"its columns are {found} and it has {len(rows)} rows."
+        )
     sites: list[dict[str, Any]] = []
+    lines: dict[tuple, int] = {}
     for line, row in enumerate(rows, start=2):
         # A short row has None for what it lacks.
         empty = [c for c in SITE_COLUMNS if not (row[c] or "").strip()]
@@ -170,6 +186,16 @@ def read_sites(directory: str | Path) -> list[dict[str, Any]]:
                 str(e["msg"]).removeprefix("Value error, ") for e in error.errors()
             )
             raise ValueError(f"{SITES} line {line}: {reasons}") from None
+        key = tuple(site.get(c) for c in (*SITE_COLUMNS, "altitude_ref"))
+        if key in lines:
+            logger.warning(
+                "%s line %d repeats line %d: the site is used once.",
+                SITES,
+                line,
+                lines[key],
+            )
+            continue
+        lines[key] = line
         sites.append(site)
     return sites
 
@@ -270,6 +296,7 @@ def add_due_releases(
 __all__ = [
     "DELAY_HOURS",
     "MAX_BACKFILL_HOURS",
+    "MAX_DELAY_HOURS",
     "SITE_COLUMNS",
     "WINDOW_HOURS",
     "add_due_releases",

@@ -40,7 +40,7 @@ from uuid import uuid4
 import yaml
 
 from runtraj._paths import is_url
-from runtraj.execution.config import ExecutionConfig
+from runtraj.execution.config import SCRATCH, ExecutionConfig
 from runtraj.execution.inputs import RELEASES, has_file, hash_inputs, push
 from runtraj.execution.schedule import DELAY_HOURS, read_sites
 from runtraj.fetch import downloads
@@ -58,8 +58,6 @@ KEEP_FINISHED = 7 * 24 * 3600
 PROJECT_LABEL = "runtraj/project"
 #: The annotation that holds the project's URL or path.
 PROJECT_ANNOTATION = "runtraj/project-url"
-#: Where each pod keeps its copy of the inputs and its runs' workdirs: an ``emptyDir``.
-SCRATCH = "/scratch"
 #: The group that owns the pods' volumes, so a new volume, which a cloud
 #: makes owned by root, is writable by an image that runs as another user.
 FS_GROUP = 10001

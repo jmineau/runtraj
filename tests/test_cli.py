@@ -151,6 +151,7 @@ def test_resolve_project_returns_path_when_config_exists(tmp_path):
 
 def test_status_counts_the_simulations_and_lists_no_folders_yet(tmp_path):
     project = _project(tmp_path)
+    (tmp_path / "out").mkdir()
 
     result = _invoke("status", project=project)
 
@@ -162,6 +163,24 @@ def test_status_counts_the_simulations_and_lists_no_folders_yet(tmp_path):
     )
     assert lines[1] == f"Output: {tmp_path / 'out'}"
     assert lines[2] == "  no settings folders yet"
+
+
+def test_status_says_when_the_output_directory_does_not_exist(tmp_path):
+    project = _project(tmp_path)
+
+    result = _invoke("status", "--output", str(tmp_path / "typo"), project=project)
+
+    assert result.exit_code == 0, result.output
+    lines = result.output.splitlines()
+    assert lines[0].endswith("pending=2")
+    assert lines[1] == f"Output: {tmp_path / 'typo'}"
+    assert "does not exist" in lines[2] and "--output" in lines[2]
+    data = json.loads(
+        _invoke(
+            "status", "--json", "--output", str(tmp_path / "typo"), project=project
+        ).output
+    )
+    assert data["output_exists"] is False
 
 
 def test_status_counts_each_variant_and_the_failures_by_reason(
@@ -923,6 +942,32 @@ def test_a_tick_that_cannot_lock_the_releases_exits_with_3(
     assert "cannot lock releases.csv" in result.output
     assert "access denied" in result.output
     assert calls == []
+
+
+@pytest.mark.parametrize("command", ["schedule", "tick"])
+def test_a_delay_beyond_a_week_is_refused(tmp_path, command):
+    project = _on_kubernetes(_project(tmp_path))
+
+    result = _invoke(command, "--delay", "100000", project=project)
+
+    assert result.exit_code == 2
+    assert "--delay" in result.output and "168" in result.output
+
+
+def test_a_kubernetes_block_with_a_bad_setting_exits_2_naming_it(tmp_path):
+    project = _on_kubernetes(_project(tmp_path))
+    path = project.directory / "config.yaml"
+    settings = yaml.safe_load(path.read_text())
+    settings["execution"]["kubernetes"]["volumes"] = [
+        {"claim_name": "met", "mount_path": "/scratch"}
+    ]
+    path.write_text(yaml.safe_dump(settings))
+
+    result = _invoke("status", project=project)
+
+    assert result.exit_code == 2
+    assert "mount_path" in result.output and "/scratch" in result.output
+    assert "Traceback" not in result.output
 
 
 def test_schedule_makes_the_cron_job_with_the_kubernetes_block(tmp_path, monkeypatch):

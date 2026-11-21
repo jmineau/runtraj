@@ -78,8 +78,11 @@ def push(directory: str | Path, url: str, *, releases: bool = True) -> list[str]
     Copy a project's inputs to *url*.
 
     Copies ``config.yaml``, ``releases.csv`` and, when the project has them,
-    ``sites.csv`` and ``tables/``. Files already at *url* are replaced;
-    files there that the project no longer has are left.
+    ``sites.csv`` and ``tables/``. Files already at *url* are replaced.
+    Files there that the project no longer has (a ``sites.csv`` or a table
+    that was deleted here) are left, since a push never deletes, and are
+    logged as a warning that names them: a pod and each hour's tick still
+    read them, so delete them at *url* too.
 
     Parameters
     ----------
@@ -125,7 +128,29 @@ def push(directory: str | Path, url: str, *, releases: bool = True) -> list[str]
             fs.makedirs(f"{root}/{parent}", exist_ok=True)
         fs.put_file(str(directory / name), f"{root}/{name}")
     logger.info("Copied %d input files to %s", len(names), url)
+    stale = _stale(fs, root, names)
+    if stale:
+        logger.warning(
+            "%s has %s, which this project does not: they are not removed, and "
+            "the pods still read them. Delete them there to match the project.",
+            url,
+            ", ".join(stale),
+        )
     return names
+
+
+def _stale(fs: fsspec.AbstractFileSystem, root: str, names: list[str]) -> list[str]:
+    """Return the ``sites.csv`` and tables under *root* that *names*, what was just copied, leaves out."""
+    try:
+        found = [str(p) for p in fs.find(f"{root}/{TABLES}")] + [f"{root}/{SITES}"]
+    except FileNotFoundError:
+        found = [f"{root}/{SITES}"]
+    stale = []
+    for path in sorted(found):
+        name = path.removeprefix(f"{root}/")
+        if name not in names and _exists(fs, path):
+            stale.append(name)
+    return stale
 
 
 def _exists(fs: fsspec.AbstractFileSystem, path: str, kind: str = "file") -> bool:

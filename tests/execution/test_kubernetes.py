@@ -91,6 +91,72 @@ def test_a_volume_path_must_be_absolute():
         KubernetesConfig(volumes=[{"claim_name": "met", "mount_path": "met"}])
 
 
+def _volume(claim_name="met", mount_path="/met"):
+    return {"claim_name": claim_name, "mount_path": mount_path}
+
+
+@pytest.mark.parametrize(
+    ("volume", "message"),
+    [
+        (_volume(mount_path="/scratch"), "where each pod keeps its inputs"),
+        (_volume(mount_path="/scratch/"), "where each pod keeps its inputs"),
+        (_volume(mount_path="/"), "the pod's root"),
+        (_volume(mount_path="/met:ro"), "has a ':'.*read_only"),
+        (
+            _volume(claim_name="/data/met"),
+            "claim_name '/data/met' is not a Kubernetes name",
+        ),
+        (_volume(claim_name=""), "claim_name '' is not a Kubernetes name"),
+        (_volume(claim_name="Hrrr_Arl"), "such as 'hrrr-arl'"),
+    ],
+)
+def test_a_volume_that_would_fail_in_the_pod_is_refused(volume, message):
+    with pytest.raises(ValidationError, match=message):
+        KubernetesConfig(volumes=[volume])
+
+
+def test_two_volumes_at_one_path_are_refused():
+    with pytest.raises(ValidationError, match="'a' and 'b' are both mounted at /met"):
+        KubernetesConfig(volumes=[_volume("a"), _volume("b", "/met/")])
+
+
+def test_volumes_with_kubernetes_names_and_apart_paths_pass():
+    config = KubernetesConfig(volumes=[_volume("hrrr-arl.v2"), _volume("out", "/out")])
+    assert [v.mount_path for v in config.volumes] == ["/met", "/out"]
+
+
+@pytest.mark.parametrize(
+    ("setting", "value"),
+    [
+        ("secrets", [""]),
+        ("secrets", ["Bad_Name"]),
+        ("service_account", "Bad_Name"),
+        ("namespace", "Bad NS"),
+        ("namespace", "my.namespace"),
+    ],
+)
+def test_a_name_kubernetes_would_refuse_is_refused(setting, value):
+    with pytest.raises(ValidationError, match="is not a Kubernetes name"):
+        KubernetesConfig(**{setting: value})
+
+
+def test_names_kubernetes_accepts_pass():
+    config = KubernetesConfig(
+        secrets=["bucket-keys"], service_account="runner", namespace="runs-2"
+    )
+    assert (config.secrets, config.service_account, config.namespace) == (
+        ["bucket-keys"],
+        "runner",
+        "runs-2",
+    )
+
+
+@pytest.mark.parametrize("image", ["", "my image:latest", " registry/x:1"])
+def test_an_image_that_is_empty_or_has_a_space_is_refused(image):
+    with pytest.raises(ValidationError, match="is not an image name"):
+        KubernetesConfig(image=image)
+
+
 # ---------------------------------------------------------------------------
 # The Job
 # ---------------------------------------------------------------------------
