@@ -181,14 +181,16 @@ def file_stamp(digest: str, realization: int | None = None) -> dict[bytes, bytes
 def stage_hash(
     name: str,
     settings: Mapping[str, Any],
-    particles_hash: str,
+    result_hash: str,
     reads: Mapping[str, str] | None = None,
+    result: str = "particles",
 ) -> str:
     """
     Return the hash of the results of the stage *name* with *settings*.
 
     A stage's results are named by what they were made from and with: the
-    particles' hash (*particles_hash*), the hash of each stage it reads
+    hash of the transport model's result (*result_hash*, keyed by its type
+    *result*, ``particles`` unless the stage reads another), the hash of each stage it reads
     (*reads*, by the stage's name), and the stage's own settings record
     (:meth:`runtraj.stages.Stage.settings`). So results made from other
     particles, or from another stage's results under other settings, never
@@ -201,7 +203,7 @@ def stage_hash(
     ... )
     True
     """
-    return settings_hash({"particles": particles_hash, **(reads or {}), name: settings})
+    return settings_hash({result: result_hash, **(reads or {}), name: settings})
 
 
 __all__ = [

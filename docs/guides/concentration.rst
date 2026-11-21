@@ -116,8 +116,9 @@ The particle file's settings (``varsiwant``, ``outdt``, ``veght``) and
 out, so a ``hysplit`` block that sets them for its particle variants serves
 a concentration variant too; each pollutant has its own ``hours``. A
 ``pollutants`` or ``grids`` without ``mode: concentration`` is refused. A stage reads
-particles, so a project's stages are refused on a concentration variant;
-give the variant ``<stage>: null`` under ``stages``. The particle
+particles unless its class says another type (its ``result``), so a stage of
+particles is refused on a concentration variant; give the variant
+``<stage>: null`` under ``stages``. The particle
 transforms, the plots of particles, and :func:`runtraj.run_trajectories`
 are for particles too.
 

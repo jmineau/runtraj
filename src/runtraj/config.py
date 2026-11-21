@@ -55,6 +55,7 @@ from runtraj.models import (
 )
 from runtraj.results import model_result
 from runtraj.stages import Stage, get_stage, ordered, reads
+from runtraj.stages import result as stage_result
 
 #: Pattern for variant and met names, which become directory names.
 VARIANT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -345,7 +346,7 @@ class Variant:
         for name in self.stage_order:
             read = {r: hashes[r] for r in reads(self.stage(name))}
             hashes[name] = stage_hash(
-                name, self.stage_settings[name], particles_hash, read
+                name, self.stage_settings[name], particles_hash, read, self.result
             )
         return hashes
 
@@ -732,7 +733,7 @@ class ProjectConfig(BaseModel):
             If a variant's transport settings are invalid for its model, its
             realizations would repeat one another, a stage's settings do
             not fit the variant's model, or the variant has a stage and its
-            model makes a result other than particles, which a stage reads.
+            model makes a type of result the stage does not read.
         """
         start = None if directory is None else Path(directory)
         mets: dict[tuple[str, str], Any] = {}
@@ -745,12 +746,17 @@ class ProjectConfig(BaseModel):
                 f"Variant {group!r} ({declared.model})",
             )
             made = model_result(get_model(declared.model), transport)
-            if made != "particles" and declared.stages:
-                names = ", ".join(declared.stages)
+            unread = {
+                name: stage_result(self._stages[name].stage) for name in declared.stages
+            }
+            unread = {name: r for name, r in unread.items() if r != made}
+            if unread:
+                names = ", ".join(unread)
+                needs = ", ".join(f"{n} reads {r}" for n, r in unread.items())
                 raise ValueError(
-                    f"Variant {group!r} makes {made}, not particles, and its "
-                    f"stages ({names}) read particles. Give the variant "
-                    f"{names}: null under stages to leave them out of it."
+                    f"Variant {group!r} makes {made}, and its stages cannot "
+                    f"read it ({needs}). Give the variant {names}: null under "
+                    "stages to leave them out of it."
                 )
             stages: dict[str, Any] = {}
             for name, config in declared.stages.items():

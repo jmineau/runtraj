@@ -26,6 +26,7 @@ COUNT = "tests.fixtures.stages.CountStage"
 DOUBLE = "tests.fixtures.stages.DoubleStage"
 
 ECHO = "tests.fixtures.stages.EchoStage"
+CELLS = "tests.fixtures.stages.CellsStage"
 
 #: Each call of a toy stage's ``run``, as (stage, release id, variant), in order.
 RUNS: list[tuple[str, str, str]] = []
@@ -199,3 +200,49 @@ class Forgetful:
 def chain(**count: Any) -> dict[str, dict[str, Any]]:
     """Return a ``stages`` block with both toy stages, ``double`` written first."""
     return {"double": {"class": DOUBLE}, "count": {"class": COUNT, **count}}
+
+
+class CellsConfig(BaseModel):
+    """Settings of :class:`CellsStage`: none."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class CellsStage:
+    """Writes the sum of every grid of a concentration result, as text: a stage that reads a type other than particles."""
+
+    name = "cells"
+    config_class = CellsConfig
+    suffix = ".txt"
+    result = "concentration"
+
+    def resolve(
+        self,
+        config: CellsConfig,
+        model: str,
+        model_settings: Mapping[str, Any],
+        directory: Path | None,
+    ) -> CellsConfig:
+        """Return *config* as given."""
+        return config
+
+    def settings(self, config: CellsConfig) -> dict[str, Any]:
+        """Return the record of the stage's settings."""
+        return config.model_dump(mode="json")
+
+    def check(
+        self, config: CellsConfig, releases: pd.DataFrame, directory: Path | None
+    ) -> list[tuple[str, str | None, str]]:
+        """List nothing."""
+        return []
+
+    def run(self, config: CellsConfig, sim: Simulation, path: Path | UPath) -> None:
+        """Write the sum of every variable of every grid of *sim*'s concentration result to *path*."""
+        RUNS.append((self.name, sim.release.id, sim.variant.name))
+        tree = sim.concentration
+        total = sum(
+            float(node.to_dataset()[var].sum())
+            for node in tree.subtree
+            for var in node.data_vars
+        )
+        path.write_text(str(total))

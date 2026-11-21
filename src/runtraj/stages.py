@@ -33,6 +33,7 @@ from pydantic import BaseModel
 
 from runtraj._plugins import import_class
 from runtraj.identity import canonical
+from runtraj.results import RESULT_TYPES
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -102,6 +103,10 @@ class Stage(Protocol):
         The names of the stages whose files this one reads, none when the
         stage does not say. A stage runs after the ones it reads, and again
         whenever one of them was made again.
+    result : str, optional
+        The type of transport model result the stage reads
+        (:mod:`runtraj.results`), ``particles`` when the stage does not say.
+        A variant whose model makes another type cannot use the stage.
     """
 
     name: str
@@ -260,7 +265,18 @@ def get_stage(path: str) -> Stage:
             f"{path}: a stage's config_class must be a pydantic model, not "
             f"{config_class!r}."
         )
+    made_from = result(stage)
+    if made_from not in RESULT_TYPES:
+        raise ValueError(
+            f"{path}: a stage's result must be one of {sorted(RESULT_TYPES)}, "
+            f"not {made_from!r}."
+        )
     return stage
+
+
+def result(stage: Stage) -> str:
+    """Return the type of transport model result *stage* reads, ``particles`` when it does not say."""
+    return getattr(stage, "result", "particles")
 
 
 def reads(stage: Stage) -> tuple[str, ...]:
@@ -351,4 +367,5 @@ __all__ = [
     "get_stage",
     "ordered",
     "reads",
+    "result",
 ]

@@ -65,7 +65,7 @@ particle table, Parquet) or `concentration` (a `DataTree` of grids, NetCDF;
 HYSPLIT's `mode: concentration`). A model's optional `result(config)` names
 it (`particles` when it does not), `Variant.result` holds it, and it names
 the tree its files are in; models that make one type follow its one
-schema. A stage reads particles, so a variant of another type has none. A
+schema. A stage reads one type, its optional `result` (`particles` when it does not say), and a variant of another type refuses it; its folder's hash is keyed by that type. A
 particles record never names its type, so no stored hash moved when types
 came in.
 

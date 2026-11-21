@@ -433,6 +433,10 @@ stages:
   Find a file with `sim.path("footprint")` and read it with the reader of
   the package that wrote it. A variant that sets a
   stage to null while another of its stages reads it is refused.
+- **`result`** (optional) is the type of the transport model's result the
+  stage reads (`runtraj.results`), `particles` when it does not say. A
+  stage with `result = "concentration"` reads `sim.concentration`, and a
+  variant whose model makes another type refuses it.
 
 `path` is a `pathlib.Path`, or a `upath.UPath` when the output directory
 is on an object store. Write through `path.open()`, which both have, and

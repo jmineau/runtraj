@@ -14,6 +14,7 @@ import datetime as dt
 import pandas as pd
 import pytest
 import xarray as xr
+import yaml
 
 import runtraj
 from runtraj import ColumnRelease, MultiPointRelease, PointRelease, Project, models
@@ -28,7 +29,7 @@ from runtraj.transforms import (
 
 from .fixtures.factories import make_met_config
 from .fixtures.models import PARTICLE_STEP, TOY, ToyConfig, ToyMet, ToyModel
-from .fixtures.stages import COUNT
+from .fixtures.stages import CELLS, COUNT
 
 NOON = dt.datetime(2023, 1, 1, 12)
 
@@ -391,7 +392,7 @@ def test_each_type_is_read_by_its_own_verb(tmp_path):
 
 
 def test_a_stage_on_a_concentration_variant_is_refused(tmp_path):
-    with pytest.raises(ValueError, match="read particles"):
+    with pytest.raises(ValueError, match="count reads particles"):
         _two_types(tmp_path, stages={"count": {"class": COUNT}})
     # Left out of that variant, the stage runs on the other.
     project = _project(
@@ -467,3 +468,22 @@ def test_pressure_weighting_without_pres_names_no_hysplit_setting():
     with pytest.raises(ValueError, match="'pres'") as error:
         PressureWeighting().apply(particles)
     assert "varsiwant" not in str(error.value).split("HYSPLIT")[0]
+
+
+def test_a_stage_that_reads_concentration_runs_on_that_type_alone(tmp_path):
+    with pytest.raises(ValueError, match="cells reads concentration"):
+        _two_types(tmp_path, stages={"cells": {"class": CELLS}})
+    project = _project(
+        tmp_path / "cells",
+        variants={"toy": {"stages": {"cells": None}}, "grid": {"counts": True}},
+        stages={"cells": {"class": CELLS}},
+    )
+    _run(project)
+    assert (project.status()["state"] == "complete").all()
+    grid = project.variants["grid"]
+    # Its settings folder is keyed by the concentration result it read.
+    folder = project.output.path("cells", grid, project.releases["release"].iloc[0])
+    assert float(folder.read_text()) == 4
+    (settings,) = project.output.directory.joinpath("cells").glob("*/_settings.yaml")
+    record = yaml.safe_load(settings.read_text())
+    assert set(record["reads"]) == {"concentration"}

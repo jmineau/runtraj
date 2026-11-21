@@ -586,12 +586,12 @@ class Output:
         if kind in RESULT_TYPES:
             return settings_hash(read_run_settings(record["settings"]))
         made_from = record.get("reads")
-        if (
-            "class" not in record
-            or not isinstance(made_from, Mapping)
-            or "particles" not in made_from
-        ):
+        if "class" not in record or not isinstance(made_from, Mapping):
             return str(record.get("hash", ""))
+        found = [what for what in made_from if what in RESULT_TYPES]
+        if len(found) != 1:
+            return str(record.get("hash", ""))
+        made = found[0]
         settings = _read_stage_settings(record["class"], record["settings"], str(path))
         hashes = {}
         for what, folder in made_from.items():
@@ -599,7 +599,7 @@ class Output:
                 hashes[what] = self._folder_hash(what, folder["folder"])
             except FileNotFoundError:
                 hashes[what] = folder["hash"]  # its folder is gone: as recorded
-        return stage_hash(kind, settings, hashes.pop("particles"), hashes)
+        return stage_hash(kind, settings, hashes.pop(made), hashes, made)
 
     @staticmethod
     def _variant_hash(kind: Kind, variant: Variant) -> str | None:
@@ -740,7 +740,7 @@ class Output:
             if kind not in variant.stages:
                 raise ValueError(f"Variant {variant.name!r} has no {kind} stage.")
             digest = variant.stage_hashes[kind]
-            made_from = {"particles": variant.particles_hash}
+            made_from = {variant.result: variant.particles_hash}
             made_from.update(
                 {
                     read: variant.stage_hashes[read]
