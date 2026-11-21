@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Running &#8212; runtraj 0.1.0a3</title>
+    <title>Running &#8212; runtraj dev</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
+    <script src="../_static/documentation_options.js?v=5c32a9f4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3" />
+  <meta name="docsearch:version" content="0.1.0a4.dev1+g96ca5c4ec" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -628,7 +628,8 @@ missing files. <code class="docutils literal notranslate"><span class="pre">--re
 archive lacks some, and 3 when it was stopped (Ctrl-C or SIGTERM) or the
 archive was busy or unreachable (<a class="reference internal" href="containers.html#fetch-once"><span class="std std-ref">Fetching the meteorology once</span></a>).</p>
 <p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> fetch first on their own: on Slurm in
-a job the array waits for (<a class="reference internal" href="slurm.html#slurm-fetch"><span class="std std-ref">Met files that download</span></a>), and locally before the
+a job the array waits for (<a class="reference internal" href="slurm.html#slurm-fetch"><span class="std std-ref">Met files that download</span></a>), on Kubernetes in each pod
+in turn with <code class="docutils literal notranslate"><span class="pre">fetch:</span> <span class="pre">true</span></code> (<a class="reference internal" href="containers.html#fetch-once"><span class="std std-ref">Fetching the meteorology once</span></a>), and locally before the
 workers start when <code class="docutils literal notranslate"><span class="pre">cpus</span></code> is above 1. Run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code> yourself to
 see whether the archive has every file before you submit, or before you
 start tasks with <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code> from another scheduler, which does

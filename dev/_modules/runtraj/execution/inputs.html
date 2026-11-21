@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.inputs &#8212; runtraj 0.1.0a3</title>
+    <title>runtraj.execution.inputs &#8212; runtraj dev</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=da35e9cb"></script>
+    <script src="../../../_static/documentation_options.js?v=5c32a9f4"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3" />
+  <meta name="docsearch:version" content="0.1.0a4.dev1+g96ca5c4ec" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -468,6 +468,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
@@ -491,6 +492,9 @@
 <span class="n">LOCK_STALE_SECONDS</span> <span class="o">=</span> <span class="mi">300</span>
 <span class="c1">#: Seconds between a waiting program's looks at a lock.</span>
 <span class="n">LOCK_POLL_SECONDS</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="c1">#: Seconds between a holder's rewrites of its lock, which keep it from</span>
+<span class="c1">#: looking stale while the holder works for longer than :data:`LOCK_STALE_SECONDS`.</span>
+<span class="n">LOCK_REFRESH_SECONDS</span> <span class="o">=</span> <span class="mi">60</span>
 
 
 <div class="viewcode-block" id="hash_inputs">
@@ -751,7 +755,9 @@
 <span class="sd">    it is not there (``open(..., "x")``: ``If-None-Match`` on S3,</span>
 <span class="sd">    ``ifGenerationMatch=0`` on Google Cloud Storage, ``O_EXCL`` on a</span>
 <span class="sd">    folder), and deleted at the end of the block. It says which host and</span>
-<span class="sd">    process holds it. A program that finds it waits, and takes it over if</span>
+<span class="sd">    process holds it. While the block runs, the holder rewrites it every</span>
+<span class="sd">    :data:`LOCK_REFRESH_SECONDS`, so a long hold (a pod downloading the met)</span>
+<span class="sd">    still looks alive. A program that finds it waits, and takes it over if</span>
 <span class="sd">    it has not changed for :data:`LOCK_STALE_SECONDS` by its own clock, so</span>
 <span class="sd">    a holder that crashed does not stop every later one.</span>
 
@@ -772,8 +778,9 @@
 <span class="sd">    -----</span>
 <span class="sd">    A store that ignores ``If-None-Match`` (some older S3-compatible ones)</span>
 <span class="sd">    lets two programs make the lock at once, so it does not protect there.</span>
-<span class="sd">    A holder slower than :data:`LOCK_STALE_SECONDS` can be taken over; it</span>
-<span class="sd">    then logs a warning when it finishes.</span>
+<span class="sd">    A holder that stops rewriting its lock for :data:`LOCK_STALE_SECONDS`</span>
+<span class="sd">    (a process paused that long) can be taken over; it then logs a warning</span>
+<span class="sd">    when it finishes.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -793,11 +800,14 @@
         <span class="n">_acquire</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cannot lock </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+    <span class="n">held</span> <span class="o">=</span> <span class="n">_KeepAlive</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+    <span class="n">held</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">yield</span>
     <span class="k">finally</span><span class="p">:</span>
+        <span class="n">held</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">_release</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_release</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">held</span><span class="o">.</span><span class="n">token</span><span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">"</span><span class="si">%s</span><span class="s2"> was taken over while this program held it, so another "</span>
                     <span class="s2">"may have written </span><span class="si">%s</span><span class="s2"> at the same time."</span><span class="p">,</span>
@@ -813,6 +823,48 @@
                 <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span></div>
 
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_KeepAlive</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Rewrite a held lock every :data:`LOCK_REFRESH_SECONDS`, so waiters see it change.</span>
+
+<span class="sd">    Each rewrite holds a new token (the first with a count after it);</span>
+<span class="sd">    :attr:`token` is the latest, which the holder removes at the end. It</span>
+<span class="sd">    stops when the lock no longer holds its token, which means another</span>
+<span class="sd">    program took it over.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fs</span><span class="p">:</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">AbstractFileSystem</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"keep </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">fs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_done</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_turn</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Rewrite the lock until :meth:`stop`, or until it was taken over."""</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">LOCK_REFRESH_SECONDS</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_turn</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+                    <span class="k">return</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">:</span>
+                        <span class="k">return</span>  <span class="c1"># taken over; the holder warns when it finishes</span>
+                    <span class="n">token</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="si">}</span><span class="s2"> refresh </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">pipe_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="n">token</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="c1"># A missed rewrite is retried at the next; waiters take</span>
+                    <span class="c1"># over only after LOCK_STALE_SECONDS without one.</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Could not rewrite </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Stop rewriting, and wait for a rewrite under way to end."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_turn</span><span class="p">:</span>
+            <span class="k">pass</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_acquire</span><span class="p">(</span><span class="n">fs</span><span class="p">:</span> <span class="n">fsspec</span><span class="o">.</span><span class="n">AbstractFileSystem</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
