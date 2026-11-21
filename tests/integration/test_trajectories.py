@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+import runtraj
 from runtraj import MultiPointRelease, PointRelease, Project
 from runtraj.exceptions import SimulationError
 from runtraj.models import run_model
@@ -112,8 +113,10 @@ def test_a_backward_trajectory_goes_back_in_time(tmp_path, met_dir):
         latitude=40.5,
         altitude=10.0,
     )
-    config = HysplitConfig(n_hours=-3, mode="trajectory", tout=30)
-    table = run_model("hysplit", release, config, reference_met(met_dir)).result
+    # One release without a project, as the guide runs it.
+    table = runtraj.run_trajectories(
+        release, reference_met(met_dir), n_hours=-3, mode="trajectory", tout=30
+    )
     assert table["age"].tolist() == [0, -30, -60, -90, -120, -150, -180]
     assert table["time"].is_monotonic_decreasing
 

@@ -726,12 +726,15 @@ def run_trajectories(
     workdir: str | Path | None = None,
     timeout: int | None = None,
     **params: Any,
-) -> pd.DataFrame:
+) -> Any:
     """
-    Run the transport model for one release and return its particles.
+    Run the transport model for one release and return what it made, particles unless the settings say another type.
 
     This is what a project runs for each release, without a project: the
-    particles are returned, not stored.
+    result is returned, not stored. Its type follows the settings, as a
+    variant's does (:mod:`runtraj.results`): particles, or with HYSPLIT's
+    ``mode="trajectory"`` the trajectory table, or with
+    ``mode="concentration"`` the grids.
 
     Parameters
     ----------
@@ -759,11 +762,14 @@ def run_trajectories(
 
     Returns
     -------
-    pandas.DataFrame
+    pandas.DataFrame or xarray.DataTree
         The particle table, one row per particle per output step, with
         ``time`` (UTC), the release time plus ``age``, as a table read from
         a particle file has. ``foot`` is the model's own (HYSPLIT's, made
         with ``veght``). A model that writes no ``foot`` returns none.
+        With settings that make another type, that type's result: the
+        trajectory table (:mod:`runtraj.trajectories`), or a tree of
+        concentration grids (:mod:`runtraj.concentration`).
 
     Raises
     ------
@@ -787,15 +793,13 @@ def run_trajectories(
     ...     n_hours=-24,
     ...     numpar=200,  # HYSPLIT's particle count
     ... )  # doctest: +SKIP
+    >>> path = runtraj.run_trajectories(
+    ...     release, "/data/hrrr", n_hours=-24, mode="trajectory"
+    ... )  # doctest: +SKIP
     """
     transport_model = get_model(model)
     config = transport_model.config_class(**params)
     made = model_result(transport_model, config)
-    if made != "particles":
-        raise ValueError(
-            f"run_trajectories returns particles, and these settings make {made}. "
-            "Use runtraj.models.run_model, whose result is the run's."
-        )
     met_config = transport_model.met_config_class.model_validate(met)
     if workdir is not None:
         workdir = Path(workdir)
@@ -806,6 +810,8 @@ def run_trajectories(
             )
         workdir.mkdir(parents=True, exist_ok=True)
     particles = run_model(model, release, config, met_config, workdir, timeout).result
+    if made != "particles":
+        return particles
     particles["time"] = pd.Timestamp(release.time) + pd.to_timedelta(
         particles["age"].to_numpy(), unit="min"
     )

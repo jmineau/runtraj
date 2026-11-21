@@ -426,11 +426,15 @@ def test_a_concentration_run_that_made_nothing_fails_with_its_type(
     assert (failed["reason"] == "NO_CONCENTRATION_DATA").all()
 
 
-def test_run_trajectories_refuses_settings_that_make_no_particles():
-    with pytest.raises(ValueError, match="make concentration"):
-        runtraj.run_trajectories(
-            _release(), {"weather": "hrrr"}, model=TOY, n_hours=2, counts=True
-        )
+def test_run_trajectories_returns_the_type_the_settings_make():
+    tree = runtraj.run_trajectories(
+        _release(), {"weather": "hrrr"}, model=TOY, n_hours=2, counts=True
+    )
+    assert isinstance(tree, xr.DataTree)
+    particles = runtraj.run_trajectories(
+        _release(), {"weather": "hrrr"}, model=TOY, n_hours=2
+    )
+    assert "time" in particles.columns
 
 
 def test_check_model_holds_a_concentration_model_to_its_type():

@@ -28,15 +28,13 @@ back from 10 m above Salt Lake Valley:
 .. code-block:: python
 
    import runtraj
-   from runtraj.models import run_model
-   from runtraj.models.hysplit import HysplitConfig, MetConfig
 
    release = runtraj.PointRelease(
        time="2021-07-15 10:30", longitude=-112.0, latitude=40.5, altitude=10
    )
-   config = HysplitConfig(n_hours=-6, mode="trajectory")
-   met = MetConfig.model_validate("/data/hrrr")
-   trajectories = run_model("hysplit", release, config, met).result
+   trajectories = runtraj.run_trajectories(
+       release, "/data/hrrr", n_hours=-6, mode="trajectory"
+   )
    trajectories
 
 .. code-block:: text
@@ -121,8 +119,9 @@ at one place, at different heights, which is how you compare levels:
        latitudes=[40.5, 40.5, 41.0],
        altitudes=[10, 500, 100],
    )
-   config = HysplitConfig(n_hours=6, mode="trajectory", tout=30, tm_tpot=1, tm_mixd=1)
-   trajectories = run_model("hysplit", levels, config, met).result
+   trajectories = runtraj.run_trajectories(
+       levels, "/data/hrrr", n_hours=6, mode="trajectory", tout=30, tm_tpot=1, tm_mixd=1
+   )
    trajectories.head(6)
 
 .. code-block:: text
