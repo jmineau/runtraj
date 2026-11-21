@@ -1,9 +1,12 @@
 """
-HYSPLIT's config: every setting that shapes the particles HYSPLIT makes.
+HYSPLIT's config: every setting that shapes what HYSPLIT makes.
 
 :class:`HysplitConfig` holds them. Most are HYSPLIT's own, under HYSPLIT's
-names; a few are used by runtraj itself. Which input file each goes to is
-the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).
+names; a few are used by runtraj itself. Its ``mode`` says what a run
+makes: particles (HYSPLIT's particle output, ``ICHEM=8``, the default) or concentration
+grids, whose pollutants and grids are :class:`Pollutant` and
+:class:`ConcentrationGrid` records. Which input file each setting goes to
+is the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).
 """
 
 from __future__ import annotations
@@ -11,7 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, ClassVar, Literal, Self
 
-from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from runtraj.models import TransportConfig
 
@@ -50,17 +53,209 @@ HYSPLIT_VARSIWANT = (
     "pres",
 )
 
-#: ``SETUP.CFG`` entries written with the same value in every run, which no
-#: setting changes. ``ICHEM=8`` is HYSPLIT's particle output mode, the only
-#: mode in which ``hycs_std`` opens the particle file runtraj reads, and
-#: ``IDSP=2`` is the dispersion scheme that writes its rows: with ``IDSP=1``
-#: the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).
+#: ``SETUP.CFG`` entries written with the same value in every run of the
+#: particles mode, which no setting changes. ``ICHEM=8`` is HYSPLIT's particle
+#: output mode, the only mode in which ``hycs_std`` opens the particle file
+#: runtraj reads, and ``IDSP=2`` is the dispersion scheme that writes its rows:
+#: with ``IDSP=1`` the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).
 FIXED_SETUP: dict[str, Any] = {"ichem": 8, "idsp": 2}
+
+#: ``SETUP.CFG`` entries written in every run of the concentration mode:
+#: HYSPLIT's own concentration output (``ICHEM=0``), with its own dispersion
+#: scheme (``IDSP`` unset, HYSPLIT's 1).
+FIXED_CONCENTRATION_SETUP: dict[str, Any] = {"ichem": 0}
+
+
+#: Settings only the particles mode reads: the particle file's variables
+#: and interval, the height of ``foot`` (``veght``), and the release's length (in the
+#: concentration mode each pollutant has its own ``hours``). A concentration
+#: run leaves them out: neither written nor recorded, so a ``hysplit`` block
+#: that sets them for its particle variants serves a concentration variant too.
+PARTICLES_SETTINGS = ("varsiwant", "outdt", "veght", "emisshrs")
+
+#: Settings only the concentration mode reads.
+CONCENTRATION_SETTINGS = ("pollutants", "grids")
+
+#: The ``CPACK`` values whose concentration file runtraj reads: 0 every cell,
+#: 1 and 3 only the cells that are not zero (written the same way).
+CPACK_READ = (0, 1, 3)
+
+#: What one sample of a concentration grid is.
+Sampling = Literal["average", "snapshot", "maximum"]
+
+#: HYSPLIT's sampling types, line 25 of each grid in ``CONTROL``.
+SAMPLING_TYPES: dict[Sampling, int] = {"average": 0, "snapshot": 1, "maximum": 2}
+
+
+class Pollutant(BaseModel):
+    """
+    One pollutant of a HYSPLIT concentration run: what is released, and how it is removed.
+
+    Every pollutant is released at every release location, and counted on
+    every grid. The removal settings are HYSPLIT's deposition lines of
+    ``CONTROL``, in HYSPLIT's units; all zero, the default, is a gas that
+    is not removed. See the HYSPLIT user guide for each.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    name: str = Field(
+        ...,
+        pattern=r"^[A-Za-z0-9_]{1,4}$",
+        description=(
+            "Up to four letters or digits: HYSPLIT's identifier, and the name "
+            "of the pollutant's variable in each grid."
+        ),
+    )
+    rate: float = Field(
+        1.0,
+        ge=0,
+        description=(
+            "Emission rate, per hour, at each release location. Its mass unit "
+            "is the concentration's: 1 per hour for an hour gives a mass of 1."
+        ),
+    )
+    hours: float = Field(
+        1.0,
+        gt=0,
+        description="How long the pollutant is released, in hours, from the release time.",
+    )
+    particle_diameter: float = Field(
+        0.0, ge=0, description="Particle diameter, in micrometers. 0 for a gas."
+    )
+    particle_density: float = Field(
+        0.0, ge=0, description="Particle density, in g/cm3. 0 for a gas."
+    )
+    particle_shape: float = Field(
+        0.0, ge=0, description="Particle shape factor. 0 for a gas."
+    )
+    deposition_velocity: float = Field(
+        0.0,
+        ge=0,
+        description="Dry deposition velocity, in m/s. 0 for none, or to compute it from the settings below.",
+    )
+    molecular_weight: float = Field(
+        0.0, ge=0, description="Molecular weight, in g/mol, for the resistance method."
+    )
+    surface_reactivity: float = Field(
+        0.0, ge=0, description="Surface reactivity ratio, for the resistance method."
+    )
+    diffusivity_ratio: float = Field(
+        0.0, ge=0, description="Diffusivity ratio, for the resistance method."
+    )
+    henry_effective: float = Field(
+        0.0,
+        ge=0,
+        description="Effective Henry's constant, in M/atm, for the resistance method.",
+    )
+    henry: float = Field(
+        0.0, ge=0, description="Henry's constant for wet removal of a gas, in M/atm."
+    )
+    in_cloud: float = Field(
+        0.0, ge=0, description="In-cloud wet removal, in L/L (particles)."
+    )
+    below_cloud: float = Field(
+        0.0, ge=0, description="Below-cloud wet removal, in 1/s (particles)."
+    )
+    half_life: float = Field(
+        0.0, ge=0, description="Radioactive decay half-life, in days. 0 for none."
+    )
+    resuspension: float = Field(
+        0.0, ge=0, description="Resuspension factor of deposited mass, in 1/m."
+    )
+
+
+class ConcentrationGrid(BaseModel):
+    """
+    One grid of a HYSPLIT concentration run: where and how often the particles are counted.
+
+    A grid is regular in latitude and longitude, with levels of heights
+    above ground. HYSPLIT averages, snapshots, or takes the maximum of the
+    concentration over each sampling interval, from the start of the run to
+    its end.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    name: str = Field(
+        ...,
+        pattern=r"^[A-Za-z0-9_-]{1,32}$",
+        description="The grid's name: its group in the result's file, and its child in the tree.",
+    )
+    center_lon: float | None = Field(
+        None,
+        ge=-180,
+        le=360,
+        description=(
+            "Longitude of the grid's center, in degrees. Unset with "
+            "``center_lat``, the grid is centered on each release."
+        ),
+    )
+    center_lat: float | None = Field(
+        None,
+        ge=-90,
+        le=90,
+        description="Latitude of the grid's center, in degrees. Set with ``center_lon``.",
+    )
+    spacing_lat: float = Field(
+        0.05,
+        gt=0,
+        description="Distance between rows of cells, in degrees of latitude.",
+    )
+    spacing_lon: float = Field(
+        0.05,
+        gt=0,
+        description="Distance between columns of cells, in degrees of longitude.",
+    )
+    span_lat: float = Field(
+        1.0, gt=0, description="How far the grid reaches in latitude, in degrees."
+    )
+    span_lon: float = Field(
+        1.0, gt=0, description="How far the grid reaches in longitude, in degrees."
+    )
+    levels: list[int] = Field(
+        default_factory=lambda: [100],
+        min_length=1,
+        description=(
+            "Top of each level, in whole meters above ground, from the "
+            "bottom. A level of 0 counts deposition on the ground."
+        ),
+    )
+    sampling: Sampling = Field(
+        "average",
+        description="What each sample is: the average over its interval, the value at its end, or the maximum.",
+    )
+    sampling_interval: int = Field(
+        60,
+        gt=0,
+        description="Length of each sample, in minutes.",
+    )
+
+    @model_validator(mode="after")
+    def _check(self) -> Self:
+        """Refuse a center with one coordinate, a center HYSPLIT would read as the release, and levels out of order."""
+        if (self.center_lon is None) != (self.center_lat is None):
+            raise ValueError(
+                f"Grid {self.name!r}: set center_lon and center_lat together, "
+                "or neither to center the grid on each release."
+            )
+        if self.center_lon == 0 and self.center_lat == 0:
+            raise ValueError(
+                f"Grid {self.name!r}: HYSPLIT reads a center of 0, 0 as the "
+                "release location. Leave center_lon and center_lat unset for that."
+            )
+        levels = self.levels
+        if any(z < 0 for z in levels) or levels != sorted(set(levels)):
+            raise ValueError(
+                f"Grid {self.name!r}: levels must be heights of 0 m or more, "
+                f"each above the one before, not {levels}."
+            )
+        return self
 
 
 class HysplitConfig(TransportConfig):
     """
-    HYSPLIT's config: every setting that shapes the particles it makes.
+    HYSPLIT's config: every setting that shapes what it makes.
 
     In ``config.yaml`` they are the keys of the ``hysplit`` block under
     ``models:``, and a variant may override any of them. Most are HYSPLIT ``SETUP.CFG`` entries with
@@ -86,6 +281,17 @@ class HysplitConfig(TransportConfig):
     ``SETUP.CFG``, from the mode and ``numpar``, so they are unset by
     default: an unset setting is not written, and HYSPLIT chooses.
     ``n_hours`` has no default.
+
+    ``mode`` says what a run makes. ``particles`` (the default) is the
+    particle table, from HYSPLIT's particle output (``ICHEM=8``). ``concentration`` is
+    HYSPLIT's own concentration grids (``ICHEM=0``), one grid of each of
+    ``grids`` with a variable for each of ``pollutants``. A concentration
+    run leaves out the particle file's settings
+    (:data:`PARTICLES_SETTINGS`), which a ``hysplit`` block may set for
+    its particle variants; ``pollutants`` and ``grids`` without ``mode:
+    concentration`` are refused. A particles-mode run
+    records no ``mode``, ``pollutants`` or ``grids``, so its settings
+    folder is the one it had before the mode existed.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -95,6 +301,29 @@ class HysplitConfig(TransportConfig):
     #: table.
     UNRECORDED: ClassVar[frozenset[str]] = frozenset({"directory"})
 
+    mode: Literal["particles", "concentration"] = Field(
+        "particles",
+        description=(
+            "What HYSPLIT makes: ``particles``, the particle table, or "
+            "``concentration``, grids of each pollutant's concentration "
+            "(``grids`` and ``pollutants``)."
+        ),
+    )
+    pollutants: list[Pollutant] = Field(
+        default_factory=list,
+        description=(
+            "The pollutants of a concentration run, each released at every "
+            "release location and counted on every grid. At least one in "
+            "``mode: concentration``; none otherwise."
+        ),
+    )
+    grids: list[ConcentrationGrid] = Field(
+        default_factory=list,
+        description=(
+            "The grids of a concentration run. At least one in ``mode: "
+            "concentration``; none otherwise."
+        ),
+    )
     numpar: int = Field(
         2500,
         ge=1,
@@ -171,7 +400,7 @@ class HysplitConfig(TransportConfig):
         0,
         description=(
             "Compute grid concentrations (0) or grid mass (1). "
-            "Read only for HYSPLIT's concentration grid, which runtraj does not read."
+            "Read only for HYSPLIT's concentration grids (``mode: concentration``)."
         ),
     )
     conage: int = Field(
@@ -185,8 +414,9 @@ class HysplitConfig(TransportConfig):
         None,
         description=(
             "Packing of the binary concentration grid: 0 every point, 1 only "
-            "nonzero points. Unset, HYSPLIT chooses. "
-            "Read only for HYSPLIT's concentration grid, which runtraj does not read."
+            "nonzero points. Unset, HYSPLIT chooses 1. Read only for HYSPLIT's "
+            "concentration grids (``mode: concentration``), where 2, one "
+            "point per grid, is refused: runtraj does not read its file."
         ),
     )
     delt: float = Field(
@@ -693,6 +923,56 @@ class HysplitConfig(TransportConfig):
         return value
 
     @model_validator(mode="after")
+    def _validate_mode(self) -> Self:
+        """Refuse pollutants and grids outside the concentration mode, and a concentration run without a pollutant or a grid."""
+        if self.mode == "particles":
+            used = [n for n in CONCENTRATION_SETTINGS if getattr(self, n)]
+            if used:
+                raise ValueError(
+                    f"{', '.join(used)} are settings of HYSPLIT's mode: "
+                    "concentration, and this config's mode is particles. Set "
+                    "mode: concentration, or leave them out."
+                )
+            return self
+        for name in CONCENTRATION_SETTINGS:
+            records = getattr(self, name)
+            if not records:
+                raise ValueError(
+                    f"HYSPLIT's mode: concentration needs at least one of {name}."
+                )
+            names = [r.name for r in records]
+            twice = sorted({n for n in names if names.count(n) > 1})
+            if twice:
+                raise ValueError(
+                    f"Two of {name} are named {twice}: each needs its own name."
+                )
+        if self.cpack is not None and self.cpack not in CPACK_READ:
+            raise ValueError(
+                f"cpack={self.cpack} is not read: runtraj reads HYSPLIT's "
+                f"concentration files with cpack {', '.join(map(str, CPACK_READ))}."
+            )
+        return self
+
+    def settings(self) -> dict[str, Any]:
+        """
+        Return what a run records of this config: the settings of its mode.
+
+        A particles-mode record has no ``mode``, ``pollutants`` or
+        ``grids``, so it is the record (and the settings folder) a run had
+        before the mode existed. A concentration-mode record has no
+        :data:`PARTICLES_SETTINGS`.
+        """
+        record = super().settings()
+        drop = (
+            ("mode", *CONCENTRATION_SETTINGS)
+            if self.mode == "particles"
+            else PARTICLES_SETTINGS
+        )
+        for name in drop:
+            record.pop(name, None)
+        return record
+
+    @model_validator(mode="after")
     def _validate_error_params(self) -> Self:
         """Require each error group to be set in full or not at all."""
         for name, fields in (("XY", WIND_ERROR_SETTINGS), ("ZI", ZI_ERROR_SETTINGS)):
@@ -803,7 +1083,14 @@ class HysplitConfig(TransportConfig):
 
 
 __all__ = [
+    "CONCENTRATION_SETTINGS",
+    "CPACK_READ",
+    "FIXED_CONCENTRATION_SETUP",
     "FIXED_SETUP",
+    "PARTICLES_SETTINGS",
+    "SAMPLING_TYPES",
+    "ConcentrationGrid",
+    "Pollutant",
     "HYSPLIT_VARSIWANT",
     "MAX_ZISCALE_HOURS",
     "WIND_ERROR_SETTINGS",

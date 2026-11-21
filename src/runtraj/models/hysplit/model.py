@@ -12,10 +12,15 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import xarray as xr
+
+from runtraj.concentration import require_netcdf4
 from runtraj.exceptions import SimulationError
 from runtraj.models import ModelRun
 
+from .cdump import read_cdump
 from .config import HysplitConfig
+from .control import cdump_name
 from .driver import (
     LOG_FILE,
     PARTICLE_FILE,
@@ -121,7 +126,9 @@ class HysplitModel:
     :meth:`run` picks the met files a release needs, writes HYSPLIT's input
     files (:func:`~runtraj.models.hysplit.write_inputs`), runs ``hycs_std``,
     and reads the particles it writes
-    (:func:`~runtraj.models.hysplit.read_particle_dat`). HYSPLIT reads the
+    (:func:`~runtraj.models.hysplit.read_particle_dat`), or, in the
+    concentration mode, the file of each grid
+    (:func:`~runtraj.models.hysplit.read_cdump`). HYSPLIT reads the
     met where it is (the cropped copies when the met is cropped), so nothing
     is staged per run.
     """
@@ -136,6 +143,17 @@ class HysplitModel:
     particle_files = (PARTICLE_FILE,)
     #: One hycs_std process per release.
     batched = False
+
+    def result(self, config: HysplitConfig) -> str:
+        """
+        Return the type of result a run with *config* makes: its ``mode``, ``particles`` or ``concentration``.
+
+        Examples
+        --------
+        >>> HysplitModel().result(HysplitConfig(n_hours=-24))
+        'particles'
+        """
+        return config.mode
 
     def sha256(self, config: HysplitConfig) -> str:
         """
@@ -271,7 +289,7 @@ class HysplitModel:
         timeout: int | None = None,
     ) -> ModelRun:
         """
-        Run HYSPLIT for one release in *workdir* and return its particles.
+        Run HYSPLIT for one release in *workdir* and return its particles, or its grids in the concentration mode.
 
         It finds the met files that cover *window*, up to the met step at
         or after its end, which HYSPLIT interpolates, cropped when the met
@@ -290,8 +308,10 @@ class HysplitModel:
             ``hycs_std`` was killed by a signal or exited with a non-zero
             status, whatever it had written; ``PARTICLE_LIMIT``
             when ``maxpar`` stopped a release from several locations before
-            the last ones got their particles; or ``NO_PARTICLE_DATA`` when
-            HYSPLIT wrote no particle file. A run whose particles stopped
+            the last ones got their particles; ``NO_PARTICLE_DATA`` when
+            HYSPLIT wrote no particle file; or ``NO_CONCENTRATION_DATA``
+            when a concentration run wrote no file for a grid, or one with
+            no sample, as a run shorter than its sampling interval. A run whose particles stopped
             before ``n_hours`` well inside the met's domain fails as
             ``MET_COVERAGE`` too, when ``outdt`` is 0: more than 5 grid
             cells from every side of the met grid.
@@ -305,6 +325,8 @@ class HysplitModel:
         if workdir is None:
             with tempfile.TemporaryDirectory(prefix="runtraj-") as tmp:
                 return self.run(release, config, met, window, Path(tmp), timeout)
+        if config.mode == "concentration":
+            require_netcdf4()  # before the run, which could not be stored
         files = Met("met", met)
         source = files.files_for(window)
         readable = files.readable(source)
@@ -313,21 +335,67 @@ class HysplitModel:
         try:
             run_hycs_std(workdir, timeout)
             check_release(workdir, release.coords(), config)
-            path = workdir / PARTICLE_FILE
-            if not path.exists():
-                raise SimulationError(
-                    f"HYSPLIT wrote no {PARTICLE_FILE}.",
-                    reason=FailureReason.NO_PARTICLE_DATA,
-                )
-            particles = read_particle_dat(path, config.varsiwant)
-            if config.outdt == 0:  # the check needs a row every time step
-                check_met_stop(particles, config.n_hours, _met_grid(readable[0]))
+            if config.mode == "concentration":
+                result: pd.DataFrame | xr.DataTree = _read_grids(workdir, config)
+            else:
+                result = _read_particles(workdir, config, readable[0])
         except SimulationError as error:
             error.log = _read_log(workdir)
             raise
         # The record names the files found for the run: the archive's, or a
         # crop that served it; the crop settings are in the run's settings.
-        return ModelRun(result=particles, log=_read_log(workdir), met_files=source)
+        return ModelRun(result=result, log=_read_log(workdir), met_files=source)
+
+
+def _read_particles(
+    workdir: Path, config: HysplitConfig, met_file: Path
+) -> pd.DataFrame:
+    """Return the particles a run in *workdir* wrote, checked for a met that ran out."""
+    path = workdir / PARTICLE_FILE
+    if not path.exists():
+        raise SimulationError(
+            f"HYSPLIT wrote no {PARTICLE_FILE}.",
+            reason=FailureReason.NO_PARTICLE_DATA,
+        )
+    particles = read_particle_dat(path, config.varsiwant)
+    if config.outdt == 0:  # the check needs a row every time step
+        check_met_stop(particles, config.n_hours, _met_grid(met_file))
+    return particles
+
+
+def _read_grids(workdir: Path, config: HysplitConfig) -> xr.DataTree:
+    """
+    Return the grids a concentration run in *workdir* wrote, a child each, named as in *config*.
+
+    Raises
+    ------
+    SimulationError
+        With ``reason`` ``NO_CONCENTRATION_DATA`` when a grid has no file,
+        or its file holds no sample.
+    """
+    grids = {}
+    for grid in config.grids:
+        path = workdir / cdump_name(grid.name)
+        if not path.exists():
+            raise SimulationError(
+                f"HYSPLIT wrote no {path.name} for grid {grid.name!r}.",
+                reason=FailureReason.NO_CONCENTRATION_DATA,
+            )
+        try:
+            ds = read_cdump(path)
+        except ValueError as error:
+            raise SimulationError(
+                str(error), reason=FailureReason.NO_CONCENTRATION_DATA
+            ) from error
+        if ds.sizes["time"] == 0:
+            raise SimulationError(
+                f"HYSPLIT wrote no sample to grid {grid.name!r}: its "
+                f"sampling_interval ({grid.sampling_interval} min) may be "
+                f"longer than the run ({abs(config.n_hours)} h).",
+                reason=FailureReason.NO_CONCENTRATION_DATA,
+            )
+        grids[grid.name] = ds
+    return xr.DataTree.from_dict(grids)
 
 
 def _write_inputs(

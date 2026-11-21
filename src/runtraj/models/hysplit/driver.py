@@ -3,7 +3,8 @@ Write HYSPLIT's input files, run ``hycs_std``, and read the particles it writes.
 
 :func:`write_inputs` fills a working directory with everything
 ``hycs_std`` reads, and :func:`read_particle_dat` reads the particle file
-it writes. :class:`~runtraj.models.hysplit.HysplitModel` runs the two
+it writes (:func:`runtraj.models.hysplit.read_cdump` the concentration
+file of a concentration run). :class:`~runtraj.models.hysplit.HysplitModel` runs the two
 around ``hycs_std`` in one directory; call them yourself to look at the
 input files of a run, or to read a particle file from elsewhere.
 """
@@ -22,7 +23,10 @@ import pandas as pd
 
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
 from runtraj.models.hysplit.config import (
+    CONCENTRATION_SETTINGS,
+    FIXED_CONCENTRATION_SETUP,
     FIXED_SETUP,
+    PARTICLES_SETTINGS,
     WIND_ERROR_SETTINGS,
     ZI_ERROR_SETTINGS,
     HysplitConfig,
@@ -63,7 +67,7 @@ MESSAGE_TAIL_LINES = 20
 CONTROL_SETTINGS = ("n_hours", "emisshrs", "w_option", "z_top")
 
 #: Settings runtraj uses itself, in no HYSPLIT input file.
-RUNTRAJ_SETTINGS = ("directory",)
+RUNTRAJ_SETTINGS = ("directory", "mode")
 
 #: Every setting that is not a ``SETUP.CFG`` entry. All other settings are.
 NOT_IN_SETUP = frozenset(
@@ -73,6 +77,7 @@ NOT_IN_SETUP = frozenset(
         *WIND_ERROR_SETTINGS,
         *ZI_ERROR_SETTINGS,
         *RUNTRAJ_SETTINGS,
+        *CONCENTRATION_SETTINGS,  # CONTROL
     }
 )
 
@@ -237,18 +242,22 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
     """
     Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.
 
-    The entries of :data:`FIXED_SETUP` come first, then every setting not
-    in :data:`NOT_IN_SETUP`, in declaration order, under their own names.
-    The driver adds
-    ``KMSL``, ``IVMAX``, and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
+    The entries of :data:`FIXED_SETUP` come first
+    (:data:`FIXED_CONCENTRATION_SETUP` in the concentration mode), then
+    every setting not in :data:`NOT_IN_SETUP`, in declaration order, under
+    their own names; the concentration mode leaves out the particle file's
+    settings (:data:`PARTICLES_SETTINGS`). The driver adds
+    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
     is unset, which depend on the release locations or follow from other
     settings.
     """
-    entries = dict(FIXED_SETUP)
+    particles = params.mode == "particles"
+    entries = dict(FIXED_SETUP if particles else FIXED_CONCENTRATION_SETUP)
+    skip = NOT_IN_SETUP if particles else NOT_IN_SETUP | set(PARTICLES_SETTINGS)
     entries.update(
         (name, getattr(params, name))
         for name in HysplitConfig.model_fields
-        if name not in NOT_IN_SETUP and getattr(params, name) is not None
+        if name not in skip and getattr(params, name) is not None
     )
     entries["zicontroltf"] = zicontroltf(params)
     if params.seed is not None:
@@ -523,12 +532,15 @@ def write_inputs(
         w_option=config.w_option,
         z_top=config.z_top,
         met_files=list(met_files),
+        pollutants=config.pollutants,
+        grids=config.grids,
     ).write(workdir / CONTROL_FILE)
 
     entries = setup_entries(config)
     entries["kmsl"] = kmsl
     entries["maxpar"] = config.maxpar_for(release_locations(locations))
-    entries["ivmax"] = len(config.varsiwant)  # number of output variables
+    if config.mode == "particles":
+        entries["ivmax"] = len(config.varsiwant)  # number of output variables
     entries["winderrtf"] = winderrtf(config)
     setup = NameList("SETUP")
     setup.update(entries)
