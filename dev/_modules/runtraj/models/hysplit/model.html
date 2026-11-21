@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=cf94108f"></script>
+    <script src="../../../../_static/documentation_options.js?v=d72d97a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev4+g9771c4736" />
+  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -465,10 +465,15 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.concentration</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_netcdf4</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelRun</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">HysplitConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cdump</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cdump</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConcentrationGrid</span><span class="p">,</span> <span class="n">HysplitConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.control</span><span class="w"> </span><span class="kn">import</span> <span class="n">cdump_name</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.driver</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LOG_FILE</span><span class="p">,</span>
     <span class="n">PARTICLE_FILE</span><span class="p">,</span>
@@ -576,7 +581,9 @@
 <span class="sd">    :meth:`run` picks the met files a release needs, writes HYSPLIT's input</span>
 <span class="sd">    files (:func:`~runtraj.models.hysplit.write_inputs`), runs ``hycs_std``,</span>
 <span class="sd">    and reads the particles it writes</span>
-<span class="sd">    (:func:`~runtraj.models.hysplit.read_particle_dat`). HYSPLIT reads the</span>
+<span class="sd">    (:func:`~runtraj.models.hysplit.read_particle_dat`), or, in the</span>
+<span class="sd">    concentration mode, the file of each grid</span>
+<span class="sd">    (:func:`~runtraj.models.hysplit.read_cdump`). HYSPLIT reads the</span>
 <span class="sd">    met where it is (the cropped copies when the met is cropped), so nothing</span>
 <span class="sd">    is staged per run.</span>
 <span class="sd">    """</span>
@@ -587,10 +594,40 @@
     <span class="n">met_config_class</span> <span class="o">=</span> <span class="n">MetConfig</span>
     <span class="c1">#: HYSPLIT writes its inputs and outputs as files in a directory.</span>
     <span class="n">needs_workdir</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="c1">#: Its particle file, left out of a failed run's kept workdir.</span>
-    <span class="n">particle_files</span> <span class="o">=</span> <span class="p">(</span><span class="n">PARTICLE_FILE</span><span class="p">,)</span>
     <span class="c1">#: One hycs_std process per release.</span>
     <span class="n">batched</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="HysplitModel.result">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitModel.result.html#runtraj.models.hysplit.HysplitModel.result">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the type of result a run with *config* makes: its ``mode``, ``particles`` or ``concentration``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; HysplitModel().result(HysplitConfig(n_hours=-24))</span>
+<span class="sd">        'particles'</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span></div>
+
+
+<div class="viewcode-block" id="HysplitModel.result_files">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitModel.result_files.html#runtraj.models.hysplit.HysplitModel.result_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">result_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the files of a run with *config* that hold its result, left out of a failed run's kept workdir.</span>
+
+<span class="sd">        The particle file, or in concentration mode each grid's ``cdump_&lt;name&gt;``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; HysplitModel().result_files(HysplitConfig(n_hours=-24))</span>
+<span class="sd">        ('PARTICLE_STILT.DAT',)</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cdump_name</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">grid</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">grids</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">PARTICLE_FILE</span><span class="p">,)</span></div>
+
 
 <div class="viewcode-block" id="HysplitModel.sha256">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitModel.sha256.html#runtraj.models.hysplit.HysplitModel.sha256">[docs]</a>
@@ -752,7 +789,7 @@
         <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Run HYSPLIT for one release in *workdir* and return its particles.</span>
+<span class="sd">        Run HYSPLIT for one release in *workdir* and return its particles, or its grids in the concentration mode.</span>
 
 <span class="sd">        It finds the met files that cover *window*, up to the met step at</span>
 <span class="sd">        or after its end, which HYSPLIT interpolates, cropped when the met</span>
@@ -771,8 +808,11 @@
 <span class="sd">            ``hycs_std`` was killed by a signal or exited with a non-zero</span>
 <span class="sd">            status, whatever it had written; ``PARTICLE_LIMIT``</span>
 <span class="sd">            when ``maxpar`` stopped a release from several locations before</span>
-<span class="sd">            the last ones got their particles; or ``NO_PARTICLE_DATA`` when</span>
-<span class="sd">            HYSPLIT wrote no particle file. A run whose particles stopped</span>
+<span class="sd">            the last ones got their particles; ``NO_PARTICLE_DATA`` when</span>
+<span class="sd">            HYSPLIT wrote no particle file; or ``NO_CONCENTRATION_DATA``</span>
+<span class="sd">            when a concentration run wrote no file for a grid, or one with</span>
+<span class="sd">            no sample, as a run shorter than its sampling interval, or fewer</span>
+<span class="sd">            samples than the run holds, as a run that stopped early. A run whose particles stopped</span>
 <span class="sd">            before ``n_hours`` well inside the met's domain fails as</span>
 <span class="sd">            ``MET_COVERAGE`` too, when ``outdt`` is 0: more than 5 grid</span>
 <span class="sd">            cells from every side of the met grid.</span>
@@ -786,6 +826,8 @@
         <span class="k">if</span> <span class="n">workdir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"runtraj-"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">),</span> <span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span><span class="p">:</span>
+            <span class="n">require_netcdf4</span><span class="p">()</span>  <span class="c1"># before the run, which could not be stored</span>
         <span class="n">files</span> <span class="o">=</span> <span class="n">Met</span><span class="p">(</span><span class="s2">"met"</span><span class="p">,</span> <span class="n">met</span><span class="p">)</span>
         <span class="n">source</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">files_for</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
         <span class="n">readable</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">readable</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
@@ -794,23 +836,93 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">run_hycs_std</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
             <span class="n">check_release</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">release</span><span class="o">.</span><span class="n">coords</span><span class="p">(),</span> <span class="n">config</span><span class="p">)</span>
-            <span class="n">path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">PARTICLE_FILE</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"HYSPLIT wrote no </span><span class="si">{</span><span class="n">PARTICLE_FILE</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
-                    <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_PARTICLE_DATA</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">particles</span> <span class="o">=</span> <span class="n">read_particle_dat</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">outdt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># the check needs a row every time step</span>
-                <span class="n">check_met_stop</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">,</span> <span class="n">_met_grid</span><span class="p">(</span><span class="n">readable</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span> <span class="o">=</span> <span class="n">_read_grids</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">_read_particles</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">readable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">except</span> <span class="n">SimulationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="n">error</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
             <span class="k">raise</span>
         <span class="c1"># The record names the files found for the run: the archive's, or a</span>
         <span class="c1"># crop that served it; the crop settings are in the run's settings.</span>
-        <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span><span class="n">particles</span><span class="o">=</span><span class="n">particles</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span><span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span><span class="p">)</span></div>
 </div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_particles</span><span class="p">(</span>
+    <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">met_file</span><span class="p">:</span> <span class="n">Path</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the particles a run in *workdir* wrote, checked for a met that ran out."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">PARTICLE_FILE</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"HYSPLIT wrote no </span><span class="si">{</span><span class="n">PARTICLE_FILE</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+            <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_PARTICLE_DATA</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">particles</span> <span class="o">=</span> <span class="n">read_particle_dat</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">outdt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># the check needs a row every time step</span>
+        <span class="n">check_met_stop</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">,</span> <span class="n">_met_grid</span><span class="p">(</span><span class="n">met_file</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">particles</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_grids</span><span class="p">(</span><span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the grids a concentration run in *workdir* wrote, a child each, named as in *config*.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    SimulationError</span>
+<span class="sd">        With ``reason`` ``NO_CONCENTRATION_DATA`` when a grid has no file,</span>
+<span class="sd">        or its file holds no sample, or fewer samples than a whole run</span>
+<span class="sd">        writes (:func:`_samples_expected`).</span>
+<span class="sd">    """</span>
+    <span class="n">grids</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">grid</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">grids</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">cdump_name</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"HYSPLIT wrote no </span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> for grid </span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">."</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_CONCENTRATION_DATA</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">read_cdump</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">cmass</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_CONCENTRATION_DATA</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+        <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"HYSPLIT wrote no sample to grid </span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: its "</span>
+                <span class="sa">f</span><span class="s2">"sampling_interval (</span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">sampling_interval</span><span class="si">}</span><span class="s2"> min) may be "</span>
+                <span class="sa">f</span><span class="s2">"longer than the run (</span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">)</span><span class="si">}</span><span class="s2"> h)."</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_CONCENTRATION_DATA</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="n">_samples_expected</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">expected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"HYSPLIT wrote </span><span class="si">{</span><span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s1">'time'</span><span class="p">]</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2"> samples "</span>
+                <span class="sa">f</span><span class="s2">"grid </span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> holds for a </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">)</span><span class="si">}</span><span class="s2"> h run: "</span>
+                <span class="s2">"it stopped before the end of the run."</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_CONCENTRATION_DATA</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">grids</span><span class="p">[</span><span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span>
+    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">grids</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_samples_expected</span><span class="p">(</span><span class="n">grid</span><span class="p">:</span> <span class="n">ConcentrationGrid</span><span class="p">,</span> <span class="n">n_hours</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return how many samples HYSPLIT writes to *grid* in a run that reaches its end.</span>
+
+<span class="sd">    ``CONDSK`` writes a sample each time the run passes a multiple of the</span>
+<span class="sd">    sampling interval, counted from the start of the run (the grid's</span>
+<span class="sd">    sampling start is the run's start, and its stop the run's end), in</span>
+<span class="sd">    either direction. The part of the run after the last whole interval</span>
+<span class="sd">    has none. The grid's interval is the one HYSPLIT uses: the config</span>
+<span class="sd">    refuses one that HYSPLIT would change (an hour or more that is not a</span>
+<span class="sd">    whole number of hours).</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">//</span> <span class="n">grid</span><span class="o">.</span><span class="n">sampling_interval</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_inputs</span><span class="p">(</span>

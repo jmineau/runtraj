@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=cf94108f"></script>
+    <script src="../../../../_static/documentation_options.js?v=d72d97a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev4+g9771c4736" />
+  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -452,19 +452,23 @@
                   
   <h1>Source code for runtraj.models.hysplit.config</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""</span>
-<span class="sd">HYSPLIT's config: every setting that shapes the particles HYSPLIT makes.</span>
+<span class="sd">HYSPLIT's config: every setting that shapes what HYSPLIT makes.</span>
 
 <span class="sd">:class:`HysplitConfig` holds them. Most are HYSPLIT's own, under HYSPLIT's</span>
-<span class="sd">names; a few are used by runtraj itself. Which input file each goes to is</span>
-<span class="sd">the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).</span>
+<span class="sd">names; a few are used by runtraj itself. Its ``mode`` says what a run</span>
+<span class="sd">makes: particles (HYSPLIT's particle output, ``ICHEM=8``, the default) or concentration</span>
+<span class="sd">grids, whose pollutants and grids are :class:`Pollutant` and</span>
+<span class="sd">:class:`ConcentrationGrid` records. Which input file each setting goes to</span>
+<span class="sd">is the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Self</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransportConfig</span>
 
@@ -503,19 +507,252 @@
     <span class="s2">"pres"</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="c1">#: ``SETUP.CFG`` entries written with the same value in every run, which no</span>
-<span class="c1">#: setting changes. ``ICHEM=8`` is HYSPLIT's particle output mode, the only</span>
-<span class="c1">#: mode in which ``hycs_std`` opens the particle file runtraj reads, and</span>
-<span class="c1">#: ``IDSP=2`` is the dispersion scheme that writes its rows: with ``IDSP=1``</span>
-<span class="c1">#: the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).</span>
+<span class="c1">#: ``SETUP.CFG`` entries written with the same value in every run of the</span>
+<span class="c1">#: particles mode, which no setting changes. ``ICHEM=8`` is HYSPLIT's particle</span>
+<span class="c1">#: output mode, the only mode in which ``hycs_std`` opens the particle file</span>
+<span class="c1">#: runtraj reads, and ``IDSP=2`` is the dispersion scheme that writes its rows:</span>
+<span class="c1">#: with ``IDSP=1`` the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).</span>
 <span class="n">FIXED_SETUP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ichem"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"idsp"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+<span class="c1">#: ``SETUP.CFG`` entries written in every run of the concentration mode:</span>
+<span class="c1">#: HYSPLIT's own concentration output (``ICHEM=0``), with its own dispersion</span>
+<span class="c1">#: scheme (``IDSP`` unset, HYSPLIT's 1).</span>
+<span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ichem"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+
+<span class="c1">#: Settings only the particles mode reads: the particle file's variables</span>
+<span class="c1">#: and interval, the height of ``foot`` (``veght``), and the release's length (in the</span>
+<span class="c1">#: concentration mode each pollutant has its own ``hours``). A concentration</span>
+<span class="c1">#: run leaves them out: neither written nor recorded, so a ``hysplit`` block</span>
+<span class="c1">#: that sets them for its particle variants serves a concentration variant too.</span>
+<span class="n">PARTICLES_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"varsiwant"</span><span class="p">,</span> <span class="s2">"outdt"</span><span class="p">,</span> <span class="s2">"veght"</span><span class="p">,</span> <span class="s2">"emisshrs"</span><span class="p">)</span>
+
+<span class="c1">#: Settings only the concentration mode reads.</span>
+<span class="n">CONCENTRATION_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pollutants"</span><span class="p">,</span> <span class="s2">"grids"</span><span class="p">)</span>
+
+<span class="c1">#: The ``CPACK`` values whose concentration file runtraj reads: 0 every cell,</span>
+<span class="c1">#: 1 and 3 only the cells that are not zero (written the same way).</span>
+<span class="n">CPACK_READ</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="c1">#: What one sample of a concentration grid is.</span>
+<span class="n">Sampling</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"average"</span><span class="p">,</span> <span class="s2">"snapshot"</span><span class="p">,</span> <span class="s2">"maximum"</span><span class="p">]</span>
+
+<span class="c1">#: HYSPLIT's sampling types, line 25 of each grid in ``CONTROL``.</span>
+<span class="n">SAMPLING_TYPES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Sampling</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"average"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"snapshot"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"maximum"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+
+<span class="c1">#: Names a pollutant cannot have: a grid's coordinates, which its variables share a Dataset with.</span>
+<span class="c1">#: (``time_end`` is a coordinate too, but longer than a pollutant's four characters.)</span>
+<span class="n">RESERVED_POLLUTANT_NAMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">})</span>
+
+
+<div class="viewcode-block" id="Pollutant">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.Pollutant.html#runtraj.models.hysplit.Pollutant">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Pollutant</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    One pollutant of a HYSPLIT concentration run: what is released, and how it is removed.</span>
+
+<span class="sd">    Every pollutant is released at every release location, and counted on</span>
+<span class="sd">    every grid. The removal settings are HYSPLIT's deposition lines of</span>
+<span class="sd">    ``CONTROL``, in HYSPLIT's units; all zero, the default, is a gas that</span>
+<span class="sd">    is not removed. See the HYSPLIT user guide for each.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9_]{1,4}$"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Up to four letters or digits: HYSPLIT's identifier, and the name "</span>
+            <span class="s2">"of the pollutant's variable in each grid. Not ``lat``, ``lon``, "</span>
+            <span class="s2">"``z`` or ``time``, which name the grid's coordinates."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Emission rate, per hour, at each release location. Its mass unit "</span>
+            <span class="s2">"is the concentration's: 1 per hour for an hour gives a mass of 1."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"How long the pollutant is released, in hours, from the release time."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">particle_diameter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Particle diameter, in micrometers. 0 for a gas."</span>
+    <span class="p">)</span>
+    <span class="n">particle_density</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Particle density, in g/cm3. 0 for a gas."</span>
+    <span class="p">)</span>
+    <span class="n">particle_shape</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Particle shape factor. 0 for a gas."</span>
+    <span class="p">)</span>
+    <span class="n">deposition_velocity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Dry deposition velocity, in m/s. 0 for none, or to compute it from the settings below."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">molecular_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Molecular weight, in g/mol, for the resistance method."</span>
+    <span class="p">)</span>
+    <span class="n">surface_reactivity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Surface reactivity ratio, for the resistance method."</span>
+    <span class="p">)</span>
+    <span class="n">diffusivity_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Diffusivity ratio, for the resistance method."</span>
+    <span class="p">)</span>
+    <span class="n">henry_effective</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Effective Henry's constant, in M/atm, for the resistance method."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">henry</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Henry's constant for wet removal of a gas, in M/atm."</span>
+    <span class="p">)</span>
+    <span class="n">in_cloud</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"In-cloud wet removal, in L/L (particles)."</span>
+    <span class="p">)</span>
+    <span class="n">below_cloud</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Below-cloud wet removal, in 1/s (particles)."</span>
+    <span class="p">)</span>
+    <span class="n">half_life</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Radioactive decay half-life, in days. 0 for none."</span>
+    <span class="p">)</span>
+    <span class="n">resuspension</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Resuspension factor of deposited mass, in 1/m."</span>
+    <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_not_a_coordinate</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a name a grid's coordinates use, which its variable cannot have."""</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">RESERVED_POLLUTANT_NAMES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> is the name of a coordinate of every grid, and a "</span>
+                <span class="s2">"grid's pollutant is a variable of the same Dataset. Use "</span>
+                <span class="sa">f</span><span class="s2">"another name, not one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">RESERVED_POLLUTANT_NAMES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="ConcentrationGrid">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.ConcentrationGrid.html#runtraj.models.hysplit.ConcentrationGrid">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConcentrationGrid</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    One grid of a HYSPLIT concentration run: where and how often the particles are counted.</span>
+
+<span class="sd">    A grid is regular in latitude and longitude, with levels of heights</span>
+<span class="sd">    above ground. HYSPLIT averages, snapshots, or takes the maximum of the</span>
+<span class="sd">    concentration over each sampling interval, from the start of the run to</span>
+<span class="sd">    its end.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9_-]{1,32}$"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The grid's name: its group in the result's file, and its child in the tree."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">center_lon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=-</span><span class="mi">180</span><span class="p">,</span>
+        <span class="n">le</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Longitude of the grid's center, in degrees. Unset with "</span>
+            <span class="s2">"``center_lat``, the grid is centered on each release."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">center_lat</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=-</span><span class="mi">90</span><span class="p">,</span>
+        <span class="n">le</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Latitude of the grid's center, in degrees. Set with ``center_lon``."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">spacing_lat</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Distance between rows of cells, in degrees of latitude."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">spacing_lon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Distance between columns of cells, in degrees of longitude."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">span_lat</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">1.0</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"How far the grid reaches in latitude, in degrees."</span>
+    <span class="p">)</span>
+    <span class="n">span_lon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">1.0</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"How far the grid reaches in longitude, in degrees."</span>
+    <span class="p">)</span>
+    <span class="n">levels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">],</span>
+        <span class="n">min_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Top of each level, in whole meters above ground, from the "</span>
+            <span class="s2">"bottom. A level of 0 counts deposition on the ground."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">sampling</span><span class="p">:</span> <span class="n">Sampling</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"average"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"What each sample is: the average over its interval, the value at its end, or the maximum."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">sampling_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">60</span><span class="p">,</span>
+        <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Length of each sample, in minutes: under an hour, any number; "</span>
+            <span class="s2">"an hour or more, a whole number of hours (60, 120, ...), which "</span>
+            <span class="s2">"is how HYSPLIT reads it."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"sampling_interval"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_whole_hours</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an interval of an hour or more that HYSPLIT would shorten to whole hours."""</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;=</span> <span class="mi">60</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">%</span> <span class="mi">60</span><span class="p">:</span>
+            <span class="n">below</span> <span class="o">=</span> <span class="n">value</span> <span class="o">//</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"HYSPLIT reads a sampling interval of an hour or more in whole "</span>
+                <span class="sa">f</span><span class="s2">"hours and drops the minutes, so </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> minutes would be "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">below</span><span class="si">}</span><span class="s2">. Use </span><span class="si">{</span><span class="n">below</span><span class="si">}</span><span class="s2"> or </span><span class="si">{</span><span class="n">below</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">60</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a center with one coordinate, a center HYSPLIT would read as the release, and levels out of order."""</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center_lon</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center_lat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Grid </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: set center_lon and center_lat together, "</span>
+                <span class="s2">"or neither to center the grid on each release."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_lon</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_lat</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Grid </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: HYSPLIT reads a center of 0, 0 as the "</span>
+                <span class="s2">"release location. Leave center_lon and center_lat unset for that."</span>
+            <span class="p">)</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">z</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">)</span> <span class="ow">or</span> <span class="n">levels</span> <span class="o">!=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">levels</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Grid </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: levels must be heights of 0 m or more, "</span>
+                <span class="sa">f</span><span class="s2">"each above the one before, not </span><span class="si">{</span><span class="n">levels</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
 
 
 <div class="viewcode-block" id="HysplitConfig">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">HysplitConfig</span><span class="p">(</span><span class="n">TransportConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    HYSPLIT's config: every setting that shapes the particles it makes.</span>
+<span class="sd">    HYSPLIT's config: every setting that shapes what it makes.</span>
 
 <span class="sd">    In ``config.yaml`` they are the keys of the ``hysplit`` block under</span>
 <span class="sd">    ``models:``, and a variant may override any of them. Most are HYSPLIT ``SETUP.CFG`` entries with</span>
@@ -541,6 +778,17 @@
 <span class="sd">    ``SETUP.CFG``, from the mode and ``numpar``, so they are unset by</span>
 <span class="sd">    default: an unset setting is not written, and HYSPLIT chooses.</span>
 <span class="sd">    ``n_hours`` has no default.</span>
+
+<span class="sd">    ``mode`` says what a run makes. ``particles`` (the default) is the</span>
+<span class="sd">    particle table, from HYSPLIT's particle output (``ICHEM=8``). ``concentration`` is</span>
+<span class="sd">    HYSPLIT's own concentration grids (``ICHEM=0``), one grid of each of</span>
+<span class="sd">    ``grids`` with a variable for each of ``pollutants``. A concentration</span>
+<span class="sd">    run leaves out the particle file's settings</span>
+<span class="sd">    (:data:`PARTICLES_SETTINGS`), which a ``hysplit`` block may set for</span>
+<span class="sd">    its particle variants; ``pollutants`` and ``grids`` without ``mode:</span>
+<span class="sd">    concentration`` are refused. A particles-mode run</span>
+<span class="sd">    records no ``mode``, ``pollutants`` or ``grids``, so its settings</span>
+<span class="sd">    folder is the one it had before the mode existed.</span>
 <span class="sd">    """</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -550,6 +798,29 @@
     <span class="c1">#: table.</span>
     <span class="n">UNRECORDED</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"directory"</span><span class="p">})</span>
 
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"particles"</span><span class="p">,</span> <span class="s2">"concentration"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"particles"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"What HYSPLIT makes: ``particles``, the particle table, or "</span>
+            <span class="s2">"``concentration``, grids of each pollutant's concentration "</span>
+            <span class="s2">"(``grids`` and ``pollutants``)."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">pollutants</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Pollutant</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The pollutants of a concentration run, each released at every "</span>
+            <span class="s2">"release location and counted on every grid. At least one in "</span>
+            <span class="s2">"``mode: concentration``; none otherwise."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">grids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ConcentrationGrid</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The grids of a concentration run. At least one in ``mode: "</span>
+            <span class="s2">"concentration``; none otherwise."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
     <span class="n">numpar</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="mi">2500</span><span class="p">,</span>
         <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -626,7 +897,9 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Compute grid concentrations (0) or grid mass (1). "</span>
-            <span class="s2">"Read only for HYSPLIT's concentration grid, which runtraj does not read."</span>
+            <span class="s2">"Read only for HYSPLIT's concentration grids (``mode: concentration``), "</span>
+            <span class="s2">"where 1 makes each cell hold mass, not mass per volume, and "</span>
+            <span class="s2">"counts no deposition at ``z = 0``."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">conage</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -640,8 +913,9 @@
         <span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Packing of the binary concentration grid: 0 every point, 1 only "</span>
-            <span class="s2">"nonzero points. Unset, HYSPLIT chooses. "</span>
-            <span class="s2">"Read only for HYSPLIT's concentration grid, which runtraj does not read."</span>
+            <span class="s2">"nonzero points. Unset, HYSPLIT chooses 1. Read only for HYSPLIT's "</span>
+            <span class="s2">"concentration grids (``mode: concentration``), where 2, one "</span>
+            <span class="s2">"point per grid, is refused: runtraj does not read its file."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">delt</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -866,7 +1140,9 @@
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Maximum number of particles in a simulation. Unset gives every "</span>
             <span class="s2">"release location its full share: ``numpar`` for one location, "</span>
-            <span class="s2">"``n * (numpar // n + 1)`` for n. A set value that stops a "</span>
+            <span class="s2">"``n * (numpar // n + 1)`` for n; and a concentration run, which "</span>
+            <span class="s2">"releases over many time steps, ``numpar`` and HYSPLIT's rounding "</span>
+            <span class="s2">"for each emission cycle. A set value that stops a "</span>
             <span class="s2">"multipoint release before its last location fails the run."</span>
         <span class="p">),</span>
     <span class="p">)</span>
@@ -1148,6 +1424,59 @@
         <span class="k">return</span> <span class="n">value</span>
 
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse pollutants and grids outside the concentration mode, and a concentration run without a pollutant or a grid."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
+            <span class="n">used</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">CONCENTRATION_SETTINGS</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">used</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">used</span><span class="p">)</span><span class="si">}</span><span class="s2"> are settings of HYSPLIT's mode: "</span>
+                    <span class="s2">"concentration, and this config's mode is particles. Set "</span>
+                    <span class="s2">"mode: concentration, or leave them out."</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">CONCENTRATION_SETTINGS</span><span class="p">:</span>
+            <span class="n">records</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">records</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"HYSPLIT's mode: concentration needs at least one of </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">]</span>
+            <span class="n">twice</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">})</span>
+            <span class="k">if</span> <span class="n">twice</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Two of </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> are named </span><span class="si">{</span><span class="n">twice</span><span class="si">}</span><span class="s2">: each needs its own name."</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpack</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">cpack</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CPACK_READ</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"cpack=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cpack</span><span class="si">}</span><span class="s2"> is not read: runtraj reads HYSPLIT's "</span>
+                <span class="sa">f</span><span class="s2">"concentration files with cpack </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">CPACK_READ</span><span class="p">))</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="HysplitConfig.settings">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitConfig.settings.html#runtraj.models.hysplit.HysplitConfig.settings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return what a run records of this config: the settings of its mode.</span>
+
+<span class="sd">        A particles-mode record has no ``mode``, ``pollutants`` or</span>
+<span class="sd">        ``grids``, so it is the record (and the settings folder) a run had</span>
+<span class="sd">        before the mode existed. A concentration-mode record has no</span>
+<span class="sd">        :data:`PARTICLES_SETTINGS`.</span>
+<span class="sd">        """</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">settings</span><span class="p">()</span>
+        <span class="n">drop</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="o">*</span><span class="n">CONCENTRATION_SETTINGS</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
+            <span class="k">else</span> <span class="n">PARTICLES_SETTINGS</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">drop</span><span class="p">:</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">record</span></div>
+
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_error_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Require each error group to be set in full or not at all."""</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">fields</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"XY"</span><span class="p">,</span> <span class="n">WIND_ERROR_SETTINGS</span><span class="p">),</span> <span class="p">(</span><span class="s2">"ZI"</span><span class="p">,</span> <span class="n">ZI_ERROR_SETTINGS</span><span class="p">)):</span>
@@ -1214,15 +1543,38 @@
 <span class="sd">        and several get ``locations * (numpar // locations + 1)``, so the</span>
 <span class="sd">        last locations are not left short.</span>
 
+<span class="sd">        A concentration run releases over many time steps, each pollutant</span>
+<span class="sd">        for its ``hours``, and again every ``qcycle`` hours. HYSPLIT</span>
+<span class="sd">        rounds the particles of an hour and of a time step up, for each</span>
+<span class="sd">        pollutant at each location, so it asks for more than ``numpar``</span>
+<span class="sd">        in a cycle: such a run gets ``numpar`` and one particle a minute</span>
+<span class="sd">        and one an hour for each pollutant at each location, times the</span>
+<span class="sd">        number of cycles. With less, HYSPLIT stops releasing before the</span>
+<span class="sd">        end of the emission and the grids hold less than was released.</span>
+
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; HysplitConfig(n_hours=-24, numpar=1000).maxpar_for(40)</span>
 <span class="sd">        1040</span>
 <span class="sd">        &gt;&gt;&gt; HysplitConfig(n_hours=-24, numpar=1000).maxpar_for(1)</span>
 <span class="sd">        1000</span>
+<span class="sd">        &gt;&gt;&gt; HysplitConfig(</span>
+<span class="sd">        ...     n_hours=4,</span>
+<span class="sd">        ...     numpar=1000,</span>
+<span class="sd">        ...     mode="concentration",</span>
+<span class="sd">        ...     pollutants=[{"name": "TRCA", "hours": 1}],</span>
+<span class="sd">        ...     grids=[{"name": "g"}],</span>
+<span class="sd">        ... ).maxpar_for(2)</span>
+<span class="sd">        1124</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxpar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxpar</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span><span class="p">:</span>
+            <span class="n">rounding</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">61</span> <span class="o">*</span> <span class="n">p</span><span class="o">.</span><span class="n">hours</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pollutants</span><span class="p">)</span>
+            <span class="n">cycles</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">qcycle</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">qcycle</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">cycles</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">locations</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">rounding</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">locations</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">numpar</span>
         <span class="k">return</span> <span class="n">locations</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">//</span> <span class="n">locations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
@@ -1268,7 +1620,14 @@
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"CONCENTRATION_SETTINGS"</span><span class="p">,</span>
+    <span class="s2">"CPACK_READ"</span><span class="p">,</span>
+    <span class="s2">"FIXED_CONCENTRATION_SETUP"</span><span class="p">,</span>
     <span class="s2">"FIXED_SETUP"</span><span class="p">,</span>
+    <span class="s2">"PARTICLES_SETTINGS"</span><span class="p">,</span>
+    <span class="s2">"SAMPLING_TYPES"</span><span class="p">,</span>
+    <span class="s2">"ConcentrationGrid"</span><span class="p">,</span>
+    <span class="s2">"Pollutant"</span><span class="p">,</span>
     <span class="s2">"HYSPLIT_VARSIWANT"</span><span class="p">,</span>
     <span class="s2">"MAX_ZISCALE_HOURS"</span><span class="p">,</span>
     <span class="s2">"WIND_ERROR_SETTINGS"</span><span class="p">,</span>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtraj.execution.worker.run_particles &#8212; runtraj dev</title>
+    <title>runtraj.Simulation.result_path &#8212; runtraj dev</title>
   
   
   
@@ -42,13 +42,13 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=cf94108f"></script>
+    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.execution.worker.run_particles';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.Simulation.result_path';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
@@ -60,13 +60,13 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="runtraj.execution.worker.run_stage" href="runtraj.execution.worker.run_stage.html" />
-    <link rel="prev" title="runtraj.execution.runner.resolve_compute_root" href="runtraj.execution.runner.resolve_compute_root.html" />
+    <link rel="next" title="runtraj.Simulation.transport" href="runtraj.Simulation.transport.html" />
+    <link rel="prev" title="runtraj.Simulation.result" href="runtraj.Simulation.result.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev4+g9771c4736" />
+  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -75,7 +75,7 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="runtraj">
-  <meta property="og:title" content="runtraj.execution.worker.run_particles">
+  <meta property="og:title" content="runtraj.Simulation.result_path">
   <meta property="og:description" content="Run particle dispersion models at scale.">
   <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -411,7 +411,7 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../core.html">Core Objects</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../core.html">Core Objects</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="runtraj.run_trajectories.html">runtraj.run_trajectories</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Project.html">runtraj.Project</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.config.html">runtraj.Project.config</a></li>
@@ -426,6 +426,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.add_releases.html">runtraj.Project.add_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.add_table.html">runtraj.Project.add_table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.check.html">runtraj.Project.check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.Project.concentration.html">runtraj.Project.concentration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.fetch.html">runtraj.Project.fetch</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.folders.html">runtraj.Project.folders</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.incomplete.html">runtraj.Project.incomplete</a></li>
@@ -473,9 +474,11 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.releases.releases_to_frame.html">runtraj.releases.releases_to_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.releases.releases_from_frame.html">runtraj.releases.releases_from_frame</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.releases.parse_release_id.html">runtraj.releases.parse_release_id</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Simulation.html">runtraj.Simulation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.Simulation.html">runtraj.Simulation</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.concentration.html">runtraj.Simulation.concentration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.failure.html">runtraj.Simulation.failure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.has_particles.html">runtraj.Simulation.has_particles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.has_result.html">runtraj.Simulation.has_result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.id.html">runtraj.Simulation.id</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.is_complete.html">runtraj.Simulation.is_complete</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.kept_workdir.html">runtraj.Simulation.kept_workdir</a></li>
@@ -483,6 +486,8 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.log_path.html">runtraj.Simulation.log_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.particles.html">runtraj.Simulation.particles</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.particles_path.html">runtraj.Simulation.particles_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.result.html">runtraj.Simulation.result</a></li>
+<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.Simulation.result_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.transport.html">runtraj.Simulation.transport</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.has.html">runtraj.Simulation.has</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.path.html">runtraj.Simulation.path</a></li>
@@ -491,9 +496,10 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.config.Variant.html">runtraj.config.Variant</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.build.html">runtraj.config.Variant.build</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.met_settings.html">runtraj.config.Variant.met_settings</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.particles_hash.html">runtraj.config.Variant.particles_hash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.readable_run_settings.html">runtraj.config.Variant.readable_run_settings</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.realization_numbers.html">runtraj.config.Variant.realization_numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.result.html">runtraj.config.Variant.result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.result_hash.html">runtraj.config.Variant.result_hash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.run_settings.html">runtraj.config.Variant.run_settings</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.stage_hashes.html">runtraj.config.Variant.stage_hashes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.config.Variant.stage_order.html">runtraj.config.Variant.stage_order</a></li>
@@ -533,6 +539,19 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.particles.add_release_heights.html">runtraj.particles.add_release_heights</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.sampling.sample_met.html">runtraj.sampling.sample_met</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.sampling.calc_pbl_height.html">runtraj.sampling.calc_pbl_height</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../concentration.html">Result Types and Concentration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.results.RESULT_TYPES.html">runtraj.results.RESULT_TYPES</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.results.ResultType.html">runtraj.results.ResultType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.results.result_type.html">runtraj.results.result_type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.results.model_result.html">runtraj.results.model_result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.CONCENTRATION_DIMS.html">runtraj.concentration.CONCENTRATION_DIMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.check_concentration.html">runtraj.concentration.check_concentration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.describe_grid.html">runtraj.concentration.describe_grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.write_concentration.html">runtraj.concentration.write_concentration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.require_netcdf4.html">runtraj.concentration.require_netcdf4</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../transforms.html">Transforms and Sampling</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -636,14 +655,14 @@
 </details></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="../execution.html">Execution</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../execution.html">Execution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pending.html">runtraj.execution.pending</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.wait.html">runtraj.execution.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.task_share.html">runtraj.execution.task_share</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.runner.resolve_compute_root.html">runtraj.execution.runner.resolve_compute_root</a></li>
-<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.execution.worker.run_particles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_result.html">runtraj.execution.worker.run_result</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_stage.html">runtraj.execution.worker.run_stage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_stages.html">runtraj.execution.worker.run_stages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_release.html">runtraj.execution.worker.run_release</a></li>
@@ -697,13 +716,14 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.batched.html">runtraj.models.hysplit.HysplitModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.needs_workdir.html">runtraj.models.hysplit.HysplitModel.needs_workdir</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.particle_files.html">runtraj.models.hysplit.HysplitModel.particle_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_met.html">runtraj.models.hysplit.HysplitModel.check_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.data_files.html">runtraj.models.hysplit.HysplitModel.data_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.downloads_met.html">runtraj.models.hysplit.HysplitModel.downloads_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.fetch_met.html">runtraj.models.hysplit.HysplitModel.fetch_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.release_rows.html">runtraj.models.hysplit.HysplitModel.release_rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.result.html">runtraj.models.hysplit.HysplitModel.result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.result_files.html">runtraj.models.hysplit.HysplitModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.run.html">runtraj.models.hysplit.HysplitModel.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.sha256.html">runtraj.models.hysplit.HysplitModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.version.html">runtraj.models.hysplit.HysplitModel.version</a></li>
@@ -743,6 +763,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.table.html">runtraj.output.Output.table</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.write_log.html">runtraj.output.Output.write_log</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.write_particles.html">runtraj.output.Output.write_particles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.write_result.html">runtraj.output.Output.write_result</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.output.completed.html">runtraj.output.completed</a></li>
@@ -754,6 +775,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.hourly_ziscale.html">runtraj.models.hysplit.HysplitConfig.hourly_ziscale</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.maxpar_for.html">runtraj.models.hysplit.HysplitConfig.maxpar_for</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.realizations.html">runtraj.models.hysplit.HysplitConfig.realizations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.settings.html">runtraj.models.hysplit.HysplitConfig.settings</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.find_hycs_std.html">runtraj.models.hysplit.find_hycs_std</a></li>
@@ -761,6 +783,9 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
@@ -825,9 +850,12 @@
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Reference</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../execution.html" class="nav-link">Execution</a></li>
+    <li class="breadcrumb-item"><a href="../core.html" class="nav-link">Core Objects</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.execution.worker.run_particles</span></li>
+    
+    <li class="breadcrumb-item"><a href="runtraj.Simulation.html" class="nav-link">runtraj.Simulation</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.Simulation.result_path</span></li>
   </ul>
 </nav>
 </div>
@@ -844,41 +872,15 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="runtraj-execution-worker-run-particles">
-<h1>runtraj.execution.worker.run_particles<a class="headerlink" href="#runtraj-execution-worker-run-particles" title="Link to this heading">#</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="runtraj.execution.worker.run_particles">
-<span class="sig-prename descclassname"><span class="pre">runtraj.execution.worker.</span></span><span class="sig-name descname"><span class="pre">run_particles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/execution/worker.html#run_particles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.worker.run_particles" title="Link to this definition">#</a></dt>
-<dd><p>Run the transport model for a simulation and write its particles to the output directory.</p>
-<p>The transport model the variant names runs in <em>workdir</em>
-(<a class="reference internal" href="runtraj.models.run_model.html#runtraj.models.run_model" title="runtraj.models.run_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.models.run_model()</span></code></a>), with the variant’s met. Its log is written to the output
-directory whether the run succeeds or fails. The working directory is
-then removed, unless the run failed or <em>keep_workdir</em> is set, in which
-case it is copied under the output directory’s <code class="docutils literal notranslate"><span class="pre">scratch/</span></code> first. A
-failed run’s copy leaves out the model’s <code class="docutils literal notranslate"><span class="pre">particle_files</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sim</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="runtraj.Simulation.html#runtraj.Simulation" title="runtraj.Simulation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Simulation</span></code></a></span>) – What to run.</p></li>
-<li><p><strong>workdir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span>) – Directory to run in, made here. Anything in it is removed first,
-so each run needs its own.</p></li>
-<li><p><strong>keep_workdir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Keep the working directory of a successful run too.</p></li>
-<li><p><strong>timeout</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Time limit for the transport model run, in seconds.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The particles, also written to the output directory.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="runtraj.exceptions.SimulationError.html#runtraj.exceptions.SimulationError" title="runtraj.exceptions.SimulationError"><strong>SimulationError</strong></a> – As the transport model raises it (with a <code class="docutils literal notranslate"><span class="pre">reason</span></code>), or with
-    <code class="docutils literal notranslate"><span class="pre">reason</span></code> <code class="docutils literal notranslate"><span class="pre">NO_PARTICLE_DATA</span></code> when the model wrote no particles.
-    <a class="reference internal" href="runtraj.exceptions.MeteorologyError.html#runtraj.exceptions.MeteorologyError" title="runtraj.exceptions.MeteorologyError"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeteorologyError</span></code></a> when the met files are
-    missing.</p>
-</dd>
-</dl>
+  <section id="runtraj-simulation-result-path">
+<h1>runtraj.Simulation.result_path<a class="headerlink" href="#runtraj-simulation-result-path" title="Link to this heading">#</a></h1>
+<dl class="py property">
+<dt class="sig sig-object py" id="runtraj.Simulation.result_path">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Simulation.</span></span><span class="sig-name descname"><span class="pre">result_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><span class="pre">Path</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">UPath</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><a class="headerlink" href="#runtraj.Simulation.result_path" title="Link to this definition">#</a></dt>
+<dd><p>Path of the transport model’s result in the output directory, or <code class="docutils literal notranslate"><span class="pre">None</span></code> before its folder exists.</p>
+<p>The particle file for a variant that makes particles
+(<a class="reference internal" href="runtraj.Simulation.particles_path.html#runtraj.Simulation.particles_path" title="runtraj.Simulation.particles_path"><code class="xref py py-attr docutils literal notranslate"><span class="pre">particles_path</span></code></a>), the concentration file for one that makes
+concentration: the type of <a class="reference internal" href="runtraj.config.Variant.result.html#runtraj.config.Variant.result" title="runtraj.config.Variant.result"><code class="xref py py-attr docutils literal notranslate"><span class="pre">runtraj.config.Variant.result</span></code></a>.</p>
 </dd></dl>
 
 </section>
@@ -894,20 +896,20 @@ so each run needs its own.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="runtraj.execution.runner.resolve_compute_root.html"
+       href="runtraj.Simulation.result.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">runtraj.execution.runner.resolve_compute_root</p>
+        <p class="prev-next-title">runtraj.Simulation.result</p>
       </div>
     </a>
     <a class="right-next"
-       href="runtraj.execution.worker.run_stage.html"
+       href="runtraj.Simulation.transport.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">runtraj.execution.worker.run_stage</p>
+        <p class="prev-next-title">runtraj.Simulation.transport</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -930,14 +932,14 @@ so each run needs its own.</p></li>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.execution.worker.run_particles"><code class="docutils literal notranslate"><span class="pre">run_particles()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.Simulation.result_path"><code class="docutils literal notranslate"><span class="pre">Simulation.result_path</span></code></a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/reference/_api/runtraj.execution.worker.run_particles.rst.txt">
+    <a href="../../_sources/reference/_api/runtraj.Simulation.result_path.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

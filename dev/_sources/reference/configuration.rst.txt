@@ -83,6 +83,15 @@ it runs.
 
 .. config-model:: runtraj.models.hysplit.HysplitConfig
 
+The keys of one entry under ``pollutants:``, in ``mode: concentration``
+(:doc:`../guides/concentration`).
+
+.. config-model:: runtraj.models.hysplit.Pollutant
+
+The keys of one entry under ``grids:``, in ``mode: concentration``.
+
+.. config-model:: runtraj.models.hysplit.ConcentrationGrid
+
 A model in another package gets a block of any name that gives the model
 class's import path as ``class``, then that model's own settings:
 

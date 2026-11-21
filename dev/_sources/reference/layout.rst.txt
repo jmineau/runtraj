@@ -10,7 +10,8 @@ The folders
 -----------
 
 Each kind of result has its own tree: ``particles/`` for what the transport
-model wrote, and one named for each stage of the project, which is what is
+model wrote (``concentration/`` for a variant that makes concentration,
+:doc:`concentration`), and one named for each stage of the project, which is what is
 made from a simulation's results afterward. PYSTILT's footprint is a stage,
 and its tree is ``footprint/``; the examples here show it. Inside a tree,
 each settings folder holds the
@@ -27,6 +28,10 @@ results of one set of settings, split by the release's date:
          _settings.yaml
          realization=0/date=2024-07-15/<release id>.parquet
          realization=1/date=2024-07-15/<release id>.parquet
+     concentration/                              a variant with mode: concentration
+       settings=conc-41e9a0/
+         _settings.yaml
+         date=2024-07-15/<release id>.nc
      footprint/
        settings=hrrr-f82d40/
          _settings.yaml
@@ -47,7 +52,7 @@ release's release date in UTC. An ensemble (``realizations: N``) has a
 The ``logs/`` tree follows the folders of the results:
 
 - ``<release id>.log`` is the transport model's log, under the particles'
-  settings folder.
+  settings folder (the concentration's, for a variant that makes it).
 - ``<release id>.failure.yaml`` says why a result failed, and at which
   ``stage``. A failed run writes it under the particles' settings folder,
   with ``stage: particles``. A failed footprint writes it under the
@@ -60,7 +65,8 @@ transport model's particle file, and with ``keep_workdir: true`` under
 ``execution:`` every run's is, whole.
 
 The ``particles/`` and ``footprint/`` trees hold only Parquet files and
-``_settings.yaml``, so each reads as one dataset. A stage from another
+``_settings.yaml``, so each reads as one dataset. ``concentration/`` holds
+one NetCDF file per release, a group per grid (:doc:`concentration`). A stage from another
 package has a tree under its own name, with files in the format and with
 the extension that stage chooses.
 

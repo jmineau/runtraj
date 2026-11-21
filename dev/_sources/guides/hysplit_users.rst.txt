@@ -197,7 +197,9 @@ rest itself:
    * - ``CONTROL`` hours of emission
      - ``emisshrs``; the release starts at the starting time
    * - ``CONTROL`` pollutant, concentration grid and deposition
-     - Fixed: one pollutant, a placeholder grid, no deposition
+     - Fixed: one pollutant, a placeholder grid, no deposition; with
+       ``mode: concentration``, your ``pollutants`` and ``grids``
+       (:doc:`concentration`)
    * - ``SETUP.CFG`` ``KMSL``
      - The release's ``altitude_ref``
    * - ``SETUP.CFG`` ``MAXPAR``
@@ -210,7 +212,8 @@ rest itself:
      - The wind and mixed-layer error settings, and ``ziscale``
    * - ``SETUP.CFG`` ``ICHEM``, ``IDSP``
      - Fixed at 8 and 2, the only values with which HYSPLIT writes particles
-       (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`)
+       (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`); with ``mode:
+       concentration``, ``ICHEM`` 0 and ``IDSP`` left to HYSPLIT
 
 To read the files of one run, pass ``workdir="run"`` to
 :func:`~runtraj.run_trajectories`: the folder keeps ``CONTROL``,
@@ -220,10 +223,12 @@ What runtraj leaves to other tools
 ----------------------------------
 
 runtraj runs ``hycs_std`` with ``ICHEM=8``, which writes
-particle positions and the met along them. Concentration grids
-(``cdump``), puffs and ``tdump`` trajectory files come from HYSPLIT run on
-its own, and NOAA's `monetio <https://github.com/noaa-oar-arl/monetio>`_
-reads those files in Python.
+particle positions and the met along them, or, with ``mode:
+concentration``, HYSPLIT's concentration grids (``cdump``), which it reads
+for you (:doc:`concentration`). Puffs and ``tdump`` trajectory files come
+from HYSPLIT run on its own, and NOAA's
+`monetio <https://github.com/noaa-oar-arl/monetio>`_ reads those files in
+Python.
 
 When a run fails, ``project.status()`` gives its reason and
 ``sim.log`` HYSPLIT's log of it.

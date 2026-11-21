@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=cf94108f"></script>
+    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev4+g9771c4736" />
+  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -497,10 +497,13 @@
     <span class="n">releases_from_rows</span><span class="p">,</span>
     <span class="n">releases_to_csv</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">RESULT_TYPES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">reads</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
     <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProjectPlotAccessor</span>
 
 
@@ -1163,12 +1166,13 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_present</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Key</span><span class="p">,</span> <span class="n">_Present</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Return, per variant and realization, the selected releases with particles and with each stage's file.</span>
+<span class="sd">        Return, per variant and realization, the selected releases with the model's result and with each stage's file.</span>
 
 <span class="sd">        Read from a listing of the date folders the selection falls in</span>
 <span class="sd">        (:meth:`runtraj.output.Output.present`), in place of a file check per</span>
 <span class="sd">        simulation: on a large project the checks are the slow part. A</span>
-<span class="sd">        variant has a set for ``particles`` and one for each stage it uses.</span>
+<span class="sd">        variant has a set for its result type (``particles``, for most) and</span>
+<span class="sd">        one for each stage it uses.</span>
 <span class="sd">        """</span>
         <span class="n">present</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Key</span><span class="p">,</span> <span class="n">_Present</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
@@ -1176,7 +1180,7 @@
             <span class="n">among</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">"release"</span><span class="p">])</span>
             <span class="n">present</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">kind</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">present</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">among</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"particles"</span><span class="p">,</span> <span class="o">*</span><span class="n">variant</span><span class="o">.</span><span class="n">stage_order</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">variant</span><span class="o">.</span><span class="n">stage_order</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="k">return</span> <span class="n">present</span>
 
@@ -1207,8 +1211,10 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        pandas.DataFrame</span>
-<span class="sd">            The selection with more columns. ``particles``, and one</span>
-<span class="sd">            column named for each stage the project has,</span>
+<span class="sd">            The selection with more columns. ``particles`` (and a column</span>
+<span class="sd">            for each other result type a variant makes, such as</span>
+<span class="sd">            ``concentration``), and one column named for each stage the</span>
+<span class="sd">            project has,</span>
 <span class="sd">            are ``True`` when the result exists, ``False`` when it is</span>
 <span class="sd">            missing, and ``NA`` when the variant does not make it. ``state``</span>
 <span class="sd">            is ``complete`` when every expected result exists</span>
@@ -1216,7 +1222,8 @@
 <span class="sd">            run failed, ``interrupted`` when a run of its particles started</span>
 <span class="sd">            and stopped before it finished (a time limit, preemption, or a</span>
 <span class="sd">            killed process), and ``pending`` when nothing has run.</span>
-<span class="sd">            ``stage`` (``particles``, or the stage that failed), ``reason``,</span>
+<span class="sd">            ``stage`` (``particles``, the other result type, or the stage</span>
+<span class="sd">            that failed), ``reason``,</span>
 <span class="sd">            and ``message`` say why a failed simulation failed</span>
 <span class="sd">            (:attr:`runtraj.simulation.Simulation.failure`), and are ``NA`` for the</span>
 <span class="sd">            others.</span>
@@ -1231,8 +1238,12 @@
         <span class="n">present</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_present</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="n">_rows</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
         <span class="c1"># One column for each kind of result any variant of the project makes.</span>
+        <span class="n">made</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="o">.</span><span class="n">result</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
         <span class="n">kinds</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">"particles"</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">stage_order</span><span class="p">)]</span>
+            <span class="p">[</span>
+                <span class="o">*</span><span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">RESULT_TYPES</span> <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="s2">"particles"</span> <span class="ow">or</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">made</span><span class="p">),</span>
+                <span class="o">*</span><span class="p">(</span><span class="n">s</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">stage_order</span><span class="p">),</span>
+            <span class="p">]</span>
         <span class="p">)</span>
         <span class="n">has</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">kind</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
@@ -1274,8 +1285,8 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the failure record of each selected simulation missing a result, by ``(release, variant, realization)``.</span>
 
-<span class="sd">        A simulation without particles is explained by its particles'</span>
-<span class="sd">        record. One with particles is explained by the record of the first</span>
+<span class="sd">        A simulation without the model's result is explained by that</span>
+<span class="sd">        result's record. One with it is explained by the record of the first</span>
 <span class="sd">        stage, in the order they run, that has no file where what it reads</span>
 <span class="sd">        exists and that has a record (:attr:`runtraj.simulation.Simulation.failure`).</span>
 <span class="sd">        Only those releases' date folders are listed, and only the records</span>
@@ -1290,8 +1301,8 @@
                 <span class="c1"># Where a stage could have run: its inputs are there.</span>
                 <span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="p">()</span>
-                    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"particles"</span>
-                    <span class="k">else</span> <span class="p">(</span><span class="s2">"particles"</span><span class="p">,</span> <span class="o">*</span><span class="n">reads</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)))</span>
+                    <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">RESULT_TYPES</span>
+                    <span class="k">else</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">reads</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)))</span>
                 <span class="p">)</span>
                 <span class="n">ready</span> <span class="o">=</span> <span class="n">releases</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">have</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">))</span>
                 <span class="n">missing</span> <span class="o">=</span> <span class="n">ready</span> <span class="o">-</span> <span class="n">have</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span>
@@ -1308,14 +1319,15 @@
         <span class="n">failed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Return the selected simulations whose particles run started and did not finish.</span>
+<span class="sd">        Return the selected simulations whose transport model run started and did not finish.</span>
 
-<span class="sd">        That is a log with no particles and no failure record. Only the</span>
-<span class="sd">        date folders of releases without particles are listed.</span>
+<span class="sd">        That is a log with no result and no failure record. Only the</span>
+<span class="sd">        date folders of releases without a result are listed.</span>
 <span class="sd">        """</span>
         <span class="n">started</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
-            <span class="n">missing</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">"release"</span><span class="p">])</span> <span class="o">-</span> <span class="n">present</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)][</span><span class="s2">"particles"</span><span class="p">]</span>
+            <span class="n">made</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">result</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">"release"</span><span class="p">])</span> <span class="o">-</span> <span class="n">present</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)][</span><span class="n">made</span><span class="p">]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">missing</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">logged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">logged</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">missing</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
@@ -1349,7 +1361,8 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        sel : DataFrame or mask, optional</span>
-<span class="sd">            The simulations, as for :meth:`status`. All of them by default.</span>
+<span class="sd">            The simulations, as for :meth:`status`. Every simulation of a</span>
+<span class="sd">            variant that makes particles by default.</span>
 <span class="sd">        columns : list of str, optional</span>
 <span class="sd">            Only these particle columns, such as ``["particle", "age",</span>
 <span class="sd">            "lon", "lat", "foot"]``, after ``release``, ``variant``, and</span>
@@ -1373,6 +1386,12 @@
 <span class="sd">        some 250 MB in memory, so this suits a selection of tens. For a</span>
 <span class="sd">        whole large project, read the ``particles/`` tree of the output</span>
 <span class="sd">        directory with pyarrow, DuckDB, or polars instead.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If a selected variant makes another type of result, such as</span>
+<span class="sd">            concentration (:meth:`concentration`).</span>
 <span class="sd">        """</span>
         <span class="n">first</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"release"</span><span class="p">,</span> <span class="s2">"variant"</span><span class="p">,</span> <span class="s2">"realization"</span><span class="p">]</span>
         <span class="n">with_time</span> <span class="o">=</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s2">"time"</span> <span class="ow">in</span> <span class="n">columns</span>
@@ -1381,7 +1400,7 @@
             <span class="n">stored</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">)]</span>
             <span class="k">if</span> <span class="n">with_time</span> <span class="ow">and</span> <span class="s2">"age"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stored</span><span class="p">:</span>
                 <span class="n">stored</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span>
-        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of_type</span><span class="p">(</span><span class="s2">"particles"</span><span class="p">,</span> <span class="n">sel</span><span class="p">)</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
             <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
@@ -1399,6 +1418,83 @@
         <span class="n">particles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">rest</span> <span class="o">=</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">columns</span>
         <span class="k">return</span> <span class="n">particles</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">first</span> <span class="o">+</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">rest</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">first</span><span class="p">]]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the simulations *sel* selects, which must make results of type *kind*.</span>
+
+<span class="sd">        Unselected, the variants that make *kind*.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If *sel* names a variant that makes another type.</span>
+<span class="sd">        """</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">result</span> <span class="o">==</span> <span class="n">kind</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">frame</span><span class="p">[</span><span class="s2">"variant"</span><span class="p">]]</span>
+            <span class="p">]</span>
+        <span class="n">others</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">frame</span><span class="p">[</span><span class="s2">"variant"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">result</span> <span class="o">!=</span> <span class="n">kind</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">others</span><span class="p">:</span>
+            <span class="n">made</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">result</span><span class="si">}</span><span class="s2">)"</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">others</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Variants </span><span class="si">{</span><span class="n">made</span><span class="si">}</span><span class="s2"> make no </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">. Leave them out of the "</span>
+                <span class="s2">"selection, and read each type with its own method."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">frame</span>
+
+<div class="viewcode-block" id="Project.concentration">
+<a class="viewcode-back" href="../../reference/_api/runtraj.Project.concentration.html#runtraj.Project.concentration">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">concentration</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Load the concentration result of every selected simulation that has one.</span>
+
+<span class="sd">        A result is a tree with a child per grid</span>
+<span class="sd">        (:mod:`runtraj.concentration`). The grids of two releases are</span>
+<span class="sd">        centered on different places, and so not joined into one: each</span>
+<span class="sd">        simulation keeps its own.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sel : DataFrame or mask, optional</span>
+<span class="sd">            The simulations, as for :meth:`status`. Every simulation of a</span>
+<span class="sd">            variant that makes concentration by default.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            ``{(release, variant, realization): xarray.DataTree}``, in the</span>
+<span class="sd">            order of *sel*. Simulations without a result are left out.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If *sel* names a variant that makes another type of result.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; results = project.concentration()  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; tree = results[</span>
+<span class="sd">        ...     ("202107150130_-111.848_40.766_10", "conc", None)</span>
+<span class="sd">        ... ]  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; tree["local"]["TEST"].sum("time")  # doctest: +SKIP</span>
+<span class="sd">        """</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of_type</span><span class="p">(</span><span class="s2">"concentration"</span><span class="p">,</span> <span class="n">sel</span><span class="p">)</span>
+        <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">present</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_present</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">read</span> <span class="o">=</span> <span class="n">RESULT_TYPES</span><span class="p">[</span><span class="s2">"concentration"</span><span class="p">]</span><span class="o">.</span><span class="n">read</span>
+        <span class="k">for</span> <span class="n">rid</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_rows</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">present</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)][</span><span class="s2">"concentration"</span><span class="p">]:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="s2">"concentration"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">rid</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">found</span><span class="p">[(</span><span class="n">rid</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">found</span></div>
 
 
     <span class="c1"># -- running ---------------------------------------------------------------</span>
@@ -1526,13 +1622,14 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_unrun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the rows of the simulations in *sel* whose particles are missing (all of them unless *skip_existing*): the ones a fetch gets met for."""</span>
+<span class="w">        </span><span class="sd">"""Return the rows of the simulations in *sel* whose model result is missing (all of them unless *skip_existing*): the ones a fetch gets met for."""</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_existing</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">frame</span>
         <span class="n">present</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_present</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
         <span class="n">has</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">r</span> <span class="ow">in</span> <span class="n">present</span><span class="p">[(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)][</span><span class="s2">"particles"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_rows</span><span class="p">(</span><span class="n">frame</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span>
+            <span class="p">[</span><span class="n">r</span> <span class="ow">in</span> <span class="n">present</span><span class="p">[(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">)][</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">result</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_rows</span><span class="p">(</span><span class="n">frame</span><span class="p">)],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">has</span><span class="p">]</span>
 

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=cf94108f"></script>
+    <script src="../../../../_static/documentation_options.js?v=d72d97a0"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev4+g9771c4736" />
+  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -456,7 +456,8 @@
 
 <span class="sd">:func:`write_inputs` fills a working directory with everything</span>
 <span class="sd">``hycs_std`` reads, and :func:`read_particle_dat` reads the particle file</span>
-<span class="sd">it writes. :class:`~runtraj.models.hysplit.HysplitModel` runs the two</span>
+<span class="sd">it writes (:func:`runtraj.models.hysplit.read_cdump` the concentration</span>
+<span class="sd">file of a concentration run). :class:`~runtraj.models.hysplit.HysplitModel` runs the two</span>
 <span class="sd">around ``hycs_std`` in one directory; call them yourself to look at the</span>
 <span class="sd">input files of a run, or to read a particle file from elsewhere.</span>
 <span class="sd">"""</span>
@@ -475,7 +476,10 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HYSPLITNotFoundError</span><span class="p">,</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CONCENTRATION_SETTINGS</span><span class="p">,</span>
+    <span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">,</span>
     <span class="n">FIXED_SETUP</span><span class="p">,</span>
+    <span class="n">PARTICLES_SETTINGS</span><span class="p">,</span>
     <span class="n">WIND_ERROR_SETTINGS</span><span class="p">,</span>
     <span class="n">ZI_ERROR_SETTINGS</span><span class="p">,</span>
     <span class="n">HysplitConfig</span><span class="p">,</span>
@@ -516,7 +520,7 @@
 <span class="n">CONTROL_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"n_hours"</span><span class="p">,</span> <span class="s2">"emisshrs"</span><span class="p">,</span> <span class="s2">"w_option"</span><span class="p">,</span> <span class="s2">"z_top"</span><span class="p">)</span>
 
 <span class="c1">#: Settings runtraj uses itself, in no HYSPLIT input file.</span>
-<span class="n">RUNTRAJ_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"directory"</span><span class="p">,)</span>
+<span class="n">RUNTRAJ_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"directory"</span><span class="p">,</span> <span class="s2">"mode"</span><span class="p">)</span>
 
 <span class="c1">#: Every setting that is not a ``SETUP.CFG`` entry. All other settings are.</span>
 <span class="n">NOT_IN_SETUP</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
@@ -526,6 +530,7 @@
         <span class="o">*</span><span class="n">WIND_ERROR_SETTINGS</span><span class="p">,</span>
         <span class="o">*</span><span class="n">ZI_ERROR_SETTINGS</span><span class="p">,</span>
         <span class="o">*</span><span class="n">RUNTRAJ_SETTINGS</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">CONCENTRATION_SETTINGS</span><span class="p">,</span>  <span class="c1"># CONTROL</span>
     <span class="p">}</span>
 <span class="p">)</span>
 
@@ -699,18 +704,22 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.</span>
 
-<span class="sd">    The entries of :data:`FIXED_SETUP` come first, then every setting not</span>
-<span class="sd">    in :data:`NOT_IN_SETUP`, in declaration order, under their own names.</span>
-<span class="sd">    The driver adds</span>
-<span class="sd">    ``KMSL``, ``IVMAX``, and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``</span>
+<span class="sd">    The entries of :data:`FIXED_SETUP` come first</span>
+<span class="sd">    (:data:`FIXED_CONCENTRATION_SETUP` in the concentration mode), then</span>
+<span class="sd">    every setting not in :data:`NOT_IN_SETUP`, in declaration order, under</span>
+<span class="sd">    their own names; the concentration mode leaves out the particle file's</span>
+<span class="sd">    settings (:data:`PARTICLES_SETTINGS`). The driver adds</span>
+<span class="sd">    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``</span>
 <span class="sd">    is unset, which depend on the release locations or follow from other</span>
 <span class="sd">    settings.</span>
 <span class="sd">    """</span>
-    <span class="n">entries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">FIXED_SETUP</span><span class="p">)</span>
+    <span class="n">particles</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">FIXED_SETUP</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">)</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="n">NOT_IN_SETUP</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="n">NOT_IN_SETUP</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">PARTICLES_SETTINGS</span><span class="p">)</span>
     <span class="n">entries</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
         <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">HysplitConfig</span><span class="o">.</span><span class="n">model_fields</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NOT_IN_SETUP</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="p">)</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"zicontroltf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">zicontroltf</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -987,12 +996,15 @@
         <span class="n">w_option</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">w_option</span><span class="p">,</span>
         <span class="n">z_top</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">z_top</span><span class="p">,</span>
         <span class="n">met_files</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">met_files</span><span class="p">),</span>
+        <span class="n">pollutants</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">pollutants</span><span class="p">,</span>
+        <span class="n">grids</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span>
     <span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">CONTROL_FILE</span><span class="p">)</span>
 
     <span class="n">entries</span> <span class="o">=</span> <span class="n">setup_entries</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"kmsl"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kmsl</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"maxpar"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">maxpar_for</span><span class="p">(</span><span class="n">release_locations</span><span class="p">(</span><span class="n">locations</span><span class="p">))</span>
-    <span class="n">entries</span><span class="p">[</span><span class="s2">"ivmax"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>  <span class="c1"># number of output variables</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
+        <span class="n">entries</span><span class="p">[</span><span class="s2">"ivmax"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>  <span class="c1"># number of output variables</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"winderrtf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">winderrtf</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">setup</span> <span class="o">=</span> <span class="n">NameList</span><span class="p">(</span><span class="s2">"SETUP"</span><span class="p">)</span>
     <span class="n">setup</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>

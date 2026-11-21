@@ -22,8 +22,10 @@ Attributes
    :toctree:
    :nosignatures:
 
+   ~Simulation.concentration
    ~Simulation.failure
    ~Simulation.has_particles
+   ~Simulation.has_result
    ~Simulation.id
    ~Simulation.is_complete
    ~Simulation.kept_workdir
@@ -31,6 +33,8 @@ Attributes
    ~Simulation.log_path
    ~Simulation.particles
    ~Simulation.particles_path
+   ~Simulation.result
+   ~Simulation.result_path
    ~Simulation.transport
 
 

@@ -1,0 +1,6 @@
+runtraj.Simulation.result\_path
+===============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.result_path
