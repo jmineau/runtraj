@@ -11,6 +11,7 @@ is the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Any, ClassVar, Literal, Self
 
@@ -678,7 +679,9 @@ class HysplitConfig(TransportConfig):
         description=(
             "Maximum number of particles in a simulation. Unset gives every "
             "release location its full share: ``numpar`` for one location, "
-            "``n * (numpar // n + 1)`` for n. A set value that stops a "
+            "``n * (numpar // n + 1)`` for n; and a concentration run, which "
+            "releases over many time steps, ``numpar`` and HYSPLIT's rounding "
+            "for each emission cycle. A set value that stops a "
             "multipoint release before its last location fails the run."
         ),
     )
@@ -1074,15 +1077,38 @@ class HysplitConfig(TransportConfig):
         and several get ``locations * (numpar // locations + 1)``, so the
         last locations are not left short.
 
+        A concentration run releases over many time steps, each pollutant
+        for its ``hours``, and again every ``qcycle`` hours. HYSPLIT
+        rounds the particles of an hour and of a time step up, for each
+        pollutant at each location, so it asks for more than ``numpar``
+        in a cycle: such a run gets ``numpar`` and one particle a minute
+        and one an hour for each pollutant at each location, times the
+        number of cycles. With less, HYSPLIT stops releasing before the
+        end of the emission and the grids hold less than was released.
+
         Examples
         --------
         >>> HysplitConfig(n_hours=-24, numpar=1000).maxpar_for(40)
         1040
         >>> HysplitConfig(n_hours=-24, numpar=1000).maxpar_for(1)
         1000
+        >>> HysplitConfig(
+        ...     n_hours=4,
+        ...     numpar=1000,
+        ...     mode="concentration",
+        ...     pollutants=[{"name": "TRCA", "hours": 1}],
+        ...     grids=[{"name": "g"}],
+        ... ).maxpar_for(2)
+        1124
         """
         if self.maxpar is not None:
             return self.maxpar
+        if self.mode == "concentration":
+            rounding = sum(math.ceil(61 * p.hours) + 1 for p in self.pollutants)
+            cycles = (
+                math.ceil(abs(self.n_hours) / self.qcycle) if self.qcycle > 0 else 1
+            )
+            return cycles * (self.numpar + max(locations, 1) * rounding)
         if locations <= 1:
             return self.numpar
         return locations * (self.numpar // locations + 1)

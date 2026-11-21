@@ -332,3 +332,17 @@ def test_a_concentration_variant_inherits_a_block_set_for_particles(tmp_path):
     assert variants["particles"].result == "particles"
     assert variants["conc"].result == "concentration"
     assert "varsiwant" not in variants["conc"].transport.settings()
+
+
+def test_a_concentration_run_gets_particles_for_every_step_and_cycle():
+    # hycs_std 5.4.2 released 2010 particles for numpar 2000 from one
+    # location over an hour, and 2070 from three; with MAXPAR at numpar it
+    # stops before the end of the emission, and before a second cycle.
+    one = _concentration(numpar=2000)
+    assert one.maxpar_for(1) >= 2010
+    assert one.maxpar_for(3) >= 2070
+    assert _concentration(numpar=2000, qcycle=1.0).maxpar_for(1) == 4 * one.maxpar_for(
+        1
+    )
+    assert _concentration(numpar=2000, maxpar=5000).maxpar_for(3) == 5000
+    assert one.settings()["maxpar"] is None

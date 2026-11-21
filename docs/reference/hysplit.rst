@@ -138,6 +138,16 @@ it started is not found this way, and runtraj does not check a
 concentration run for it, as it does a particle run (its files are checked
 before the run starts).
 
+HYSPLIT stops releasing when it holds ``MAXPAR`` particles. A particle run
+releases in one time step, and a concentration run over each pollutant's
+``hours``, again every ``qcycle`` hours; HYSPLIT rounds the particles of
+each hour and each time step up, for each pollutant at each location, so
+it asks for more than ``numpar`` (2010 for 2000 from one location over an
+hour, 2070 from three). With ``maxpar`` unset a concentration run gets
+``numpar`` and that rounding for every cycle
+(:meth:`~runtraj.models.hysplit.HysplitConfig.maxpar_for`), so the grids
+hold all that was released. Set ``maxpar`` only above that.
+
 .. autosummary::
    :toctree: _api
    :nosignatures:

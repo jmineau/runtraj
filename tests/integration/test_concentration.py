@@ -5,7 +5,7 @@ import datetime as dt
 import numpy as np
 import pytest
 
-from runtraj import PointRelease, Project
+from runtraj import MultiPointRelease, PointRelease, Project
 from runtraj.models import run_model
 from runtraj.models.hysplit import HysplitConfig
 from runtraj.models.hysplit.driver import PARTICLE_FILE
@@ -103,6 +103,33 @@ def test_a_backward_concentration_run_samples_back_in_time(tmp_path, met_dir):
     assert float(local["TRCA"].sel(z=100).max()) > 0
     assert (tmp_path / "work" / "cdump_local").exists()
     assert not (tmp_path / "work" / PARTICLE_FILE).exists()
+
+
+@integration
+def test_a_release_from_two_points_is_counted_whole(tmp_path, met_dir):
+    # Released over an hour, which HYSPLIT rounds up at each time step: with
+    # MAXPAR at numpar it stops before the second point has its particles.
+    release = MultiPointRelease(
+        time=dt.datetime(2021, 1, 15, 0, 30),
+        longitudes=[-112.0, -111.8],
+        latitudes=[40.5, 40.7],
+        altitudes=[10.0, 10.0],
+    )
+    config = HysplitConfig(
+        n_hours=3,
+        numpar=500,
+        mode="concentration",
+        cmass=1,
+        pollutants=[{"name": "TRCA"}],
+        grids=[{"name": "local", "levels": [10000], "span_lat": 4.0, "span_lon": 4.0}],
+    )
+    work = tmp_path / "work"
+    run = run_model("hysplit", release, config, reference_met(met_dir), work)
+    assert "exceeding puff limit" not in (work / "WARNING").read_text()
+    # 1 unit of mass per hour for an hour at each of 2 points: all of it is
+    # in the grid in the first hour's average, less what is released late.
+    mass = run.result["local"].to_dataset()["TRCA"]
+    assert 0.9 < float(mass.isel(time=1).sum()) <= 2.0 + 1e-3
 
 
 @integration
