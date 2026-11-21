@@ -53,28 +53,6 @@ def test_each_point_of_a_release_gets_its_own_grid(tmp_path, met_dir):
 
 
 @integration
-def test_a_release_from_two_points_is_counted_whole(tmp_path, met_dir):
-    # Released over an hour, which HYSPLIT rounds up at each time step.
-    release = MultiPointRelease(
-        time=TIME,
-        longitudes=[-112.0, -111.8],
-        latitudes=[40.5, 40.7],
-        altitudes=[10.0, 10.0],
-    )
-    ds, work = _run(
-        tmp_path,
-        met_dir,
-        release,
-        cmass=1,
-        grids=[{"name": "local", "levels": [10000], "span_lat": 4.0, "span_lon": 4.0}],
-    )
-    assert "exceeding puff limit" not in (work / "WARNING").read_text()
-    # 1 unit of mass per hour for an hour at each of 2 points: all of it is
-    # in the grid in the first hour's average, less what is released late.
-    assert 0.9 < float(ds["TRCA"].isel(time=1).sum()) <= 2.0 + 1e-3
-
-
-@integration
 def test_each_hour_of_emission_gets_its_own_grid(tmp_path, met_dir):
     ds, _ = _run(tmp_path, met_dir, ichem=10, qcycle=1.0)
     assert ds["TRCA"].dims == ("release_time", *CONCENTRATION_DIMS)

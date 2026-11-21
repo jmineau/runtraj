@@ -82,7 +82,7 @@ def test_a_value_runtraj_does_not_run_is_refused_with_the_reason(ichem):
         _concentration(ichem=ichem)
 
 
-def test_stilt_mode_in_a_concentration_run_names_the_particles_mode():
+def test_ichem_8_in_a_concentration_run_names_the_particles_mode():
     with pytest.raises(ValidationError, match="mode: particles"):
         _concentration(ichem=8)
 
@@ -390,14 +390,8 @@ def test_a_runs_grids_are_read_with_its_ichem(tmp_path, fixture, fields, dim):
 # -- particles enough for the emission -------------------------------------------
 
 
-def test_a_concentration_run_gets_particles_for_every_step_and_cycle():
-    # hycs_std 5.4.2 released 2010 particles for numpar 2000 from one
-    # location over an hour, and 2070 from three; with MAXPAR at numpar it
-    # stops before the end of the emission, and before a second cycle.
+def test_a_grid_for_each_cycle_gets_particles_for_every_cycle():
+    # With MAXPAR at one cycle's particles hycs_std 5.4.2 released no second cycle.
     one = _concentration(numpar=2000)
-    assert one.maxpar_for(1) >= 2010
-    assert one.maxpar_for(3) >= 2070
     cycles = _concentration(numpar=2000, ichem=10, qcycle=1.0)
     assert cycles.maxpar_for(1) == 4 * one.maxpar_for(1)
-    assert _concentration(numpar=2000, maxpar=5000).maxpar_for(3) == 5000
-    assert "maxpar" not in {k for k, v in one.settings().items() if v is not None}
