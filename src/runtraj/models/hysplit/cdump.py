@@ -210,11 +210,11 @@ def _cell_centers(first: float, step: float, count: int) -> np.ndarray:
 
     ``cdump`` holds the first center and the spacing as 4-byte floats, so
     that ``40.266`` reads as ``40.26599884``. The centers are rounded to
-    the decimals a 4-byte float holds at the largest of them: twice its
-    spacing from the next float, as a step in the last decimal. That is 4
-    decimals from 128 to 360 degrees, where a spacing of 0.001 degree is
-    still kept whole, and 5 from 16 to 128, where 40.266 reads
-    back as 40.266.
+    the decimals a 4-byte float holds at the largest of them: a step in the
+    last decimal is at least twice the spacing of floats there. That is 4
+    decimals from 64 to 360 degrees, where a spacing of 0.001 degree is
+    still kept whole, 5 from 8 to 64, where 40.266 reads back as 40.266, and
+    6 below 8.
     """
     centers = first + step * np.arange(count, dtype=np.float64)
     largest = float(np.abs(centers).max())
