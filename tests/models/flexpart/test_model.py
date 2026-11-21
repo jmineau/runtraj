@@ -25,9 +25,6 @@ pytest.importorskip("eccodes")
 
 from ...fixtures.grib import write_gfs
 
-# Most runs here are on the GFS stand-in; the warning has its own test.
-pytestmark = pytest.mark.filterwarnings("ignore:FLEXPART 11 does not mix:UserWarning")
-
 SAMPLE = Path(__file__).parent / "data" / "partoutput_20230601180000_init.nc"
 RELEASE = PointRelease(
     time="2023-06-01 18:00", longitude=-111.848, latitude=40.766, altitude=25
@@ -63,7 +60,7 @@ def checkout(tmp_path):
 
 @pytest.fixture
 def gfs(tmp_path):
-    """GRIB files every 12 h around the sample run's window."""
+    """GRIB files every 12 h around the sample run's window (GFS-shaped; the stand-in FLEXPART reads none of them)."""
     directory = tmp_path / "gfs"
     directory.mkdir()
     for time in (
@@ -128,7 +125,7 @@ def test_version_without_file_or_git(tmp_path):
 def test_met_config_takes_a_bare_directory_and_records_the_grid(gfs):
     met = FlexpartMetConfig.model_validate(str(gfs))
     assert met.directory == gfs
-    assert met.settings() == {"source": "gfs", "grid": "1x1 deg, 3x3"}
+    assert met.settings() == {"source": "era5", "grid": "1x1 deg, 3x3"}
 
 
 def test_met_config_reads_the_grid_past_a_file_that_is_not_grib(gfs):
@@ -324,16 +321,9 @@ def test_run_writes_the_inputs_and_reads_the_particles(checkout, gfs, tmp_path):
     assert (workdir / "options" / "IGBP_int1.dat").is_symlink()
 
 
-@pytest.mark.filterwarnings("default:FLEXPART 11 does not mix:UserWarning")
-def test_run_on_gfs_warns_that_flexpart_does_not_mix(checkout, gfs, tmp_path):
-    with pytest.warns(UserWarning, match="does not mix its particles on GFS"):
-        FlexpartModel().run(
-            RELEASE,
-            config(checkout),
-            FlexpartMetConfig(directory=gfs),
-            WINDOW,
-            tmp_path,
-        )
+def test_met_config_refuses_gfs_saying_flexpart_does_not_mix_on_it(gfs):
+    with pytest.raises(ValidationError, match="does not mix its particles on GFS"):
+        FlexpartMetConfig(source="gfs", directory=gfs)
 
 
 def test_run_trajectories_returns_flexpart_s_particles(checkout, gfs, tmp_path):
@@ -372,12 +362,6 @@ def test_era5_runs_on_the_meter_build(checkout, gfs, tmp_path):
     met = FlexpartMetConfig(source="era5", directory=gfs)
     run = FlexpartModel().run(RELEASE, config(checkout), met, WINDOW, tmp_path)
     assert len(run.result)
-
-
-def test_gfs_refuses_the_eta_build(checkout, gfs, tmp_path):
-    met = FlexpartMetConfig(directory=gfs)
-    with pytest.raises(ValueError, match="eta: false"):
-        FlexpartModel().run(RELEASE, config(checkout, eta=True), met, WINDOW, tmp_path)
 
 
 @pytest.mark.skipif(
@@ -498,8 +482,8 @@ def test_a_project_runs_flexpart(checkout, gfs, tmp_path):
         tmp_path / "proj",
         [RELEASE],
         models={"flexpart": {"n_hours": -24, "directory": str(checkout)}},
-        mets={"gfs": {"directory": str(gfs)}},
-        variants={"gfs": {}},
+        mets={"era5": {"directory": str(gfs)}},
+        variants={"era5": {}},
         output=str(tmp_path / "out"),
     )
 

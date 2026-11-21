@@ -49,8 +49,8 @@ class FlexpartConfig(TransportConfig):
             "Run the eta build, ``src/FLEXPART_ETA``, which keeps particles on "
             "ECMWF's model levels and is the build FLEXPART's documentation "
             "intends for ECMWF input (ERA5 from flex_extract). Off runs "
-            "``src/FLEXPART``, the meter build, which GFS needs and which "
-            "reads ERA5 too. Either build needs ``numpf = 3`` in "
+            "``src/FLEXPART``, the meter build, which reads ERA5 too. Either "
+            "build needs ``numpf = 3`` in "
             "``par_mod.f90`` to read flex_extract's three precipitation fields."
         ),
     )
@@ -212,31 +212,43 @@ def flexpart_version(directory: str | Path) -> str:
     return f"git {commit}"
 
 
+#: Why a ``flexpart`` block refuses GFS. FLEXPART 11 works out GFS's surface
+#: heat flux and stress from the 2 m and 10 m values against its lowest
+#: level, which GFS diagnoses from that same layer, so they come out near
+#: zero: at a mountain site at midday, 0 W m-2 and 0.0001 N m-2 against
+#: ERA5's -228 W m-2 and 0.40 N m-2. With no turbulence the particles
+#: stayed at a median 8 m in a 1000 m mixed layer.
+GFS_REFUSED = (
+    "FLEXPART 11 does not mix its particles on GFS: it derives GFS's surface "
+    "heat flux and stress from the 2 m and 10 m values, which come out near "
+    "zero, so the particles stay near the ground. Use ERA5 (source: era5)."
+)
+
+
 class FlexpartMetConfig(BaseModel):
     """
     The meteorology FLEXPART reads: a directory of GRIB files and what they are.
 
     FLEXPART reads each file as ``AVAILABLE`` lists it, by valid time; runtraj
     reads the valid time from each file's first message, so the names do
-    not matter. Two sources: GFS in GRIB2 on a regular latitude-longitude
-    grid (``pgrb2``, analyses and short forecasts), and ERA5 as flex_extract
-    writes it (``EA*`` files on model levels).
+    not matter. The one source is ERA5 as flex_extract writes it (``EA*``
+    files on model levels). GFS is refused: FLEXPART 11 derives GFS's
+    surface heat flux and stress itself, they come out near zero, and its
+    particles do not mix (:doc:`/reference/flexpart`).
 
-    A string in ``config.yaml`` is the ``directory``: ``gfs: /path/to/gfs``.
+    A string in ``config.yaml`` is the ``directory``: ``era5: /path/to/era5``.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    source: Literal["gfs", "era5"] = Field(
-        "gfs",
+    source: Literal["era5"] = Field(
+        "era5",
         description=(
-            "The weather model the files come from: ``gfs``, NCEP's GFS on "
-            "pressure levels, or ``era5``, ECMWF's reanalysis on model levels "
-            "as flex_extract writes it, which we run with ``eta: true`` in "
-            "the model's block. On GFS, FLEXPART 11 derives the surface heat flux "
-            "and stress itself, and at a mountain site at midday they came "
-            "out near zero, so its particles did not mix: a run on GFS warns "
-            "so, and results that depend on mixing need ERA5."
+            "The weather model the files come from: ``era5``, ECMWF's "
+            "reanalysis on model levels as flex_extract writes it, which we "
+            "run with ``eta: true`` in the model's block. ``gfs`` is refused: "
+            "FLEXPART 11 derives GFS's surface heat flux and stress itself, "
+            "they come out near zero, and its particles do not mix."
         ),
     )
     directory: Path = Field(
@@ -254,6 +266,14 @@ class FlexpartMetConfig(BaseModel):
         ),
     )
 
+    @field_validator("source", mode="before")
+    @classmethod
+    def _no_gfs(cls, source: Any) -> Any:
+        """Refuse GFS, on which FLEXPART 11 does not mix its particles."""
+        if source == "gfs":
+            raise ValueError(GFS_REFUSED)
+        return source
+
     @model_validator(mode="before")
     @classmethod
     def _folder(cls, data: Any) -> Any:
@@ -267,8 +287,8 @@ class FlexpartMetConfig(BaseModel):
         Return what a run records of this met: its source and its grid.
 
         The grid, such as ``0.5x0.5 deg, 720x361``, is read from the first
-        GRIB file, so GFS at 0.5 and at 0.25 degrees run in different settings
-        folders. Where the files are kept is not recorded.
+        GRIB file, so ERA5 on two grids runs in different settings folders.
+        Where the files are kept is not recorded.
 
         Raises
         ------

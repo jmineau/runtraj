@@ -2,7 +2,7 @@
 FLEXPART 11 as a transport model.
 
 ``model: flexpart`` runs the executable of a FLEXPART 11 checkout you built
-(:class:`FlexpartConfig`'s ``directory``) on GFS or ERA5 GRIB files
+(:class:`FlexpartConfig`'s ``directory``) on ERA5 GRIB files
 (:class:`FlexpartMetConfig`). runtraj never ships FLEXPART, which is GPL-3.
 :func:`read_partoutput` reads FLEXPART's particle output on its own, for a
 run made outside runtraj.
