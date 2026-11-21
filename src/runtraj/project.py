@@ -946,9 +946,13 @@ class Project:
         )
         if others:
             made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
+            verbs = " or ".join(
+                f"project.{t}"
+                for t in sorted({self.variants[n].result for n in others})
+            )
             raise ValueError(
                 f"Variants {made} make no {kind}. Leave them out of the "
-                "selection, and read each type with its own method."
+                f"selection, and read their results with {verbs}."
             )
         return frame
 
@@ -1045,24 +1049,7 @@ class Project:
         """
         first = ["release", "variant"]
         self._require_type("trajectories", "trajectory")
-        frame = self._selected(sel)
-        if sel is None:
-            frame = frame.loc[
-                [self.variants[v].result == "trajectories" for v in frame["variant"]]
-            ]
-        others = sorted(
-            {
-                name
-                for name in frame["variant"].unique()
-                if self.variants[name].result != "trajectories"
-            }
-        )
-        if others:
-            made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
-            raise ValueError(
-                f"Variants {made} make no trajectories. Leave them out of "
-                "the selection."
-            )
+        frame = self._of_type("trajectories", sel)
         parts = []
         for name, k, rows in _groups(frame):
             variant = self.variants[name]

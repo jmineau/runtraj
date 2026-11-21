@@ -364,13 +364,7 @@ class Simulation:
         --------
         >>> sim.trajectories.groupby("trajectory")["zagl"].max()  # doctest: +SKIP
         """
-        path = self.path("trajectories")
-        if path is None or not path.exists():
-            made = self.variant.result
-            if made != "trajectories":
-                raise FileNotFoundError(f"{self} makes {made}, not trajectories.")
-            raise FileNotFoundError(f"{self} has no trajectories yet.")
-        return result_type("trajectories").read(path)
+        return self._read("trajectories")
 
 
 __all__ = ["Simulation"]

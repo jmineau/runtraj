@@ -793,7 +793,7 @@ def run_trajectories(
     ...     n_hours=-24,
     ...     numpar=200,  # HYSPLIT's particle count
     ... )  # doctest: +SKIP
-    >>> path = runtraj.run_trajectories(
+    >>> table = runtraj.run_trajectories(
     ...     release, "/data/hrrr", n_hours=-24, mode="trajectory"
     ... )  # doctest: +SKIP
     """
