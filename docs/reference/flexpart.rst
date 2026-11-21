@@ -161,6 +161,11 @@ Three things differ from a HYSPLIT table:
 
 - **There is no row at** ``age = 0``. FLEXPART skips a particle in the step
   it is released, so a particle's first row is one output step later.
+  FLEXPART numbers particles in the order it releases them, so for a column
+  or multipoint release ``release_height`` comes from the particle's number:
+  particle *k* of a column starts in slab *k*, and a multipoint release's
+  points take their particles in turn
+  (:meth:`~runtraj.models.flexpart.FlexpartModel.release_rows`).
 - **The met columns are NaN at the last output time.** Without gridded
   output FLEXPART writes the positions there but none of the values it
   interpolates from the met. The eta build writes no height there either,
