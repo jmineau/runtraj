@@ -2,7 +2,7 @@
 
 set positional-arguments
 
-# Unit tests only: the integration tests need met files and HYSPLIT (AGENTS.md, Tests).
+# Unit tests only: the integration tests need met files and HYSPLIT, or its recorded runs (AGENTS.md, Tests).
 unit := "not integration"
 
 # Show available recipes
@@ -42,6 +42,39 @@ docstr:
 # Run the unit tests in parallel (up to 8 workers; `-n 0` for serial)
 test *args:
     uv run pytest -n auto --maxprocesses=8 -m "{{ unit }}" "$@"
+
+# The integration tests on the runs recorded on HYSPLIT VERSION (tests/recorded/hysplit/): no HYSPLIT needed, only the test met files
+test-replay version *args:
+    uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup --hysplit-replay "$@"
+
+# Make a HYSPLIT folder at DEST that replays the runs recorded on VERSION, and print its exec/ (put it first on PATH)
+replay-folder version dest:
+    @uv run python tests/fixtures/replay.py folder "$2" --cases "tests/recorded/hysplit/$1"
+
+# The integration tests on each real HYSPLIT build in hysplit-builds.toml, or on the VERSIONS given
+test-real *versions:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    builds="$(uv run python tests/fixtures/replay.py builds "$@")"
+    while read -r version build <&3; do
+        echo "== HYSPLIT $version: $build"
+        PATH="$build/exec:$PATH" uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup
+    done 3<<< "$builds"
+
+# Record the integration tests' runs on each build in hysplit-builds.toml (or the VERSIONS given), replacing tests/recorded/hysplit/<version>/
+record *versions:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    builds="$(uv run python tests/fixtures/replay.py builds "$@")"
+    met="${RUNTRAJ_TEST_MET_DIR:-tests/met_cache}"
+    while read -r version build <&3; do
+        echo "== recording HYSPLIT $version: $build"
+        cases="tests/recorded/hysplit/$version"
+        rm -rf "$cases"
+        uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup \
+            --hysplit-record "$build" --hysplit-cases "$cases"
+        uv run python tests/fixtures/replay.py summary "$cases" --record "$build" --met "$met"
+    done 3<<< "$builds"
 
 # Install every dependency, the dev tools too, at the minimum pyproject.toml declares (the CI floors job; run `just test` next). EXTRAS: the extras to include; `just sync-floors ""` for none
 sync-floors extras="--all-extras":

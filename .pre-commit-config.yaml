@@ -1,3 +1,7 @@
+# HYSPLIT's recorded runs stay byte for byte as HYSPLIT wrote them
+# (tests/fixtures/replay.py), and some are over the large-file limit.
+exclude: ^tests/recorded/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

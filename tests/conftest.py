@@ -3,6 +3,7 @@
 import datetime as dt
 import os
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,7 @@ from runtraj.config import ProjectConfig
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
 from tests.fixtures.factories import blocks
 
+from .fixtures import replay
 from .fixtures.factories import make_hysplit_dir, make_met_config
 from .fixtures.runs import FakeRuns
 
@@ -48,6 +50,91 @@ def pytest_collection_modifyitems(items):
 
 #: The markers of the tests that run a real ``hycs_std``.
 _REAL_HYSPLIT = ("integration",)
+
+
+def pytest_addoption(parser):
+    """Add the options that replay or record HYSPLIT's runs (``tests/fixtures/replay.py``)."""
+    group = parser.getgroup("hysplit", "recorded HYSPLIT runs")
+    group.addoption(
+        "--hysplit-replay",
+        metavar="VERSION",
+        help="Replay the runs recorded on HYSPLIT VERSION (tests/recorded/hysplit/VERSION) "
+        "instead of running a hycs_std from PATH.",
+    )
+    group.addoption(
+        "--hysplit-record",
+        metavar="BUILD",
+        type=Path,
+        help="Run the HYSPLIT folder BUILD (its exec/ and bdyfiles/) and record "
+        "each run in --hysplit-cases.",
+    )
+    group.addoption(
+        "--hysplit-cases",
+        metavar="DIR",
+        type=Path,
+        help="Where --hysplit-record saves the runs.",
+    )
+
+
+def pytest_configure(config):
+    """
+    Put a replaying or recording HYSPLIT folder first on ``PATH``, for the whole session.
+
+    It goes on ``PATH`` before the tests are collected, because some modules
+    skip themselves when there is no ``hyts_std``. Each xdist worker makes its
+    own folder; a replay's misses go to one folder, which the controller
+    clears and reports (:func:`pytest_terminal_summary`).
+    """
+    version = config.getoption("--hysplit-replay")
+    build = config.getoption("--hysplit-record")
+    if version is None and build is None:
+        return
+    if version is not None and build is not None:
+        raise pytest.UsageError("Give --hysplit-replay or --hysplit-record, not both.")
+    if build is not None:
+        cases = config.getoption("--hysplit-cases")
+        if cases is None:
+            raise pytest.UsageError("--hysplit-record needs --hysplit-cases.")
+        misses = None
+    else:
+        cases = replay.RECORDED / version
+        if not cases.is_dir():
+            raise pytest.UsageError(
+                f"No runs are recorded on HYSPLIT {version}: {cases}"
+            )
+        misses = replay.RECORDED.parent / ".misses" / version
+        if not hasattr(config, "workerinput"):  # the controller, or no xdist
+            shutil.rmtree(misses, ignore_errors=True)
+        config._hysplit_misses = misses
+    folder = Path(tempfile.mkdtemp(prefix="runtraj-hysplit-"))
+    config._hysplit_folder = folder
+    exec_dir = replay.make_folder(folder, cases, build, misses)
+    os.environ["PATH"] = f"{exec_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+
+
+def pytest_unconfigure(config):
+    """Remove the session's replaying or recording HYSPLIT folder."""
+    folder = getattr(config, "_hysplit_folder", None)
+    if folder is not None:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def pytest_terminal_summary(terminalreporter, config):
+    """List the runs a replay had no recording of, and say how to record them."""
+    folder = getattr(config, "_hysplit_misses", None)
+    if folder is None or hasattr(config, "workerinput"):
+        return
+    found = replay.misses(folder)
+    if found:
+        terminalreporter.section("HYSPLIT runs with no recording")
+        for path in found:
+            terminalreporter.write_line(str(path))
+        terminalreporter.write_line(
+            f"{len(found)} run(s) had inputs no recorded case has; they are kept above. "
+            "If runtraj writes them on purpose, record again: just record "
+            "(CONTRIBUTING.md, 'Testing against real HYSPLIT')."
+        )
+
 
 #: What the stand-in prints when it starts, as ``hycs_std`` does.
 STAND_IN_VERSION = "hysplit.v5.1.0-test"
@@ -126,7 +213,50 @@ _MET_BLOCKS: list[tuple[str, str]] = [
 
 
 @pytest.fixture(scope="session")
-def met_dir() -> Path:
+def met_dir(request) -> Path:
+    """
+    Path to HRRR ARL met files for the integration tests (:func:`_find_met_dir`).
+
+    A replay (``--hysplit-replay``) checks first that they are the files the
+    runs were recorded on (:func:`_check_recorded_met`).
+    """
+    path = _find_met_dir()
+    version = request.config.getoption("--hysplit-replay")
+    if version is not None:
+        _check_recorded_met(replay.RECORDED / version, path)
+    return path
+
+
+def _check_recorded_met(cases: Path, met: Path) -> None:
+    """
+    Fail unless *met* holds the met files the cases at *cases* were recorded on, byte for byte.
+
+    A replay gives back HYSPLIT's output on the recorded files, while runtraj
+    reads the files here: other files (another crop, another arlmet) make
+    tests that compare the two fail for no reason of runtraj's.
+    """
+    import hashlib
+
+    import yaml
+
+    recorded = yaml.safe_load((cases / "recorded.yaml").read_text())["met_files"]
+    differ = []
+    for name, sha in recorded.items():
+        path = met / name
+        if not path.is_file():
+            differ.append(f"{name}: missing")
+        elif hashlib.sha256(path.read_bytes()).hexdigest() != sha:
+            differ.append(f"{name}: other contents")
+    if differ:
+        pytest.fail(
+            f"The met files in {met} differ from the ones the runs in {cases} were "
+            "recorded on (recorded.yaml):\n  " + "\n  ".join(differ) + "\n"
+            "Record again on these files (just record), or use the recorded ones.",
+            pytrace=False,
+        )
+
+
+def _find_met_dir() -> Path:
     """
     Path to HRRR ARL met files for fidelity tests.
 

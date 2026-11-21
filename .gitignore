@@ -6,6 +6,10 @@
 # runtraj-specific
 # Downloaded met file cache for integration tests (populated on demand via HRRRSource)
 tests/met_cache/
+# Where this machine's HYSPLIT builds are (just record, just test-real; CONTRIBUTING.md)
+hysplit-builds.toml
+# Inputs a replayed HYSPLIT run had no recording of (tests/fixtures/replay.py)
+tests/recorded/.misses/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

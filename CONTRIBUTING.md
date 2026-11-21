@@ -21,12 +21,14 @@ relies on.
    ```bash
    uv run pre-commit install
    ```
-4. For the tests that run HYSPLIT (`integration`) and the docs build, put
-   a HYSPLIT folder's `exec/` on `PATH`, with its data tables in
-   `bdyfiles/` beside it, as CI does
-   (`.github/scripts/install_hysplit.sh`). Without one those tests are
-   skipped. The unit tests need none: they put a stand-in HYSPLIT first on
-   `PATH`.
+4. The unit tests need no HYSPLIT: they put a stand-in first on `PATH`.
+   The tests that run HYSPLIT (`integration`) need the test met files, and
+   either a HYSPLIT folder's `exec/` on `PATH` (with its data tables in
+   `bdyfiles/` beside it) or the runs recorded in this repository:
+   `just test-replay 5.4.2` needs no HYSPLIT
+   ([Testing against real HYSPLIT](#testing-against-real-hysplit)). Without
+   either, those tests are skipped. The docs build needs a HYSPLIT folder
+   on `PATH` (CI's is `.github/scripts/install_hysplit.sh`).
 
 ## Making a change
 
@@ -46,6 +48,74 @@ relies on.
    message (`fix(slurm): ...`, `docs: ...`), push to your fork, and open a
    pull request. Leave [CHANGELOG.md](CHANGELOG.md) alone: the release notes
    are drafted from these messages when the maintainer releases.
+
+## Testing against real HYSPLIT
+
+runtraj includes no HYSPLIT, and NOAA ARL's builds are not ours to download in
+CI, so CI tests runtraj against real HYSPLIT runs recorded where a build is
+licensed. A recorded run (a *case*) is one call of a HYSPLIT program: the files
+runtraj gave it (`CONTROL`, `SETUP.CFG`, ...), the files it wrote, what it
+printed and its exit status. The cases are in `tests/recorded/hysplit/<version>/`,
+with a `recorded.yaml` naming the build's SHA-256, its printed version, the
+date and the met files. No HYSPLIT program and no met file is committed:
+HYSPLIT's results from archived met may be shared, its programs may not.
+
+We record the oldest HYSPLIT runtraj supports and the newest:
+
+| Version | Build | Programs |
+|---|---|---|
+| 5.1.0 | the oldest supported (it writes no `age = 0` row) | `hycs_std` |
+| 5.4.2 | NOAA ARL's public build, from [ARL's download page](https://www.ready.noaa.gov/HYSPLIT_linux.php) | `hycs_std`, `hyts_std` |
+
+A version in between is recorded only when it changes something runtraj reads.
+
+**Replaying.** `just test-replay VERSION` runs the integration tests with a
+HYSPLIT folder whose programs replay the cases: each finds the case with the
+same inputs, writes its files and exits as it did. A met folder in `CONTROL`
+is compared as `<met>/`, so cases replay on any machine with the test met
+files. CI runs it for each version. `just replay-folder VERSION DEST` makes
+such a folder for anything else; put the `exec/` it prints first on `PATH`.
+The docs build and the Kubernetes test still run a v5.1.0 `hycs_std`, which
+`.github/scripts/install_hysplit.sh` downloads.
+
+**When a replay fails.** Inputs no case has fail the run, and the test session
+lists them at its end ("HYSPLIT runs with no recording"), kept in
+`tests/recorded/.misses/` to compare with the cases' `inputs/`. If runtraj now
+writes them on purpose (a new setting, a new test), record again. A change that
+should not change what runtraj writes is a bug the replay caught.
+
+**Recording.** Recording needs each build, so it is done by hand, on a
+machine where HYSPLIT is installed. List the builds in `hysplit-builds.toml`
+at the repository's top (it is not committed), one HYSPLIT folder (`exec/`
+and `bdyfiles/`) per version:
+
+```toml
+[builds]
+"5.1.0" = "/path/to/hysplit-5.1.0"
+"5.4.2" = "/path/to/hysplit.v5.4.2_RHEL8.10_public"
+```
+
+Record on the met files CI uses: the ones `RUNTRAJ_TEST_FETCH_MET=1` downloads
+and crops into `tests/met_cache/` with the arlmet in `uv.lock` (23.9 GB
+downloaded, 211 MB kept). Another copy of the same hours, cropped another way,
+gives other numbers, and a replay stops at its start when the met files differ
+from the ones in `recorded.yaml`. Then, with `RUNTRAJ_TEST_MET_DIR` set (or the
+met files in `tests/met_cache/`):
+
+```bash
+just test-real        # the integration tests on each real build
+just record           # replace tests/recorded/hysplit/<version>/ for each build
+just record 5.4.2     # one version only
+```
+
+`just record` runs the integration tests on the build with a folder whose
+programs run the real one and save each call, then writes `recorded.yaml`. A
+case leaves out the files runtraj never reads (`NOT_RECORDED` in
+`tests/fixtures/replay.py`, `PARTICLE.DAT` the largest), and the rest are
+compressed with xz. Commit the cases with the
+change that made them. HYSPLIT's random numbers make the particles differ from
+run to run unless a run sets a seed, so a new recording changes every case's
+output: record only when the inputs changed or a version is added.
 
 ## Writing documentation
 

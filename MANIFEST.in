@@ -1,0 +1,3 @@
+# The recorded HYSPLIT runs are for the repository's CI only: HYSPLIT's own
+# output, and folders named after its programs, stay out of the sdist.
+prune tests/recorded
