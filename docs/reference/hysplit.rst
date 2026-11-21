@@ -129,8 +129,12 @@ written to ``CONTROL``:
 Dataset of :doc:`concentration`. A file of one point per grid (``cpack:
 2``) is refused. A run fails as ``NO_CONCENTRATION_DATA`` when a grid has
 no file, or a file with no sample, as when ``sampling_interval`` is longer
-than the run. runtraj does not check a concentration run for met that ran
-out after it started, as it does a particle run (its files are checked
+than the run, or fewer samples than the run holds: its length divided by
+the interval, in whole intervals (HYSPLIT reads an interval of an hour or
+more in whole hours, so 90 minutes is 60). HYSPLIT keeps writing samples,
+of zeros, after its particles are gone, so a run whose met ran out after
+it started is not found this way, and runtraj does not check a
+concentration run for it, as it does a particle run (its files are checked
 before the run starts).
 
 .. autosummary::
@@ -244,8 +248,9 @@ Each reason, what happened, and what to do:
      - The transport model ran but wrote no particles. Read the log
        (``sim.log``): it usually says why.
    * - ``NO_CONCENTRATION_DATA``
-     - A concentration run wrote no file for a grid, or one with no sample.
-       A ``sampling_interval`` longer than the run gives no sample; for
+     - A concentration run wrote no file for a grid, one with no sample,
+       or one with fewer samples than the run holds. A
+       ``sampling_interval`` longer than the run gives no sample; for
        anything else, read the log.
    * - ``FORTRAN_RUNTIME_ERROR``
      - HYSPLIT stopped with a Fortran error, which the message names. Read

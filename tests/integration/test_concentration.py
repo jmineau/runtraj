@@ -103,3 +103,48 @@ def test_a_backward_concentration_run_samples_back_in_time(tmp_path, met_dir):
     assert float(local["TRCA"].sel(z=100).max()) > 0
     assert (tmp_path / "work" / "cdump_local").exists()
     assert not (tmp_path / "work" / PARTICLE_FILE).exists()
+
+
+@integration
+@pytest.mark.parametrize(
+    ("n_hours", "sampling", "interval", "samples"),
+    [
+        (4, "average", 60, 4),
+        (4, "average", 25, 9),  # the last 15 minutes have no sample
+        (4, "average", 90, 4),  # HYSPLIT reads 1 h 30 min as 1 h
+        (4, "snapshot", 120, 2),
+        (3, "average", 120, 1),
+        (-3, "maximum", 60, 3),
+        (-3, "snapshot", 120, 1),
+    ],
+)
+def test_a_whole_run_writes_the_samples_the_check_expects(
+    tmp_path, met_dir, n_hours, sampling, interval, samples
+):
+    # The check that a grid holds every sample counts them as HYSPLIT does
+    # (measured on 5.1.0 and 5.4.2): run_model raises if it disagrees.
+    release = (
+        _forward_release()
+        if n_hours > 0
+        else PointRelease(
+            time=REFERENCE_TIME, longitude=-112.0, latitude=40.5, altitude=10.0
+        )
+    )
+    config = HysplitConfig(
+        n_hours=n_hours,
+        numpar=200,
+        mode="concentration",
+        pollutants=[{"name": "TRCA"}],
+        grids=[
+            {
+                "name": "g",
+                "levels": [100],
+                "sampling": sampling,
+                "sampling_interval": interval,
+            }
+        ],
+    )
+    run = run_model(
+        "hysplit", release, config, reference_met(met_dir), tmp_path / "work"
+    )
+    assert run.result["g"].sizes["time"] == samples

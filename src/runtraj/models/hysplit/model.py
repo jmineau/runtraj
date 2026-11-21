@@ -19,7 +19,7 @@ from runtraj.exceptions import SimulationError
 from runtraj.models import ModelRun
 
 from .cdump import read_cdump
-from .config import HysplitConfig
+from .config import ConcentrationGrid, HysplitConfig
 from .control import cdump_name
 from .driver import (
     LOG_FILE,
@@ -311,7 +311,8 @@ class HysplitModel:
             the last ones got their particles; ``NO_PARTICLE_DATA`` when
             HYSPLIT wrote no particle file; or ``NO_CONCENTRATION_DATA``
             when a concentration run wrote no file for a grid, or one with
-            no sample, as a run shorter than its sampling interval. A run whose particles stopped
+            no sample, as a run shorter than its sampling interval, or fewer
+            samples than the run holds, as a run that stopped early. A run whose particles stopped
             before ``n_hours`` well inside the met's domain fails as
             ``MET_COVERAGE`` too, when ``outdt`` is 0: more than 5 grid
             cells from every side of the met grid.
@@ -371,7 +372,8 @@ def _read_grids(workdir: Path, config: HysplitConfig) -> xr.DataTree:
     ------
     SimulationError
         With ``reason`` ``NO_CONCENTRATION_DATA`` when a grid has no file,
-        or its file holds no sample.
+        or its file holds no sample, or fewer samples than a whole run
+        writes (:func:`_samples_expected`).
     """
     grids = {}
     for grid in config.grids:
@@ -394,8 +396,33 @@ def _read_grids(workdir: Path, config: HysplitConfig) -> xr.DataTree:
                 f"longer than the run ({abs(config.n_hours)} h).",
                 reason=FailureReason.NO_CONCENTRATION_DATA,
             )
+        expected = _samples_expected(grid, config.n_hours)
+        if ds.sizes["time"] < expected:
+            raise SimulationError(
+                f"HYSPLIT wrote {ds.sizes['time']} of the {expected} samples "
+                f"grid {grid.name!r} holds for a {abs(config.n_hours)} h run: "
+                "it stopped before the end of the run.",
+                reason=FailureReason.NO_CONCENTRATION_DATA,
+            )
         grids[grid.name] = ds
     return xr.DataTree.from_dict(grids)
+
+
+def _samples_expected(grid: ConcentrationGrid, n_hours: int) -> int:
+    """
+    Return how many samples HYSPLIT writes to *grid* in a run that reaches its end.
+
+    ``CONDSK`` writes a sample each time the run passes a multiple of the
+    sampling interval, counted from the start of the run (the grid's
+    sampling start is the run's start, and its stop the run's end), in
+    either direction. The part of the run after the last whole interval
+    has none. ``CONSET`` reads an interval of an hour or more in whole
+    hours and drops its minutes, so 90 minutes is 60.
+    """
+    minutes = grid.sampling_interval
+    if minutes >= 60:
+        minutes -= minutes % 60
+    return abs(n_hours) * 60 // minutes
 
 
 def _write_inputs(
