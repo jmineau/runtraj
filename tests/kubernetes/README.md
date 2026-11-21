@@ -15,9 +15,10 @@ Docker, so it runs in CI only.
   (`AWS_ENDPOINT_URL`), and the met folder as a PersistentVolumeClaim. One
   `List`, so it is one YAML document (the `check-yaml` hook takes no more).
 - `Dockerfile`: the pods' image, built in the workflow from this commit's
-  wheel and the HYSPLIT folder `.github/scripts/install_hysplit.sh` installs.
-  It is loaded into the cluster and never pushed: runtraj publishes no image
-  and no HYSPLIT.
+  wheel and a HYSPLIT folder whose programs replay recorded runs. It is loaded
+  into the cluster and never pushed: runtraj publishes no image and no HYSPLIT.
+- `tests/recorded/kubernetes/5.1.0/`: the two runs of `demo/` (and HYSPLIT's
+  version call), recorded on HYSPLIT 5.1.0 (`tests/fixtures/replay.py`).
 
 The workflow submits `demo/`, waits for the Job, and checks that
 `runtraj status` counts 2 complete simulations and one complete Job. Then it
@@ -27,6 +28,18 @@ schedules `demo/`, starts one tick from the CronJob by hand, and checks that
 the tick added its hours to the bucket's `releases.csv` and that its Job
 failed by the exit-code rule (`FailedIndexes`): the demo's met is from 2021,
 so today's hours cannot run, as when an hour's met is not out yet.
+
+**No HYSPLIT is downloaded.** The workflow's "Make the HYSPLIT folder" step
+makes `/opt/hysplit` (`hycs_std` replays the recorded runs) and `/opt/replay`
+(`replay.py` and the cases) on the runner, and the image gets both as they are.
+The runner needs the folder too (`runtraj submit` checks for `hycs_std`), and
+it must be the same one: `hycs_std`'s checksum is part of each run's settings
+folder, so `runtraj status` on the runner would not find what the pods wrote
+with another. The program is made with `--python python3`, so it does not name
+the runner's interpreter. A change to what runtraj gives HYSPLIT in these runs
+makes a pod fail with "no recorded hycs_std run has these inputs": record
+again with `just record-kubernetes` (CONTRIBUTING.md, "Testing against real
+HYSPLIT").
 
 Two things to know:
 

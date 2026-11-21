@@ -76,6 +76,29 @@ record *versions:
         uv run python tests/fixtures/replay.py summary "$cases" --record "$build" --met "$met"
     done 3<<< "$builds"
 
+# Record the HYSPLIT runs of the Kubernetes test (tests/kubernetes/demo) on the build of VERSION, replacing tests/recorded/kubernetes/<version>/
+record-kubernetes version="5.1.0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    read -r _ build <<< "$(uv run python tests/fixtures/replay.py builds "$1")"
+    met="$(realpath "${RUNTRAJ_TEST_MET_DIR:-tests/met_cache}")"
+    cases="tests/recorded/kubernetes/$1"
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    # The demo with the Kubernetes parts left out: the same runs, here.
+    mkdir "$work/met" "$work/project"
+    ln -s "$met"/20210115_00-05_* "$work/met/"
+    cp tests/kubernetes/demo/releases.csv "$work/project/"
+    uv run python tests/fixtures/replay.py folder "$work/hysplit" --cases "$cases" --record "$build" > /dev/null
+    sed -e '/^execution:/,$d' \
+        -e "s|^  hrrr: /met\$|  hrrr: $work/met|" \
+        -e "s|directory: /opt/hysplit|directory: $work/hysplit|" \
+        -e "s|^output: .*|output: $work/output|" \
+        tests/kubernetes/demo/config.yaml > "$work/project/config.yaml"
+    rm -rf "$cases"
+    RUNTRAJ_COMPUTE_ROOT="$work/compute" uv run runtraj run "$work/project"
+    uv run python tests/fixtures/replay.py summary "$cases" --record "$build" --met "$met"
+
 # Install every dependency, the dev tools too, at the minimum pyproject.toml declares (the CI floors job; run `just test` next). EXTRAS: the extras to include; `just sync-floors ""` for none
 sync-floors extras="--all-extras":
     #!/usr/bin/env bash

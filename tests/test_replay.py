@@ -2,6 +2,7 @@
 
 import lzma
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -125,6 +126,20 @@ def test_a_replay_folder_has_only_the_programs_recorded(tmp_path):
     (cases / "hycs_std").mkdir(parents=True)
     exec_dir = replay.make_folder(tmp_path / "rep", cases)
     assert [p.name for p in exec_dir.iterdir()] == ["hycs_std"]
+
+
+def test_a_folder_that_names_python3_is_the_same_where_it_is_made(tmp_path):
+    # The Kubernetes test makes one on the runner and uses it in the image: the
+    # hash of its program is part of each run's settings, so both must match.
+    cases = tmp_path / "cases"
+    recording = replay.make_folder(tmp_path / "rec", cases, _real_hysplit(tmp_path))
+    first = _call(recording, _workdir(tmp_path, "one", "/data/met"))
+    exec_dir = replay.make_folder(tmp_path / "rep", cases, python="python3")
+    program = (exec_dir / "hycs_std").read_text()
+    assert "exec python3 -I " in program
+    assert sys.executable not in program
+    second = _call(exec_dir, _workdir(tmp_path, "two", "/elsewhere/met"))
+    assert (second.returncode, second.stdout) == (first.returncode, first.stdout)
 
 
 def test_builds_are_read_from_the_file(tmp_path, monkeypatch):

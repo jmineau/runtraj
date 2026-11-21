@@ -75,8 +75,9 @@ same inputs, writes its files and exits as it did. A met folder in `CONTROL`
 is compared as `<met>/`, so cases replay on any machine with the test met
 files. CI runs it for each version. `just replay-folder VERSION DEST` makes
 such a folder for anything else; put the `exec/` it prints first on `PATH`.
-The docs build and the Kubernetes test still run a v5.1.0 `hycs_std`, which
-`.github/scripts/install_hysplit.sh` downloads.
+The Kubernetes test replays its own cases, `tests/recorded/kubernetes/5.1.0/`
+(`tests/kubernetes/README.md`). The docs build still runs a v5.1.0 `hycs_std`,
+which `.github/scripts/install_hysplit.sh` downloads.
 
 **When a replay fails.** Inputs no case has fail the run, and the test session
 lists them at its end ("HYSPLIT runs with no recording"), kept in
@@ -106,6 +107,7 @@ met files in `tests/met_cache/`):
 just test-real        # the integration tests on each real build
 just record           # replace tests/recorded/hysplit/<version>/ for each build
 just record 5.4.2     # one version only
+just record-kubernetes  # the Kubernetes test's runs, on 5.1.0, in tests/recorded/kubernetes/
 ```
 
 `just record` runs the integration tests on the build with a folder whose

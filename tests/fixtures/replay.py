@@ -31,6 +31,7 @@ The tests use it through ``tests/conftest.py`` (``--hysplit-replay``,
 
     python tests/fixtures/replay.py folder DEST --cases tests/recorded/hysplit/5.4.2
     python tests/fixtures/replay.py folder DEST --cases DIR --record BUILD
+    python tests/fixtures/replay.py folder DEST --cases DIR --python python3
     python tests/fixtures/replay.py summary DIR --record BUILD --met MET_DIR
     python tests/fixtures/replay.py builds [VERSION ...]
 
@@ -242,7 +243,11 @@ def replay(program: str, cases: Path, misses: Path) -> int:
 
 
 def make_folder(
-    dest: Path, cases: Path, real: Path | None = None, misses: Path | None = None
+    dest: Path,
+    cases: Path,
+    real: Path | None = None,
+    misses: Path | None = None,
+    python: str | None = None,
 ) -> Path:
     """
     Make a HYSPLIT folder at *dest* that replays *cases*, or records them from the build *real*.
@@ -250,7 +255,9 @@ def make_folder(
     *real* is a HYSPLIT folder (``exec/`` and ``bdyfiles/``). Recording, the
     folder has the programs *real* has, and its tables. Replaying, it has the
     programs *cases* holds cases of, and stand-in tables, and keeps the
-    inputs of a miss in *misses* (``dest/misses`` unless given). Returns
+    inputs of a miss in *misses* (``dest/misses`` unless given). The programs
+    run ``replay.py`` with the interpreter that made the folder, or *python*
+    as given (``python3``: found on ``PATH`` when a program runs). Returns
     the folder's ``exec/``, to put first on ``PATH``.
     """
     dest = Path(dest)
@@ -274,7 +281,7 @@ def make_folder(
         else:
             kept = Path(misses) if misses is not None else dest / "misses"
             args = ["replay", program, str(cases), str(kept.resolve())]
-        command = [sys.executable, "-I", str(this), "run", *args]
+        command = [python or sys.executable, "-I", str(this), "run", *args]
         script = dest / "exec" / program
         script.write_text(
             "#!/bin/sh\n"
@@ -384,6 +391,11 @@ def main(argv: list[str] | None = None) -> int:
     folder.add_argument(
         "--record", type=Path, metavar="BUILD", help="record from this HYSPLIT folder"
     )
+    folder.add_argument(
+        "--python",
+        help="the interpreter the programs run, as they name it (default: this one, "
+        "by its path); 'python3' makes a folder that is the same wherever it is made",
+    )
     summ = sub.add_parser("summary", help="write recorded.yaml in the cases folder")
     summ.add_argument("cases", type=Path)
     summ.add_argument("--record", type=Path, metavar="BUILD", required=True)
@@ -403,7 +415,7 @@ def main(argv: list[str] | None = None) -> int:
             print(version, folder)
         return 0
     if args.command == "folder":
-        print(make_folder(args.dest, args.cases, args.record))
+        print(make_folder(args.dest, args.cases, args.record, python=args.python))
         return 0
     text = summary(args.cases, args.record, args.met)
     (args.cases / "recorded.yaml").write_text(text)

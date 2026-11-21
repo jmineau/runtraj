@@ -193,7 +193,8 @@ in `tests.yml`:
   runtraj gives HYSPLIT fails there until someone with the builds runs `just record`
   (CONTRIBUTING.md, "Testing against real HYSPLIT").
 - `tests/kubernetes/`: the end-to-end test on a kind cluster, run by `kubernetes.yml`
-  only (it needs Docker); its README says what it checks.
+  only (it needs Docker); its README says what it checks. Its HYSPLIT replays the
+  runs in `tests/recorded/kubernetes/5.1.0/` (`just record-kubernetes`).
 
 Docstring examples (`>>>` lines under `src/`) run as tests too
 (`--doctest-modules`), so an example that stops matching the code fails
