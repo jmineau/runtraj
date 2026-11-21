@@ -170,6 +170,8 @@ in `tests.yml`:
   `PATH` (unit tests get a stand-in) and `RUNTRAJ_TEST_MET_DIR` (HRRR ARL files) or
   `RUNTRAJ_TEST_FETCH_MET=1` (downloads seven 6 h blocks, 23.9 GB in all, and keeps
   211 MB in the ignored `tests/met_cache/`); otherwise they skip.
+- `tests/kubernetes/`: the end-to-end test on a kind cluster, run by `kubernetes.yml`
+  only (it needs Docker); its README says what it checks.
 
 Docstring examples (`>>>` lines under `src/`) run as tests too
 (`--doctest-modules`), so an example that stops matching the code fails

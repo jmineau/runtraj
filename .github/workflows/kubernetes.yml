@@ -1,0 +1,167 @@
+name: Kubernetes
+
+# Runs a real project on a kind cluster (Kubernetes in Docker), with an image
+# built from this commit, an S3 server in the cluster for the inputs and
+# results, and one cropped HRRR file mounted as the met: runtraj submit, then
+# status. Then checks that a Job whose project is missing fails at once
+# without retries (exit code 2), and that an hourly tick from runtraj
+# schedule adds its hours to the bucket's releases.csv.
+# tests/kubernetes/README.md says what each part is.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kind:
+    name: kind
+    runs-on: ubuntu-latest  # the hycs_std install_hysplit.sh takes is linux_x64
+    timeout-minutes: 30
+    env:
+      UV_NO_SYNC: "1"
+      # Every S3 call goes to the cluster's S3 server, through the port-forward.
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://127.0.0.1:5000
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # setuptools-scm reads the version from tags
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.12.23"
+          python-version: "3.13"
+
+      - name: Install
+        run: |
+          uv sync --locked --extra download
+          uv pip install s3fs
+
+      - name: Install HYSPLIT
+        run: .github/scripts/install_hysplit.sh
+
+      - name: Restore the met
+        id: met-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: met
+          key: met-hrrr-20210115-00
+
+      - name: Download the met
+        # One 6-hour HRRR file from NOAA's bucket, cropped to Utah (about 30 MB).
+        # NOAA's bucket is S3 too, so this step goes to it, not the cluster's.
+        if: steps.met-cache.outputs.cache-hit != 'true'
+        run: |
+          env -u AWS_ENDPOINT_URL uv run python -c '
+          from arlmet.archives import HRRRArchive
+          HRRRArchive().fetch("2021-01-15 00:00", "2021-01-15 05:59", dest_dir="met",
+                              bbox=(-114.0, 39.0, -110.0, 42.0))
+          '
+
+      - name: Save the met
+        if: steps.met-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: met
+          key: ${{ steps.met-cache.outputs.cache-primary-key }}
+
+      - name: Build the image
+        run: |
+          uv build --wheel --out-dir image/dist
+          cp -r /opt/hysplit image/hysplit
+          docker build -t runtraj:ci -f tests/kubernetes/Dockerfile image
+
+      - name: Write the kind config
+        # The node mounts the runner's met folder at /met.
+        run: |
+          cat > kind.yaml <<KIND
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+            - role: control-plane
+              extraMounts:
+                - hostPath: $GITHUB_WORKSPACE/met
+                  containerPath: /met
+                  readOnly: true
+          KIND
+
+      - uses: helm/kind-action@v1.15.2
+        with:
+          cluster_name: runtraj
+          config: kind.yaml
+
+      - name: Start the S3 server
+        run: |
+          kind load docker-image runtraj:ci --name runtraj
+          kubectl apply -f tests/kubernetes/cluster.yaml
+          kubectl wait --for=condition=available deployment/s3 --timeout=300s
+          kubectl port-forward service/s3 5000:5000 > port-forward.log 2>&1 &
+          for _ in $(seq 30); do nc -z 127.0.0.1 5000 && break; sleep 1; done
+          uv run python -c "import s3fs; s3fs.S3FileSystem().mkdir('runtraj')"
+
+      - name: Submit the demo project and count its results
+        run: |
+          # runtraj reads the met's first file to name the results, so the met
+          # must be at /met here too, as in the pods.
+          sudo ln -s "$GITHUB_WORKSPACE/met" /met
+          uv run runtraj submit tests/kubernetes/demo
+          kubectl wait --for=condition=complete job -l runtraj/project=demo --timeout=600s
+          uv run runtraj status tests/kubernetes/demo
+          uv run runtraj status tests/kubernetes/demo --json > status.json
+          python3 - <<'CHECK'
+          import json
+          status = json.load(open("status.json"))
+          assert status["simulations"]["complete"] == 2, status["simulations"]
+          assert [job["state"] for job in status["jobs"]] == ["complete"], status["jobs"]
+          assert status["jobs"][0]["done"] == 2, status["jobs"]
+          CHECK
+
+      - name: A missing project fails the Job without retries
+        # The Job runtraj submit made, pointed at a URL with no project: each
+        # pod exits with 2, which fails the whole Job at once.
+        run: |
+          manifest=$(ls tests/kubernetes/demo/_kubernetes/*/job.yaml)
+          name=$(sed 's|s3://runtraj/projects/demo|s3://runtraj/projects/missing|' "$manifest" \
+            | kubectl create -f - -o name)
+          kubectl wait --for=condition=failed "$name" --timeout=300s
+          reason=$(kubectl get "$name" -o jsonpath='{.status.conditions[?(@.type=="Failed")].reason}')
+          test "$reason" = PodFailurePolicy || { echo "::error::failed for $reason"; exit 1; }
+
+      - name: A schedule's tick adds its hours to the bucket and runs them
+        # The demo's met is from 2021, so today's hours cannot run: the tick
+        # must still add them to the bucket's releases.csv, and its Job must
+        # end by the exit-code rule (1: the task fails, no retries), as an hour
+        # whose met is not out yet would. releases.csv's newest hour is from
+        # 2021, far older than the day, so the tick also reaches back a week
+        # further (MAX_BACKFILL_HOURS): one site, 24 + 168 hours.
+        run: |
+          uv run runtraj schedule tests/kubernetes/demo
+          name=$(uv run python -c "from runtraj.execution.kubernetes import cron_job_name; print(cron_job_name('demo', 's3://runtraj/projects/demo'))")
+          kubectl get cronjob "$name"
+          kubectl create job tick-now --from=cronjob/"$name"
+          kubectl wait --for=condition=failed job/tick-now --timeout=600s
+          reason=$(kubectl get job/tick-now -o jsonpath='{.status.conditions[?(@.type=="Failed")].reason}')
+          test "$reason" = FailedIndexes || { echo "::error::failed for $reason"; exit 1; }
+          rows=$(uv run python -c "import s3fs; print(len(s3fs.S3FileSystem().cat_file('runtraj/projects/demo/releases.csv').splitlines()) - 1)")
+          want=$(uv run python -c "from runtraj.execution import schedule; print(2 + schedule.WINDOW_HOURS + schedule.MAX_BACKFILL_HOURS)")
+          test "$rows" = "$want" || { echo "::error::releases.csv has $rows rows, not $want"; exit 1; }
+
+      - name: Show the cluster
+        if: ${{ !cancelled() }}
+        run: |
+          kubectl get jobs,cronjobs,pods -o wide
+          kubectl describe jobs -l app.kubernetes.io/name=runtraj | tail -60
+          kubectl logs -l app.kubernetes.io/name=runtraj --prefix --tail=40 || true
