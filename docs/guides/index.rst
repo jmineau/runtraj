@@ -22,6 +22,8 @@ word in the :doc:`../getting_started/glossary`.
   stands, and find out why one failed
 - :doc:`slurm`: run thousands of simulations on an HPC cluster
 - :doc:`containers`: run with Kubernetes or another scheduler
+- :doc:`kubernetes_setup`: the image, a cluster and a bucket for Kubernetes,
+  on your computer or on Google Cloud
 
 **Results**
 
@@ -54,6 +56,7 @@ word in the :doc:`../getting_started/glossary`.
    checking
    slurm
    containers
+   kubernetes_setup
 
 .. toctree::
    :hidden:
