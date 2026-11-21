@@ -118,8 +118,10 @@ written to ``CONTROL``:
        levels, sampling start, stop and interval
      - ``grids``: ``center_lon`` and ``center_lat`` (unset, ``0.0 0.0``,
        the release), ``spacing_*``, ``span_*``, ``levels``, ``sampling``
-       and ``sampling_interval``; the file is ``cdump_<name>`` in the
-       workdir, and the samples cover the whole run
+       and ``sampling_interval`` (under an hour, any number of minutes;
+       from an hour up, whole hours, which is how HYSPLIT reads it); the
+       file is ``cdump_<name>`` in the workdir, and the samples cover the
+       whole run
    * - Lines 26 to 31: deposition, wet removal, decay and resuspension of
        each pollutant
      - The other fields of each pollutant, in HYSPLIT's units
@@ -130,8 +132,7 @@ Dataset of :doc:`concentration`. A file of one point per grid (``cpack:
 2``) is refused. A run fails as ``NO_CONCENTRATION_DATA`` when a grid has
 no file, or a file with no sample, as when ``sampling_interval`` is longer
 than the run, or fewer samples than the run holds: its length divided by
-the interval, in whole intervals (HYSPLIT reads an interval of an hour or
-more in whole hours, so 90 minutes is 60). HYSPLIT keeps writing samples,
+the interval, in whole intervals. HYSPLIT keeps writing samples,
 of zeros, after its particles are gone, so a run whose met ran out after
 it started is not found this way, and runtraj does not check a
 concentration run for it, as it does a particle run (its files are checked

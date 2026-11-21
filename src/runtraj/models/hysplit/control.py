@@ -307,7 +307,8 @@ def _read_concentration(
                 span_lon=float(words[g + 2][1]),
                 levels=[int(z) for z in words[g + 6]],
                 sampling={v: k for k, v in SAMPLING_TYPES.items()}[kind],
-                sampling_interval=60 * hh + mm,
+                # HYSPLIT drops the minutes of an interval of an hour or more.
+                sampling_interval=60 * hh if hh else mm,
             )
         )
     deposition = at + 1 + 10 * n_grid + 1

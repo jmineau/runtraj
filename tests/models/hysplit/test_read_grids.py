@@ -44,8 +44,6 @@ def test_a_cmass_run_keeps_its_grids_labeled_as_mass(tmp_path):
     ("fixture", "grid", "n_hours"),
     [
         ("average_cpack1", {"sampling_interval": 60}, 4),
-        # 1.5 hours is read by HYSPLIT as 1: hours replace minutes from 1 hour up.
-        ("average_cpack1", {"sampling_interval": 90}, 4),
         ("snapshot_cpack1", {"sampling": "snapshot", "sampling_interval": 120}, 4),
         # The part of a run after its last whole interval has no sample.
         ("snapshot_cpack1", {"sampling": "snapshot", "sampling_interval": 120}, 5),

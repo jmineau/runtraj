@@ -416,13 +416,11 @@ def _samples_expected(grid: ConcentrationGrid, n_hours: int) -> int:
     sampling interval, counted from the start of the run (the grid's
     sampling start is the run's start, and its stop the run's end), in
     either direction. The part of the run after the last whole interval
-    has none. ``CONSET`` reads an interval of an hour or more in whole
-    hours and drops its minutes, so 90 minutes is 60.
+    has none. The grid's interval is the one HYSPLIT uses: the config
+    refuses one that HYSPLIT would change (an hour or more that is not a
+    whole number of hours).
     """
-    minutes = grid.sampling_interval
-    if minutes >= 60:
-        minutes -= minutes % 60
-    return abs(n_hours) * 60 // minutes
+    return abs(n_hours) * 60 // grid.sampling_interval
 
 
 def _write_inputs(

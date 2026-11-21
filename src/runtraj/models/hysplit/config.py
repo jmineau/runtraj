@@ -246,8 +246,25 @@ class ConcentrationGrid(BaseModel):
     sampling_interval: int = Field(
         60,
         gt=0,
-        description="Length of each sample, in minutes.",
+        description=(
+            "Length of each sample, in minutes: under an hour, any number; "
+            "an hour or more, a whole number of hours (60, 120, ...), which "
+            "is how HYSPLIT reads it."
+        ),
     )
+
+    @field_validator("sampling_interval")
+    @classmethod
+    def _whole_hours(cls, value: int) -> int:
+        """Refuse an interval of an hour or more that HYSPLIT would shorten to whole hours."""
+        if value >= 60 and value % 60:
+            below = value // 60 * 60
+            raise ValueError(
+                "HYSPLIT reads a sampling interval of an hour or more in whole "
+                f"hours and drops the minutes, so {value} minutes would be "
+                f"{below}. Use {below} or {below + 60}."
+            )
+        return value
 
     @model_validator(mode="after")
     def _check(self) -> Self:

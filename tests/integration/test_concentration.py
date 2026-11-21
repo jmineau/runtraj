@@ -111,7 +111,7 @@ def test_a_backward_concentration_run_samples_back_in_time(tmp_path, met_dir):
     [
         (4, "average", 60, 4),
         (4, "average", 25, 9),  # the last 15 minutes have no sample
-        (4, "average", 90, 4),  # HYSPLIT reads 1 h 30 min as 1 h
+        (4, "average", 45, 5),  # under an hour, HYSPLIT keeps the minutes
         (4, "snapshot", 120, 2),
         (3, "average", 120, 1),
         (-3, "maximum", 60, 3),

@@ -127,6 +127,21 @@ def test_a_grid_is_checked(fields, match):
         ConcentrationGrid(name="g", **fields)
 
 
+@pytest.mark.parametrize("minutes", [1, 25, 59, 60, 120, 360])
+def test_an_interval_hysplit_keeps_is_accepted(minutes):
+    assert ConcentrationGrid(name="g", sampling_interval=minutes)
+
+
+@pytest.mark.parametrize(
+    ("minutes", "nearest"), [(61, "60 or 120"), (90, "60 or 120"), (150, "120 or 180")]
+)
+def test_an_interval_hysplit_would_shorten_is_refused(minutes, nearest):
+    # Under an hour HYSPLIT keeps the minutes; from an hour up it drops them,
+    # so 90 gives the samples of 60 (conset.f), not 90 minutes.
+    with pytest.raises(ValidationError, match=f"whole hours.*Use {nearest}"):
+        ConcentrationGrid(name="g", sampling_interval=minutes)
+
+
 def test_a_pollutant_name_is_hysplits_four_characters():
     with pytest.raises(ValidationError):
         Pollutant(name="TOOLONG")
@@ -261,6 +276,17 @@ def test_control_reads_back_its_pollutants_and_grids(tmp_path):
     loaded = ControlFile.read(path)
     assert loaded.pollutants == POLLUTANTS
     assert loaded.grids == GRIDS
+
+
+def test_a_control_file_is_read_as_hysplit_reads_its_interval(tmp_path):
+    # HYSPLIT drops the minutes of an interval of an hour or more (conset.f), so
+    # a file that says 1 h 30 min is a file of hourly samples.
+    assert CONCENTRATION_CONTROL.count("00 01 00\n") == 1
+    path = tmp_path / "CONTROL"
+    path.write_text(CONCENTRATION_CONTROL.replace("00 01 00\n", "00 01 30\n"))
+    assert ControlFile.read(path).grids == GRIDS
+    path.write_text(CONCENTRATION_CONTROL.replace("00 01 00\n", "00 00 45\n"))
+    assert ControlFile.read(path).grids[0].sampling_interval == 45
 
 
 def test_a_particles_control_reads_back_with_no_pollutants(tmp_path):

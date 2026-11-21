@@ -82,7 +82,9 @@ the release; we recommend this for releases at many places), its spacing
 and span in degrees, its levels, and its samples. ``sampling`` is
 ``average`` (the mean over each interval, the default), ``snapshot`` (the
 value at the interval's end), or ``maximum``; ``sampling_interval`` is the
-length of a sample in minutes. A level of 0 counts deposition on the
+length of a sample in minutes: any number under an hour, and from an
+hour up a whole number of hours (60, 120, ...), since HYSPLIT reads the
+interval in whole hours and a setting such as 90 is refused. A level of 0 counts deposition on the
 ground. Every grid samples from the start of the run to its end.
 
 In ``config.yaml``:
