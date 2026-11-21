@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=31054d87"></script>
+    <script src="../_static/documentation_options.js?v=cf94108f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="The Output Directory" href="output.html" />
+    <link rel="next" title="Setting Up Kubernetes" href="kubernetes_setup.html" />
     <link rel="prev" title="On An HPC Cluster (Slurm)" href="slurm.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev2+gbd8ea1911" />
+  <meta name="docsearch:version" content="0.1.0a4.dev4+g9771c4736" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -423,6 +423,7 @@
 <li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
 <ul class="nav bd-sidenav">
@@ -498,7 +499,8 @@
 <p>A project can run in many containers at once, such as the pods of a
 Kubernetes Job, without Slurm. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> makes that Job for you
 (<a class="reference internal" href="#kubernetes-submit"><span class="std std-ref">Submitting to Kubernetes</span></a>); the rest of this page is what each pod does,
-for a Job you write yourself or another scheduler.</p>
+for a Job you write yourself or another scheduler. <a class="reference internal" href="kubernetes_setup.html"><span class="doc">Setting Up Kubernetes</span></a>
+makes the image, the cluster and the bucket.</p>
 <p>Each container runs one share of the releases:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>run<span class="w"> </span>/project<span class="w"> </span>--task<span class="w"> </span><span class="m">3</span>/20
 </pre></div>
@@ -873,11 +875,11 @@ that drives the Job.</p>
       </div>
     </a>
     <a class="right-next"
-       href="output.html"
+       href="kubernetes_setup.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">The Output Directory</p>
+        <p class="prev-next-title">Setting Up Kubernetes</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

@@ -4,7 +4,8 @@ In Containers (Kubernetes)
 A project can run in many containers at once, such as the pods of a
 Kubernetes Job, without Slurm. ``runtraj submit`` makes that Job for you
 (:ref:`kubernetes-submit`); the rest of this page is what each pod does,
-for a Job you write yourself or another scheduler.
+for a Job you write yourself or another scheduler. :doc:`kubernetes_setup`
+makes the image, the cluster and the bucket.
 
 Each container runs one share of the releases:
 
