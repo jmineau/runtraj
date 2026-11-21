@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.config &#8212; runtraj 0.1.0a4</title>
+    <title>runtraj.execution.config &#8212; runtraj dev</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../../../_static/documentation_options.js?v=93b9df49"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5.dev2+g5af3e9d77" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -669,6 +669,41 @@
 <span class="n">_K8S_MEMORY</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"\d+(\.\d+)?(Ki|Mi|Gi|Ti|Pi|Ei)"</span>
 
 
+<span class="c1">#: Where each pod keeps its copy of the inputs and its runs' workdirs: an ``emptyDir``.</span>
+<span class="n">SCRATCH</span> <span class="o">=</span> <span class="s2">"/scratch"</span>
+<span class="n">_DNS_LABEL</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"[a-z0-9]([-a-z0-9]*[a-z0-9])?"</span>
+<span class="n">_DNS_SUBDOMAIN</span> <span class="o">=</span> <span class="sa">rf</span><span class="s2">"</span><span class="si">{</span><span class="n">_DNS_LABEL</span><span class="si">}</span><span class="s2">(\.</span><span class="si">{</span><span class="n">_DNS_LABEL</span><span class="si">}</span><span class="s2">)*"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_kube_name</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return *value* if it is a Kubernetes name, else raise ``ValueError`` naming *kind*.</span>
+
+<span class="sd">    Kubernetes names its objects with lowercase letters, digits and ``-``</span>
+<span class="sd">    (and ``.`` between parts, except in a namespace, which is one *label*),</span>
+<span class="sd">    starting and ending with a letter or digit, so a name outside that</span>
+<span class="sd">    would be refused by ``kubectl`` only when the Job is made.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; check_kube_name("hrrr-arl", "claim_name")</span>
+<span class="sd">    'hrrr-arl'</span>
+<span class="sd">    &gt;&gt;&gt; check_kube_name("Bad_Name", "claim_name")</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ValueError: claim_name 'Bad_Name' is not a Kubernetes name: use lowercase letters, digits and '-', starting and ending with a letter or digit, such as 'bad-name'.</span>
+<span class="sd">    """</span>
+    <span class="n">pattern</span><span class="p">,</span> <span class="n">longest</span> <span class="o">=</span> <span class="p">(</span><span class="n">_DNS_LABEL</span><span class="p">,</span> <span class="mi">63</span><span class="p">)</span> <span class="k">if</span> <span class="n">label</span> <span class="k">else</span> <span class="p">(</span><span class="n">_DNS_SUBDOMAIN</span><span class="p">,</span> <span class="mi">253</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">longest</span> <span class="ow">and</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="n">guess</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^a-z0-9.]+"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"-."</span><span class="p">)</span>
+    <span class="n">hint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">", such as </span><span class="si">{</span><span class="n">guess</span><span class="si">!r}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">guess</span> <span class="ow">and</span> <span class="n">guess</span> <span class="o">!=</span> <span class="n">value</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> is not a Kubernetes name: use lowercase letters, "</span>
+        <span class="sa">f</span><span class="s2">"digits and '-', starting and ending with a letter or digit</span><span class="si">{</span><span class="n">hint</span><span class="si">}</span><span class="s2">."</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="Volume">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.execution.Volume.html#runtraj.Volume">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Volume</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -692,7 +727,33 @@
     <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">False</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="s2">"Mount it read-only, as for a met archive the pods only read."</span><span class="p">),</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"claim_name"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_claim_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a claim name Kubernetes would refuse, such as a path or ``''``."""</span>
+        <span class="k">return</span> <span class="n">check_kube_name</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"claim_name"</span><span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"mount_path"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_mount_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a mount path with a ``:``, or that is ``/`` or the pods' scratch."""</span>
+        <span class="k">if</span> <span class="s2">":"</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"mount_path </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> has a ':'; write the path alone and set "</span>
+                <span class="s2">"read_only for a read-only mount."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"mount_path </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> is the pod's root; mount the volume in a folder."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span> <span class="o">==</span> <span class="n">SCRATCH</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"mount_path </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> is where each pod keeps its inputs and "</span>
+                <span class="s2">"workdirs; mount the volume at another path."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
 
 
 
@@ -806,6 +867,54 @@
             <span class="s2">"when each pod has its own met directory."</span>
         <span class="p">),</span>
     <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"image"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_image</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an image that is empty or has a space."""</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">value</span> <span class="ow">or</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\s"</span><span class="p">,</span> <span class="n">value</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"image </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> is not an image name: it is empty or has a "</span>
+                <span class="s2">"space. Write it as in a Dockerfile's FROM, such as "</span>
+                <span class="s2">"registry.example.org/runtraj-hysplit:1."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"namespace"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_namespace</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a namespace that is not a Kubernetes label."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">check_kube_name</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"namespace"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"service_account"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_service_account</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a service account that is not a Kubernetes name."""</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">check_kube_name</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"service_account"</span><span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"secrets"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_secrets</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Refuse a secret that is not a Kubernetes name."""</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">check_kube_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"secrets entry"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_volumes_apart</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse two volumes at one ``mount_path``."""</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">volume</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">mount_path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"volumes </span><span class="si">{</span><span class="n">seen</span><span class="p">[</span><span class="n">path</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">volume</span><span class="o">.</span><span class="n">claim_name</span><span class="si">!r}</span><span class="s2"> are both "</span>
+                    <span class="sa">f</span><span class="s2">"mounted at </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">; each needs its own mount_path."</span>
+                <span class="p">)</span>
+            <span class="n">seen</span><span class="p">[</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">claim_name</span>
+        <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"memory"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>

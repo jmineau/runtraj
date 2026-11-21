@@ -83,12 +83,24 @@ volume for the project. The output directory must then be on a bucket too,
 or each pod would write its results to its own disk; ``runtraj submit``
 refuses that. Without ``inputs`` the pods open the project folder at the
 path it has where you submit, so it must be on a volume they mount at that
-path.
+path. Copying never deletes: a ``sites.csv`` or a table you removed from the
+project stays on the bucket, where the pods still read it, so ``submit`` and
+``schedule`` log a warning naming the files the bucket has that the project
+does not. Delete them there (``aws s3 rm``, for one).
 
 ``image`` is required. runtraj publishes no image: an image needs runtraj,
 HYSPLIT's ``hycs_std`` (downloaded from NOAA ARL; :doc:`../getting_started/installation`)
 and the packages of the stages the project names. Every pod must have the
 same ``hycs_std``, since its checksum is part of each run's settings.
+
+The block is checked when the project opens, so a setting Kubernetes would
+refuse stops ``runtraj submit`` before anything reaches the cluster:
+``image`` is not empty and has no space; ``namespace`` (one label),
+``service_account``, each of ``secrets`` and each volume's ``claim_name``
+are Kubernetes names (lowercase letters, digits and ``-``, starting and
+ending with a letter or digit); and each volume's ``mount_path`` has no
+``:`` (set ``read_only`` rather than writing ``/met:ro``), is not ``/`` or
+``/scratch``, and is not another volume's.
 
 Each pod gets an ``emptyDir`` at ``/scratch`` as its ``TMPDIR``, where its
 copy of the inputs and its workdirs go, and one thread per worker. The Job
@@ -120,7 +132,10 @@ failed simulations each have a ``.failure.yaml``. The Jobs are found by the
 project's name and kept when they were made for this project's inputs, so
 another project of the same name is left out. When ``kubectl`` cannot list
 them, the line says why and the counts still print. ``runtraj status
---json`` adds them as ``jobs``.
+--json`` adds them as ``jobs``. When the output directory does not exist
+(a typo in ``--output``, or nothing has run yet), ``status`` says so under
+``Output:`` instead of only counting every simulation as pending, and
+``--json`` has ``output_exists``.
 
 .. _kubernetes-schedule:
 
@@ -139,7 +154,10 @@ each hour gets a release at each site once its met is out. List the sites in
 
 ``longitude``, ``latitude`` and ``altitude`` are required; ``altitude_ref``
 (``agl``, the default, or ``msl``) is optional, and other columns, such as a
-name, are ignored. The project needs no ``releases.csv`` to start. Then,
+name, are ignored. A site that repeats an earlier line is used once, with a
+warning that names both lines; a header without the required columns is
+refused with the columns the file has. The project needs no
+``releases.csv`` to start. Then,
 with the same ``kubernetes`` block as for ``runtraj submit``:
 
 .. code-block:: bash
@@ -151,7 +169,8 @@ At 15 minutes past each hour (UTC) the CronJob starts one pod, which runs
 ``runtraj tick``. A tick
 
 1. adds a release at each site for each hour of the last day that is at
-   least ``--delay`` hours old (8 by default), and reaches back up to a week
+   least ``--delay`` hours old (8 by default, at most a week, 168), and
+   reaches back up to a week
    further to close a gap after the newest hour ``releases.csv`` holds, as
    after an outage;
 2. writes ``releases.csv`` back, to the bucket when the inputs are on one;

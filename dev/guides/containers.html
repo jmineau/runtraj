@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>In Containers (Kubernetes) &#8212; runtraj 0.1.0a4</title>
+    <title>In Containers (Kubernetes) &#8212; runtraj dev</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../_static/documentation_options.js?v=93b9df49"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5.dev2+g5af3e9d77" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -569,11 +569,22 @@ volume for the project. The output directory must then be on a bucket too,
 or each pod would write its results to its own disk; <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>
 refuses that. Without <code class="docutils literal notranslate"><span class="pre">inputs</span></code> the pods open the project folder at the
 path it has where you submit, so it must be on a volume they mount at that
-path.</p>
+path. Copying never deletes: a <code class="docutils literal notranslate"><span class="pre">sites.csv</span></code> or a table you removed from the
+project stays on the bucket, where the pods still read it, so <code class="docutils literal notranslate"><span class="pre">submit</span></code> and
+<code class="docutils literal notranslate"><span class="pre">schedule</span></code> log a warning naming the files the bucket has that the project
+does not. Delete them there (<code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span> <span class="pre">rm</span></code>, for one).</p>
 <p><code class="docutils literal notranslate"><span class="pre">image</span></code> is required. runtraj publishes no image: an image needs runtraj,
 HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> (downloaded from NOAA ARL; <a class="reference internal" href="../getting_started/installation.html"><span class="doc">Installation</span></a>)
 and the packages of the stages the project names. Every pod must have the
 same <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, since its checksum is part of each run’s settings.</p>
+<p>The block is checked when the project opens, so a setting Kubernetes would
+refuse stops <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> before anything reaches the cluster:
+<code class="docutils literal notranslate"><span class="pre">image</span></code> is not empty and has no space; <code class="docutils literal notranslate"><span class="pre">namespace</span></code> (one label),
+<code class="docutils literal notranslate"><span class="pre">service_account</span></code>, each of <code class="docutils literal notranslate"><span class="pre">secrets</span></code> and each volume’s <code class="docutils literal notranslate"><span class="pre">claim_name</span></code>
+are Kubernetes names (lowercase letters, digits and <code class="docutils literal notranslate"><span class="pre">-</span></code>, starting and
+ending with a letter or digit); and each volume’s <code class="docutils literal notranslate"><span class="pre">mount_path</span></code> has no
+<code class="docutils literal notranslate"><span class="pre">:</span></code> (set <code class="docutils literal notranslate"><span class="pre">read_only</span></code> rather than writing <code class="docutils literal notranslate"><span class="pre">/met:ro</span></code>), is not <code class="docutils literal notranslate"><span class="pre">/</span></code> or
+<code class="docutils literal notranslate"><span class="pre">/scratch</span></code>, and is not another volume’s.</p>
 <p>Each pod gets an <code class="docutils literal notranslate"><span class="pre">emptyDir</span></code> at <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> as its <code class="docutils literal notranslate"><span class="pre">TMPDIR</span></code>, where its
 copy of the inputs and its workdirs go, and one thread per worker. The Job
 retries a pod from its exit code (<a class="reference internal" href="#exit-codes"><span class="std std-ref">Exit codes</span></a>): 3 is retried up to
@@ -601,7 +612,10 @@ failed simulations each have a <code class="docutils literal notranslate"><span 
 project’s name and kept when they were made for this project’s inputs, so
 another project of the same name is left out. When <code class="docutils literal notranslate"><span class="pre">kubectl</span></code> cannot list
 them, the line says why and the counts still print. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span>
-<span class="pre">--json</span></code> adds them as <code class="docutils literal notranslate"><span class="pre">jobs</span></code>.</p>
+<span class="pre">--json</span></code> adds them as <code class="docutils literal notranslate"><span class="pre">jobs</span></code>. When the output directory does not exist
+(a typo in <code class="docutils literal notranslate"><span class="pre">--output</span></code>, or nothing has run yet), <code class="docutils literal notranslate"><span class="pre">status</span></code> says so under
+<code class="docutils literal notranslate"><span class="pre">Output:</span></code> instead of only counting every simulation as pending, and
+<code class="docutils literal notranslate"><span class="pre">--json</span></code> has <code class="docutils literal notranslate"><span class="pre">output_exists</span></code>.</p>
 </section>
 <section id="running-every-hour">
 <span id="kubernetes-schedule"></span><h2>Running every hour<a class="headerlink" href="#running-every-hour" title="Link to this heading">#</a></h2>
@@ -615,7 +629,10 @@ valley,-112.1155,40.5385,5,
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">longitude</span></code>, <code class="docutils literal notranslate"><span class="pre">latitude</span></code> and <code class="docutils literal notranslate"><span class="pre">altitude</span></code> are required; <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>
 (<code class="docutils literal notranslate"><span class="pre">agl</span></code>, the default, or <code class="docutils literal notranslate"><span class="pre">msl</span></code>) is optional, and other columns, such as a
-name, are ignored. The project needs no <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> to start. Then,
+name, are ignored. A site that repeats an earlier line is used once, with a
+warning that names both lines; a header without the required columns is
+refused with the columns the file has. The project needs no
+<code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> to start. Then,
 with the same <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block as for <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>schedule<span class="w"> </span>/project
 </pre></div>
@@ -625,7 +642,8 @@ At 15 minutes past each hour (UTC) the CronJob starts one pod, which runs
 <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span></code>. A tick</p>
 <ol class="arabic simple">
 <li><p>adds a release at each site for each hour of the last day that is at
-least <code class="docutils literal notranslate"><span class="pre">--delay</span></code> hours old (8 by default), and reaches back up to a week
+least <code class="docutils literal notranslate"><span class="pre">--delay</span></code> hours old (8 by default, at most a week, 168), and
+reaches back up to a week
 further to close a gap after the newest hour <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> holds, as
 after an outage;</p></li>
 <li><p>writes <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> back, to the bucket when the inputs are on one;</p></li>
