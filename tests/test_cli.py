@@ -6,6 +6,7 @@ import ftplib
 import io
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -951,7 +952,9 @@ def test_a_delay_beyond_a_week_is_refused(tmp_path, command):
     result = _invoke(command, "--delay", "100000", project=project)
 
     assert result.exit_code == 2
-    assert "--delay" in result.output and "168" in result.output
+    # CI colors the usage error and draws it in a box: keep only its words.
+    words = re.sub(r"[│╭╮╰╯─]", " ", re.sub(r"\x1b\[[0-9;]*m", "", result.output))
+    assert "--delay" in words and "168" in words
 
 
 def test_a_kubernetes_block_with_a_bad_setting_exits_2_naming_it(tmp_path):
