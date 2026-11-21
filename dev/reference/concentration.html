@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../_static/documentation_options.js?v=875fea35"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -549,6 +549,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.results.result_type.html">runtraj.results.result_type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.results.model_result.html">runtraj.results.model_result</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.CONCENTRATION_DIMS.html">runtraj.concentration.CONCENTRATION_DIMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.SPLIT_DIMS.html">runtraj.concentration.SPLIT_DIMS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.check_concentration.html">runtraj.concentration.check_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.describe_grid.html">runtraj.concentration.describe_grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
@@ -796,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.Conversion.html">runtraj.models.hysplit.Conversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -985,6 +987,16 @@ deposited. With <code class="docutils literal notranslate"><span class="pre">cma
 unit of mass, and nothing at <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">0</span></code>. Zero where the model wrote
 nothing.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">source</span></code> or <code class="docutils literal notranslate"><span class="pre">release_time</span></code></p></td>
+<td><p>a number, or UTC</p></td>
+<td><p>Only when the model counts each pollutant apart by where or when
+it was released (<a class="reference internal" href="_api/runtraj.concentration.SPLIT_DIMS.html#runtraj.concentration.SPLIT_DIMS" title="runtraj.concentration.SPLIT_DIMS"><code class="xref py py-data docutils literal notranslate"><span class="pre">SPLIT_DIMS</span></code></a>), as HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">1</span></code>
+and <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">10</span></code> do. It is then the first dimension of every
+variable, before the four above: <code class="docutils literal notranslate"><span class="pre">source</span></code> numbers the release’s
+points from 1, with <code class="docutils literal notranslate"><span class="pre">source_lon</span></code>, <code class="docutils literal notranslate"><span class="pre">source_lat</span></code> and
+<code class="docutils literal notranslate"><span class="pre">source_height</span></code>; <code class="docutils literal notranslate"><span class="pre">release_time</span></code> is when each part of the
+emission started.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1000,19 +1012,22 @@ metadata), <code class="docutils literal notranslate"><span class="pre">runtraj:
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.concentration.CONCENTRATION_DIMS.html#runtraj.concentration.CONCENTRATION_DIMS" title="runtraj.concentration.CONCENTRATION_DIMS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CONCENTRATION_DIMS</span></code></a></p></td>
 <td><p>The dimensions of every grid's variables, in order.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.concentration.check_concentration.html#runtraj.concentration.check_concentration" title="runtraj.concentration.check_concentration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_concentration</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.concentration.SPLIT_DIMS.html#runtraj.concentration.SPLIT_DIMS" title="runtraj.concentration.SPLIT_DIMS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SPLIT_DIMS</span></code></a></p></td>
+<td><p>The dimensions a grid's variables may have before <a class="reference internal" href="_api/runtraj.concentration.CONCENTRATION_DIMS.html#runtraj.concentration.CONCENTRATION_DIMS" title="runtraj.concentration.CONCENTRATION_DIMS"><code class="xref py py-data docutils literal notranslate"><span class="pre">CONCENTRATION_DIMS</span></code></a>, when the model counts each pollutant apart by where or when it was released.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.concentration.check_concentration.html#runtraj.concentration.check_concentration" title="runtraj.concentration.check_concentration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_concentration</span></code></a></p></td>
 <td><p>Raise unless <em>result</em> is a concentration result: a DataTree of grids.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.concentration.describe_grid.html#runtraj.concentration.describe_grid" title="runtraj.concentration.describe_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe_grid</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.concentration.describe_grid.html#runtraj.concentration.describe_grid" title="runtraj.concentration.describe_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe_grid</span></code></a></p></td>
 <td><p>Give a grid's coordinates and variables their units and meanings, in place, and return it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.concentration.read_concentration.html#runtraj.concentration.read_concentration" title="runtraj.concentration.read_concentration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_concentration</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.concentration.read_concentration.html#runtraj.concentration.read_concentration" title="runtraj.concentration.read_concentration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_concentration</span></code></a></p></td>
 <td><p>Read a concentration file <a class="reference internal" href="_api/runtraj.concentration.write_concentration.html#runtraj.concentration.write_concentration" title="runtraj.concentration.write_concentration"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_concentration()</span></code></a> wrote.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.concentration.write_concentration.html#runtraj.concentration.write_concentration" title="runtraj.concentration.write_concentration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_concentration</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.concentration.write_concentration.html#runtraj.concentration.write_concentration" title="runtraj.concentration.write_concentration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_concentration</span></code></a></p></td>
 <td><p>Write a concentration result to a NetCDF file that <a class="reference internal" href="_api/runtraj.concentration.read_concentration.html#runtraj.concentration.read_concentration" title="runtraj.concentration.read_concentration"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_concentration()</span></code></a> reads alone.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.concentration.require_netcdf4.html#runtraj.concentration.require_netcdf4" title="runtraj.concentration.require_netcdf4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">require_netcdf4</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.concentration.require_netcdf4.html#runtraj.concentration.require_netcdf4" title="runtraj.concentration.require_netcdf4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">require_netcdf4</span></code></a></p></td>
 <td><p>Raise when <code class="docutils literal notranslate"><span class="pre">netCDF4</span></code>, which writes and reads the files, is not installed.</p></td>
 </tr>
 </tbody>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../_static/documentation_options.js?v=875fea35"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -683,7 +683,7 @@ of any selection of runs as one table:</p>
 </section>
 <section id="where-each-control-and-setup-cfg-line-comes-from">
 <h2>Where each <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> and <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> line comes from<a class="headerlink" href="#where-each-control-and-setup-cfg-line-comes-from" title="Link to this heading">#</a></h2>
-<p>Every <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> entry but <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code> and <code class="docutils literal notranslate"><span class="pre">IDSP</span></code> is a setting of the same name in
+<p>Every <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> entry but <code class="docutils literal notranslate"><span class="pre">IDSP</span></code> is a setting of the same name in
 lowercase, such as <code class="docutils literal notranslate"><span class="pre">numpar</span></code>, <code class="docutils literal notranslate"><span class="pre">kmixd</span></code> or <code class="docutils literal notranslate"><span class="pre">tlfrac</span></code>
 (<a class="reference internal" href="../reference/configuration.html"><span class="doc">Configuration</span></a> lists them). Each defaults to HYSPLIT’s
 own value with <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>. A setting HYSPLIT decides only after reading the
@@ -741,11 +741,16 @@ rest itself:</p>
 <td><p>The wind and mixed-layer error settings, and <code class="docutils literal notranslate"><span class="pre">ziscale</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code>, <code class="docutils literal notranslate"><span class="pre">IDSP</span></code></p></td>
-<td><p>Fixed at 8 and 2, the only values with which HYSPLIT writes particles
-(<code class="xref py py-data docutils literal notranslate"><span class="pre">FIXED_SETUP</span></code>); with <code class="docutils literal notranslate"><span class="pre">mode:</span>
-<span class="pre">concentration</span></code>, <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code> 0 and <code class="docutils literal notranslate"><span class="pre">IDSP</span></code> left to HYSPLIT</p></td>
+<td><p>8 and 2, the only values with which HYSPLIT writes particles
+(<code class="xref py py-data docutils literal notranslate"><span class="pre">FIXED_SETUP</span></code>; <code class="docutils literal notranslate"><span class="pre">ichem</span></code> may
+be 8 or left out); with <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code>, <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code> from
+<code class="docutils literal notranslate"><span class="pre">ichem</span></code>, 0 unless set, and <code class="docutils literal notranslate"><span class="pre">IDSP</span></code> left to HYSPLIT
+(<a class="reference internal" href="concentration.html"><span class="doc">Concentration Grids</span></a>)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> <code class="docutils literal notranslate"><span class="pre">KAGL</span></code>, <code class="docutils literal notranslate"><span class="pre">TOUT</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_*</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CHEMRATE.TXT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">conversions</span></code>, with <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code> and <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> <code class="docutils literal notranslate"><span class="pre">KAGL</span></code>, <code class="docutils literal notranslate"><span class="pre">TOUT</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_*</span></code></p></td>
 <td><p>With <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">trajectory</span></code>: <code class="docutils literal notranslate"><span class="pre">KAGL</span></code> fixed at 1 (heights above
 ground), <code class="docutils literal notranslate"><span class="pre">tout</span></code>, and the <code class="docutils literal notranslate"><span class="pre">tm_</span></code> settings</p></td>
 </tr>

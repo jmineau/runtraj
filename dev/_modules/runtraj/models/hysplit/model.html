@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -784,10 +784,16 @@
 
 <span class="sd">        Multipoint releases whose points share a location, which</span>
 <span class="sd">        ``hycs_std`` joins into a line source; in the trajectory mode,</span>
-<span class="sd">        column releases, since ``hyts_std`` has no line source. See</span>
+<span class="sd">        column releases, since ``hyts_std`` has no line source; and in a</span>
+<span class="sd">        concentration run with ``ichem: 1``, column releases too, which</span>
+<span class="sd">        are one source at two locations. See</span>
 <span class="sd">        :func:`runtraj.models.hysplit.releases.check_releases`.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">check_releases</span><span class="p">(</span><span class="n">releases</span><span class="p">,</span> <span class="n">trajectory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">check_releases</span><span class="p">(</span>
+            <span class="n">releases</span><span class="p">,</span>
+            <span class="n">trajectory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">,</span>
+            <span class="n">sources</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">ichem</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HysplitModel.release_rows">
@@ -961,7 +967,12 @@
                 <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_CONCENTRATION_DATA</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">ds</span> <span class="o">=</span> <span class="n">read_cdump</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">cmass</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">read_cdump</span><span class="p">(</span>
+                <span class="n">path</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">cmass</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">ichem</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">pollutant</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">pollutants</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
                 <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">NO_CONCENTRATION_DATA</span>

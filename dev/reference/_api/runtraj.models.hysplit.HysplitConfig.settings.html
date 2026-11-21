@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -549,6 +549,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.result_type.html">runtraj.results.result_type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.model_result.html">runtraj.results.model_result</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.CONCENTRATION_DIMS.html">runtraj.concentration.CONCENTRATION_DIMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.SPLIT_DIMS.html">runtraj.concentration.SPLIT_DIMS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.check_concentration.html">runtraj.concentration.check_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.describe_grid.html">runtraj.concentration.describe_grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
@@ -796,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Conversion.html">runtraj.models.hysplit.Conversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -890,8 +892,8 @@
 <dt class="sig sig-object py" id="runtraj.models.hysplit.HysplitConfig.settings">
 <span class="sig-prename descclassname"><span class="pre">HysplitConfig.</span></span><span class="sig-name descname"><span class="pre">settings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/config.html#HysplitConfig.settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.HysplitConfig.settings" title="Link to this definition">#</a></dt>
 <dd><p>Return what a run records of this config: the settings of its mode.</p>
-<p>A particles-mode record has no <code class="docutils literal notranslate"><span class="pre">mode</span></code>, <code class="docutils literal notranslate"><span class="pre">pollutants</span></code>, <code class="docutils literal notranslate"><span class="pre">grids</span></code>
-or <code class="docutils literal notranslate"><span class="pre">tm_</span></code> setting, so it is the record (and the settings folder) a
+<p>A particles-mode record has no <code class="docutils literal notranslate"><span class="pre">mode</span></code>, <code class="docutils literal notranslate"><span class="pre">ichem</span></code>, <code class="docutils literal notranslate"><span class="pre">pollutants</span></code>,
+<code class="docutils literal notranslate"><span class="pre">grids</span></code>, <code class="docutils literal notranslate"><span class="pre">conversions</span></code> or <code class="docutils literal notranslate"><span class="pre">tm_</span></code> setting, so it is the record (and the settings folder) a
 run had before the modes existed. A concentration-mode record has
 no <code class="xref py py-data docutils literal notranslate"><span class="pre">PARTICLES_SETTINGS</span></code>, and a trajectory-mode record only
 <code class="xref py py-data docutils literal notranslate"><span class="pre">TRAJECTORY_SETTINGS</span></code>.</p>

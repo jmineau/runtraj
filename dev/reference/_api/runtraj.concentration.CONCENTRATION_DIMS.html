@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="runtraj.concentration.check_concentration" href="runtraj.concentration.check_concentration.html" />
+    <link rel="next" title="runtraj.concentration.SPLIT_DIMS" href="runtraj.concentration.SPLIT_DIMS.html" />
     <link rel="prev" title="runtraj.results.model_result" href="runtraj.results.model_result.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -549,6 +549,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.result_type.html">runtraj.results.result_type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.model_result.html">runtraj.results.model_result</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.concentration.CONCENTRATION_DIMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.SPLIT_DIMS.html">runtraj.concentration.SPLIT_DIMS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.check_concentration.html">runtraj.concentration.check_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.describe_grid.html">runtraj.concentration.describe_grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
@@ -796,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Conversion.html">runtraj.models.hysplit.Conversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -886,7 +888,8 @@
 <dl class="py data">
 <dt class="sig sig-object py" id="runtraj.concentration.CONCENTRATION_DIMS">
 <span class="sig-prename descclassname"><span class="pre">runtraj.concentration.</span></span><span class="sig-name descname"><span class="pre">CONCENTRATION_DIMS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('time',</span> <span class="pre">'z',</span> <span class="pre">'lat',</span> <span class="pre">'lon')</span></span><a class="headerlink" href="#runtraj.concentration.CONCENTRATION_DIMS" title="Link to this definition">#</a></dt>
-<dd><p>The dimensions of every grid’s variables, in order.</p>
+<dd><p>The dimensions of every grid’s variables, in order. A variable may have
+one more before them, one of <a class="reference internal" href="runtraj.concentration.SPLIT_DIMS.html#runtraj.concentration.SPLIT_DIMS" title="runtraj.concentration.SPLIT_DIMS"><code class="xref py py-data docutils literal notranslate"><span class="pre">SPLIT_DIMS</span></code></a>.</p>
 </dd></dl>
 
 </section>
@@ -911,11 +914,11 @@
       </div>
     </a>
     <a class="right-next"
-       href="runtraj.concentration.check_concentration.html"
+       href="runtraj.concentration.SPLIT_DIMS.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">runtraj.concentration.check_concentration</p>
+        <p class="prev-next-title">runtraj.concentration.SPLIT_DIMS</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

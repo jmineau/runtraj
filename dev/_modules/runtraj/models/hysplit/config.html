@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -515,10 +515,47 @@
 <span class="c1">#: with ``IDSP=1`` the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).</span>
 <span class="n">FIXED_SETUP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ichem"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"idsp"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 
-<span class="c1">#: ``SETUP.CFG`` entries written in every run of the concentration mode:</span>
-<span class="c1">#: HYSPLIT's own concentration output (``ICHEM=0``), with its own dispersion</span>
-<span class="c1">#: scheme (``IDSP`` unset, HYSPLIT's 1).</span>
-<span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ichem"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+<span class="c1">#: The ``ICHEM`` of the particles mode, the only value with which</span>
+<span class="c1">#: ``hycs_std`` writes the particle file.</span>
+<span class="n">PARTICLES_ICHEM</span> <span class="o">=</span> <span class="mi">8</span>
+
+<span class="c1">#: The ``ICHEM`` values of a concentration run that runtraj writes and</span>
+<span class="c1">#: reads, and what each makes HYSPLIT do. The file has the same form with</span>
+<span class="c1">#: every one of them; what differs is what a cell or a pollutant of it means,</span>
+<span class="c1">#: which :func:`~runtraj.models.hysplit.read_cdump` is told.</span>
+<span class="n">CONCENTRATION_ICHEM</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">0</span><span class="p">:</span> <span class="s2">"concentration, HYSPLIT's default"</span><span class="p">,</span>
+    <span class="mi">1</span><span class="p">:</span> <span class="s2">"a grid for each release location (a source-receptor matrix)"</span><span class="p">,</span>
+    <span class="mi">2</span><span class="p">:</span> <span class="s2">"pollutants that convert into one another (conversions)"</span><span class="p">,</span>
+    <span class="mi">5</span><span class="p">:</span> <span class="s2">"deposition of whole particles, by probability"</span><span class="p">,</span>
+    <span class="mi">6</span><span class="p">:</span> <span class="s2">"mass divided by air density: a mixing ratio"</span><span class="p">,</span>
+    <span class="mi">9</span><span class="p">:</span> <span class="s2">"a lowest level whose top follows the mixed layer"</span><span class="p">,</span>
+    <span class="mi">10</span><span class="p">:</span> <span class="s2">"a grid for each emission cycle (a matrix by release time)"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: The ``ICHEM`` values a concentration run refuses, and why.</span>
+<span class="n">ICHEM_REFUSED</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">3</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"HYSPLIT's dust emission needs an emission and an area on each "</span>
+        <span class="s2">"release location, which a release does not have"</span>
+    <span class="p">),</span>
+    <span class="mi">4</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"it counts on the met model's own grid, for HYSPLIT's chemistry "</span>
+        <span class="s2">"builds, which runtraj does not run"</span>
+    <span class="p">),</span>
+    <span class="mi">7</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"it carries deposited particles on the sea surface and needs "</span>
+        <span class="s2">"momentum fluxes in the met files"</span>
+    <span class="p">),</span>
+    <span class="mi">8</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"it is HYSPLIT's particle output, which is mode: particles; a "</span>
+        <span class="s2">"concentration run that sets it would write no particles"</span>
+    <span class="p">),</span>
+    <span class="mi">11</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"HYSPLIT's daughter products need a DAUGHTER.TXT that its own "</span>
+        <span class="s2">"preprocessor writes"</span>
+    <span class="p">),</span>
+<span class="p">}</span>
 
 
 <span class="c1">#: Settings only the particles mode reads: the particle file's variables</span>
@@ -528,8 +565,13 @@
 <span class="c1">#: that sets them for its particle variants serves a concentration variant too.</span>
 <span class="n">PARTICLES_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"varsiwant"</span><span class="p">,</span> <span class="s2">"outdt"</span><span class="p">,</span> <span class="s2">"veght"</span><span class="p">,</span> <span class="s2">"emisshrs"</span><span class="p">)</span>
 
-<span class="c1">#: Settings only the concentration mode reads.</span>
+<span class="c1">#: Settings only the concentration mode reads, and needs at least one of.</span>
 <span class="n">CONCENTRATION_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pollutants"</span><span class="p">,</span> <span class="s2">"grids"</span><span class="p">)</span>
+
+<span class="c1">#: Settings only the concentration mode reads: :data:`CONCENTRATION_SETTINGS`</span>
+<span class="c1">#: and the conversions of ``ichem: 2``. Another mode refuses one that is</span>
+<span class="c1">#: set, and records none.</span>
+<span class="n">CONCENTRATION_ONLY_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">CONCENTRATION_SETTINGS</span><span class="p">,</span> <span class="s2">"conversions"</span><span class="p">)</span>
 
 <span class="c1">#: The values ``hyts_std`` can write along a trajectory beside its pressure,</span>
 <span class="c1">#: each asked for with its ``tm_`` setting: the setting, HYSPLIT's label for</span>
@@ -717,6 +759,47 @@
 
 
 
+<div class="viewcode-block" id="Conversion">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.Conversion.html#runtraj.models.hysplit.Conversion">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Conversion</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    One conversion of a HYSPLIT concentration run with ``ichem: 2``: a pollutant that turns into another.</span>
+
+<span class="sd">    Every time step HYSPLIT moves a fraction of the mass of ``source`` on</span>
+<span class="sd">    each particle to ``product``. The conversions are a line each of the</span>
+<span class="sd">    ``CHEMRATE.TXT`` file HYSPLIT reads, in order.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The name of the pollutant that is converted."</span><span class="p">)</span>
+    <span class="n">product</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The name of the pollutant it becomes."</span><span class="p">)</span>
+    <span class="n">rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">le</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The fraction of ``source`` converted per hour, such as 0.1."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">weight_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Mass of ``product`` made per mass of ``source`` converted: the "</span>
+            <span class="s2">"ratio of their molecular weights, such as 1.5 for SO2 to SO4."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_two_pollutants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a pollutant that converts into itself."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">product</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"A conversion needs two pollutants, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="si">!r}</span><span class="s2"> twice."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+
 <div class="viewcode-block" id="ConcentrationGrid">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.ConcentrationGrid.html#runtraj.models.hysplit.ConcentrationGrid">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConcentrationGrid</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -840,9 +923,10 @@
 <span class="sd">    ``foot`` by a random mixed-layer height error. Each group is set in full</span>
 <span class="sd">    or not at all.</span>
 
-<span class="sd">    ``ichem`` and ``idsp`` are not settings: runtraj always writes</span>
-<span class="sd">    ``ICHEM=8`` and ``IDSP=2`` (:data:`FIXED_SETUP`), the only values with</span>
-<span class="sd">    which HYSPLIT writes particles, and a config that sets one is refused. Some settings act only together with</span>
+<span class="sd">    In the particles mode runtraj always writes ``ICHEM=8`` and ``IDSP=2``</span>
+<span class="sd">    (:data:`FIXED_SETUP`), the only values with which HYSPLIT writes</span>
+<span class="sd">    particles: ``idsp`` is not a setting, and ``ichem`` may be 8 or left</span>
+<span class="sd">    out there. Some settings act only together with</span>
 <span class="sd">    another: the puff settings (``conage``, ``kpuff``, ``kspl``, ``krnd``,</span>
 <span class="sd">    ``splitf`` and the ``fr`` group) when ``initd`` releases puffs, and</span>
 <span class="sd">    ``khinp`` and ``pinpf`` when ``ninit`` reads particles from a file. A few</span>
@@ -858,12 +942,16 @@
 
 <span class="sd">    ``mode`` says what a run makes. ``particles`` (the default) is the</span>
 <span class="sd">    particle table, from HYSPLIT's particle output (``ICHEM=8``). ``concentration`` is</span>
-<span class="sd">    HYSPLIT's own concentration grids (``ICHEM=0``), one grid of each of</span>
-<span class="sd">    ``grids`` with a variable for each of ``pollutants``. A concentration</span>
+<span class="sd">    HYSPLIT's own concentration grids, one grid of each of</span>
+<span class="sd">    ``grids`` with a variable for each of ``pollutants``. There ``ichem``</span>
+<span class="sd">    (0 unless set, and recorded) picks one of the other things HYSPLIT can</span>
+<span class="sd">    count (:data:`CONCENTRATION_ICHEM`); the values runtraj does not run</span>
+<span class="sd">    are refused with the reason (:data:`ICHEM_REFUSED`), and so are the</span>
+<span class="sd">    settings HYSPLIT would change, ignore or stop on with the one set. A concentration</span>
 <span class="sd">    run leaves out the particle file's settings</span>
 <span class="sd">    (:data:`PARTICLES_SETTINGS`), which a ``hysplit`` block may set for</span>
-<span class="sd">    its particle variants; ``pollutants`` and ``grids`` without ``mode:</span>
-<span class="sd">    concentration`` are refused. A particles-mode run</span>
+<span class="sd">    its particle variants; ``pollutants``, ``grids`` and ``conversions``</span>
+<span class="sd">    without ``mode: concentration`` are refused. A particles-mode run</span>
 <span class="sd">    records no ``mode``, ``pollutants`` or ``grids``, so its settings</span>
 <span class="sd">    folder is the one it had before the mode existed.</span>
 
@@ -911,6 +999,27 @@
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"The grids of a concentration run. At least one in ``mode: "</span>
             <span class="s2">"concentration``; none otherwise."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">conversions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Conversion</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The conversions of a concentration run with ``ichem: 2``, each "</span>
+            <span class="s2">"from one of ``pollutants`` to another. At least one with "</span>
+            <span class="s2">"``ichem: 2``; none otherwise."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">ichem</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"HYSPLIT's ``ICHEM``, which in ``mode: concentration`` changes "</span>
+            <span class="s2">"what a run counts: 0 concentration (the default); 1 a grid "</span>
+            <span class="s2">"for each release location; 2 pollutants that convert "</span>
+            <span class="s2">"(``conversions``); 5 deposition of whole particles by "</span>
+            <span class="s2">"probability; 6 mass divided by air density; 9 a lowest level "</span>
+            <span class="s2">"that follows the mixed layer; 10 a grid for each emission "</span>
+            <span class="s2">"cycle (``qcycle``). The particles mode is ``ICHEM=8``, the only "</span>
+            <span class="s2">"value it takes, and a trajectory run reads none."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">numpar</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1597,6 +1706,18 @@
             <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">TRAJECTORY_DEFAULTS</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">data</span>
 
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_concentration_ichem</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Give a concentration config ``ichem: 0``, HYSPLIT's own, where it sets none, so every record holds it."""</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"concentration"</span>
+            <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ichem"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">data</span><span class="p">,</span> <span class="s2">"ichem"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">data</span>
+
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Refuse the settings of another mode, a concentration run without a pollutant or a grid, and a trajectory run HYSPLIT would change."""</span>
@@ -1609,7 +1730,7 @@
                     <span class="s2">"mode: trajectory, or leave them out."</span>
                 <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">"concentration"</span><span class="p">:</span>
-            <span class="n">used</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">CONCENTRATION_SETTINGS</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="n">used</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">CONCENTRATION_ONLY_SETTINGS</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
             <span class="k">if</span> <span class="n">used</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">used</span><span class="p">)</span><span class="si">}</span><span class="s2"> are settings of HYSPLIT's mode: "</span>
@@ -1618,6 +1739,14 @@
                 <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_validate_trajectory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">PARTICLES_ICHEM</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"ichem=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ichem</span><span class="si">}</span><span class="s2"> is not a setting of mode: particles, "</span>
+                <span class="sa">f</span><span class="s2">"which is HYSPLIT's ICHEM=</span><span class="si">{</span><span class="n">PARTICLES_ICHEM</span><span class="si">}</span><span class="s2">: with another "</span>
+                <span class="s2">"value HYSPLIT writes no particles. Set mode: concentration "</span>
+                <span class="s2">"on the variant that counts on a grid, with ichem there, or "</span>
+                <span class="s2">"leave ichem out."</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">"concentration"</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">CONCENTRATION_SETTINGS</span><span class="p">:</span>
@@ -1637,7 +1766,112 @@
                 <span class="sa">f</span><span class="s2">"cpack=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cpack</span><span class="si">}</span><span class="s2"> is not read: runtraj reads HYSPLIT's "</span>
                 <span class="sa">f</span><span class="s2">"concentration files with cpack </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">CPACK_READ</span><span class="p">))</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_ichem</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_ichem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an ``ichem`` runtraj does not run, and the settings HYSPLIT would change, ignore or stop on with the one set."""</span>
+        <span class="n">ichem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichem</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="ow">in</span> <span class="n">ICHEM_REFUSED</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ichem=</span><span class="si">{</span><span class="n">ichem</span><span class="si">}</span><span class="s2"> is not run: </span><span class="si">{</span><span class="n">ICHEM_REFUSED</span><span class="p">[</span><span class="n">ichem</span><span class="p">]</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CONCENTRATION_ICHEM</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"ichem=</span><span class="si">{</span><span class="n">ichem</span><span class="si">}</span><span class="s2"> is not one of HYSPLIT's, which ignores it. "</span>
+                <span class="sa">f</span><span class="s2">"Use one of </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="w"> </span><span class="n">CONCENTRATION_ICHEM</span><span class="p">))</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversions</span> <span class="ow">and</span> <span class="n">ichem</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"conversions are read only with ichem: 2. Set ichem: 2, or "</span>
+                <span class="s2">"leave them out."</span>
+            <span class="p">)</span>
+        <span class="n">why</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"ichem=</span><span class="si">{</span><span class="n">ichem</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">CONCENTRATION_ICHEM</span><span class="p">[</span><span class="n">ichem</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pollutants</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2"> takes one pollutant, not </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pollutants</span><span class="p">)</span><span class="si">}</span><span class="s2">: "</span>
+                <span class="s2">"HYSPLIT uses the pollutants of the file for the release "</span>
+                <span class="s2">"locations or the emission cycles, and drops every pollutant "</span>
+                <span class="s2">"after the first."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbptyp</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2"> needs nbptyp: 1, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nbptyp</span><span class="si">}</span><span class="s2">: HYSPLIT stops."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxdim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2"> needs maxdim: 1, not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">maxdim</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_conversions</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">5</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">initd</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2"> releases particles only: HYSPLIT would change "</span>
+                <span class="sa">f</span><span class="s2">"initd=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">initd</span><span class="si">}</span><span class="s2"> to 0. Set initd: 0."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">grid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">grids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">grid</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Grid </span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: with </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2"> the first of levels is "</span>
+                        <span class="s2">"a percentage of the mixed layer depth, 1 to 100, not "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">. A level of 0, for deposition, is "</span>
+                        <span class="s2">"not counted with it."</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_cycles</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_conversions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an ``ichem: 2`` run whose particles cannot carry its pollutants, or whose conversions name none."""</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pollutants</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxdim</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"ichem=2 converts pollutants carried on one particle: it needs "</span>
+                <span class="s2">"two pollutants or more, and maxdim set to their number "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">), not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">maxdim</span><span class="si">}</span><span class="s2">. With maxdim: 1 HYSPLIT "</span>
+                <span class="s2">"stops and leaves an empty file."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"ichem=2 needs at least one of conversions: without them "</span>
+                <span class="s2">"HYSPLIT converts the first pollutant to the second at 0.10 "</span>
+                <span class="s2">"per hour. Write that conversion, or your own."</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversions</span><span class="p">:</span>
+            <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">product</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"A conversion names </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">, which is not one of "</span>
+                    <span class="sa">f</span><span class="s2">"pollutants (</span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">)."</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_cycles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse an ``ichem: 10`` run whose emission cycles HYSPLIT would drop or not make."""</span>
+        <span class="n">qcycle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qcycle</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pollutants</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">hours</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_hours</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_hours</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"ichem=10 needs a forward run: in a backward one HYSPLIT "</span>
+                <span class="s2">"releases the first emission cycle only and leaves the others "</span>
+                <span class="s2">"zero."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">qcycle</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">qcycle</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">qcycle</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"ichem=10 gives a grid to each emission cycle of qcycle "</span>
+                <span class="sa">f</span><span class="s2">"hours, and qcycle=</span><span class="si">{</span><span class="n">qcycle</span><span class="si">!r}</span><span class="s2"> must be a whole number of hours, "</span>
+                <span class="s2">"1 or more: HYSPLIT stops on 0, and releases only some of "</span>
+                <span class="s2">"the cycles that are shorter than an hour."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_hours</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hours</span> <span class="o">%</span> <span class="n">qcycle</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_hours</span> <span class="o">&gt;</span> <span class="mi">999</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"ichem=10: n_hours=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_hours</span><span class="si">}</span><span class="s2"> must be a multiple of "</span>
+                <span class="sa">f</span><span class="s2">"qcycle=</span><span class="si">{</span><span class="n">qcycle</span><span class="si">!r}</span><span class="s2">, and 999 at most. HYSPLIT makes "</span>
+                <span class="s2">"n_hours // qcycle cycles and releases nothing after them."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="n">qcycle</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"ichem=10: the pollutant is released for </span><span class="si">{</span><span class="n">hours</span><span class="si">!r}</span><span class="s2"> hours in "</span>
+                <span class="sa">f</span><span class="s2">"each cycle, longer than qcycle=</span><span class="si">{</span><span class="n">qcycle</span><span class="si">!r}</span><span class="s2">. Give it hours of "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">qcycle</span><span class="si">!r}</span><span class="s2"> or less."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">efile</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ichem=10 cannot be used with an efile: HYSPLIT stops."</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Refuse a trajectory config whose ``tout`` HYSPLIT would lower, or that sets what runtraj fixes."""</span>
@@ -1663,8 +1897,8 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return what a run records of this config: the settings of its mode.</span>
 
-<span class="sd">        A particles-mode record has no ``mode``, ``pollutants``, ``grids``</span>
-<span class="sd">        or ``tm_`` setting, so it is the record (and the settings folder) a</span>
+<span class="sd">        A particles-mode record has no ``mode``, ``ichem``, ``pollutants``,</span>
+<span class="sd">        ``grids``, ``conversions`` or ``tm_`` setting, so it is the record (and the settings folder) a</span>
 <span class="sd">        run had before the modes existed. A concentration-mode record has</span>
 <span class="sd">        no :data:`PARTICLES_SETTINGS`, and a trajectory-mode record only</span>
 <span class="sd">        :data:`TRAJECTORY_SETTINGS`.</span>
@@ -1673,7 +1907,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">record</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">TRAJECTORY_SETTINGS</span><span class="p">}</span>
         <span class="n">drop</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="o">*</span><span class="n">CONCENTRATION_SETTINGS</span><span class="p">)</span>
+            <span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="s2">"ichem"</span><span class="p">,</span> <span class="o">*</span><span class="n">CONCENTRATION_ONLY_SETTINGS</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
             <span class="k">else</span> <span class="n">PARTICLES_SETTINGS</span>
         <span class="p">)</span>
@@ -1832,9 +2066,12 @@
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"CONCENTRATION_ICHEM"</span><span class="p">,</span>
+    <span class="s2">"CONCENTRATION_ONLY_SETTINGS"</span><span class="p">,</span>
     <span class="s2">"CONCENTRATION_SETTINGS"</span><span class="p">,</span>
     <span class="s2">"CPACK_READ"</span><span class="p">,</span>
-    <span class="s2">"FIXED_CONCENTRATION_SETUP"</span><span class="p">,</span>
+    <span class="s2">"ICHEM_REFUSED"</span><span class="p">,</span>
+    <span class="s2">"PARTICLES_ICHEM"</span><span class="p">,</span>
     <span class="s2">"FIXED_SETUP"</span><span class="p">,</span>
     <span class="s2">"FIXED_TRAJECTORY_SETUP"</span><span class="p">,</span>
     <span class="s2">"TRAJECTORY_DEFAULTS"</span><span class="p">,</span>
@@ -1846,6 +2083,7 @@
     <span class="s2">"PARTICLES_SETTINGS"</span><span class="p">,</span>
     <span class="s2">"SAMPLING_TYPES"</span><span class="p">,</span>
     <span class="s2">"ConcentrationGrid"</span><span class="p">,</span>
+    <span class="s2">"Conversion"</span><span class="p">,</span>
     <span class="s2">"Pollutant"</span><span class="p">,</span>
     <span class="s2">"HYSPLIT_VARSIWANT"</span><span class="p">,</span>
     <span class="s2">"MAX_ZISCALE_HOURS"</span><span class="p">,</span>

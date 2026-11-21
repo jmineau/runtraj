@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -477,8 +477,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HYSPLITNotFoundError</span><span class="p">,</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">CONCENTRATION_SETTINGS</span><span class="p">,</span>
-    <span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">,</span>
+    <span class="n">CONCENTRATION_ONLY_SETTINGS</span><span class="p">,</span>
     <span class="n">FIXED_SETUP</span><span class="p">,</span>
     <span class="n">FIXED_TRAJECTORY_SETUP</span><span class="p">,</span>
     <span class="n">PARTICLES_SETTINGS</span><span class="p">,</span>
@@ -514,6 +513,8 @@
 <span class="n">WINDERR_FILE</span> <span class="o">=</span> <span class="s2">"WINDERR"</span>
 <span class="n">ZIERR_FILE</span> <span class="o">=</span> <span class="s2">"ZIERR"</span>
 <span class="n">ZICONTROL_FILE</span> <span class="o">=</span> <span class="s2">"ZICONTROL"</span>
+<span class="c1">#: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.</span>
+<span class="n">CHEMRATE_FILE</span> <span class="o">=</span> <span class="s2">"CHEMRATE.TXT"</span>
 <span class="n">LOG_FILE</span> <span class="o">=</span> <span class="s2">"hysplit.log"</span>
 <span class="c1">#: HYSPLIT's own file of warnings, such as the met running out.</span>
 <span class="n">WARNING_FILE</span> <span class="o">=</span> <span class="s2">"WARNING"</span>
@@ -536,7 +537,7 @@
         <span class="o">*</span><span class="n">WIND_ERROR_SETTINGS</span><span class="p">,</span>
         <span class="o">*</span><span class="n">ZI_ERROR_SETTINGS</span><span class="p">,</span>
         <span class="o">*</span><span class="n">RUNTRAJ_SETTINGS</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">CONCENTRATION_SETTINGS</span><span class="p">,</span>  <span class="c1"># CONTROL</span>
+        <span class="o">*</span><span class="n">CONCENTRATION_ONLY_SETTINGS</span><span class="p">,</span>  <span class="c1"># CONTROL and CHEMRATE.TXT</span>
         <span class="o">*</span><span class="n">TRAJECTORY_ONLY_SETTINGS</span><span class="p">,</span>  <span class="c1"># hyts_std's</span>
     <span class="p">}</span>
 <span class="p">)</span>
@@ -753,11 +754,11 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.</span>
 
-<span class="sd">    The entries of :data:`FIXED_SETUP` come first</span>
-<span class="sd">    (:data:`FIXED_CONCENTRATION_SETUP` in the concentration mode), then</span>
-<span class="sd">    every setting not in :data:`NOT_IN_SETUP`, in declaration order, under</span>
-<span class="sd">    their own names; the concentration mode leaves out the particle file's</span>
-<span class="sd">    settings (:data:`PARTICLES_SETTINGS`). The driver adds</span>
+<span class="sd">    In the particles mode the entries of :data:`FIXED_SETUP` come first.</span>
+<span class="sd">    Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,</span>
+<span class="sd">    under their own names; the concentration mode leaves out the particle</span>
+<span class="sd">    file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the</span>
+<span class="sd">    config's ``ichem``, 0 unless set. The driver adds</span>
 <span class="sd">    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``</span>
 <span class="sd">    is unset, which depend on the release locations or follow from other</span>
 <span class="sd">    settings.</span>
@@ -776,7 +777,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">entries</span>
     <span class="n">particles</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
-    <span class="n">entries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">FIXED_SETUP</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">)</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">FIXED_SETUP</span><span class="p">)</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="p">{}</span>
     <span class="n">skip</span> <span class="o">=</span> <span class="n">NOT_IN_SETUP</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="n">NOT_IN_SETUP</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">PARTICLES_SETTINGS</span><span class="p">)</span>
     <span class="n">entries</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
         <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
@@ -972,6 +973,25 @@
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">ziscale_factors</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">chemrate</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the lines of ``CHEMRATE.TXT`` for *params*, or ``None`` when it has no conversions.</span>
+
+<span class="sd">    One line per conversion, as ``CHEM02`` reads them: the number of the</span>
+<span class="sd">    pollutant converted and of the one it becomes, counted from 1 in the</span>
+<span class="sd">    order of ``pollutants``, the fraction converted per hour, and the</span>
+<span class="sd">    weight ratio. A run with ``ichem: 2`` always gets the file: without</span>
+<span class="sd">    one HYSPLIT converts pollutant 1 to 2 at 0.10 per hour.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="o">.</span><span class="n">conversions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">number</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">pollutants</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">number</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">source</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">number</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">product</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">c</span><span class="o">.</span><span class="n">rate</span><span class="si">!r}</span><span class="s2"> </span><span class="si">{</span><span class="n">c</span><span class="o">.</span><span class="n">weight_ratio</span><span class="si">!r}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">conversions</span>
+    <span class="p">]</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the ``WINDERR`` values, in the file's order, or ``None`` when unset."""</span>
     <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">WIND_ERROR_SETTINGS</span><span class="p">]</span>
@@ -1085,6 +1105,9 @@
         <span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">ZICONTROL_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
             <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">factors</span><span class="p">)),</span> <span class="o">*</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
         <span class="p">)</span>
+    <span class="n">rates</span> <span class="o">=</span> <span class="n">chemrate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">CHEMRATE_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rates</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
     <span class="n">_write_values</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">WINDERR_FILE</span><span class="p">,</span> <span class="n">winderr</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
     <span class="n">_write_values</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">ZIERR_FILE</span><span class="p">,</span> <span class="n">zierr</span><span class="p">(</span><span class="n">config</span><span class="p">))</span></div>
 

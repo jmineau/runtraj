@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -474,6 +474,13 @@
 <span class="sd">  meter at ``z = 0``, or, with ``cmass: 1``, the mass in each cell. Cells</span>
 <span class="sd">  HYSPLIT did not write are zero.</span>
 
+<span class="sd">A model may count each pollutant several times over, apart: HYSPLIT can</span>
+<span class="sd">keep the mass of each release location, or of each hour of emission, in a</span>
+<span class="sd">grid of its own (HYSPLIT's ``ichem: 1`` and ``ichem: 10``). The variables then have</span>
+<span class="sd">one more dimension, before the four: ``source``, numbered from 1 in the</span>
+<span class="sd">order of the release's locations, or ``release_time``, the UTC time each</span>
+<span class="sd">part of the emission started.</span>
+
 <span class="sd">A transport model reads its own output into such grids (HYSPLIT's</span>
 <span class="sd">:func:`runtraj.models.hysplit.read_cdump`). :func:`write_concentration` and</span>
 <span class="sd">:func:`read_concentration` store and read the whole result.</span>
@@ -499,8 +506,14 @@
 <span class="c1">#: The extension of a stored concentration result.</span>
 <span class="n">CONCENTRATION_SUFFIX</span> <span class="o">=</span> <span class="s2">".nc"</span>
 
-<span class="c1">#: The dimensions of every grid's variables, in order.</span>
+<span class="c1">#: The dimensions of every grid's variables, in order. A variable may have</span>
+<span class="c1">#: one more before them, one of :data:`SPLIT_DIMS`.</span>
 <span class="n">CONCENTRATION_DIMS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">)</span>
+
+<span class="c1">#: The dimensions a grid's variables may have before</span>
+<span class="c1">#: :data:`CONCENTRATION_DIMS`, when the model counts each pollutant apart</span>
+<span class="c1">#: by where or when it was released.</span>
+<span class="n">SPLIT_DIMS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="s2">"release_time"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="describe_grid">
@@ -571,7 +584,8 @@
 <span class="sd">    Raise unless *result* is a concentration result: a DataTree of grids.</span>
 
 <span class="sd">    Each child is a grid with the dimensions of :data:`CONCENTRATION_DIMS`,</span>
-<span class="sd">    at least one sample, and at least one pollutant.</span>
+<span class="sd">    at least one sample, and at least one pollutant. Its variables may</span>
+<span class="sd">    have one dimension more, before those: one of :data:`SPLIT_DIMS`.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -595,10 +609,14 @@
         <span class="k">if</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Grid </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has no sampling time."</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="n">CONCENTRATION_DIMS</span><span class="p">:</span>
+            <span class="n">split</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">dims</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">CONCENTRATION_DIMS</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">dims</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="p">:]</span> <span class="o">!=</span> <span class="n">CONCENTRATION_DIMS</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="n">split</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SPLIT_DIMS</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Grid </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">'s </span><span class="si">{</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has dimensions </span><span class="si">{</span><span class="n">var</span><span class="o">.</span><span class="n">dims</span><span class="si">}</span><span class="s2">, "</span>
-                    <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">CONCENTRATION_DIMS</span><span class="si">}</span><span class="s2">."</span>
+                    <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">CONCENTRATION_DIMS</span><span class="si">}</span><span class="s2">, alone or after one of "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SPLIT_DIMS</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">)</span></div>
 
 
@@ -729,6 +747,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"CONCENTRATION_DIMS"</span><span class="p">,</span>
     <span class="s2">"CONCENTRATION_SUFFIX"</span><span class="p">,</span>
+    <span class="s2">"SPLIT_DIMS"</span><span class="p">,</span>
     <span class="s2">"check_concentration"</span><span class="p">,</span>
     <span class="s2">"describe_grid"</span><span class="p">,</span>
     <span class="s2">"read_concentration"</span><span class="p">,</span>

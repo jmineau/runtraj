@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -549,6 +549,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.result_type.html">runtraj.results.result_type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.model_result.html">runtraj.results.model_result</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.CONCENTRATION_DIMS.html">runtraj.concentration.CONCENTRATION_DIMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.SPLIT_DIMS.html">runtraj.concentration.SPLIT_DIMS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.check_concentration.html">runtraj.concentration.check_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.describe_grid.html">runtraj.concentration.describe_grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
@@ -796,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Conversion.html">runtraj.models.hysplit.Conversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -885,7 +887,7 @@
 <h1>runtraj.models.hysplit.releases.check_releases<a class="headerlink" href="#runtraj-models-hysplit-releases-check-releases" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.models.hysplit.releases.check_releases">
-<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.releases.</span></span><span class="sig-name descname"><span class="pre">check_releases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">releases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/releases.html#check_releases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.releases.check_releases" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.releases.</span></span><span class="sig-name descname"><span class="pre">check_releases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">releases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trajectory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/releases.html#check_releases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.releases.check_releases" title="Link to this definition">#</a></dt>
 <dd><p>Return the releases HYSPLIT cannot run, one row each, with <code class="docutils literal notranslate"><span class="pre">check</span></code>, <code class="docutils literal notranslate"><span class="pre">release</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code>.</p>
 <p><em>releases</em> has one row per release point (<code class="docutils literal notranslate"><span class="pre">release</span></code>, <code class="docutils literal notranslate"><span class="pre">kind</span></code>,
 <code class="docutils literal notranslate"><span class="pre">longitude</span></code>, <code class="docutils literal notranslate"><span class="pre">latitude</span></code>). A multipoint release is refused when two
@@ -896,6 +898,10 @@ into a vertical line source and releases only from the last pair.</p>
 instead: every location starts a trajectory of its own, so a
 multipoint release may repeat a location, and there is no line source
 for a column.</p>
+<p>With <em>sources</em>, for a concentration run with <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">1</span></code>, a column
+release is refused as well as a multipoint one that repeats a
+location: the run’s grids are one per release location, and a column
+is two locations and one source.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
@@ -904,6 +910,7 @@ for a column.</p>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>releases</strong> (<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><em>DataFrame</em></a>)</p></li>
 <li><p><strong>trajectory</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
+<li><p><strong>sources</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
 </ul>
 </dd>
 </dl>

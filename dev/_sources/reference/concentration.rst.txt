@@ -84,6 +84,15 @@ named as the grid is in ``config.yaml``. Each grid is a Dataset over
        deposited. With ``cmass: 1``: the mass in each cell, in the same
        unit of mass, and nothing at ``z = 0``. Zero where the model wrote
        nothing.
+   * - ``source`` or ``release_time``
+     - a number, or UTC
+     - Only when the model counts each pollutant apart by where or when
+       it was released (:data:`SPLIT_DIMS`), as HYSPLIT's ``ichem: 1``
+       and ``ichem: 10`` do. It is then the first dimension of every
+       variable, before the four above: ``source`` numbers the release's
+       points from 1, with ``source_lon``, ``source_lat`` and
+       ``source_height``; ``release_time`` is when each part of the
+       emission started.
 
 The file of one release is NetCDF 4, a group per grid, which
 :func:`xarray.open_datatree` opens, as do ``ncdump`` and R's ``ncdf4``. Its
@@ -98,6 +107,7 @@ metadata), ``runtraj:hash`` and ``runtraj:version``, and, in an ensemble,
    :nosignatures:
 
    CONCENTRATION_DIMS
+   SPLIT_DIMS
    check_concentration
    describe_grid
    read_concentration

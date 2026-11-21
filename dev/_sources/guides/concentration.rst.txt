@@ -115,7 +115,7 @@ The particle file's settings (``varsiwant``, ``outdt``, ``veght``) and
 ``emisshrs`` belong to the particles mode. A concentration run leaves them
 out, so a ``hysplit`` block that sets them for its particle variants serves
 a concentration variant too; each pollutant has its own ``hours``. A
-``pollutants`` or ``grids`` without ``mode: concentration`` is refused. A stage reads
+``pollutants``, ``grids`` or ``conversions`` without ``mode: concentration`` is refused. A stage reads
 particles unless its class says another type (its ``result``), so a stage of
 particles is refused on a concentration variant; give the variant
 ``<stage>: null`` under ``stages``. The particle
@@ -123,9 +123,108 @@ transforms and the plots of particles are for particles too.
 :func:`runtraj.run_trajectories` runs one release in any mode, and returns
 the tree of grids in this one.
 
-runtraj does not yet expose HYSPLIT's other ``ICHEM`` modes, time-varying
-emissions (``EMITIMES``), or sampling that starts or stops inside the run;
-open an issue if you need one.
+runtraj does not yet expose time-varying emissions (``EMITIMES``) or
+sampling that starts or stops inside the run; open an issue if you need
+one.
+
+Other things HYSPLIT can count
+------------------------------
+
+HYSPLIT's ``ICHEM`` switches a concentration run to count something else.
+It is the setting ``ichem``, 0 unless you set it, and it is part of the
+run's settings. We recommend leaving it out until you need one of these:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10 45 45
+
+   * - ``ichem``
+     - What you get
+     - What it needs
+   * - 1
+     - A grid for each point of the release: which source each cell's
+       pollutant came from. The pollutant's variable gets a ``source``
+       dimension.
+     - One pollutant; a multipoint release (a column release is refused,
+       since it is one source).
+   * - 10
+     - A grid for each hour, or each ``qcycle`` hours, of emission: when
+       each cell's pollutant was released. The variable gets a
+       ``release_time`` dimension.
+     - One pollutant; a forward run; ``qcycle`` in whole hours, which
+       ``n_hours`` is a multiple of; ``hours`` of the pollutant no longer
+       than ``qcycle``.
+   * - 2
+     - Pollutants that convert into one another at a rate per hour, such
+       as SO2 into sulfate.
+     - Two pollutants or more, ``maxdim`` set to their number, and
+       ``conversions``.
+   * - 6
+     - Mass per mass of air in place of mass per volume: the
+       concentration divided by the air density at the particle.
+     - Nothing.
+   * - 9
+     - A lowest level that reaches from the ground to a share of the
+       mixed layer, wherever each particle is.
+     - The first of each grid's ``levels`` as a percentage, 1 to 100, and
+       no level of 0.
+   * - 5
+     - Deposition of whole particles by chance, in place of a share of
+       every particle's mass.
+     - ``maxdim: 1`` and ``initd: 0``, which are the defaults, and a
+       pollutant that deposits.
+
+With ``ichem: 10`` one run tells apart the pollutant of each hour, where
+you would otherwise add a release per hour to ``releases.csv`` and run
+each:
+
+.. code-block:: yaml
+
+   variants:
+     by_hour:
+       mode: concentration
+       ichem: 10
+       qcycle: 1
+       n_hours: 24
+       pollutants:
+         - {name: CH4, rate: 1.0, hours: 1}
+       grids:
+         - {name: local, spacing_lat: 0.01, spacing_lon: 0.01, levels: [100]}
+
+.. code-block:: python
+
+   ch4 = sim.concentration["local"]["CH4"]  # (release_time, time, z, lat, lon)
+   ch4.sel(release_time="2021-07-15 03:30")  # what was released from 03:30
+   ch4.sum("release_time")                   # all of it, as ichem 0 counts
+
+Each cycle is released at ``rate`` for ``hours``, so with a rate of 1 the
+grids are what one unit of mass per hour in that cycle gives, and you
+scale each by the emission you want to test. With ``ichem: 1`` the same
+holds for each point of the release, and ``source`` numbers the points
+from 1 in their order, with ``source_lon``, ``source_lat`` and
+``source_height`` beside it.
+
+Conversions are a list, as pollutants are, each naming two of them:
+
+.. code-block:: yaml
+
+   conc:
+     mode: concentration
+     ichem: 2
+     maxdim: 2
+     pollutants:
+       - {name: SO2, rate: 1000.0, hours: 24}
+       - {name: SO4, rate: 0.0, hours: 24}
+     conversions:
+       - {source: SO2, product: SO4, rate: 0.01, weight_ratio: 1.5}
+
+``rate`` is the fraction converted per hour, and ``weight_ratio`` the mass
+of the product per mass converted (1.5 for SO2 to SO4).
+
+The other values are refused, each with its reason
+(:ref:`hysplit-concentration`). ``ichem: 8`` is HYSPLIT's particle output,
+which is ``mode: particles``: there ``ichem`` may be 8 or left out, and a
+trajectory run reads none.
 
 In a project
 ------------

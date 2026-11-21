@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../_static/documentation_options.js?v=875fea35"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -549,6 +549,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.results.result_type.html">runtraj.results.result_type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.results.model_result.html">runtraj.results.model_result</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.CONCENTRATION_DIMS.html">runtraj.concentration.CONCENTRATION_DIMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.SPLIT_DIMS.html">runtraj.concentration.SPLIT_DIMS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.check_concentration.html">runtraj.concentration.check_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.describe_grid.html">runtraj.concentration.describe_grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
@@ -796,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.Conversion.html">runtraj.models.hysplit.Conversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1016,6 +1018,14 @@ it runs.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">grids</span></code></p></td>
 <td><p>The grids of a concentration run. At least one in <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code>; none otherwise.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">conversions</span></code></p></td>
+<td><p>The conversions of a concentration run with <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">2</span></code>, each from one of <code class="docutils literal notranslate"><span class="pre">pollutants</span></code> to another. At least one with <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">2</span></code>; none otherwise.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ichem</span></code></p></td>
+<td><p>HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code>, which in <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code> changes what a run counts: 0 concentration (the default); 1 a grid for each release location; 2 pollutants that convert (<code class="docutils literal notranslate"><span class="pre">conversions</span></code>); 5 deposition of whole particles by probability; 6 mass divided by air density; 9 a lowest level that follows the mixed layer; 10 a grid for each emission cycle (<code class="docutils literal notranslate"><span class="pre">qcycle</span></code>). The particles mode is <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>, the only value it takes, and a trajectory run reads none.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">numpar</span></code></p></td>
 <td><p>Number of particles released per simulation. More particles sample the turbulence better and take longer to run.</p></td>
@@ -1511,6 +1521,39 @@ it runs.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sampling_interval</span></code></p></td>
 <td><p>Length of each sample, in minutes: under an hour, any number; an hour or more, a whole number of hours (60, 120, …), which is how HYSPLIT reads it.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">60</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The keys of one entry under <code class="docutils literal notranslate"><span class="pre">conversions:</span></code>, with <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">2</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 60.0%" />
+<col style="width: 18.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source</span></code></p></td>
+<td><p>The name of the pollutant that is converted.</p></td>
+<td><p>Required</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">product</span></code></p></td>
+<td><p>The name of the pollutant it becomes.</p></td>
+<td><p>Required</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rate</span></code></p></td>
+<td><p>The fraction of <code class="docutils literal notranslate"><span class="pre">source</span></code> converted per hour, such as 0.1.</p></td>
+<td><p>Required</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">weight_ratio</span></code></p></td>
+<td><p>Mass of <code class="docutils literal notranslate"><span class="pre">product</span></code> made per mass of <code class="docutils literal notranslate"><span class="pre">source</span></code> converted: the ratio of their molecular weights, such as 1.5 for SO2 to SO4.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
 </tr>
 </tbody>
 </table>

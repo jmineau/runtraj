@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -474,6 +474,10 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.concentration</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONCENTRATION_DIMS</span><span class="p">,</span> <span class="n">describe_grid</span>
 
+<span class="c1">#: The ``ichem`` values with which HYSPLIT counts one pollutant apart by</span>
+<span class="c1">#: release location or by emission cycle, and the dimension each is read as.</span>
+<span class="n">SPLIT_ICHEM</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"source"</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="s2">"release_time"</span><span class="p">}</span>
+
 <span class="c1">#: What :func:`read_cdump` resolves a two-digit year with: years below this are 20YY, the rest 19YY.</span>
 <span class="n">_CENTURY_PIVOT</span> <span class="o">=</span> <span class="mi">40</span>
 
@@ -530,7 +534,9 @@
 
 <div class="viewcode-block" id="read_cdump">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.read_cdump.html#runtraj.models.hysplit.read_cdump">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">read_cdump</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">cmass</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_cdump</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">cmass</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ichem</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pollutant</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Read one of HYSPLIT's binary concentration files (``cdump``) as a Dataset.</span>
 
@@ -549,6 +555,17 @@
 <span class="sd">        The ``cmass`` setting the run had: 0 for concentrations, anything</span>
 <span class="sd">        else for the mass in each cell. The file does not say, and the</span>
 <span class="sd">        variables' ``units`` and ``long_name`` do.</span>
+<span class="sd">    ichem : int, default 0</span>
+<span class="sd">        The ``ichem`` setting the run had, which the file does not say</span>
+<span class="sd">        either. With 6 the values are divided by air density, and the</span>
+<span class="sd">        ``units`` say so. With 9 the first level reaches from the ground</span>
+<span class="sd">        to a share of the mixed layer, and ``z`` says so. With 1 or 10</span>
+<span class="sd">        what the file calls its pollutants are the release locations or</span>
+<span class="sd">        the emission cycles of one pollutant, and the Dataset has one</span>
+<span class="sd">        variable, named *pollutant*, with a dimension more (see Notes).</span>
+<span class="sd">    pollutant : str, optional</span>
+<span class="sd">        The name of the run's one pollutant, with *ichem* 1 or 10, which</span>
+<span class="sd">        the file does not hold.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -561,11 +578,28 @@
 <span class="sd">        release ``locations`` as ``[[lon, lat, height], ...]``. Two-digit</span>
 <span class="sd">        years are read as 1940 to 2039.</span>
 
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    With ``ichem=1`` HYSPLIT numbers the release locations in the place of</span>
+<span class="sd">    the pollutants (``0001``, ``0002``, ...). They are read as the</span>
+<span class="sd">    dimension ``source``, 1 to the number of locations, in the order of</span>
+<span class="sd">    the release's points, with the coordinates ``source_lon``,</span>
+<span class="sd">    ``source_lat`` and ``source_height`` from the file's header.</span>
+
+<span class="sd">    With ``ichem=10`` HYSPLIT names each emission cycle by the tenths of</span>
+<span class="sd">    an hour from the start of the run to the cycle's start. They are read</span>
+<span class="sd">    as the dimension ``release_time``, the UTC time each cycle starts.</span>
+
+<span class="sd">    With ``ichem=9`` each record of the first level holds the depth that</span>
+<span class="sd">    level had for the last particle counted, in place of its height, so</span>
+<span class="sd">    that depth is not checked, and not kept.</span>
+
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If the file is cut off, is not a concentration file, or was written</span>
-<span class="sd">        with ``CPACK=2`` (one point per grid), which this does not read.</span>
+<span class="sd">        with ``CPACK=2`` (one point per grid), which this does not read; or</span>
+<span class="sd">        if its pollutants are not what *ichem* 1 or 10 writes.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -576,15 +610,108 @@
     <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
         <span class="n">records</span> <span class="o">=</span> <span class="n">_Records</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">_read_records</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">cmass</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">_read_records</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">ichem</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">struct</span><span class="o">.</span><span class="n">error</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is not a HYSPLIT concentration file: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">."</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+    <span class="k">if</span> <span class="n">ichem</span> <span class="ow">in</span> <span class="n">SPLIT_ICHEM</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pollutant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"read_cdump needs the pollutant's name with ichem=</span><span class="si">{</span><span class="n">ichem</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">ichem</span><span class="p">,</span> <span class="n">pollutant</span><span class="p">)</span>
+    <span class="n">units</span><span class="p">,</span> <span class="n">long_name</span> <span class="o">=</span> <span class="n">_meaning</span><span class="p">(</span><span class="n">cmass</span><span class="p">,</span> <span class="n">ichem</span><span class="p">)</span>
+    <span class="n">describe_grid</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">long_name</span><span class="o">=</span><span class="n">long_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s2">"z"</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"long_name"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"top of the level above ground, except the first, which is the "</span>
+            <span class="s2">"percentage of the mixed layer depth its level reaches from "</span>
+            <span class="s2">"the ground"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ds</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_read_records</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="n">_Records</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">cmass</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_meaning</span><span class="p">(</span><span class="n">cmass</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ichem</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the ``units`` and ``long_name`` of a grid's variables in a run with *cmass* and *ichem*."""</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="s2">"(mass in the unit of the emission rate)"</span>
+    <span class="k">if</span> <span class="n">cmass</span><span class="p">:</span>
+        <span class="c1"># MASSUM, which hycs_std calls instead of CONSUM, adds each particle's</span>
+        <span class="c1"># mass to its cell: not per volume, and nothing at z = 0, where CONSUM</span>
+        <span class="c1"># counts deposition.</span>
+        <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"mass m3 kg-1 </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"</span><span class="si">{name}</span><span class="s2"> mass in the cell, divided by air density; no deposition at z = 0"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"mass </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{name}</span><span class="s2"> mass in the cell; no deposition at z = 0"</span>
+    <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"mass kg-1, mass m-2 at z = 0 </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"</span><span class="si">{name}</span><span class="s2"> mass per mass of air (concentration divided by air "</span>
+            <span class="s2">"density), or deposition at z = 0"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"mass m-3, mass m-2 at z = 0 </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"</span><span class="si">{name}</span><span class="s2"> concentration, or deposition at z = 0"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">ichem</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pollutant</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return *ds* with its variables, the sources or cycles of one pollutant, as one variable with a dimension more.</span>
+
+<span class="sd">    *ds* is the file as written with ``ichem`` 1 or 10: a variable per</span>
+<span class="sd">    release location, named in hexadecimal from ``0001``, or per emission</span>
+<span class="sd">    cycle, named by the tenths of an hour to its start.</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span><span class="p">]</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">SPLIT_ICHEM</span><span class="p">[</span><span class="n">ichem</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">16</span> <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">10</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">locations</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"locations"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="n">numbers</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">locations</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"source"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
+            <span class="s2">"source_lon"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="p">[</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">locations</span><span class="p">]),</span>
+            <span class="s2">"source_lat"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="p">[</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">locations</span><span class="p">]),</span>
+            <span class="s2">"source_height"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="p">[</span><span class="n">loc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">loc</span> <span class="ow">in</span> <span class="n">locations</span><span class="p">]),</span>
+        <span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ok</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span> <span class="ow">and</span> <span class="n">numbers</span> <span class="o">==</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">numbers</span><span class="p">))</span> <span class="ow">and</span> <span class="n">numbers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"start"</span><span class="p">])</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">6</span> <span class="o">*</span> <span class="n">tenths</span><span class="p">)</span> <span class="k">for</span> <span class="n">tenths</span> <span class="ow">in</span> <span class="n">numbers</span><span class="p">]</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"release_time"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"release_time"</span><span class="p">,</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"datetime64[ns]"</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ok</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is not the file of a run with ichem=</span><span class="si">{</span><span class="n">ichem</span><span class="si">}</span><span class="s2">: its "</span>
+            <span class="sa">f</span><span class="s2">"pollutants are </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">pollutant</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">dim</span><span class="p">,</span> <span class="o">*</span><span class="n">CONCENTRATION_DIMS</span><span class="p">),</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"source"</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"release location, numbered from 1 in the order of the release's points"</span>
+        <span class="p">}</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"source_lon"</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degrees_east"</span><span class="p">}</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"source_lat"</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degrees_north"</span><span class="p">}</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"source_height"</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"m"</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"release_time"</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"start of the emission cycle"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_records</span><span class="p">(</span><span class="n">records</span><span class="p">:</span> <span class="n">_Records</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">ichem</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Read the records of a ``cdump`` file, as :func:`read_cdump` does."""</span>
     <span class="n">head</span> <span class="o">=</span> <span class="n">records</span><span class="o">.</span><span class="n">need</span><span class="p">(</span><span class="s2">"header"</span><span class="p">)</span>
     <span class="n">met_model</span> <span class="o">=</span> <span class="n">head</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -595,11 +722,13 @@
             <span class="s2">"runtraj does not read. Use cpack 0 or 1."</span>
         <span class="p">)</span>
     <span class="n">locations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nloc</span><span class="p">):</span>
-        <span class="n">_y</span><span class="p">,</span> <span class="n">_m</span><span class="p">,</span> <span class="n">_d</span><span class="p">,</span> <span class="n">_h</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">_mn</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span>
+        <span class="n">yy</span><span class="p">,</span> <span class="n">mm</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">hh</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">mn</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span>
             <span class="s2">"&gt;4i3fi"</span><span class="p">,</span> <span class="n">records</span><span class="o">.</span><span class="n">need</span><span class="p">(</span><span class="s2">"release locations"</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">lat</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">height</span><span class="p">)])</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">start</span> <span class="ow">or</span> <span class="n">_stamp</span><span class="p">((</span><span class="n">yy</span><span class="p">,</span> <span class="n">mm</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">hh</span><span class="p">,</span> <span class="n">mn</span><span class="p">))</span>
     <span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span><span class="p">,</span> <span class="n">dlat</span><span class="p">,</span> <span class="n">dlon</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon1</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;2i4f"</span><span class="p">,</span> <span class="n">records</span><span class="o">.</span><span class="n">need</span><span class="p">(</span><span class="s2">"grid"</span><span class="p">))</span>
     <span class="n">level_record</span> <span class="o">=</span> <span class="n">records</span><span class="o">.</span><span class="n">need</span><span class="p">(</span><span class="s2">"levels"</span><span class="p">)</span>
     <span class="p">(</span><span class="n">nz</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;i"</span><span class="p">,</span> <span class="n">level_record</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
@@ -612,7 +741,6 @@
     <span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> names a pollutant twice: </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-    <span class="n">level_index</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">):</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">levels</span><span class="p">)}</span>
 
     <span class="n">starts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">ends</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -621,8 +749,19 @@
         <span class="n">starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_stamp</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;6i"</span><span class="p">,</span> <span class="n">record</span><span class="p">[:</span><span class="mi">24</span><span class="p">])))</span>
         <span class="n">ends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_stamp</span><span class="p">(</span><span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;6i"</span><span class="p">,</span> <span class="n">records</span><span class="o">.</span><span class="n">need</span><span class="p">(</span><span class="s2">"sample end"</span><span class="p">)[:</span><span class="mi">24</span><span class="p">])))</span>
         <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ntyp</span><span class="p">,</span> <span class="n">nz</span><span class="p">,</span> <span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntyp</span> <span class="o">*</span> <span class="n">nz</span><span class="p">):</span>
-            <span class="n">_read_level</span><span class="p">(</span><span class="n">records</span><span class="o">.</span><span class="n">need</span><span class="p">(</span><span class="s2">"concentrations"</span><span class="p">),</span> <span class="n">grid</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">level_index</span><span class="p">,</span> <span class="n">cpack</span><span class="p">)</span>
+        <span class="c1"># One record per pollutant per level, the levels of a pollutant together.</span>
+        <span class="k">for</span> <span class="n">kt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntyp</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">kl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nz</span><span class="p">):</span>
+                <span class="c1"># With ICHEM=9 a record of the first level holds a depth, not its height.</span>
+                <span class="n">height</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">ichem</span> <span class="o">==</span> <span class="mi">9</span> <span class="ow">and</span> <span class="n">kl</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">levels</span><span class="p">[</span><span class="n">kl</span><span class="p">])</span>
+                <span class="n">_read_level</span><span class="p">(</span>
+                    <span class="n">records</span><span class="o">.</span><span class="n">need</span><span class="p">(</span><span class="s2">"concentrations"</span><span class="p">),</span>
+                    <span class="n">grid</span><span class="p">[</span><span class="n">kt</span><span class="p">,</span> <span class="n">kl</span><span class="p">],</span>
+                    <span class="n">names</span><span class="p">[</span><span class="n">kt</span><span class="p">],</span>
+                    <span class="n">height</span><span class="p">,</span>
+                    <span class="n">cpack</span><span class="p">,</span>
+                    <span class="n">path</span><span class="p">,</span>
+                <span class="p">)</span>
         <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
 
     <span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
@@ -643,21 +782,9 @@
         <span class="s2">"cpack"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">cpack</span><span class="p">),</span>
         <span class="s2">"met_model"</span><span class="p">:</span> <span class="n">met_model</span><span class="p">,</span>
         <span class="s2">"locations"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">locations</span><span class="p">),</span>
+        <span class="s2">"start"</span><span class="p">:</span> <span class="n">start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">start</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="k">if</span> <span class="n">cmass</span><span class="p">:</span>
-        <span class="c1"># MASSUM, which hycs_std calls instead of CONSUM, adds each particle's</span>
-        <span class="c1"># mass to its cell: not per volume, and nothing at z = 0, where CONSUM</span>
-        <span class="c1"># counts deposition.</span>
-        <span class="k">return</span> <span class="n">describe_grid</span><span class="p">(</span>
-            <span class="n">ds</span><span class="p">,</span>
-            <span class="n">units</span><span class="o">=</span><span class="s2">"mass (in the unit of the emission rate)"</span><span class="p">,</span>
-            <span class="n">long_name</span><span class="o">=</span><span class="s2">"</span><span class="si">{name}</span><span class="s2"> mass in the cell; no deposition at z = 0"</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="n">describe_grid</span><span class="p">(</span>
-        <span class="n">ds</span><span class="p">,</span>
-        <span class="n">units</span><span class="o">=</span><span class="s2">"mass m-3, mass m-2 at z = 0 (mass in the unit of the emission rate)"</span><span class="p">,</span>
-        <span class="n">long_name</span><span class="o">=</span><span class="s2">"</span><span class="si">{name}</span><span class="s2"> concentration, or deposition at z = 0"</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ds</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_cell_centers</span><span class="p">(</span><span class="n">first</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -682,32 +809,43 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_level</span><span class="p">(</span>
     <span class="n">record</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
-    <span class="n">grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-    <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">level_index</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">cells</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">cpack</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Put one pollutant's one level of a sample, a ``cdump`` record, into *grid*."""</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">record</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="p">(</span><span class="n">height</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;i"</span><span class="p">,</span> <span class="n">record</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
-    <span class="n">kt</span><span class="p">,</span> <span class="n">kl</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">level_index</span><span class="p">[</span><span class="n">height</span><span class="p">]</span>
-    <span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Put a ``cdump`` record, one pollutant's one level of a sample, into *cells*, ``(lat, lon)``.</span>
+
+<span class="sd">    The record names its pollutant and its level's height, which must be</span>
+<span class="sd">    *name* and *height* (no height is checked when *height* is ``None``).</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">record</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="p">(</span><span class="n">level</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;i"</span><span class="p">,</span> <span class="n">record</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="o">!=</span> <span class="n">name</span> <span class="ow">or</span> <span class="p">(</span><span class="n">height</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">level</span> <span class="o">!=</span> <span class="n">height</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> holds </span><span class="si">{</span><span class="n">found</span><span class="si">!r}</span><span class="s2"> at </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2"> m where </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> at "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">height</span><span class="si">}</span><span class="s2"> m is expected: it is not the file of a run with "</span>
+            <span class="s2">"these settings."</span>
+        <span class="p">)</span>
+    <span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span> <span class="o">=</span> <span class="n">cells</span><span class="o">.</span><span class="n">shape</span>
     <span class="k">if</span> <span class="n">cpack</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"&gt;f4"</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">nlat</span> <span class="o">*</span> <span class="n">nlon</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
         <span class="c1"># Fortran order: longitude varies fastest.</span>
-        <span class="n">grid</span><span class="p">[</span><span class="n">kt</span><span class="p">,</span> <span class="n">kl</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span><span class="p">)</span>
+        <span class="n">cells</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nlat</span><span class="p">,</span> <span class="n">nlon</span><span class="p">)</span>
         <span class="k">return</span>
     <span class="p">(</span><span class="n">count</span><span class="p">,)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">"&gt;i"</span><span class="p">,</span> <span class="n">record</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">12</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span>
-    <span class="n">cells</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span>
+    <span class="n">packed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span>
         <span class="n">record</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s2">"i"</span><span class="p">,</span> <span class="s2">"&gt;i2"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"j"</span><span class="p">,</span> <span class="s2">"&gt;i2"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"c"</span><span class="p">,</span> <span class="s2">"&gt;f4"</span><span class="p">)]),</span>
         <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">,</span>
         <span class="n">offset</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># HYSPLIT counts cells from 1.</span>
-    <span class="n">grid</span><span class="p">[</span><span class="n">kt</span><span class="p">,</span> <span class="n">kl</span><span class="p">,</span> <span class="n">cells</span><span class="p">[</span><span class="s2">"j"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cells</span><span class="p">[</span><span class="s2">"i"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="s2">"c"</span><span class="p">]</span>
+    <span class="n">cells</span><span class="p">[</span><span class="n">packed</span><span class="p">[</span><span class="s2">"j"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">packed</span><span class="p">[</span><span class="s2">"i"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed</span><span class="p">[</span><span class="s2">"c"</span><span class="p">]</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"read_cdump"</span><span class="p">]</span>

@@ -103,8 +103,8 @@ The concentration mode
 ----------------------
 
 With ``mode: concentration`` runtraj writes HYSPLIT's own concentration
-output, ``ICHEM=0``, with HYSPLIT's dispersion scheme (``IDSP`` unset)
-in place of ``ICHEM=8`` and ``IDSP=2``. The pollutants and grids are
+output, ``ICHEM`` from ``ichem`` (0 unless set), with HYSPLIT's dispersion
+scheme (``IDSP`` unset) in place of ``ICHEM=8`` and ``IDSP=2``. The pollutants and grids are
 written to ``CONTROL``:
 
 .. list-table::
@@ -150,12 +150,76 @@ hour, 2070 from three). With ``maxpar`` unset a concentration run gets
 (:meth:`~runtraj.models.hysplit.HysplitConfig.maxpar_for`), so the grids
 hold all that was released. Set ``maxpar`` only above that.
 
+``ichem`` is recorded in a concentration run's settings, 0 when unset. No
+value changes the form of the file, only what a cell or a pollutant of it
+means, which the file does not say:
+:func:`~runtraj.models.hysplit.read_cdump` is told the ``ichem`` and
+``cmass`` the run had. What each value does and needs, as seen in runs of
+HYSPLIT 5.4.2:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 8 92
+
+   * - ``ichem``
+     - What HYSPLIT does, and what runtraj refuses with it
+   * - 1
+     - Names a pollutant for each ``CONTROL`` location, ``0001``,
+       ``0002``, ... in hexadecimal, read as the dimension ``source``. It
+       drops every pollutant after the first, so more than one is
+       refused. A column release, two locations that are one line source,
+       left the first empty and filled the second: refused before the run
+       (``RELEASE_REFUSED``). ``nbptyp`` and ``maxdim`` must be 1.
+   * - 2
+     - Reads ``CHEMRATE.TXT``, a line per conversion (the two pollutants'
+       numbers, the fraction per hour, the weight ratio), which runtraj
+       writes from ``conversions`` on every run: without the file HYSPLIT
+       converts pollutant 1 to 2 at 0.10 per hour, so an empty
+       ``conversions`` is refused. With ``maxdim: 1`` HYSPLIT prints an
+       error, exits with status 0 and leaves a file with no sample:
+       ``maxdim`` must be the number of pollutants.
+   * - 5
+     - Deposits whole particles with a probability. HYSPLIT stops on
+       ``maxdim`` above 1, and changes ``initd`` to 0 itself: both are
+       refused.
+   * - 6
+     - Divides each particle's mass by the air density at its level
+       before it is counted. The ``units`` are ``mass kg-1``, or ``mass m3
+       kg-1`` with ``cmass: 1``; deposition at ``z = 0`` is not divided.
+   * - 9
+     - Reads the first of a grid's levels as a percentage of the mixed
+       layer depth and counts from the ground to that share of it, at
+       each particle (10 m at least). ``z`` keeps the percentage and says
+       so in its ``long_name``. A level of 0 first became a 10 m level
+       and no deposition was counted, so the first level must be 1 to
+       100.
+   * - 10
+     - Names a pollutant for each emission cycle by the tenths of an hour
+       from the start of the run, read as the dimension
+       ``release_time``. It makes ``n_hours // qcycle`` cycles and
+       releases nothing after the last; with half-hour cycles two of
+       eight were empty; in a backward run only the first was released.
+       So ``qcycle`` is whole hours that divide ``n_hours``, the run is
+       forward, and the pollutant's ``hours`` are ``qcycle`` at most.
+       HYSPLIT stops on ``qcycle: 0`` and on an ``efile``.
+   * - 3, 4, 7, 11
+     - Refused: dust emission needs an emission and an area on each
+       location; 4 counts on the met model's grid for HYSPLIT's chemistry
+       builds; 7 needs momentum fluxes in the met files; 11 needs a
+       ``DAUGHTER.TXT`` from HYSPLIT's preprocessor.
+   * - 8
+     - Refused here: it is ``mode: particles``, which takes ``ichem: 8``
+       or none.
+   * - others
+     - Refused: HYSPLIT ran ``ICHEM=12`` as 0 without a message.
+
 .. autosummary::
    :toctree: _api
    :nosignatures:
 
    runtraj.models.hysplit.Pollutant
    runtraj.models.hysplit.ConcentrationGrid
+   runtraj.models.hysplit.Conversion
    runtraj.models.hysplit.read_cdump
 
 .. _hysplit-trajectory:

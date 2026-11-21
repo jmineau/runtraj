@@ -92,6 +92,10 @@ The keys of one entry under ``grids:``, in ``mode: concentration``.
 
 .. config-model:: runtraj.models.hysplit.ConcentrationGrid
 
+The keys of one entry under ``conversions:``, with ``ichem: 2``.
+
+.. config-model:: runtraj.models.hysplit.Conversion
+
 A model in another package gets a block of any name that gives the model
 class's import path as ``class``, then that model's own settings:
 

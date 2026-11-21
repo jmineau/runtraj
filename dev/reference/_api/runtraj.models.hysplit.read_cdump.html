@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
+    <script src="../../_static/documentation_options.js?v=875fea35"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,12 +61,12 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="runtraj.models.hysplit.read_tdump" href="runtraj.models.hysplit.read_tdump.html" />
-    <link rel="prev" title="runtraj.models.hysplit.ConcentrationGrid" href="runtraj.models.hysplit.ConcentrationGrid.html" />
+    <link rel="prev" title="runtraj.models.hysplit.Conversion" href="runtraj.models.hysplit.Conversion.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
+  <meta name="docsearch:version" content="0.1.0a4.dev30+ga9ab1c62b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -549,6 +549,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.result_type.html">runtraj.results.result_type</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.results.model_result.html">runtraj.results.model_result</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.CONCENTRATION_DIMS.html">runtraj.concentration.CONCENTRATION_DIMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.SPLIT_DIMS.html">runtraj.concentration.SPLIT_DIMS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.check_concentration.html">runtraj.concentration.check_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.describe_grid.html">runtraj.concentration.describe_grid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
@@ -796,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_particle_dat.html">runtraj.models.hysplit.read_particle_dat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Conversion.html">runtraj.models.hysplit.Conversion</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.models.hysplit.read_cdump</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -885,7 +887,7 @@
 <h1>runtraj.models.hysplit.read_cdump<a class="headerlink" href="#runtraj-models-hysplit-read-cdump" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.models.hysplit.read_cdump">
-<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.</span></span><span class="sig-name descname"><span class="pre">read_cdump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/cdump.html#read_cdump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.read_cdump" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.</span></span><span class="sig-name descname"><span class="pre">read_cdump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ichem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pollutant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/cdump.html#read_cdump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.read_cdump" title="Link to this definition">#</a></dt>
 <dd><p>Read one of HYSPLIT’s binary concentration files (<code class="docutils literal notranslate"><span class="pre">cdump</span></code>) as a Dataset.</p>
 <p>The file holds one grid: its header (the met, the release locations, the
 grid, the levels, the pollutants), then, for each sampling time, one
@@ -900,6 +902,15 @@ Dataset.</p>
 <li><p><strong>cmass</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The <code class="docutils literal notranslate"><span class="pre">cmass</span></code> setting the run had: 0 for concentrations, anything
 else for the mass in each cell. The file does not say, and the
 variables’ <code class="docutils literal notranslate"><span class="pre">units</span></code> and <code class="docutils literal notranslate"><span class="pre">long_name</span></code> do.</p></li>
+<li><p><strong>ichem</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The <code class="docutils literal notranslate"><span class="pre">ichem</span></code> setting the run had, which the file does not say
+either. With 6 the values are divided by air density, and the
+<code class="docutils literal notranslate"><span class="pre">units</span></code> say so. With 9 the first level reaches from the ground
+to a share of the mixed layer, and <code class="docutils literal notranslate"><span class="pre">z</span></code> says so. With 1 or 10
+what the file calls its pollutants are the release locations or
+the emission cycles of one pollutant, and the Dataset has one
+variable, named <em>pollutant</em>, with a dimension more (see Notes).</p></li>
+<li><p><strong>pollutant</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The name of the run’s one pollutant, with <em>ichem</em> 1 or 10, which
+the file does not hold.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -914,9 +925,35 @@ years are read as 1940 to 2039.</p>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a></span></p>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the file is cut off, is not a concentration file, or was written
-    with <code class="docutils literal notranslate"><span class="pre">CPACK=2</span></code> (one point per grid), which this does not read.</p>
+</dl>
+<p class="rubric">Notes</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">ichem=1</span></code> HYSPLIT numbers the release locations in the place of
+the pollutants (<code class="docutils literal notranslate"><span class="pre">0001</span></code>, <code class="docutils literal notranslate"><span class="pre">0002</span></code>, …). They are read as the
+dimension <code class="docutils literal notranslate"><span class="pre">source</span></code>, 1 to the number of locations, in the order of
+the release’s points, with the coordinates <code class="docutils literal notranslate"><span class="pre">source_lon</span></code>,
+<code class="docutils literal notranslate"><span class="pre">source_lat</span></code> and <code class="docutils literal notranslate"><span class="pre">source_height</span></code> from the file’s header.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">ichem=10</span></code> HYSPLIT names each emission cycle by the tenths of
+an hour from the start of the run to the cycle’s start. They are read
+as the dimension <code class="docutils literal notranslate"><span class="pre">release_time</span></code>, the UTC time each cycle starts.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">ichem=9</span></code> each record of the first level holds the depth that
+level had for the last particle counted, in place of its height, so
+that depth is not checked, and not kept.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the file is cut off, is not a concentration file, or was written
+    with <code class="docutils literal notranslate"><span class="pre">CPACK=2</span></code> (one point per grid), which this does not read; or
+    if its pollutants are not what <em>ichem</em> 1 or 10 writes.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>Path</em></a>)</p></li>
+<li><p><strong>cmass</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+<li><p><strong>ichem</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+<li><p><strong>pollutant</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><em>Dataset</em></a></p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -939,12 +976,12 @@ years are read as 1940 to 2039.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="runtraj.models.hysplit.ConcentrationGrid.html"
+       href="runtraj.models.hysplit.Conversion.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">runtraj.models.hysplit.ConcentrationGrid</p>
+        <p class="prev-next-title">runtraj.models.hysplit.Conversion</p>
       </div>
     </a>
     <a class="right-next"
