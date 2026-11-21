@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c3eabf34"></script>
+    <script src="../_static/documentation_options.js?v=6f79d75b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev8+g9e5d114a2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev9+gf8e4a636f" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -535,7 +535,7 @@ follows them through the meteorology:</p>
 <span class="gp">   ...: </span>    <span class="n">release</span><span class="p">,</span>
 <span class="gp">   ...: </span>    <span class="n">met</span><span class="p">,</span>
 <span class="gp">   ...: </span>    <span class="n">n_hours</span><span class="o">=-</span><span class="mi">12</span><span class="p">,</span>     <span class="c1"># follow the air 12 hours back in time</span>
-<span class="gp">   ...: </span>    <span class="n">numpar</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>      <span class="c1"># number of particles to release</span>
+<span class="gp">   ...: </span>    <span class="n">numpar</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>      <span class="c1"># number of particles to release</span>
 <span class="gp">   ...: </span>    <span class="n">krand</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>         <span class="c1"># the random numbers a seed can fix</span>
 <span class="gp">   ...: </span>    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>         <span class="c1"># same seed, same particles</span>
 <span class="gp">   ...: </span><span class="p">)</span>
@@ -549,7 +549,7 @@ forward, from a source toward where the air goes. This page uses 12
 hours because its met files start 13 hours before the release.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">numpar</span></code></dt><dd><p>How many particles to release. More particles sample the turbulence
-better but take longer. 200 is enough to see where the air went.</p>
+better but take longer. 100 is enough to see where the air went.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">krand</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code></dt><dd><p>HYSPLIT draws random numbers for the turbulence that moves each particle.
 <code class="docutils literal notranslate"><span class="pre">krand=2</span></code> with a <code class="docutils literal notranslate"><span class="pre">seed</span></code> makes the draws the same on every run, so your
@@ -565,11 +565,11 @@ time step:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [4]: </span><span class="n">particles</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 <span class="gh">Out[4]: </span>
 <span class="go">   age  particle       lon  ...     mlht    pres                time</span>
-<span class="go">0 -1.0       1.0 -111.8497  ...  1029.05  853.30 2021-01-14 18:59:00</span>
-<span class="go">1 -1.0       2.0 -111.8501  ...  1029.05  856.30 2021-01-14 18:59:00</span>
-<span class="go">2 -1.0       3.0 -111.8496  ...  1029.05  855.58 2021-01-14 18:59:00</span>
-<span class="go">3 -1.0       4.0 -111.8494  ...  1029.05  856.30 2021-01-14 18:59:00</span>
-<span class="go">4 -1.0       5.0 -111.8489  ...  1029.05  856.17 2021-01-14 18:59:00</span>
+<span class="go">0 -1.0       1.0 -111.8488  ...  1029.05  856.06 2021-01-14 18:59:00</span>
+<span class="go">1 -1.0       2.0 -111.8497  ...  1029.05  854.15 2021-01-14 18:59:00</span>
+<span class="go">2 -1.0       3.0 -111.8488  ...  1029.05  856.30 2021-01-14 18:59:00</span>
+<span class="go">3 -1.0       4.0 -111.8495  ...  1029.05  855.26 2021-01-14 18:59:00</span>
+<span class="go">4 -1.0       5.0 -111.8504  ...  1029.05  856.21 2021-01-14 18:59:00</span>
 
 <span class="go">[5 rows x 21 columns]</span>
 
@@ -582,7 +582,7 @@ time step:</p>
 only a small region around Salt Lake, and a particle that leaves the met stops
 there. This is how many hours they went (<code class="docutils literal notranslate"><span class="pre">age</span></code> is in minutes):</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">particles</span><span class="p">[</span><span class="s1">'age'</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours"</span><span class="p">)</span>
-<span class="go">12.0 hours</span>
+<span class="go">10.2 hours</span>
 </pre></div>
 </div>
 </section>
@@ -598,7 +598,7 @@ belong to:</p>
 <span class="gp">   ...: </span>    <span class="n">releases</span><span class="o">=</span><span class="p">[</span><span class="n">release</span><span class="p">],</span>
 <span class="gp">   ...: </span>    <span class="n">mets</span><span class="o">=</span><span class="p">{</span><span class="s2">"hrrr"</span><span class="p">:</span> <span class="n">met</span><span class="p">},</span>          <span class="c1"># "hrrr" is a name you choose</span>
 <span class="gp">   ...: </span>    <span class="n">models</span><span class="o">=</span><span class="p">{</span>
-<span class="gp">   ...: </span>        <span class="s2">"hysplit"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"n_hours"</span><span class="p">:</span> <span class="o">-</span><span class="mi">12</span><span class="p">,</span> <span class="s2">"numpar"</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">"krand"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">:</span> <span class="mi">42</span><span class="p">}</span>
+<span class="gp">   ...: </span>        <span class="s2">"hysplit"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"n_hours"</span><span class="p">:</span> <span class="o">-</span><span class="mi">12</span><span class="p">,</span> <span class="s2">"numpar"</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s2">"krand"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">:</span> <span class="mi">42</span><span class="p">}</span>
 <span class="gp">   ...: </span>    <span class="p">},</span>
 <span class="gp">   ...: </span>    <span class="n">variants</span><span class="o">=</span><span class="p">{</span><span class="s2">"hrrr"</span><span class="p">:</span> <span class="p">{}},</span>       <span class="c1"># one variant: these settings, met hrrr</span>
 <span class="gp">   ...: </span><span class="p">)</span>
@@ -632,11 +632,11 @@ and the variant name:</p>
 <span class="gp">In [11]: </span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 <span class="gh">Out[11]: </span>
 <span class="go">   age  particle       lon  ...     mlht    pres                time</span>
-<span class="go">0 -1.0       1.0 -111.8497  ...  1029.05  853.30 2021-01-14 18:59:00</span>
-<span class="go">1 -1.0       2.0 -111.8501  ...  1029.05  856.30 2021-01-14 18:59:00</span>
-<span class="go">2 -1.0       3.0 -111.8496  ...  1029.05  855.58 2021-01-14 18:59:00</span>
-<span class="go">3 -1.0       4.0 -111.8494  ...  1029.05  856.30 2021-01-14 18:59:00</span>
-<span class="go">4 -1.0       5.0 -111.8489  ...  1029.05  856.17 2021-01-14 18:59:00</span>
+<span class="go">0 -1.0       1.0 -111.8488  ...  1029.05  856.06 2021-01-14 18:59:00</span>
+<span class="go">1 -1.0       2.0 -111.8497  ...  1029.05  854.15 2021-01-14 18:59:00</span>
+<span class="go">2 -1.0       3.0 -111.8488  ...  1029.05  856.30 2021-01-14 18:59:00</span>
+<span class="go">3 -1.0       4.0 -111.8495  ...  1029.05  855.26 2021-01-14 18:59:00</span>
+<span class="go">4 -1.0       5.0 -111.8504  ...  1029.05  856.21 2021-01-14 18:59:00</span>
 
 <span class="go">[5 rows x 21 columns]</span>
 </pre></div>
@@ -679,7 +679,7 @@ has the same blocks as the Python example above:</p>
 <span class="nt">models</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">hysplit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">n_hours</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-12</span>
-<span class="w">    </span><span class="nt">numpar</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">    </span><span class="nt">numpar</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
 <span class="w">    </span><span class="nt">krand</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 <span class="w">    </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
 

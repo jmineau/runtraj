@@ -9,7 +9,7 @@ its particles look wrong, the last section lists what to check, in order.
 
 The examples on this page that run use a small sample project: four
 releases an hour apart on the morning of 15 January 2021 at one site in Salt
-Lake City, 24-hour backward runs with 200 particles, and one variant,
+Lake City, 24-hour backward runs with 100 particles, and one variant,
 ``hrrr``. It was made as in :doc:`projects`, "The same project in Python".
 
 .. This page runs when the docs are built, on the sample project of

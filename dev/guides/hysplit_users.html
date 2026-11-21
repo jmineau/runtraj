@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c3eabf34"></script>
+    <script src="../_static/documentation_options.js?v=6f79d75b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev8+g9e5d114a2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev9+gf8e4a636f" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -548,7 +548,7 @@ you it is the starting time and starting locations of <code class="docutils lite
 <section id="one-run">
 <h2>One run<a class="headerlink" href="#one-run" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="../reference/_api/runtraj.run_trajectories.html#runtraj.run_trajectories" title="runtraj.run_trajectories"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.run_trajectories()</span></code></a> runs HYSPLIT once and returns the particles.
-Here 1,000 particles leave Salt Lake City at 500 m above ground during one
+Here 200 particles leave Salt Lake City at 500 m above ground during one
 hour and are followed 6 hours forward:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">runtraj</span>
 
@@ -558,19 +558,19 @@ hour and are followed 6 hours forward:</p>
 <span class="gp">   ...: </span>
 
 <span class="gp">In [3]: </span><span class="n">cloud</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-<span class="gp">   ...: </span>    <span class="n">start</span><span class="p">,</span> <span class="n">met_dir</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">emisshrs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="gp">   ...: </span>    <span class="n">start</span><span class="p">,</span> <span class="n">met_dir</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">emisshrs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
 <span class="gp">   ...: </span>    <span class="n">krand</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
 <span class="gp">   ...: </span><span class="p">)</span>
 <span class="gp">   ...: </span>
 
 <span class="gp">In [4]: </span><span class="n">cloud</span><span class="p">[[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"zagl"</span><span class="p">]]</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 <span class="gh">Out[4]: </span>
-<span class="go">                      time  particle       lon      lat       zagl</span>
-<span class="go">331082 2021-07-15 07:00:00     996.0 -111.1807  40.7772  1507.9584</span>
-<span class="go">331083 2021-07-15 07:00:00     997.0 -111.0063  40.9791   708.8995</span>
-<span class="go">331084 2021-07-15 07:00:00     998.0 -111.2098  40.7906  1379.2334</span>
-<span class="go">331085 2021-07-15 07:00:00     999.0 -111.0689  40.6187  1935.1648</span>
-<span class="go">331086 2021-07-15 07:00:00    1000.0 -111.4296  40.9582    76.5167</span>
+<span class="go">                     time  particle       lon      lat       zagl</span>
+<span class="go">67095 2021-07-15 07:00:00     196.0 -111.0782  40.8776   921.6019</span>
+<span class="go">67096 2021-07-15 07:00:00     197.0 -111.2290  40.9385     2.0606</span>
+<span class="go">67097 2021-07-15 07:00:00     198.0 -111.1279  40.6213  2112.3625</span>
+<span class="go">67098 2021-07-15 07:00:00     199.0 -110.9901  40.8926   979.2964</span>
+<span class="go">67099 2021-07-15 07:00:00     200.0 -111.1695  40.6080  2601.3728</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">n_hours</span></code> is <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>’s total run time: positive runs forward, negative
@@ -602,9 +602,10 @@ particle with turbulence off follows the same path, so <code class="docutils lit
 <span class="go">359 2021-07-15 07:00:00 -110.7072  40.5359  1428.3129</span>
 </pre></div>
 </div>
-<p>We compared this run with <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> on the same met. After 6 hours the two
-are 0.001 degrees apart. The mean position of 1,000 particles with
-turbulence on ended about 21 km away and 400 m lower:</p>
+<p>We compared this run with <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> (NOAA’s public 5.4.2) on the same
+met. After 6 hours the two are 0.001 degrees apart in longitude and 0.008 in
+latitude. The mean position of 200 particles with turbulence on ended about
+41 km away and 340 m lower:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 46.0%" />
@@ -621,19 +622,19 @@ turbulence on ended about 21 km away and 400 m lower:</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hyts_std</span></code></p></td>
-<td><p>-110.717</p></td>
-<td><p>40.534</p></td>
-<td><p>1585</p></td>
+<td><p>-110.709</p></td>
+<td><p>40.544</p></td>
+<td><p>1354</p></td>
 </tr>
 <tr class="row-odd"><td><p>One particle, turbulence off</p></td>
-<td><p>-110.718</p></td>
-<td><p>40.533</p></td>
-<td><p>1644</p></td>
+<td><p>-110.707</p></td>
+<td><p>40.536</p></td>
+<td><p>1428</p></td>
 </tr>
-<tr class="row-even"><td><p>Mean of 1,000 particles</p></td>
-<td><p>-110.961</p></td>
-<td><p>40.583</p></td>
-<td><p>1244</p></td>
+<tr class="row-even"><td><p>Mean of 200 particles</p></td>
+<td><p>-111.111</p></td>
+<td><p>40.735</p></td>
+<td><p>1087</p></td>
 </tr>
 </tbody>
 </table>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c3eabf34"></script>
+    <script src="../_static/documentation_options.js?v=6f79d75b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev8+g9e5d114a2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev9+gf8e4a636f" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -506,7 +506,7 @@ one, a quick check that tells you whether the choice was good enough, and
 what HYSPLIT chooses for you when you set nothing.</p>
 <p>The examples on this page that run use a small sample project: four
 releases an hour apart on the morning of 15 January 2021 at one site in Salt
-Lake City, 24-hour backward runs with 200 particles, and one variant,
+Lake City, 24-hour backward runs with 100 particles, and one variant,
 <code class="docutils literal notranslate"><span class="pre">hrrr</span></code>.</p>
 <section id="meteorology">
 <h2>Meteorology<a class="headerlink" href="#meteorology" title="Link to this heading">#</a></h2>
@@ -537,7 +537,7 @@ particle:</p>
 <span class="gp">In [4]: </span><span class="n">ends</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">runtraj</span><span class="o">.</span><span class="n">endpoints</span><span class="p">()</span>
 
 <span class="gp">In [5]: </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"the longest particle ran </span><span class="si">{</span><span class="n">ends</span><span class="p">[</span><span class="s1">'age'</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> of 24 hours"</span><span class="p">)</span>
-<span class="go">the longest particle ran 16.0 of 24 hours</span>
+<span class="go">the longest particle ran 17.2 of 24 hours</span>
 </pre></div>
 </div>
 <p>These particles stopped before 24 hours because they left the small crop of
@@ -550,7 +550,7 @@ region, a longer run would follow them further, so raise <code class="docutils l
 <h2>How many particles<a class="headerlink" href="#how-many-particles" title="Link to this heading">#</a></h2>
 <p>More particles sample the turbulence better. The far end of a run, where
 the particles have spread out and few are in any one place, converges last.
-200 particles show where the air went. For results we use 1000, below the
+100 particles show where the air went. For results we use 1000, below the
 default of 2500, because it is enough for a tower and a project of
 thousands of releases runs in less than half the time. To check a value for
 your site, run a few releases with three times as many particles as a

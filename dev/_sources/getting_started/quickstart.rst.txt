@@ -86,7 +86,7 @@ follows them through the meteorology:
        release,
        met,
        n_hours=-12,     # follow the air 12 hours back in time
-       numpar=200,      # number of particles to release
+       numpar=100,      # number of particles to release
        krand=2,         # the random numbers a seed can fix
        seed=42,         # same seed, same particles
    )
@@ -99,7 +99,7 @@ follows them through the meteorology:
 
 ``numpar``
    How many particles to release. More particles sample the turbulence
-   better but take longer. 200 is enough to see where the air went.
+   better but take longer. 100 is enough to see where the air went.
 
 ``krand`` and ``seed``
    HYSPLIT draws random numbers for the turbulence that moves each particle.
@@ -146,7 +146,7 @@ belong to:
        releases=[release],
        mets={"hrrr": met},          # "hrrr" is a name you choose
        models={
-           "hysplit": {"n_hours": -12, "numpar": 200, "krand": 2, "seed": 42}
+           "hysplit": {"n_hours": -12, "numpar": 100, "krand": 2, "seed": 42}
        },
        variants={"hrrr": {}},       # one variant: these settings, met hrrr
    )
@@ -228,7 +228,7 @@ has the same blocks as the Python example above:
    models:
      hysplit:
        n_hours: -12
-       numpar: 200
+       numpar: 100
        krand: 2
        seed: 42
 
