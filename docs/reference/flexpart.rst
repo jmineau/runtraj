@@ -15,13 +15,14 @@ the executable you built, and reads the particles it writes.
        n_hours: -24
        numpar: 1000
    mets:
-     gfs:
-       source: gfs
-       directory: /path/to/gfs
+     era5:
+       source: era5
+       directory: /path/to/era5
 
 FLEXPART support is new, and two things about FLEXPART 11 itself limit
-what you can use it for today. Read `Meteorology`_ and `Repeating a run`_
-before you rely on a result.
+what you can use it for today: it runs on ERA5 only, and a run with
+several threads does not repeat exactly. Read `Meteorology`_ and
+`Repeating a run`_ before you rely on a result.
 
 The FLEXPART build
 ------------------
@@ -50,19 +51,6 @@ any names, except that a name cannot hold a space: FLEXPART reads a name up
 to its first space. Other files in the directory, such as the index cfgrib
 writes beside a GRIB file, are left out.
 
-``source: gfs``
-   NCEP's GFS on pressure levels in GRIB2 (``pgrb2``), which the meter
-   build (``eta: false``) reads. FLEXPART stops when two files in a row are
-   more than 6 hours apart, so keep the analysis and the 3-hour forecast of
-   each cycle.
-
-   **FLEXPART 11 does not mix its particles on GFS.** These files hold no
-   surface fluxes, so FLEXPART derives the surface heat flux and stress
-   from the 2 m and 10 m values. At a mountain site at midday they came out
-   near zero (0 W m\ :sup:`-2` where ERA5 has -228), and particles released
-   near the ground stayed at a median 8 m in a 1000 m mixed layer. A run on
-   GFS warns of this. Use ERA5 for a result that depends on mixing.
-
 ``source: era5``
    ECMWF's ERA5 on model levels, as `flex_extract
    <https://flexpart.img.univie.ac.at/flexextract/index.html>`_ writes it.
@@ -71,6 +59,14 @@ writes beside a GRIB file, are left out.
    model's own levels. flex_extract writes three precipitation fields,
    which FLEXPART reads only when it was built with ``numpf = 3`` in
    ``src/par_mod.f90``.
+
+``source: gfs`` is refused, because FLEXPART 11 does not mix its particles
+on GFS. NCEP's ``pgrb2`` files hold no surface fluxes, so FLEXPART derives
+the surface heat flux and stress from the 2 m and 10 m values against its
+lowest level, which GFS diagnoses from that same layer. At a mountain site
+at midday they came out near zero (0 W m\ :sup:`-2` where ERA5 has -228),
+and particles released near the ground stayed at a median 8 m in a 1000 m
+mixed layer. GFS comes back once FLEXPART reads GFS's own fluxes.
 
 ``runtraj check`` and ``runtraj fetch`` do nothing for a FLEXPART met yet.
 A run still stops before FLEXPART starts when the files do not cover it or
@@ -171,11 +167,11 @@ Three things differ from a HYSPLIT table:
   output FLEXPART writes the positions there but none of the values it
   interpolates from the met. The eta build writes no height there either,
   so ``zagl`` is NaN in a run's last rows.
-- **On GFS,** ``pres`` **and** ``dens`` **near the ground are those of the
-  lowest pressure level above the terrain.** At a site at 1767 m where
+- **In a run on GFS made outside runtraj,** ``pres`` **and** ``dens``
+  **near the ground are those of the lowest pressure level above the
+  terrain.** At a site at 1767 m where
   GFS's surface pressure was 817 hPa, FLEXPART's ``pres`` at the ground was
-  about 792 hPa. For the air near the ground, read GFS's own columns with
-  :func:`runtraj.sampling.sample_met`.
+  about 792 hPa.
 
 API
 ---

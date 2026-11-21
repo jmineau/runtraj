@@ -10,7 +10,6 @@ import resource
 import signal
 import subprocess
 import tempfile
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -23,7 +22,7 @@ from runtraj.releases import ColumnRelease, MultiPointRelease
 
 from .config import FlexpartConfig, FlexpartMetConfig, flexpart_version
 from .inputs import split, write_inputs
-from .met import catalog, files_for, open_era5, open_gfs
+from .met import catalog, files_for, open_era5
 from .output import read_partoutput
 
 if TYPE_CHECKING:
@@ -42,20 +41,6 @@ SUCCESS = "CONGRATULATIONS"
 TAIL_LINES = 20
 
 
-#: The warning a FLEXPART run on GFS gives. FLEXPART 11 works out GFS's
-#: surface heat flux and stress from the 2 m and 10 m values against its
-#: lowest level, which GFS diagnoses from that same layer, so they come out
-#: near zero: at a mountain site at midday, 0 W m-2 and 0.0001 N m-2
-#: against ERA5's -228 W m-2 and 0.40 N m-2. With no turbulence the
-#: particles stayed at a median 8 m in a 1000 m mixed layer.
-GFS_WARNING = (
-    "FLEXPART 11 does not mix its particles on GFS: it derives GFS's surface "
-    "heat flux and stress from the 2 m and 10 m values, which come out near "
-    "zero, so the particles stay near the ground. Run on ERA5 for results "
-    "that depend on mixing."
-)
-
-
 class FlexpartModel:
     """
     FLEXPART 11 as a transport model, the object ``get_model("flexpart")`` returns.
@@ -65,7 +50,7 @@ class FlexpartModel:
     runs the checkout's executable there, and reads its particle output
     (:func:`~runtraj.models.flexpart.read_partoutput`). The particles
     carry FLEXPART's ``mlht`` and ``dens`` at each particle, for a stage to
-    read. :meth:`open_met` opens a run's GFS or ERA5 files for
+    read. :meth:`open_met` opens a run's ERA5 files for
     :mod:`runtraj.sampling`, to read other met at the particles.
     """
 
@@ -115,21 +100,17 @@ class FlexpartModel:
         bounds: Bounds | None = None,
     ) -> xr.Dataset:
         """
-        Return the GRIB *files* a run read as one Dataset in :func:`arlmet.open_dataset`'s layout, cropped to *bounds*.
+        Return the GRIB *files* a run read as one Dataset in :func:`arlmet.open_dataset`'s layout.
 
         The met config says what the files are, so that the met can be read
-        at the particles (:mod:`runtraj.sampling`). GFS files are converted
-        with :func:`arlmet.converters.from_gfs`
-        (:func:`~runtraj.models.flexpart.met.open_gfs`). ERA5 files, as
+        at the particles (:mod:`runtraj.sampling`). ERA5 files, as
         flex_extract writes them, are converted with
         :func:`arlmet.converters.from_flex_extract`
         (:func:`~runtraj.models.flexpart.met.open_era5`); they are already
         cropped to their domain, so *bounds* is not used, and they hold no
         boundary layer height.
         """
-        if met.source == "era5":
-            return open_era5(files)
-        return open_gfs(files, bounds)
+        return open_era5(files)
 
     def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
         """
@@ -198,24 +179,7 @@ class FlexpartModel:
             the run exceeded *timeout* seconds, ``EXIT_STATUS`` when
             FLEXPART stopped without finishing, and ``NO_PARTICLE_DATA``
             when it finished but wrote no particle file.
-        ValueError
-            If the met is GFS and the config runs the eta build: FLEXPART's
-            documentation says the eta build is intended for ECMWF data.
-            ERA5 runs on either build.
-
-        Warns
-        -----
-        UserWarning
-            If the met is GFS, once in each process: FLEXPART 11 does not
-            mix its particles on GFS.
         """
-        if met.source == "gfs" and config.eta:
-            raise ValueError(
-                "FLEXPART's eta build is intended for ECMWF data; GFS runs on "
-                "src/FLEXPART: set eta: false in the flexpart block."
-            )
-        if met.source == "gfs":
-            warnings.warn(GFS_WARNING, UserWarning, stacklevel=2)
         if workdir is None:
             with tempfile.TemporaryDirectory(prefix="runtraj-") as tmp:
                 return self.run(release, config, met, window, Path(tmp), timeout)
