@@ -11,6 +11,10 @@ to do something, start with the :doc:`../guides/index` instead.
    The particle table a transport model run gives: its columns and units,
    and the met columns sampled for a model that writes only positions.
 
+:doc:`concentration`
+   The types of result a transport model makes, and the concentration
+   grids of HYSPLIT's concentration mode.
+
 :doc:`transforms`
    Weighting particle rows (averaging kernels, pressure weighting, loss
    along the way), and sampling a gridded field at particles.
@@ -41,6 +45,7 @@ to do something, start with the :doc:`../guides/index` instead.
 
    core
    particles
+   concentration
    transforms
    layout
    configuration

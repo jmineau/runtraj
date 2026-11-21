@@ -5,7 +5,8 @@ HYSPLIT is the transport model behind every simulation, unless a variant
 names another. The worker gets it as
 :class:`runtraj.models.hysplit.HysplitModel` (see :doc:`execution`), which
 picks the met files, writes HYSPLIT's input files, runs ``hycs_std``, and
-reads the particles it writes.
+reads the particles it writes, or, with ``mode: concentration``, its
+concentration grids (:ref:`hysplit-concentration`).
 
 Config
 ------
@@ -93,6 +94,52 @@ the input files of a run. A project run then adds the release heights
    runtraj.models.hysplit.write_inputs
    runtraj.models.hysplit.run_hycs_std
    runtraj.models.hysplit.read_particle_dat
+
+.. _hysplit-concentration:
+
+The concentration mode
+----------------------
+
+With ``mode: concentration`` runtraj writes HYSPLIT's own concentration
+output, ``ICHEM=0``, with HYSPLIT's dispersion scheme (``IDSP`` unset)
+in place of ``ICHEM=8`` and ``IDSP=2``. The pollutants and grids are
+written to ``CONTROL``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - In ``CONTROL``
+     - In runtraj
+   * - Lines 10 to 14: the pollutants, their emission rate, hours and start
+     - ``pollutants``: ``name``, ``rate``, ``hours``; the start is the
+       release time
+   * - Lines 15 to 25: the grids, their center, spacing, span, file,
+       levels, sampling start, stop and interval
+     - ``grids``: ``center_lon`` and ``center_lat`` (unset, ``0.0 0.0``,
+       the release), ``spacing_*``, ``span_*``, ``levels``, ``sampling``
+       and ``sampling_interval``; the file is ``cdump_<name>`` in the
+       workdir, and the samples cover the whole run
+   * - Lines 26 to 31: deposition, wet removal, decay and resuspension of
+       each pollutant
+     - The other fields of each pollutant, in HYSPLIT's units
+
+:func:`~runtraj.models.hysplit.read_cdump` reads one grid's file, packed
+(``cpack`` 1, HYSPLIT's default, or 3) or not (``cpack: 0``), as a
+Dataset of :doc:`concentration`. A file of one point per grid (``cpack:
+2``) is refused. A run fails as ``NO_CONCENTRATION_DATA`` when a grid has
+no file, or a file with no sample, as when ``sampling_interval`` is longer
+than the run. runtraj does not check a concentration run for met that ran
+out after it started, as it does a particle run (its files are checked
+before the run starts).
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.models.hysplit.Pollutant
+   runtraj.models.hysplit.ConcentrationGrid
+   runtraj.models.hysplit.read_cdump
 
 Reading the input files
 -----------------------
@@ -196,6 +243,10 @@ Each reason, what happened, and what to do:
    * - ``NO_PARTICLE_DATA``
      - The transport model ran but wrote no particles. Read the log
        (``sim.log``): it usually says why.
+   * - ``NO_CONCENTRATION_DATA``
+     - A concentration run wrote no file for a grid, or one with no sample.
+       A ``sampling_interval`` longer than the run gives no sample; for
+       anything else, read the log.
    * - ``FORTRAN_RUNTIME_ERROR``
      - HYSPLIT stopped with a Fortran error, which the message names. Read
        the log and the kept workdir's ``MESSAGE`` file.

@@ -29,6 +29,8 @@ word in the :doc:`../getting_started/glossary`.
   object store
 - :doc:`particles`: read and plot the particles of one simulation or
   many, and open them in DuckDB, R, or CF trajectory tools
+- :doc:`concentration`: HYSPLIT's concentration grids, of pollutants you
+  release, in place of particles
 
 **HYSPLIT**
 
@@ -61,6 +63,7 @@ word in the :doc:`../getting_started/glossary`.
 
    output
    particles
+   concentration
 
 .. toctree::
    :hidden:

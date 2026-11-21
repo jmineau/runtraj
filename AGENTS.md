@@ -50,7 +50,8 @@ before v1.0**, so prefer the clean design over a compatibility shim.
 inputs (`Project`: `config.yaml`, `releases.csv`) and an output directory
 (`Output`) that `config.yaml` names and several projects can share. Its
 simulations are **releases × variants** (at least one variant). Each `Variant` (`runtraj.config`) has
-run settings, whose hash names its particles folder, and the settings of each
+run settings, whose hash names the folder of its model's result (its
+particles folder, for most), and the settings of each
 stage it uses, hashed with what the stage reads (`runtraj.identity`); variants
 with equal run settings share one run per release, and a changed setting
 hashes to a new folder (`docs/reference/layout.rst`). **A stage** makes one
@@ -58,6 +59,15 @@ file per release after the model runs. `config.yaml` names its class by
 import path, in a block named for the stage, and the class provides
 `runtraj.stages.Stage`, so the core handles any stage and imports none
 (`CONTRIBUTING.md`, "Adding a stage").
+
+**A model's result has a type** (`runtraj.results`): `particles` (the
+particle table, Parquet) or `concentration` (a `DataTree` of grids, NetCDF;
+HYSPLIT's `mode: concentration`). A model's optional `result(config)` names
+it (`particles` when it does not), `Variant.result` holds it, and it names
+the tree its files are in; models that make one type follow its one
+schema. A stage reads particles, so a variant of another type has none. A
+particles record never names its type, so no stored hash moved when types
+came in.
 
 **`Project` reads; the workers write results.** `Project` writes only its
 inputs (`config.yaml` once, at `Project.init`; `add_releases` appends to
@@ -87,9 +97,11 @@ src/runtraj/
   config.py       ProjectConfig and Variant;  identity.py  settings records, hashes
   stages.py       the Stage protocol, get_stage, check_stage;  _plugins.py  a class by import path
   releases/       release classes, releases.csv, shared validation
+  results.py      the result types (particles, concentration): suffix, check, write, read
   particles/      the particle table and files, release heights, the particles.runtraj accessor
+  concentration.py  the concentration result: a DataTree of grids, its NetCDF file
   models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model, check_model
-    hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
+    hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump reader, failures
   execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
@@ -202,7 +214,7 @@ log, met files or `age = 0` row; particles numbered 10, 20, ...):
 - Exceptions live in `runtraj/exceptions.py`, each subclassing `RuntrajError` and
   the builtin that describes it; a failed run is a `SimulationError`. Plain
   input checks raise builtins such as `ValueError`.
-- Extras: `visualization`, `download`, and `complete`, which the `dev` group installs.
+- Extras: `visualization`, `download`, `concentration` (netCDF4), and `complete`, which the `dev` group installs.
 
 ### Documentation
 

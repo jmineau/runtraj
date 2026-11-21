@@ -278,7 +278,12 @@ particles, never where its files are kept). HYSPLIT's is
 the ARL headers and the crop. A model that reads no files can take any
 keys, with no directory. `met` is that config, its `directory` and
 `subgrid_dir` absolute when it has them, and `window` the `(start, end)`
-the run covers; the model finds its own met from them. `run` returns a `ModelRun`: the particle table (the
+the run covers; the model finds its own met from them. `run` returns a
+`ModelRun` whose `result` is of the type the model makes: a model that
+makes another type than particles gives `result(config)`, the type's name
+in `runtraj.results.RESULT_TYPES` (`concentration`: a `DataTree` of grids,
+`docs/reference/concentration.rst`), and `check_model` holds it to that
+type. For particles, `result` is the particle table (the
 columns of `runtraj.particles.PARTICLE_SCHEMA`, `foot` if the model computes
 one, and what a stage reads, with a release row at `age = 0` when the
 model can write one; see `docs/reference/particles.rst`), its log as text,
