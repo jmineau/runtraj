@@ -45,8 +45,7 @@ if TYPE_CHECKING:
 STAGE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 #: Names a stage may not take: the output directory's own trees (the result
-#: types of :mod:`runtraj.results`, and ``trajectories``, kept for the type a
-#: trajectory model will make), and the columns of ``project.status()``.
+#: types of :mod:`runtraj.results`), and the columns of ``project.status()``.
 RESERVED_NAMES = frozenset(
     {
         "particles",

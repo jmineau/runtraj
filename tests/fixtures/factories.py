@@ -246,17 +246,19 @@ def make_hysplit_dir(
     tables: bool = True,
 ) -> Path:
     """
-    Make a HYSPLIT folder as its download unpacks, with a stand-in ``exec/hycs_std``, and return it.
+    Make a HYSPLIT folder as its download unpacks, with a stand-in ``exec/hycs_std`` and ``exec/hyts_std``, and return it.
 
     The stand-in prints ``HYSPLIT version: <version>`` as ``hycs_std`` does
     when it starts (nothing for ``None``), then runs the shell lines *body*.
     With *tables*, ``bdyfiles/`` holds :data:`STAND_IN_TABLES`.
     """
-    exe = directory / "exec" / "hycs_std"
-    exe.parent.mkdir(parents=True, exist_ok=True)
     said = "" if version is None else f"echo ' HYSPLIT version: {version}'\n"
-    exe.write_text(f"#!/bin/sh\n{said}{body}")
-    exe.chmod(0o755 if executable else 0o644)
+    # hyts_std too, for the trajectory mode; its text differs, as its build does.
+    for name in ("hycs_std", "hyts_std"):
+        exe = directory / "exec" / name
+        exe.parent.mkdir(parents=True, exist_ok=True)
+        exe.write_text(f"#!/bin/sh\n# {name}\n{said}{body}")
+        exe.chmod(0o755 if executable else 0o644)
     if tables:
         (directory / "bdyfiles").mkdir(exist_ok=True)
         for name, text in STAND_IN_TABLES.items():

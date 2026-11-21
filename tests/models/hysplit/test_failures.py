@@ -18,6 +18,7 @@ def test_all_failure_reasons_exist():
         "VARYING_MET_INTERVAL",
         "NO_PARTICLE_DATA",
         "NO_CONCENTRATION_DATA",
+        "NO_TRAJECTORIES_DATA",
         "FORTRAN_RUNTIME_ERROR",
         "TIMEOUT",
         "PARTICLE_LIMIT",

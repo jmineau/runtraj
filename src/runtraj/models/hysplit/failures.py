@@ -10,8 +10,8 @@ class FailureReason(StrEnum):
     Why a HYSPLIT run failed.
 
     The driver reads it from HYSPLIT's log and ``WARNING`` file when the
-    run ends, or knows it (a timeout, no particle or concentration
-    output, its exit status), and raises a
+    run ends, or knows it (a timeout, no particle, concentration or
+    trajectory output, its exit status), and raises a
     :class:`~runtraj.exceptions.SimulationError` with it as ``reason``. The
     worker records it with the simulation.
     """
@@ -20,6 +20,7 @@ class FailureReason(StrEnum):
     VARYING_MET_INTERVAL = "VARYING_MET_INTERVAL"
     NO_PARTICLE_DATA = "NO_PARTICLE_DATA"
     NO_CONCENTRATION_DATA = "NO_CONCENTRATION_DATA"
+    NO_TRAJECTORIES_DATA = "NO_TRAJECTORIES_DATA"
     FORTRAN_RUNTIME_ERROR = "FORTRAN_RUNTIME_ERROR"
     TIMEOUT = "TIMEOUT"
     PARTICLE_LIMIT = "PARTICLE_LIMIT"

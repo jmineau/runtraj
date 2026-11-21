@@ -3,7 +3,7 @@ The output directory, where particles and the files of each stage are kept.
 
 A project's results live in an output directory that several projects can
 share. It has one tree per kind of result: one per type of result a
-transport model makes (``particles``, or ``concentration``;
+transport model makes (``particles``, ``concentration``, or ``trajectories``;
 :mod:`runtraj.results`) and one named for each stage. Inside each is a
 folder per set of settings, in hive form so every tree reads as one
 dataset. Here the stage is PYSTILT's footprint::
@@ -18,6 +18,9 @@ dataset. Here the stage is PYSTILT's footprint::
       concentration/                     a variant in HYSPLIT's concentration mode
         settings=conc-5d01aa/
           date=2024-07-01/<release>.nc
+      trajectories/                      a variant in HYSPLIT's trajectory mode
+        settings=traj-81c2e0/
+          date=2024-07-01/<release>.parquet
       footprint/
         settings=hrrr-93278c/            variant name + short hash of transport + stage settings
           _settings.yaml                 names the particles folder it was made from
@@ -34,8 +37,8 @@ A folder is found by the hash of its settings, so two projects that run the
 same settings share one folder, and a changed setting lands in a new folder
 beside the old one instead of overwriting it. ``pyarrow.dataset``, DuckDB,
 polars, and R's arrow read ``settings`` and ``date`` as columns of the whole
-tree. Particles are one Parquet file per release, and a concentration
-result one NetCDF file. A stage writes its own
+tree. Particles and trajectories are one Parquet file per release, and a
+concentration result one NetCDF file. A stage writes its own
 file per release, with the extension it declares
 (:attr:`runtraj.stages.Stage.suffix`), at the path this module gives it, and
 this module never looks inside one.

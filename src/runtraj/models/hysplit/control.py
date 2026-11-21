@@ -14,6 +14,9 @@ from runtraj.models.hysplit.config import (
 #: The start of each grid's file name in a concentration run: ``cdump_<grid name>``.
 CDUMP_PREFIX = "cdump_"
 
+#: The file ``hyts_std`` writes its trajectories to, in the workdir.
+TDUMP_FILE = "tdump"
+
 #: A time in ``CONTROL`` written as zeros: the start of the run (or, for a
 #: sampling stop, its end).
 _ZERO_TIME = "00 00 00 00 00"
@@ -26,13 +29,16 @@ def cdump_name(grid: str) -> str:
 
 class ControlFile(BaseModel):
     """
-    Contents of a HYSPLIT ``CONTROL`` file for one run of ``hycs_std``.
+    Contents of a HYSPLIT ``CONTROL`` file for one run of ``hycs_std`` or ``hyts_std``.
 
     Holds the release time and the release locations, the run time, the
-    vertical motion option, the model top, and the met files, then the
-    pollutant, concentration grid, and deposition sections. Without
-    *pollutants* and *grids*, as in the particles mode, those sections are
-    written with fixed values that the particle output does not use.
+    vertical motion option, the model top, and the met files, which both
+    programs read alike. For ``hycs_std`` the pollutant, concentration
+    grid, and deposition sections follow. Without *pollutants* and *grids*,
+    as in the particles mode, those sections are written with fixed values
+    that the particle output does not use. For ``hyts_std``
+    (*trajectory*) the file ends with where the trajectories are written:
+    ``tdump`` in the workdir.
 
     Attributes
     ----------
@@ -61,6 +67,9 @@ class ControlFile(BaseModel):
         The grids of a concentration run, each written to
         ``cdump_<name>`` in the workdir (:func:`cdump_name`). Empty for
         the fixed sections.
+    trajectory : bool
+        Whether the file is for ``hyts_std``, which reads no pollutant or
+        grid. *emisshrs* is then not written.
     """
 
     release_time: dt.datetime
@@ -72,6 +81,7 @@ class ControlFile(BaseModel):
     met_files: list[Path]
     pollutants: list[Pollutant] = Field(default_factory=list)
     grids: list[ConcentrationGrid] = Field(default_factory=list)
+    trajectory: bool = False
 
     def write(self, path: str | Path) -> None:
         """
@@ -109,6 +119,12 @@ class ControlFile(BaseModel):
                 str(met_file.parent) + "/"
             )  # (8) met file directory (trailing slash important for HYSPLIT)
             lines.append(met_file.name)  # (9) met file name
+
+        if self.trajectory:
+            lines.append("./")  # (10) output directory
+            lines.append(TDUMP_FILE)  # (11) output file
+            Path(path).write_text("\n".join(lines) + "\n")
+            return
 
         if self.pollutants or self.grids:
             lines += _concentration_lines(self.pollutants, self.grids)
@@ -209,6 +225,17 @@ class ControlFile(BaseModel):
             met_files.append(met_file)
 
         cursor += 2 * n_met_files
+        if len(lines) - cursor == 2:  # hyts_std's ending: a directory and a file
+            return cls(
+                release_time=release_time,
+                locations=locations,
+                emisshrs=0.0,
+                n_hours=n_hours,
+                w_option=w_option,
+                z_top=z_top,
+                met_files=met_files,
+                trajectory=True,
+            )
         # Pollutant section: n_pollutant (0), species name (1), emission count (2),
         # then emisshrs at offset 3
         emisshrs = float(lines[cursor + 3].strip())

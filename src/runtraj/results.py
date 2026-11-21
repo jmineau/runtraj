@@ -8,11 +8,13 @@ makes a type follows its one schema:
   Parquet file per release.
 - ``concentration``: grids of concentration
   (:mod:`runtraj.concentration`), one NetCDF file per release.
+- ``trajectories``: the trajectory table (:mod:`runtraj.trajectories`),
+  one Parquet file per release.
 
 A model says which type a config makes with an optional
 ``result(config)`` (:class:`runtraj.models.TransportModel`), and makes
 particles when it does not say. The type names the tree of the output
-directory its files are kept in (``particles/``, ``concentration/``),
+directory its files are kept in (``particles/``, ``concentration/``, ``trajectories/``),
 beside the trees of the stages. A stage reads particles, so a variant that
 makes another type has no stages.
 """
@@ -33,6 +35,12 @@ from runtraj.concentration import (
     write_concentration,
 )
 from runtraj.particles import check_particles, read_particles, write_particles
+from runtraj.trajectories import (
+    TRAJECTORIES_SUFFIX,
+    check_trajectories,
+    read_trajectories,
+    write_trajectories,
+)
 
 if TYPE_CHECKING:
     from upath import UPath
@@ -90,6 +98,13 @@ RESULT_TYPES: dict[str, ResultType] = {
         check_concentration,
         write_concentration,
         read_concentration,
+    ),
+    "trajectories": ResultType(
+        "trajectories",
+        TRAJECTORIES_SUFFIX,
+        check_trajectories,
+        write_trajectories,
+        read_trajectories,
     ),
 }
 

@@ -1,10 +1,11 @@
 """
-Write HYSPLIT's input files, run ``hycs_std``, and read the particles it writes.
+Write HYSPLIT's input files, run ``hycs_std`` or ``hyts_std``, and read the particles it writes.
 
 :func:`write_inputs` fills a working directory with everything
-``hycs_std`` reads, and :func:`read_particle_dat` reads the particle file
+the program reads, and :func:`read_particle_dat` reads the particle file
 it writes (:func:`runtraj.models.hysplit.read_cdump` the concentration
-file of a concentration run). :class:`~runtraj.models.hysplit.HysplitModel` runs the two
+file of a concentration run, and :func:`runtraj.models.hysplit.read_tdump`
+the trajectory file of a trajectory run). :class:`~runtraj.models.hysplit.HysplitModel` runs the two
 around ``hycs_std`` in one directory; call them yourself to look at the
 input files of a run, or to read a particle file from elsewhere.
 """
@@ -26,7 +27,10 @@ from runtraj.models.hysplit.config import (
     CONCENTRATION_SETTINGS,
     FIXED_CONCENTRATION_SETUP,
     FIXED_SETUP,
+    FIXED_TRAJECTORY_SETUP,
     PARTICLES_SETTINGS,
+    TRAJECTORY_ONLY_SETTINGS,
+    TRAJECTORY_SETUP_SETTINGS,
     WIND_ERROR_SETTINGS,
     ZI_ERROR_SETTINGS,
     HysplitConfig,
@@ -45,6 +49,8 @@ if TYPE_CHECKING:
 CONTROL_FILE = "CONTROL"
 SETUP_FILE = "SETUP.CFG"
 HYCS_STD_FILE = "hycs_std"
+#: HYSPLIT's trajectory program, which the trajectory mode runs.
+HYTS_STD_FILE = "hyts_std"
 #: HYSPLIT's folders, as its download unpacks: the programs and the data tables.
 EXEC_DIR = "exec"
 BDYFILES_DIR = "bdyfiles"
@@ -78,8 +84,68 @@ NOT_IN_SETUP = frozenset(
         *ZI_ERROR_SETTINGS,
         *RUNTRAJ_SETTINGS,
         *CONCENTRATION_SETTINGS,  # CONTROL
+        *TRAJECTORY_ONLY_SETTINGS,  # hyts_std's
     }
 )
+
+
+def program_name(config: HysplitConfig) -> str:
+    """
+    Return the HYSPLIT program a run with *config* is: ``hyts_std`` in the trajectory mode, else ``hycs_std``.
+
+    Examples
+    --------
+    >>> program_name(HysplitConfig(n_hours=-24, mode="trajectory"))
+    'hyts_std'
+    """
+    return HYTS_STD_FILE if config.mode == "trajectory" else HYCS_STD_FILE
+
+
+def find_program(name: str, directory: str | Path | None = None) -> Path:
+    """
+    Return the HYSPLIT program called *name* that a run uses: ``exec/<name>`` under *directory*, else the first on ``PATH``.
+
+    runtraj does not include HYSPLIT, so the build is yours. *directory* is
+    the HYSPLIT folder as unpacked (``directory`` under ``models: hysplit:``
+    in ``config.yaml``), which holds ``exec/`` and ``bdyfiles/``.
+
+    Parameters
+    ----------
+    name : str
+        The program: ``hycs_std``, or ``hyts_std`` for a trajectory run.
+    directory : str or Path, optional
+        The HYSPLIT folder.
+
+    Raises
+    ------
+    HYSPLITNotFoundError
+        If *directory* has no ``exec/<name>``, or it is not executable;
+        without *directory*, if no such program is on ``PATH``.
+    """
+    if directory is not None:
+        exe = Path(directory) / EXEC_DIR / name
+        if not exe.is_file():
+            raise HYSPLITNotFoundError(
+                f"No {EXEC_DIR}/{name} in {directory}. Set directory "
+                "(under models: hysplit: in config.yaml) to the HYSPLIT folder "
+                f"as unpacked, the one that holds {EXEC_DIR}/ and {BDYFILES_DIR}/."
+            )
+        if not os.access(exe, os.X_OK):
+            raise HYSPLITNotFoundError(
+                f"{exe} is not executable, so it cannot run. A HYSPLIT folder "
+                "unpacked on Windows, or copied from there, loses that permission; "
+                f"make it executable with: chmod +x {exe}"
+            )
+        return exe
+    found = shutil.which(name)
+    if found is None:
+        raise HYSPLITNotFoundError(
+            f"No {name} on PATH. runtraj does not include HYSPLIT: get "
+            "it from NOAA ARL (https://www.ready.noaa.gov/HYSPLIT.php), then set directory (under "
+            "models: hysplit: in config.yaml) to the HYSPLIT folder, or put the "
+            f"folder that holds an executable {name} on PATH."
+        )
+    return Path(found)
 
 
 def find_hycs_std(directory: str | Path | None = None) -> Path:
@@ -96,39 +162,19 @@ def find_hycs_std(directory: str | Path | None = None) -> Path:
         If *directory* has no ``exec/hycs_std``, or its ``hycs_std`` is not
         executable; without *directory*, if no ``hycs_std`` is on ``PATH``.
     """
-    if directory is not None:
-        exe = Path(directory) / EXEC_DIR / HYCS_STD_FILE
-        if not exe.is_file():
-            raise HYSPLITNotFoundError(
-                f"No {EXEC_DIR}/{HYCS_STD_FILE} in {directory}. Set directory "
-                "(under models: hysplit: in config.yaml) to the HYSPLIT folder "
-                f"as unpacked, the one that holds {EXEC_DIR}/ and {BDYFILES_DIR}/."
-            )
-        if not os.access(exe, os.X_OK):
-            raise HYSPLITNotFoundError(
-                f"{exe} is not executable, so it cannot run. A HYSPLIT folder "
-                "unpacked on Windows, or copied from there, loses that permission; "
-                f"make it executable with: chmod +x {exe}"
-            )
-        return exe
-    found = shutil.which(HYCS_STD_FILE)
-    if found is None:
-        raise HYSPLITNotFoundError(
-            f"No {HYCS_STD_FILE} on PATH. runtraj does not include HYSPLIT: get "
-            "it from NOAA ARL (https://www.ready.noaa.gov/HYSPLIT.php), then set directory (under "
-            "models: hysplit: in config.yaml) to the HYSPLIT folder, or put the "
-            f"folder that holds an executable {HYCS_STD_FILE} on PATH."
-        )
-    return Path(found)
+    return find_program(HYCS_STD_FILE, directory)
 
 
-def data_tables(directory: str | Path | None = None) -> dict[str, Path | bytes]:
+def data_tables(
+    directory: str | Path | None = None, program: str = HYCS_STD_FILE
+) -> dict[str, Path | bytes]:
     """
     Return HYSPLIT's data tables a run uses, by name: a file to link, or the text to write.
 
     They come from ``bdyfiles/`` under *directory*, or, without
     *directory*, from a ``bdyfiles/`` folder beside the folder of the
-    ``hycs_std`` on ``PATH``, as HYSPLIT's download lays them out. runtraj
+    ``hycs_std`` on ``PATH`` (or of *program*, such as ``hyts_std`` for a
+    trajectory run), as HYSPLIT's download lays them out. runtraj
     includes none. HYSPLIT's own ``ASCDATA.CFG`` says the tables are in
     ``../bdyfiles/``; a run links them into its workdir, so its
     ``ASCDATA.CFG`` is returned as text with that line, the sixth, set to
@@ -138,12 +184,12 @@ def data_tables(directory: str | Path | None = None) -> dict[str, Path | bytes]:
     ------
     HYSPLITNotFoundError
         If the folder is missing or lacks one of the four tables, or,
-        without *directory*, no ``hycs_std`` is on ``PATH``.
+        without *directory*, no *program* is on ``PATH``.
     """
     if directory is not None:
         folder = Path(directory) / BDYFILES_DIR
     else:
-        folder = find_hycs_std().resolve().parent.parent / BDYFILES_DIR
+        folder = find_program(program).resolve().parent.parent / BDYFILES_DIR
     missing = [name for name in DATA_TABLES if not (folder / name).is_file()]
     if missing:
         raise HYSPLITNotFoundError(
@@ -250,7 +296,20 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
     ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
     is unset, which depend on the release locations or follow from other
     settings.
+
+    A trajectory run gets :data:`FIXED_TRAJECTORY_SETUP` and the settings
+    of :data:`TRAJECTORY_SETUP_SETTINGS` only: ``hyts_std`` reads the
+    dispersion model's entries too (``ICHEM`` and ``IDSP`` change its
+    trajectories), so none of them is written. The driver adds ``KMSL``.
     """
+    if params.mode == "trajectory":
+        entries = dict(FIXED_TRAJECTORY_SETUP)
+        entries.update(
+            (name, getattr(params, name))
+            for name in TRAJECTORY_SETUP_SETTINGS
+            if getattr(params, name) is not None
+        )
+        return entries
     particles = params.mode == "particles"
     entries = dict(FIXED_SETUP if particles else FIXED_CONCENTRATION_SETUP)
     skip = NOT_IN_SETUP if particles else NOT_IN_SETUP | set(PARTICLES_SETTINGS)
@@ -480,10 +539,10 @@ def write_inputs(
     kmsl: int = 0,
 ) -> None:
     """
-    Write everything ``hycs_std`` reads for one run into *workdir*.
+    Write everything ``hycs_std`` reads for one run into *workdir*, or ``hyts_std`` in the trajectory mode.
 
-    Links ``hycs_std`` (from ``config.directory``, or else ``PATH``:
-    :func:`find_hycs_std`) and HYSPLIT's data tables
+    Links the program (from ``config.directory``, or else ``PATH``:
+    :func:`find_program`) and HYSPLIT's data tables
     (:func:`data_tables`), and writes ``CONTROL`` and ``SETUP.CFG``, plus
     ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for
     them. *workdir* is created if needed, and should be empty.
@@ -508,15 +567,17 @@ def write_inputs(
     Raises
     ------
     HYSPLITNotFoundError
-        If there is no ``hycs_std`` to link (:func:`find_hycs_std`).
+        If there is no program to link (:func:`find_program`).
     """
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
 
     # Link the binary and the data tables; only hycs_std is
     # taken from exec/, which holds dozens of other programs.
-    links = {HYCS_STD_FILE: find_hycs_std(config.directory)}
-    for name, table in data_tables(config.directory).items():
+    program = program_name(config)
+    trajectory = config.mode == "trajectory"
+    links = {program: find_program(program, config.directory)}
+    for name, table in data_tables(config.directory, program).items():
         if isinstance(table, bytes):
             (workdir / name).write_bytes(table)
         else:
@@ -534,10 +595,16 @@ def write_inputs(
         met_files=list(met_files),
         pollutants=config.pollutants,
         grids=config.grids,
+        trajectory=trajectory,
     ).write(workdir / CONTROL_FILE)
 
     entries = setup_entries(config)
     entries["kmsl"] = kmsl
+    if trajectory:  # none of the dispersion model's entries or files
+        setup = NameList("SETUP")
+        setup.update(entries)
+        setup.write(workdir / SETUP_FILE)
+        return
     entries["maxpar"] = config.maxpar_for(release_locations(locations))
     if config.mode == "particles":
         entries["ivmax"] = len(config.varsiwant)  # number of output variables
@@ -555,11 +622,14 @@ def write_inputs(
     _write_values(workdir / ZIERR_FILE, zierr(config))
 
 
-def run_hycs_std(workdir: Path, timeout: int | None = None) -> None:
+def run_hycs_std(
+    workdir: Path, timeout: int | None = None, program: str = HYCS_STD_FILE
+) -> None:
     """
     Run the ``hycs_std`` in *workdir*, writing its output to ``hysplit.log``.
 
-    *workdir* holds the inputs :func:`write_inputs` wrote. With *timeout*
+    *workdir* holds the inputs :func:`write_inputs` wrote. *program* names
+    another HYSPLIT program linked there, ``hyts_std`` for a trajectory run. With *timeout*
     seconds the run is stopped when it takes longer; without it, it may run
     as long as HYSPLIT does. If this process is interrupted while it waits
     (``KeyboardInterrupt`` or ``SystemExit``), the run is stopped too.
@@ -581,7 +651,7 @@ def run_hycs_std(workdir: Path, timeout: int | None = None) -> None:
     with (
         log_path.open("w", encoding="utf-8") as handle,
         subprocess.Popen(
-            [str(workdir / HYCS_STD_FILE)],
+            [str(workdir / program)],
             cwd=workdir,
             stdout=handle,
             stderr=subprocess.STDOUT,

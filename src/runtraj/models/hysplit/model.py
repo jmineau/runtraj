@@ -20,14 +20,15 @@ from runtraj.models import ModelRun
 
 from .cdump import read_cdump
 from .config import ConcentrationGrid, HysplitConfig
-from .control import cdump_name
+from .control import TDUMP_FILE, cdump_name
 from .driver import (
     LOG_FILE,
     PARTICLE_FILE,
     check_met_stop,
     check_release,
     data_tables,
-    find_hycs_std,
+    find_program,
+    program_name,
     read_particle_dat,
     run_hycs_std,
     write_inputs,
@@ -35,6 +36,7 @@ from .driver import (
 from .failures import FailureReason
 from .met import Met, MetConfig
 from .releases import check_releases, release_rows
+from .tdump import read_tdump
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -50,9 +52,14 @@ _VERSION_LINE = re.compile(r"HYSPLIT version:\s*(\S+)")
 _VERSION_TIMEOUT = 30
 
 
-def hysplit_version(directory: str | Path | None = None) -> str | None:
+def hysplit_version(
+    directory: str | Path | None = None, program: str = "hycs_std"
+) -> str | None:
     """
     Return the version the ``hycs_std`` of *directory*, or else on ``PATH``, prints when it starts.
+
+    *program* names another HYSPLIT program to ask, such as ``hyts_std``,
+    which prints the same line.
 
     ``hycs_std`` prints a line such as ``HYSPLIT version: hysplit.v5.1.0``
     before it reads its input; this returns ``hysplit.v5.1.0``. It runs the
@@ -72,9 +79,9 @@ def hysplit_version(directory: str | Path | None = None) -> str | None:
     Raises
     ------
     HYSPLITNotFoundError
-        If there is no ``hycs_std`` (:func:`find_hycs_std`).
+        If there is no such program (:func:`find_program`).
     """
-    return _printed_version(*_stamp(find_hycs_std(directory)))
+    return _printed_version(*_stamp(find_program(program, directory)))
 
 
 def _stamp(path: Path) -> tuple[str, int, int]:
@@ -128,7 +135,9 @@ class HysplitModel:
     and reads the particles it writes
     (:func:`~runtraj.models.hysplit.read_particle_dat`), or, in the
     concentration mode, the file of each grid
-    (:func:`~runtraj.models.hysplit.read_cdump`). HYSPLIT reads the
+    (:func:`~runtraj.models.hysplit.read_cdump`). In the trajectory mode
+    it runs ``hyts_std`` and reads its trajectory file
+    (:func:`~runtraj.models.hysplit.read_tdump`). HYSPLIT reads the
     met where it is (the cropped copies when the met is cropped), so nothing
     is staged per run.
     """
@@ -139,25 +148,31 @@ class HysplitModel:
     met_config_class = MetConfig
     #: HYSPLIT writes its inputs and outputs as files in a directory.
     needs_workdir = True
-    #: One hycs_std process per release.
+    #: One hycs_std (or hyts_std) process per release.
     batched = False
 
     def result(self, config: HysplitConfig) -> str:
         """
-        Return the type of result a run with *config* makes: its ``mode``, ``particles`` or ``concentration``.
+        Return the type of result a run with *config* makes, which its ``mode`` says.
+
+        ``particles``, ``concentration``, or ``trajectories`` in ``mode:
+        trajectory``.
 
         Examples
         --------
         >>> HysplitModel().result(HysplitConfig(n_hours=-24))
         'particles'
+        >>> HysplitModel().result(HysplitConfig(n_hours=-24, mode="trajectory"))
+        'trajectories'
         """
-        return config.mode
+        return "trajectories" if config.mode == "trajectory" else config.mode
 
     def result_files(self, config: HysplitConfig) -> tuple[str, ...]:
         """
         Return the files of a run with *config* that hold its result, left out of a failed run's kept workdir.
 
-        The particle file, or in concentration mode each grid's ``cdump_<name>``.
+        The particle file, in concentration mode each grid's
+        ``cdump_<name>``, or in trajectory mode ``tdump``.
 
         Examples
         --------
@@ -166,25 +181,30 @@ class HysplitModel:
         """
         if config.mode == "concentration":
             return tuple(cdump_name(grid.name) for grid in config.grids)
+        if config.mode == "trajectory":
+            return (TDUMP_FILE,)
         return (PARTICLE_FILE,)
 
     def sha256(self, config: HysplitConfig) -> str:
         """
-        Return the SHA-256 of the ``hycs_std`` *config* runs, which tells its build from any other.
+        Return the SHA-256 of the program *config* runs, which tells its build from any other.
 
         The ``hycs_std`` of ``config.directory``, or else on ``PATH``
-        (:func:`find_hycs_std`). Read once per file.
+        (:func:`find_program`); ``hyts_std`` in the trajectory mode. Read
+        once per file.
 
         Raises
         ------
         HYSPLITNotFoundError
-            If there is no ``hycs_std``.
+            If there is no such program.
         """
-        return _file_sha256(*_stamp(find_hycs_std(config.directory)))
+        return _file_sha256(
+            *_stamp(find_program(program_name(config), config.directory))
+        )
 
     def version(self, config: HysplitConfig) -> str | None:
-        """Return the version the ``hycs_std`` *config* runs prints when it starts (:func:`hysplit_version`)."""
-        return hysplit_version(config.directory)
+        """Return the version the program *config* runs prints when it starts (:func:`hysplit_version`)."""
+        return hysplit_version(config.directory, program_name(config))
 
     def data_files(self, config: HysplitConfig) -> dict[str, str]:
         """
@@ -204,7 +224,9 @@ class HysplitModel:
             name: hashlib.sha256(
                 table if isinstance(table, bytes) else table.read_bytes()
             ).hexdigest()
-            for name, table in sorted(data_tables(config.directory).items())
+            for name, table in sorted(
+                data_tables(config.directory, program_name(config)).items()
+            )
         }
 
     def check_met(
@@ -277,12 +299,14 @@ class HysplitModel:
         self, releases: pd.DataFrame, config: HysplitConfig
     ) -> pd.DataFrame:
         """
-        Return the releases HYSPLIT cannot run: multipoint releases whose points share a location.
+        Return the releases HYSPLIT cannot run with *config*.
 
-        No setting changes which, so *config* is not read. See
+        Multipoint releases whose points share a location, which
+        ``hycs_std`` joins into a line source; in the trajectory mode,
+        column releases, since ``hyts_std`` has no line source. See
         :func:`runtraj.models.hysplit.releases.check_releases`.
         """
-        return check_releases(releases)
+        return check_releases(releases, trajectory=config.mode == "trajectory")
 
     def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
         """
@@ -302,7 +326,7 @@ class HysplitModel:
         timeout: int | None = None,
     ) -> ModelRun:
         """
-        Run HYSPLIT for one release in *workdir* and return its particles, or its grids in the concentration mode.
+        Run HYSPLIT for one release in *workdir* and return its particles, its grids in the concentration mode, or its trajectories.
 
         It finds the met files that cover *window*, up to the met step at
         or after its end, which HYSPLIT interpolates, cropped when the met
@@ -325,7 +349,12 @@ class HysplitModel:
             HYSPLIT wrote no particle file; or ``NO_CONCENTRATION_DATA``
             when a concentration run wrote no file for a grid, or one with
             no sample, as a run shorter than its sampling interval, or fewer
-            samples than the run holds, as a run that stopped early. A run whose particles stopped
+            samples than the run holds, as a run that stopped early;
+            ``NO_TRAJECTORIES_DATA`` when a trajectory run wrote no
+            trajectory file, or one with no row; or ``MET_COVERAGE`` when
+            it followed fewer trajectories than the release has locations,
+            which is what ``hyts_std`` does with a location outside the
+            met's domain. A run whose particles stopped
             before ``n_hours`` well inside the met's domain fails as
             ``MET_COVERAGE`` too, when ``outdt`` is 0: more than 5 grid
             cells from every side of the met grid.
@@ -346,11 +375,16 @@ class HysplitModel:
         readable = files.readable(source)
         files.check(readable, window)
         _write_inputs(workdir, release, config, readable)
+        result: pd.DataFrame | xr.DataTree
         try:
+            if config.mode == "trajectory":
+                run_hycs_std(workdir, timeout, program=program_name(config))
+                result = _read_trajectories(workdir, len(release.coords()))
+                return ModelRun(result=result, log=_read_log(workdir), met_files=source)
             run_hycs_std(workdir, timeout)
             check_release(workdir, release.coords(), config)
             if config.mode == "concentration":
-                result: pd.DataFrame | xr.DataTree = _read_grids(workdir, config)
+                result = _read_grids(workdir, config)
             else:
                 result = _read_particles(workdir, config, readable[0])
         except SimulationError as error:
@@ -375,6 +409,47 @@ def _read_particles(
     if config.outdt == 0:  # the check needs a row every time step
         check_met_stop(particles, config.n_hours, _met_grid(met_file))
     return particles
+
+
+def _read_trajectories(workdir: Path, locations: int) -> pd.DataFrame:
+    """
+    Return the trajectories a run in *workdir* wrote, one from each of the release's *locations*.
+
+    Raises
+    ------
+    SimulationError
+        With ``reason`` ``NO_TRAJECTORIES_DATA`` when there is no
+        trajectory file, or it holds no row; ``MET_COVERAGE`` when it holds
+        fewer trajectories than *locations*: ``hyts_std`` leaves out a
+        location outside the met's domain, goes on, and numbers the rest
+        from 1, so they could not be told apart.
+    """
+    path = workdir / TDUMP_FILE
+    if not path.exists():
+        raise SimulationError(
+            f"HYSPLIT wrote no {TDUMP_FILE}.",
+            reason=FailureReason.NO_TRAJECTORIES_DATA,
+        )
+    try:
+        table = read_tdump(path)
+    except ValueError as error:
+        raise SimulationError(
+            str(error), reason=FailureReason.NO_TRAJECTORIES_DATA
+        ) from error
+    if table.empty:
+        raise SimulationError(
+            f"HYSPLIT wrote no trajectory to {TDUMP_FILE}.",
+            reason=FailureReason.NO_TRAJECTORIES_DATA,
+        )
+    followed = table.attrs["trajectories"]
+    if followed != locations:
+        raise SimulationError(
+            f"HYSPLIT followed {followed} of the release's {locations} "
+            "trajectories: it leaves out a location outside the met's domain.",
+            reason=FailureReason.MET_COVERAGE,
+        )
+    table.attrs = {}  # the header; a table with attrs does not concatenate quietly
+    return table
 
 
 def _read_grids(workdir: Path, config: HysplitConfig) -> xr.DataTree:

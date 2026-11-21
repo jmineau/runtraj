@@ -50,6 +50,7 @@ from runtraj.releases.table import (
 from runtraj.results import RESULT_TYPES
 from runtraj.simulation import Simulation
 from runtraj.stages import reads
+from runtraj.trajectories import trajectories_from_table
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -895,7 +896,8 @@ class Project:
         ------
         ValueError
             If a selected variant makes another type of result, such as
-            concentration (:meth:`concentration`).
+            concentration (:meth:`concentration`) or trajectories
+            (:meth:`trajectories`).
         """
         first = ["release", "variant", "realization"]
         with_time = columns is None or "time" in columns
@@ -996,6 +998,70 @@ class Project:
                 if path is not None:
                     found[(rid, name, k)] = read(path)
         return found
+
+    def trajectories(self, sel: Any = None) -> pd.DataFrame:
+        """
+        Load the trajectories of every selected simulation that has them, as one table.
+
+        Parameters
+        ----------
+        sel : DataFrame or mask, optional
+            The simulations, as for :meth:`status`. Every simulation of a
+            variant that makes trajectories by default.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The trajectory table (:mod:`runtraj.trajectories`) with
+            ``release`` and ``variant`` first. A trajectory is told from
+            another by ``release``, ``variant`` and ``trajectory``
+            together. Simulations without a result are left out, and the
+            table is empty when none has one.
+
+        Raises
+        ------
+        ValueError
+            If *sel* names a variant that makes another type of result.
+
+        Examples
+        --------
+        >>> trajectories = project.trajectories()  # doctest: +SKIP
+        >>> trajectories.groupby(["release", "trajectory"])[
+        ...     "zagl"
+        ... ].max()  # doctest: +SKIP
+        """
+        first = ["release", "variant"]
+        frame = self._selected(sel)
+        if sel is None:
+            frame = frame.loc[
+                [self.variants[v].result == "trajectories" for v in frame["variant"]]
+            ]
+        others = sorted(
+            {
+                name
+                for name in frame["variant"].unique()
+                if self.variants[name].result != "trajectories"
+            }
+        )
+        if others:
+            made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
+            raise ValueError(
+                f"Variants {made} make no trajectories. Leave them out of "
+                "the selection."
+            )
+        parts = []
+        for name, k, rows in _groups(frame):
+            variant = self.variants[name]
+            present = self.output.present("trajectories", variant, rows["release"], k)
+            # In selection order: a set would follow each process's string hashing.
+            releases = [r for r in dict.fromkeys(rows["release"]) if r in present]
+            table = self.output.table("trajectories", variant, releases, k)
+            if table.num_rows:
+                parts.append(trajectories_from_table(table).assign(variant=name))
+        if not parts:
+            return pd.DataFrame(columns=pd.Index(first))
+        found = pd.concat(parts, ignore_index=True)
+        return found.loc[:, first + [c for c in found.columns if c not in first]]
 
     # -- running ---------------------------------------------------------------
 

@@ -3,9 +3,10 @@ HYSPLIT's config: every setting that shapes what HYSPLIT makes.
 
 :class:`HysplitConfig` holds them. Most are HYSPLIT's own, under HYSPLIT's
 names; a few are used by runtraj itself. Its ``mode`` says what a run
-makes: particles (HYSPLIT's particle output, ``ICHEM=8``, the default) or concentration
+makes: particles (HYSPLIT's particle output, ``ICHEM=8``, the default), concentration
 grids, whose pollutants and grids are :class:`Pollutant` and
-:class:`ConcentrationGrid` records. Which input file each setting goes to
+:class:`ConcentrationGrid` records, or trajectories, from HYSPLIT's
+trajectory program ``hyts_std``. Which input file each setting goes to
 is the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).
 """
 
@@ -76,6 +77,82 @@ PARTICLES_SETTINGS = ("varsiwant", "outdt", "veght", "emisshrs")
 
 #: Settings only the concentration mode reads.
 CONCENTRATION_SETTINGS = ("pollutants", "grids")
+
+#: The values ``hyts_std`` can write along a trajectory beside its pressure,
+#: each asked for with its ``tm_`` setting: the setting, HYSPLIT's label for
+#: it in the trajectory file, and the column of the trajectory table.
+TRAJECTORY_DIAGNOSTICS = (
+    ("tm_tpot", "THETA", "tpot"),
+    ("tm_tamb", "AIR_TEMP", "temp"),
+    ("tm_rain", "RAINFALL", "rain"),
+    ("tm_mixd", "MIXDEPTH", "mlht"),
+    ("tm_relh", "RELHUMID", "relh"),
+    ("tm_sphu", "SPCHUMID", "sphu"),
+    ("tm_mixr", "H2OMIXRA", "mixr"),
+    ("tm_terr", "TERR_MSL", "zsfc"),
+    ("tm_dswf", "SUN_FLUX", "dswf"),
+)
+
+#: Settings only the trajectory mode reads: which values are written along a
+#: trajectory. Another mode refuses one that is set, and records none.
+TRAJECTORY_ONLY_SETTINGS = tuple(name for name, _, _ in TRAJECTORY_DIAGNOSTICS)
+
+#: The ``SETUP.CFG`` entries of a trajectory run, the settings ``hyts_std``
+#: reads that runtraj lets a config set. The rest of ``SETUP.CFG`` is the
+#: dispersion model's, and is not written.
+TRAJECTORY_SETUP_SETTINGS = (
+    "delt",
+    "tratio",
+    "mgmin",
+    "khmax",
+    "k10m",
+    "kmixd",
+    "kmix0",
+    "tout",
+    *TRAJECTORY_ONLY_SETTINGS,
+    "wbbh",
+    "wbwf",
+    "wbwr",
+)
+
+#: Every setting a trajectory run records: its mode, what goes to
+#: ``CONTROL``, and :data:`TRAJECTORY_SETUP_SETTINGS`. A setting of the
+#: other modes, such as ``numpar``, is neither written nor recorded, so a
+#: ``hysplit`` block that sets it for its particle variants serves a
+#: trajectory variant too.
+TRAJECTORY_SETTINGS = (
+    "mode",
+    "n_hours",
+    "w_option",
+    "z_top",
+    *TRAJECTORY_SETUP_SETTINGS,
+)
+
+#: ``SETUP.CFG`` entries written in every run of the trajectory mode:
+#: heights above ground (``KAGL=1``), as ``zagl`` is in the particle table.
+FIXED_TRAJECTORY_SETUP: dict[str, Any] = {"kagl": 1}
+
+#: The defaults of ``hyts_std`` that differ from the dispersion model's,
+#: which a trajectory config gets where it sets none: an output row every
+#: hour, and no minimum mixed-layer depth.
+TRAJECTORY_DEFAULTS: dict[str, Any] = {"tout": 60, "kmix0": 0}
+
+#: Settings of ``hyts_std`` that runtraj fixes in the trajectory mode, with
+#: the value each must have when a config sets it, and why.
+TRAJECTORY_FIXED = {
+    "kagl": (
+        1,
+        "runtraj writes KAGL=1, so zagl is the height above ground; set "
+        "tm_terr: 1 for the terrain height (zsfc), and add it for heights "
+        "above sea level",
+    ),
+    "nstr": (
+        0,
+        "a trajectory starts at each release's time; add releases to start "
+        "trajectories at more times",
+    ),
+    "nver": (0, "runtraj does not read the file of a run that splits trajectories"),
+}
 
 #: The ``CPACK`` values whose concentration file runtraj reads: 0 every cell,
 #: 1 and 3 only the cells that are not zero (written the same way).
@@ -328,6 +405,19 @@ class HysplitConfig(TransportConfig):
     concentration`` are refused. A particles-mode run
     records no ``mode``, ``pollutants`` or ``grids``, so its settings
     folder is the one it had before the mode existed.
+
+    ``trajectory`` runs HYSPLIT's trajectory program, ``hyts_std``, which
+    follows one air parcel from each release location with the mean wind
+    and no turbulence, and gives the trajectory table
+    (:mod:`runtraj.trajectories`). It reads few settings
+    (:data:`TRAJECTORY_SETTINGS`): the run's length, vertical motion and
+    top, ``tout``, the ``tm_`` settings that add a column each, and a
+    handful ``hyts_std`` shares with ``hycs_std``. Every other setting,
+    such as ``numpar``, is left out of a trajectory run, neither written
+    nor recorded. ``tout`` is 60 and ``kmix0`` is 0 unless set, the
+    defaults of ``hyts_std`` (:data:`TRAJECTORY_DEFAULTS`). Heights are
+    always above ground (``KAGL=1``), and ``realizations`` above 1 are
+    refused, since nothing in a trajectory run is random.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -337,12 +427,14 @@ class HysplitConfig(TransportConfig):
     #: table.
     UNRECORDED: ClassVar[frozenset[str]] = frozenset({"directory"})
 
-    mode: Literal["particles", "concentration"] = Field(
+    mode: Literal["particles", "concentration", "trajectory"] = Field(
         "particles",
         description=(
-            "What HYSPLIT makes: ``particles``, the particle table, or "
+            "What HYSPLIT makes: ``particles``, the particle table; "
             "``concentration``, grids of each pollutant's concentration "
-            "(``grids`` and ``pollutants``)."
+            "(``grids`` and ``pollutants``); or ``trajectory``, the "
+            "trajectory table, from HYSPLIT's trajectory program "
+            "``hyts_std``."
         ),
     )
     pollutants: list[Pollutant] = Field(
@@ -558,7 +650,9 @@ class HysplitConfig(TransportConfig):
         0,
         description=(
             "Trajectory heights above ground (1) or above sea level (0). "
-            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``. "
+            "In ``mode: trajectory`` runtraj always writes 1, and refuses "
+            "another value."
         ),
     )
     kbls: int = Field(
@@ -595,7 +689,10 @@ class HysplitConfig(TransportConfig):
     )
     kmix0: int = Field(
         150,
-        description="Minimum mixed-layer depth, in meters.",
+        description=(
+            "Minimum mixed-layer depth, in meters. 0 by default in ``mode: "
+            "trajectory``, as in ``hyts_std``."
+        ),
     )
     kmixd: int | None = Field(
         None,
@@ -723,7 +820,9 @@ class HysplitConfig(TransportConfig):
         0,
         description=(
             "Trajectory restart interval, in hours. "
-            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``. "
+            "Refused in ``mode: trajectory``, where each release starts its "
+            "own trajectories."
         ),
     )
     nturb: int = Field(
@@ -734,7 +833,8 @@ class HysplitConfig(TransportConfig):
         0,
         description=(
             "Trajectory vertical split number. "
-            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``. "
+            "Refused in ``mode: trajectory``."
         ),
     )
     outdt: int = Field(
@@ -809,9 +909,75 @@ class HysplitConfig(TransportConfig):
     )
     tout: int = Field(
         0,
+        ge=0,
         description=(
-            "Trajectory output interval, in minutes. "
-            "Read only by HYSPLIT's trajectory model, not by ``hycs_std``."
+            "Trajectory output interval, in minutes: the time between the "
+            "rows of a trajectory. Read only in ``mode: trajectory``, where "
+            "it is 60 by default, and under an hour must divide 60 (HYSPLIT "
+            "lowers any other to one that does)."
+        ),
+    )
+    tm_tpot: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the potential temperature along each trajectory (1), as "
+            "``tpot``, in K. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_tamb: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the air temperature along each trajectory (1), as "
+            "``temp``, in K. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_rain: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the rainfall along each trajectory (1), as ``rain``, in "
+            "mm per hour. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_mixd: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the mixed-layer depth along each trajectory (1), as "
+            "``mlht``, in m. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_relh: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the relative humidity along each trajectory (1), as "
+            "``relh``, in percent. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_sphu: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the specific humidity along each trajectory (1), as "
+            "``sphu``, in g/kg. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_mixr: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the water vapor mixing ratio along each trajectory (1), "
+            "as ``mixr``, in g/kg. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_terr: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the terrain height along each trajectory (1), as "
+            "``zsfc``, in m above sea level. In ``mode: trajectory`` only."
+        ),
+    )
+    tm_dswf: Literal[0, 1] = Field(
+        0,
+        description=(
+            "Write the downward shortwave flux along each trajectory (1), "
+            "as ``dswf``, in W/m2. In ``mode: trajectory`` only."
         ),
     )
     tratio: float = Field(
@@ -962,17 +1128,36 @@ class HysplitConfig(TransportConfig):
             return value[0]
         return value
 
+    @model_validator(mode="before")
+    @classmethod
+    def _trajectory_defaults(cls, data: Any) -> Any:
+        """Give a trajectory config the defaults of ``hyts_std`` where it sets none (:data:`TRAJECTORY_DEFAULTS`)."""
+        if isinstance(data, dict) and data.get("mode") == "trajectory":
+            return {**TRAJECTORY_DEFAULTS, **data}
+        return data
+
     @model_validator(mode="after")
     def _validate_mode(self) -> Self:
-        """Refuse pollutants and grids outside the concentration mode, and a concentration run without a pollutant or a grid."""
-        if self.mode == "particles":
+        """Refuse the settings of another mode, a concentration run without a pollutant or a grid, and a trajectory run HYSPLIT would change."""
+        if self.mode != "trajectory":
+            used = [n for n in TRAJECTORY_ONLY_SETTINGS if getattr(self, n)]
+            if used:
+                raise ValueError(
+                    f"{', '.join(used)} are settings of HYSPLIT's mode: "
+                    f"trajectory, and this config's mode is {self.mode}. Set "
+                    "mode: trajectory, or leave them out."
+                )
+        if self.mode != "concentration":
             used = [n for n in CONCENTRATION_SETTINGS if getattr(self, n)]
             if used:
                 raise ValueError(
                     f"{', '.join(used)} are settings of HYSPLIT's mode: "
-                    "concentration, and this config's mode is particles. Set "
+                    f"concentration, and this config's mode is {self.mode}. Set "
                     "mode: concentration, or leave them out."
                 )
+        if self.mode == "trajectory":
+            self._validate_trajectory()
+        if self.mode != "concentration":
             return self
         for name in CONCENTRATION_SETTINGS:
             records = getattr(self, name)
@@ -993,22 +1178,43 @@ class HysplitConfig(TransportConfig):
             )
         return self
 
+    def _validate_trajectory(self) -> None:
+        """Refuse a trajectory config whose ``tout`` HYSPLIT would lower, or that sets what runtraj fixes."""
+        tout = self.tout
+        if tout < 1 or (tout < 60 and 60 % tout):
+            fits = [m for m in (1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30) if m < tout]
+            raise ValueError(
+                f"tout={tout}: in mode: trajectory the output interval is 1 "
+                "minute or more, and under an hour it must divide 60, or "
+                f"HYSPLIT lowers it (to {fits[-1] if fits else 1}). Use one "
+                "of 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, or 60 or more."
+            )
+        for name, (value, why) in TRAJECTORY_FIXED.items():
+            if name in self.model_fields_set and getattr(self, name) != value:
+                raise ValueError(
+                    f"{name}={getattr(self, name)} is not a setting of mode: "
+                    f"trajectory: {why}. Leave {name} out."
+                )
+
     def settings(self) -> dict[str, Any]:
         """
         Return what a run records of this config: the settings of its mode.
 
-        A particles-mode record has no ``mode``, ``pollutants`` or
-        ``grids``, so it is the record (and the settings folder) a run had
-        before the mode existed. A concentration-mode record has no
-        :data:`PARTICLES_SETTINGS`.
+        A particles-mode record has no ``mode``, ``pollutants``, ``grids``
+        or ``tm_`` setting, so it is the record (and the settings folder) a
+        run had before the modes existed. A concentration-mode record has
+        no :data:`PARTICLES_SETTINGS`, and a trajectory-mode record only
+        :data:`TRAJECTORY_SETTINGS`.
         """
         record = super().settings()
+        if self.mode == "trajectory":
+            return {name: record[name] for name in TRAJECTORY_SETTINGS}
         drop = (
             ("mode", *CONCENTRATION_SETTINGS)
             if self.mode == "particles"
             else PARTICLES_SETTINGS
         )
-        for name in drop:
+        for name in (*drop, *TRAJECTORY_ONLY_SETTINGS):
             record.pop(name, None)
         return record
 
@@ -1129,9 +1335,15 @@ class HysplitConfig(TransportConfig):
         ------
         ValueError
             If *n* is more than one and the runs would repeat one another:
-            only ``krand=4`` (HYSPLIT seeds each run from the clock) and
+            a trajectory run draws no random numbers, and otherwise only ``krand=4`` (HYSPLIT seeds each run from the clock) and
             ``krand=2`` with a seed give each realization its own draws.
         """
+        if n > 1 and self.mode == "trajectory":
+            raise ValueError(
+                f"realizations={n} with mode: trajectory would run the same "
+                "trajectories each time: hyts_std draws no random numbers. "
+                "Leave realizations out."
+            )
         if n > 1 and not (
             self.krand == 4 or (self.krand == 2 and self.seed is not None)
         ):
@@ -1150,6 +1362,13 @@ __all__ = [
     "CPACK_READ",
     "FIXED_CONCENTRATION_SETUP",
     "FIXED_SETUP",
+    "FIXED_TRAJECTORY_SETUP",
+    "TRAJECTORY_DEFAULTS",
+    "TRAJECTORY_DIAGNOSTICS",
+    "TRAJECTORY_FIXED",
+    "TRAJECTORY_ONLY_SETTINGS",
+    "TRAJECTORY_SETTINGS",
+    "TRAJECTORY_SETUP_SETTINGS",
     "PARTICLES_SETTINGS",
     "SAMPLING_TYPES",
     "ConcentrationGrid",

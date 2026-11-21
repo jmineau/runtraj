@@ -344,5 +344,33 @@ class Simulation:
         """
         return self._read("concentration")
 
+    @cached_property
+    def trajectories(self) -> pd.DataFrame:
+        """
+        The trajectory table, one row per trajectory per output time (:mod:`runtraj.trajectories`).
+
+        For a variant that makes trajectories, such as HYSPLIT's ``mode:
+        trajectory``. Read from the output directory on first access and
+        kept. Check :attr:`has_result` first when the run may not have
+        finished.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the result has not been written yet, or the variant makes
+            another type of result.
+
+        Examples
+        --------
+        >>> sim.trajectories.groupby("trajectory")["zagl"].max()  # doctest: +SKIP
+        """
+        path = self.path("trajectories")
+        if path is None or not path.exists():
+            made = self.variant.result
+            if made != "trajectories":
+                raise FileNotFoundError(f"{self} makes {made}, not trajectories.")
+            raise FileNotFoundError(f"{self} has no trajectories yet.")
+        return result_type("trajectories").read(path)
+
 
 __all__ = ["Simulation"]

@@ -143,6 +143,7 @@ layers = [
     "stages",
     "identity : meteorology : models",
     "results",
+    "trajectories",
     "particles | concentration",
     "releases : visualization",
     "transforms",

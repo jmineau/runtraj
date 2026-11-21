@@ -34,7 +34,16 @@ REPEATED_LOCATION = (
 )
 
 
-def check_releases(releases: pd.DataFrame) -> pd.DataFrame:
+#: Why HYSPLIT's trajectory program cannot run a column release.
+COLUMN_TRAJECTORY = (
+    "HYSPLIT's trajectory mode cannot run a ColumnRelease: a column is a "
+    "line source of particles, and hyts_std follows one trajectory from "
+    "each location. Use a PointRelease at each height (distinct group), or "
+    "a MultiPointRelease."
+)
+
+
+def check_releases(releases: pd.DataFrame, trajectory: bool = False) -> pd.DataFrame:
     """
     Return the releases HYSPLIT cannot run, one row each, with ``check``, ``release`` and ``message``.
 
@@ -43,7 +52,22 @@ def check_releases(releases: pd.DataFrame) -> pd.DataFrame:
     of its points share a horizontal location: HYSPLIT joins consecutive
     release locations at one latitude and longitude, to 5 decimal places,
     into a vertical line source and releases only from the last pair.
+
+    With *trajectory*, for ``hyts_std``, a column release is refused
+    instead: every location starts a trajectory of its own, so a
+    multipoint release may repeat a location, and there is no line source
+    for a column.
     """
+    if trajectory:
+        columns = pd.unique(releases.loc[releases["kind"] == "column", "release"])
+        return pd.DataFrame(
+            {
+                "check": "release_refused",
+                "release": columns,
+                "message": COLUMN_TRAJECTORY,
+            },
+            columns=["check", "release", "message"],
+        )
     multi = releases[releases["kind"] == "multipoint"]
     repeated = _repeated(multi["release"], multi["longitude"], multi["latitude"])
     bad = pd.unique(multi["release"].to_numpy()[repeated])
