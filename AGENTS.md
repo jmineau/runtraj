@@ -188,7 +188,8 @@ in `tests.yml`:
   `RUNTRAJ_TEST_FETCH_MET=1` (downloads seven 6 h blocks, 23.9 GB in all, and keeps
   211 MB in the ignored `tests/met_cache/`); otherwise they skip.
   The trajectory mode's also need a `hyts_std` on `PATH` (NOAA's public build has one) and skip without.
-  CI has no HYSPLIT: it replays the runs recorded in `tests/recorded/hysplit/<version>/`
+  CI has no HYSPLIT: it replays the runs recorded in `tests/recorded/hysplit/<version>/`,
+  and the docs build replays those of 5.1.0 (`just replay-folder`)
   (`just test-replay 5.1.0`, `5.4.2`; `tests/fixtures/replay.py`). A change to what
   runtraj gives HYSPLIT fails there until someone with the builds runs `just record`
   (CONTRIBUTING.md, "Testing against real HYSPLIT").

@@ -2,6 +2,9 @@
 
 set positional-arguments
 
+# The HYSPLIT version the docs build replays (the oldest recorded)
+docs_version := "5.1.0"
+
 # Unit tests only: the integration tests need met files and HYSPLIT, or its recorded runs (AGENTS.md, Tests).
 unit := "not integration"
 
@@ -61,7 +64,7 @@ test-real *versions:
         PATH="$build/exec:$PATH" uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup
     done 3<<< "$builds"
 
-# Record the integration tests' runs on each build in hysplit-builds.toml (or the VERSIONS given), replacing tests/recorded/hysplit/<version>/
+# Record the integration tests' runs, and for 5.1.0 the docs build's, on each build in hysplit-builds.toml (or the VERSIONS given), replacing tests/recorded/hysplit/<version>/
 record *versions:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -73,6 +76,13 @@ record *versions:
         rm -rf "$cases"
         uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup \
             --hysplit-record "$build" --hysplit-cases "$cases"
+        if [ "$version" = "{{docs_version}}" ]; then
+            # The docs build replays this version in CI: its runs join the tests' cases.
+            folder="$(mktemp -d)"
+            exec_dir="$(uv run python tests/fixtures/replay.py folder "$folder" --cases "$cases" --record "$build")"
+            PATH="$exec_dir:$PATH" RUNTRAJ_TEST_MET_DIR="$met" just build-docs
+            rm -rf "$folder"
+        fi
         uv run python tests/fixtures/replay.py summary "$cases" --record "$build" --met "$met"
     done 3<<< "$builds"
 

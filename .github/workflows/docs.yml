@@ -48,9 +48,10 @@ jobs:
       - name: Install
         run: uv sync --locked
 
-      # The pages that run a simulation need a hycs_std.
-      - name: Install HYSPLIT
-        run: .github/scripts/install_hysplit.sh
+      # The pages that run a simulation get a hycs_std that replays the runs
+      # recorded on HYSPLIT 5.1.0 (tests/recorded/hysplit/), as the tests do.
+      - name: Replay HYSPLIT
+        run: uv run just replay-folder 5.1.0 "$RUNNER_TEMP/hysplit" >> "$GITHUB_PATH"
 
       # The Getting Started page runs a real simulation on the met files the
       # tests cache: the same cache and key as tests.yml.

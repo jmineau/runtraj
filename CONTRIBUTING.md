@@ -28,7 +28,8 @@ relies on.
    `just test-replay 5.4.2` needs no HYSPLIT
    ([Testing against real HYSPLIT](#testing-against-real-hysplit)). Without
    either, those tests are skipped. The docs build needs a HYSPLIT folder
-   on `PATH` (CI's is `.github/scripts/install_hysplit.sh`).
+   on `PATH` too: `just replay-folder 5.1.0 DEST` makes one that replays the
+   recorded runs.
 
 ## Making a change
 
@@ -76,8 +77,8 @@ is compared as `<met>/`, so cases replay on any machine with the test met
 files. CI runs it for each version, on Linux and macOS. `just replay-folder VERSION DEST` makes
 such a folder for anything else; put the `exec/` it prints first on `PATH`.
 The Kubernetes test replays its own cases, `tests/recorded/kubernetes/5.1.0/`
-(`tests/kubernetes/README.md`). The docs build still runs a v5.1.0 `hycs_std`,
-which `.github/scripts/install_hysplit.sh` downloads.
+(`tests/kubernetes/README.md`). The docs build replays 5.1.0 the same way,
+with the runs of its pages recorded beside the tests'.
 
 **When a replay fails.** Inputs no case has fail the run, and the test session
 lists them at its end ("HYSPLIT runs with no recording"), kept in
@@ -111,7 +112,8 @@ just record-kubernetes  # the Kubernetes test's runs, on 5.1.0, in tests/recorde
 ```
 
 `just record` runs the integration tests on the build with a folder whose
-programs run the real one and save each call, then writes `recorded.yaml`. A
+programs run the real one and save each call (for 5.1.0, the docs build too),
+then writes `recorded.yaml`. A
 case leaves out the files runtraj never reads (`NOT_RECORDED` in
 `tests/fixtures/replay.py`, `PARTICLE.DAT` the largest), and the rest are
 compressed with xz. Commit the cases with the

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Install a Linux HYSPLIT as a HYSPLIT folder: /opt/hysplit/exec/hycs_std and
 # the four data tables in /opt/hysplit/bdyfiles/, with hycs_std on PATH.
-# runtraj includes no HYSPLIT, so the docs build takes the v5.1.0 build that
-# the repository below publishes, at the commit below. The integration tests
-# and the Kubernetes test replay recorded runs instead (CONTRIBUTING.md,
-# "Testing against real HYSPLIT"); the docs build does not yet.
+# runtraj includes no HYSPLIT, so this takes the v5.1.0 build that the
+# repository below publishes, at the commit below, for the Kubernetes guide
+# (docs/guides/kubernetes_setup.rst). CI does not use it: the tests, the docs
+# build and the Kubernetes test replay recorded runs (CONTRIBUTING.md,
+# "Testing against real HYSPLIT").
 set -euo pipefail
 sha="278b1ef6d542efd21c6ccab2a85b796acd9812a6"
 repo="uataq/stilt"

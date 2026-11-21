@@ -100,7 +100,7 @@ def sample_project() -> Path:
             str(project),
             releases=releases,
             mets={"hrrr": met()},
-            models={"hysplit": {"n_hours": -24, "numpar": 200, "krand": 2, "seed": 42}},
+            models={"hysplit": {"n_hours": -24, "numpar": 100, "krand": 2, "seed": 42}},
             variants={"hrrr": {}},
         ).run()
         marker.touch()
