@@ -13,6 +13,7 @@ import datetime as dt
 
 import pandas as pd
 import pytest
+import xarray as xr
 
 import runtraj
 from runtraj import ColumnRelease, MultiPointRelease, PointRelease, Project, models
@@ -299,10 +300,10 @@ class _BatchedRefusesLate(_RefusesLate):
         """Run each release as the toy does, in one table with a release column."""
         self.given = [str(r.id) for r in releases]
         tables = [
-            self.run(r, config, met, w).particles.assign(release=str(r.id))
+            self.run(r, config, met, w).result.assign(release=str(r.id))
             for r, w in zip(releases, windows, strict=True)
         ]
-        return ModelRun(particles=pd.concat(tables, ignore_index=True))
+        return ModelRun(result=pd.concat(tables, ignore_index=True))
 
 
 def test_the_core_refuses_a_release_the_model_lists_before_it_runs(monkeypatch):
@@ -326,6 +327,110 @@ def test_a_batched_model_is_not_given_a_release_it_refuses(monkeypatch):
     assert model.given == [noon.id]
     assert isinstance(results[noon.id], models.ModelRun)
     assert results[late.id].reason == "RELEASE_REFUSED"
+
+
+# ---------------------------------------------------------------------------
+# A second type of result: the toy's counts, a concentration result.
+# ---------------------------------------------------------------------------
+
+
+def _two_types(tmp_path, **settings) -> Project:
+    """A project with a variant of particles and one of counts on a grid."""
+    return _project(
+        tmp_path, variants={"toy": {}, "grid": {"counts": True}}, **settings
+    )
+
+
+def test_a_concentration_variant_runs_beside_a_particles_one(tmp_path):
+    project = _two_types(tmp_path)
+    assert project.variants["grid"].result == "concentration"
+    _run(project)
+
+    status = project.status()
+    assert (status["state"] == "complete").all()
+    by_variant = status.set_index("variant")
+    # A column per type, NA where the variant does not make it.
+    assert by_variant.loc["toy", "particles"].all()
+    assert by_variant.loc["grid", "particles"].isna().all()
+    assert by_variant.loc["grid", "concentration"].all()
+    assert by_variant.loc["toy", "concentration"].isna().all()
+    files = sorted((project.output.directory / "concentration").rglob("*.nc"))
+    assert len(files) == 2
+    assert project.output.kinds() == ["particles", "concentration"]
+
+
+def test_a_concentration_result_reads_back_as_the_model_made_it(tmp_path):
+    project = _two_types(tmp_path)
+    _run(project)
+
+    results = project.concentration()
+    assert [key[1] for key in results] == ["grid", "grid"]
+    tree = next(iter(results.values()))
+    cells = tree["cells"].to_dataset()
+    # Every one of the toy's 4 particles is counted once.
+    assert float(cells["TOY"].sum()) == 4
+    assert tree.attrs["release"] == next(iter(results))[0]
+    sim = project.simulation(project.releases["release"].iloc[0], "grid")
+    assert sim.has_result and not sim.has_particles
+    assert sim.result_path.suffix == ".nc"
+
+
+def test_each_type_is_read_by_its_own_verb(tmp_path):
+    project = _two_types(tmp_path)
+    _run(project)
+
+    # Unselected, each verb takes the variants of its type.
+    assert set(project.particles()["variant"]) == {"toy"}
+    with pytest.raises(ValueError, match="make no particles"):
+        project.particles(project.simulations)
+    with pytest.raises(ValueError, match="make no concentration"):
+        project.concentration(project.simulations)
+    sim = project.simulation(project.releases["release"].iloc[0], "toy")
+    with pytest.raises(FileNotFoundError, match="makes particles"):
+        sim.concentration  # noqa: B018
+
+
+def test_a_stage_on_a_concentration_variant_is_refused(tmp_path):
+    with pytest.raises(ValueError, match="read particles"):
+        _two_types(tmp_path, stages={"count": {"class": COUNT}})
+    # Left out of that variant, the stage runs on the other.
+    project = _project(
+        tmp_path / "null",
+        variants={"toy": {}, "grid": {"counts": True, "stages": {"count": None}}},
+        stages={"count": {"class": COUNT}},
+    )
+    _run(project)
+    assert (project.status()["state"] == "complete").all()
+
+
+def test_a_concentration_run_that_made_nothing_fails_with_its_type(
+    tmp_path, monkeypatch
+):
+    project = _two_types(tmp_path)
+    monkeypatch.setattr(
+        ToyModel,
+        "run",
+        lambda self, *args, **kwargs: ModelRun(result=xr.DataTree()),
+    )
+    _run(project)
+
+    failed = project.status().set_index("variant").loc["grid"]
+    assert (failed["state"] == "failed").all()
+    assert (failed["stage"] == "concentration").all()
+    assert (failed["reason"] == "NO_CONCENTRATION_DATA").all()
+
+
+def test_run_trajectories_refuses_settings_that_make_no_particles():
+    with pytest.raises(ValueError, match="make concentration"):
+        runtraj.run_trajectories(
+            _release(), {"weather": "hrrr"}, model=TOY, n_hours=2, counts=True
+        )
+
+
+def test_check_model_holds_a_concentration_model_to_its_type():
+    models.check_model(
+        ToyModel(), ToyConfig(n_hours=-2, counts=True), ToyMet(), _release()
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -3832,6 +3832,10 @@ complete = [
     { name = "arlmet", extra = ["archives"] },
     { name = "cartopy" },
     { name = "matplotlib" },
+    { name = "netcdf4" },
+]
+concentration = [
+    { name = "netcdf4" },
 ]
 download = [
     { name = "arlmet", extra = ["archives"] },
@@ -3885,12 +3889,14 @@ requires-dist = [
     { name = "cartopy", marker = "extra == 'visualization'", specifier = ">=0.26" },
     { name = "fsspec", specifier = ">=2024.12.0" },
     { name = "matplotlib", marker = "extra == 'visualization'", specifier = ">=3.7" },
+    { name = "netcdf4", marker = "extra == 'concentration'", specifier = ">=1.6.5" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.1" },
     { name = "pyarrow", specifier = ">=14.0" },
     { name = "pydantic", specifier = ">=2.5.3" },
     { name = "pyproj", specifier = ">=3.5" },
     { name = "pyyaml", specifier = ">=6.0" },
+    { name = "runtraj", extras = ["concentration"], marker = "extra == 'complete'" },
     { name = "runtraj", extras = ["download"], marker = "extra == 'complete'" },
     { name = "runtraj", extras = ["visualization"], marker = "extra == 'complete'" },
     { name = "scipy", specifier = ">=1.10" },
@@ -3899,7 +3905,7 @@ requires-dist = [
     { name = "universal-pathlib", specifier = ">=0.3.0" },
     { name = "xarray", specifier = ">=2024.10.0" },
 ]
-provides-extras = ["visualization", "download", "complete"]
+provides-extras = ["visualization", "download", "concentration", "complete"]
 
 [package.metadata.requires-dev]
 dev = [

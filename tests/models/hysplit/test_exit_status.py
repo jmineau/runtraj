@@ -116,7 +116,7 @@ def test_a_hycs_std_that_exits_0_with_the_full_run_is_complete(tmp_path):
 
     run = _model_run(tmp_path, build, outdt=0)
 
-    assert run.particles["age"].min() == N_HOURS * 60
+    assert run.result["age"].min() == N_HOURS * 60
 
 
 def test_a_hycs_std_that_exits_0_without_output_still_fails_for_that(tmp_path):

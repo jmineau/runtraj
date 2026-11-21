@@ -568,5 +568,5 @@ def test_a_stage_folder_whose_class_is_not_installed_keeps_its_record(
 def test_logs_and_scratch_are_not_kinds(tmp_path, release, model_runs):
     project = _project(tmp_path, release)
     _run(project, release)
-    with pytest.raises(ValueError, match="kind is 'particles' or a stage's name"):
+    with pytest.raises(ValueError, match="kind is a result type .* or a stage's name"):
         project.output.hashes("logs")

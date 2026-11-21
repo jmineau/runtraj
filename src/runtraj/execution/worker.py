@@ -98,8 +98,8 @@ def _failed(sim: Simulation, stage: str, error: Exception) -> str:
     """
     Record why *sim* failed at *stage*, and return one line saying so.
 
-    *stage* is ``particles`` for the transport model run, or the name of
-    the stage that failed. The record goes in the logs of the folder whose
+    *stage* is the variant's result type (``particles``, for most) for the
+    transport model run, or the name of the stage that failed. The record goes in the logs of the folder whose
     result failed (:meth:`runtraj.output.Output.record_failure`): a particles
     failure covers every variant on those particles, a stage's failure
     every variant with that stage's settings on them. ``reason`` is the
@@ -184,7 +184,7 @@ def run_particles(
     timeout: int | None = None,
 ) -> pd.DataFrame:
     """
-    Run the transport model for a simulation and write its particles to the output directory.
+    Run the transport model for a simulation and write its result to the output directory.
 
     The transport model the variant names runs in *workdir*
     (:func:`runtraj.models.run_model`), with the variant's met. Its log is written to the output
@@ -207,14 +207,16 @@ def run_particles(
 
     Returns
     -------
-    pandas.DataFrame
-        The particles, also written to the output directory.
+    pandas.DataFrame or xarray.DataTree
+        The result, of the variant's type (the particles, for most), also
+        written to the output directory.
 
     Raises
     ------
     SimulationError
         As the transport model raises it (with a ``reason``), or with
-        ``reason`` ``NO_PARTICLE_DATA`` when the model wrote no particles.
+        ``reason`` ``NO_PARTICLE_DATA`` when the model wrote no particles
+        (``NO_CONCENTRATION_DATA`` for a concentration result).
         :class:`~runtraj.exceptions.MeteorologyError` when the met files are
         missing.
     """
@@ -241,16 +243,16 @@ def run_particles(
             timeout=timeout,
         )
         log = result.log
-        output.write_particles(
+        output.write_result(
             sim.variant,
             sim.release,
-            result.particles,
+            result.result,
             result.met_files,
             sim.realization,
         )
         succeeded = True
         ended = True
-        return result.particles
+        return result.result
     except SimulationError as error:
         log = error.log
         ended = True
@@ -343,7 +345,7 @@ def run_particles_batch(
             # error keeps the started line unless the error carries a log.
             if log or isinstance(error, SimulationError):
                 _log_end(sim, log)
-            failed[sim.release.id] = _failed(sim, "particles", error)
+            failed[sim.release.id] = _failed(sim, sim.variant.result, error)
         return {}, failed
     written: dict[str, pd.DataFrame] = {}
     failed = {}
@@ -352,17 +354,17 @@ def run_particles_batch(
         result = results[rid]
         _log_end(sim, result.log)
         if isinstance(result, SimulationError):
-            failed[rid] = _failed(sim, "particles", result)
+            failed[rid] = _failed(sim, sim.variant.result, result)
             continue
-        sim.output.write_particles(
+        sim.output.write_result(
             sim.variant,
             sim.release,
-            result.particles,
+            result.result,
             result.met_files,
             sim.realization,
         )
-        _succeeded(sim, "particles")
-        written[rid] = result.particles
+        _succeeded(sim, sim.variant.result)
+        written[rid] = result.result
     return written, failed
 
 
@@ -612,7 +614,7 @@ def _run_batched(
         if not _is_batched(project, names[0]):
             continue
         firsts = [project.simulation(rid, names[0], k) for rid in release_ids]
-        todo = [s for s in firsts if not (skip_existing and s.has_particles)]
+        todo = [s for s in firsts if not (skip_existing and s.has_result)]
         written: dict[str, pd.DataFrame] = {}
         if todo:
             written, failed = run_particles_batch(todo, timeout=execution.timeout)
@@ -651,19 +653,22 @@ def _run_group(
 ) -> list[str]:
     """Run the simulations of one release that share particles: the transport model at most once, then each variant's stages."""
     first = sims[0]
+    made = first.variant.result
     particles: pd.DataFrame | None = None
-    rerun = not (skip_existing and first.has_particles)
+    rerun = not (skip_existing and first.has_result)
     if rerun:
         try:
-            particles = run_particles(
+            result = run_particles(
                 first,
                 workdir=_new_workdir(compute_root, first),
                 keep_workdir=execution.keep_workdir,
                 timeout=execution.timeout,
             )
         except Exception as error:
-            return [_failed(first, "particles", error)]
-        _succeeded(first, "particles")
+            return [_failed(first, made, error)]
+        _succeeded(first, made)
+        if made == "particles":
+            particles = result  # the stages read them in memory
     return run_stages(sims, particles, remade=rerun, skip_existing=skip_existing)
 
 

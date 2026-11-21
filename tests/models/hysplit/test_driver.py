@@ -602,7 +602,7 @@ def test_a_run_whose_particles_left_the_domain_early_is_complete(
 
     run = run_model("hysplit", point_release, _config(), met, tmp_path / "run")
 
-    assert run.particles["age"].min() == -13 * 60
+    assert run.result["age"].min() == -13 * 60
 
 
 def test_run_keeps_a_run_that_reaches_the_end_past_a_damaged_met_file(
@@ -614,7 +614,7 @@ def test_run_keeps_a_run_that_reaches_the_end_past_a_damaged_met_file(
         rows=_ending_at(24 * 60),
     )
 
-    assert _run(tmp_path, point_release).particles["age"].min() == -24 * 60
+    assert _run(tmp_path, point_release).result["age"].min() == -24 * 60
 
 
 def test_run_leaves_an_empty_particle_file_to_the_caller(
@@ -626,7 +626,7 @@ def test_run_leaves_an_empty_particle_file_to_the_caller(
         rows=[],
     )
 
-    assert _run(tmp_path, point_release).particles.empty
+    assert _run(tmp_path, point_release).result.empty
 
 
 def test_run_leaves_particles_that_stop_early_to_the_caller(
@@ -635,7 +635,7 @@ def test_run_leaves_particles_that_stop_early_to_the_caller(
     """Particles that all left the met's domain before the end are a run."""
     _fake_hysplit(monkeypatch, log="", rows=_ending_at(13 * 60))
 
-    assert _run(tmp_path, point_release).particles["age"].min() == -13 * 60
+    assert _run(tmp_path, point_release).result["age"].min() == -13 * 60
 
 
 def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
@@ -658,7 +658,7 @@ def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
         tmp_path / "run",
     )
 
-    assert run.particles["zcfx"].eq(2.5).all()
+    assert run.result["zcfx"].eq(2.5).all()
     entries = setup_entries(_config(varsiwant=[*VARS, "zcfx"]))
     assert entries["varsiwant"][-1] == "zcfx"
 
@@ -692,8 +692,8 @@ def test_a_point_release_at_the_puff_limit_is_a_run(
     """From one location HYSPLIT asks for numpar + 1 and keeps numpar, which is harmless."""
     _fake_hysplit(monkeypatch, log="", rows=_ending_at(24 * 60), warning=PUFF_LIMIT)
 
-    assert not _run(tmp_path / "point", point_release).particles.empty
-    assert not _run(tmp_path / "column", column_release).particles.empty
+    assert not _run(tmp_path / "point", point_release).result.empty
+    assert not _run(tmp_path / "column", column_release).result.empty
 
 
 def test_a_multipoint_release_without_the_warning_is_a_run(
@@ -701,7 +701,7 @@ def test_a_multipoint_release_without_the_warning_is_a_run(
 ):
     _fake_hysplit(monkeypatch, log="", rows=_ending_at(24 * 60))
 
-    assert not _run(tmp_path, multipoint_release).particles.empty
+    assert not _run(tmp_path, multipoint_release).result.empty
 
 
 def test_a_perturbed_run_is_one_hycs_std_call_with_winderr(
@@ -720,7 +720,7 @@ def test_a_perturbed_run_is_one_hycs_std_call_with_winderr(
     assert (workdir / "WINDERR").exists()
     assert not (workdir / "ZIERR").exists()
     assert "winderrtf=1" in (workdir / "SETUP.CFG").read_text().lower()
-    assert len(result.particles) == 1
+    assert len(result.result) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -891,7 +891,7 @@ def test_run_does_not_check_where_particles_stopped_when_outdt_is_set(
 
     run = _run(tmp_path, point_release, _config(outdt=60))
 
-    assert run.particles["age"].min() == -360
+    assert run.result["age"].min() == -360
 
 
 def test_met_grid_is_the_grid_of_a_met_file(tmp_path):

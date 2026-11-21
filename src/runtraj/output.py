@@ -2,9 +2,11 @@
 The output directory, where particles and the files of each stage are kept.
 
 A project's results live in an output directory that several projects can
-share. It has one tree per kind of result, ``particles`` and one named for
-each stage, and inside each a folder per set of settings, in hive form so
-every tree reads as one dataset. Here the stage is PYSTILT's footprint::
+share. It has one tree per kind of result: one per type of result a
+transport model makes (``particles``, or ``concentration``;
+:mod:`runtraj.results`) and one named for each stage. Inside each is a
+folder per set of settings, in hive form so every tree reads as one
+dataset. Here the stage is PYSTILT's footprint::
 
     <output>/
       particles/
@@ -13,6 +15,9 @@ every tree reads as one dataset. Here the stage is PYSTILT's footprint::
           date=2024-07-01/<release>.parquet
         settings=hrrr-err-7be104/        an ensemble: one folder, a partition per realization
           realization=0/date=2024-07-01/<release>.parquet
+      concentration/                     a variant in HYSPLIT's concentration mode
+        settings=conc-5d01aa/
+          date=2024-07-01/<release>.nc
       footprint/
         settings=hrrr-93278c/            variant name + short hash of transport + stage settings
           _settings.yaml                 names the particles folder it was made from
@@ -29,20 +34,24 @@ A folder is found by the hash of its settings, so two projects that run the
 same settings share one folder, and a changed setting lands in a new folder
 beside the old one instead of overwriting it. ``pyarrow.dataset``, DuckDB,
 polars, and R's arrow read ``settings`` and ``date`` as columns of the whole
-tree. Particles are one Parquet file per release. A stage writes its own
+tree. Particles are one Parquet file per release, and a concentration
+result one NetCDF file. A stage writes its own
 file per release, with the extension it declares
 (:attr:`runtraj.stages.Stage.suffix`), at the path this module gives it, and
 this module never looks inside one.
 
-Logs, failure records, and kept workdirs are in trees of their own
+A log, failure record or kept workdir of a transport model run is under
+the name of the folder of the model's result, whatever its type. Logs,
+failure records, and kept workdirs are in trees of their own
 (``logs/``, ``scratch/``) rather than beside the results, so that each
 results tree holds result files only and reads as one dataset. Whether a
 simulation is complete is read from the results trees alone
 (:func:`completed`); the logs only explain the ones that are not.
 
 Start from :class:`Output` and a resolved variant (``project.variants``).
-Every function takes the kind of result, ``"particles"`` or a stage's name,
-and the variant::
+Every function takes the kind of result, ``"particles"`` (or another
+result type, :attr:`runtraj.config.Variant.result`) or a stage's name, and
+the variant::
 
     out = Output("output")
     out.write_particles(variant, release, frame, met_files)
@@ -82,6 +91,7 @@ from runtraj.identity import (
 from runtraj.particles import write_particles
 from runtraj.particles.table import OLD_FILE
 from runtraj.releases import Release, parse_release_id
+from runtraj.results import RESULT_TYPES, result_type, write_result
 from runtraj.stages import get_stage, reads
 
 if TYPE_CHECKING:
@@ -264,7 +274,7 @@ def _read_stage_settings(
 
 # -- the output directory -----------------------------------------------------
 
-#: A kind of result, and the tree it is kept in: ``particles``, or the name of a stage.
+#: A kind of result, and the tree it is kept in: a result type such as ``particles``, or the name of a stage.
 Kind = str
 
 #: The trees of an output directory that hold no results.
@@ -367,7 +377,7 @@ def _differences(
     kind: Kind, record: Mapping[str, Any], variant: Variant, path: Path | UPath
 ) -> str:
     """Return how a folder's stored settings differ from *variant*'s, the first four, ``; ``-joined."""
-    if kind == "particles":
+    if kind in RESULT_TYPES:
         # What can be read here: the met's files or the build may be missing.
         readable = variant.readable_run_settings
         stored = _like(read_run_settings(record["settings"]), readable)
@@ -380,7 +390,7 @@ def _differences(
             str(record.get("class", "")), record["settings"], str(path)
         )
     found = _diff(stored, current)
-    if kind != "particles" and not found:
+    if kind not in RESULT_TYPES and not found:
         return "made from other particles"
     if len(found) > 4:
         found = [*found[:4], f"and {len(found) - 4} more"]
@@ -408,10 +418,23 @@ def _check_realization(variant: Variant, realization: int | None) -> None:
         )
 
 
+def _parquet_only(kind: Kind) -> None:
+    """Raise for a result type whose files are not Parquet, which :meth:`Output.table` and :meth:`Output.read` cannot read."""
+    if kind in RESULT_TYPES and result_type(kind).suffix != ".parquet":
+        raise ValueError(
+            f"{kind} files are not Parquet: read one with "
+            f"runtraj.results.result_type({kind!r}).read(path), or "
+            f"Simulation.{kind}."
+        )
+
+
 def _check_kind(kind: str) -> None:
     """Raise for a kind that names one of the trees that hold no results."""
     if kind in _OTHER_TREES:
-        raise ValueError(f"kind is 'particles' or a stage's name, not {kind!r}.")
+        raise ValueError(
+            f"kind is a result type ({', '.join(RESULT_TYPES)}) or a stage's "
+            f"name, not {kind!r}."
+        )
 
 
 class Output:
@@ -467,18 +490,21 @@ class Output:
 
     def kinds(self) -> list[Kind]:
         """
-        Return the kinds of result the directory holds a tree for: ``particles``, then the others in name order.
+        Return the kinds of result the directory holds a tree for: ``particles``, the other result types, then the stages in name order.
 
         Every tree but ``logs`` and ``scratch`` is a kind, whether or not a
-        stage of that name is installed here.
+        stage of that name is installed here. ``particles`` is always
+        listed, another result type only when its tree exists.
         """
+        names = set(_names(self.directory))
+        made = [t for t in RESULT_TYPES if t == "particles" or t in names]
         trees = sorted(
             name
-            for name in _names(self.directory)
-            if name not in ("particles", *_OTHER_TREES)
+            for name in names
+            if name not in (*RESULT_TYPES, *_OTHER_TREES)
             and not name.startswith((".", "_"))
         )
-        return ["particles", *trees]
+        return [*made, *trees]
 
     def folders(self, variants: Mapping[str, Variant] | None = None) -> pd.DataFrame:
         """
@@ -497,7 +523,7 @@ class Output:
         Returns
         -------
         pandas.DataFrame
-            ``kind`` (``particles`` or a stage's name), ``folder`` (the
+            ``kind`` (a result type such as ``particles``, or a stage's name), ``folder`` (the
             ``settings=`` value), ``name`` (the variant that made it), and
             ``files`` (the result files it holds, every realization of an
             ensemble counted). With *variants*, also ``variant``, the
@@ -557,7 +583,7 @@ class Output:
         """
         path = self._dir(kind, name) / SETTINGS_FILE
         record = _read_yaml(path)
-        if kind == "particles":
+        if kind in RESULT_TYPES:
             return settings_hash(read_run_settings(record["settings"]))
         made_from = record.get("reads")
         if (
@@ -577,10 +603,10 @@ class Output:
 
     @staticmethod
     def _variant_hash(kind: Kind, variant: Variant) -> str | None:
-        """Return the hash that names *variant*'s folder of *kind*, ``None`` for a stage the variant does not use."""
+        """Return the hash that names *variant*'s folder of *kind*, ``None`` for a stage the variant does not use or a result type it does not make."""
         _check_kind(kind)
-        if kind == "particles":
-            return variant.particles_hash
+        if kind in RESULT_TYPES:
+            return variant.particles_hash if kind == variant.result else None
         if kind not in variant.stages:
             return None  # without reading the met or the build for the particles' hash
         return variant.stage_hashes[kind]
@@ -621,13 +647,13 @@ class Output:
                 raise
             if not mine:
                 return None
-            if kind == "particles":
-                return mine[0]
+            if kind in RESULT_TYPES:
+                return mine[0] if kind == variant.result else None
             return variant.stage_hashes_on(mine[0]).get(kind)
 
     def _readable_matches(self, variant: Variant) -> list[tuple[str, str]]:
         """
-        Return ``(hash, name)`` of each particles folder with *variant*'s settings, on what can be read here.
+        Return ``(hash, name)`` of each folder of *variant*'s result type with its settings, on what can be read here.
 
         The settings of :attr:`Variant.readable_run_settings`: without the
         met's when its files cannot be read, and without the build's
@@ -638,8 +664,9 @@ class Output:
         wanted = variant.readable_run_settings
         digest = settings_hash(wanted)
         found = []
-        for folder in _settings_folders(self.directory / "particles"):
-            record = _read_yaml(self._dir("particles", folder) / SETTINGS_FILE)
+        tree = variant.result
+        for folder in _settings_folders(self.directory / tree):
+            record = _read_yaml(self._dir(tree, folder) / SETTINGS_FILE)
             stored = read_run_settings(record["settings"])
             if settings_hash(_like(stored, wanted)) == digest:
                 found.append((settings_hash(stored), record.get("name", "")))
@@ -649,8 +676,9 @@ class Output:
         """
         Return the name of *variant*'s folder of *kind*, or ``None`` when it does not exist.
 
-        A string that is not ``"particles"`` is taken for a stage, and one
-        the variant does not use has no folder.
+        A string that is not a result type is taken for a stage, and one the
+        variant does not use has no folder, as a result type it does not
+        make has none.
         """
         digest = self._lookup_hash(kind, variant)
         if digest is None:
@@ -689,12 +717,17 @@ class Output:
         Raises
         ------
         ValueError
-            If *kind* is a stage the variant does not use.
+            If *kind* is a stage the variant does not use, or a result type
+            it does not make.
         """
         name = self._name(kind, variant)
         if name is not None:
             return name
-        if kind == "particles":
+        if kind in RESULT_TYPES and kind != variant.result:
+            raise ValueError(
+                f"Variant {variant.name!r} makes {variant.result}, not {kind}."
+            )
+        if kind in RESULT_TYPES:
             digest = variant.particles_hash
             record: dict[str, Any] = {
                 "name": variant.name,
@@ -804,8 +837,10 @@ class Output:
 
     @staticmethod
     def _suffix(kind: Kind, variant: Variant) -> str:
-        """Return the extension of *variant*'s files of *kind*: ``.parquet`` for particles, a stage's own for its files."""
-        return ".parquet" if kind == "particles" else variant.stage(kind).suffix
+        """Return the extension of *variant*'s files of *kind*: its result type's (``.parquet`` for particles), or a stage's own."""
+        if kind in RESULT_TYPES:
+            return result_type(kind).suffix
+        return variant.stage(kind).suffix
 
     def read(
         self,
@@ -842,6 +877,7 @@ class Output:
         FileNotFoundError
             If the release has no file, or the variant no folder.
         """
+        _parquet_only(kind)
         path = self.path(kind, variant, release_id, realization)
         if path is None:
             raise FileNotFoundError(
@@ -854,14 +890,14 @@ class Output:
         self, variant: Variant, release_id: str, realization: int | None = None
     ) -> Path | UPath | None:
         """Return where the log of a release's transport model run is kept, or ``None`` before its folder exists."""
-        logs = self._found("particles", "logs", variant, realization)
+        logs = self._found(variant.result, "logs", variant, realization)
         return None if logs is None else _release_file(logs, release_id, ".log")
 
     def kept_workdir(
         self, variant: Variant, release_id: str, realization: int | None = None
     ) -> Path | UPath | None:
         """Return where a release's failed run's working directory is kept, or ``None`` before its folder exists."""
-        kept = self._found("particles", "scratch", variant, realization)
+        kept = self._found(variant.result, "scratch", variant, realization)
         return None if kept is None else kept / _date_dir(release_id) / release_id
 
     # -- many releases' files ----------------------------------------------
@@ -894,15 +930,15 @@ class Output:
         """
         Return the releases whose simulations under *variant* are complete (:func:`completed`).
 
-        Only the releases with particles are looked for in each stage's
-        folder.
+        Only the releases with the model's result are looked for in each
+        stage's folder.
         """
-        particles = self.present("particles", variant, release_ids, realization)
+        made = self.present(variant.result, variant, release_ids, realization)
         stages = [
-            self.present(name, variant, particles, realization)
+            self.present(name, variant, made, realization)
             for name in variant.stage_order
         ]
-        return completed(particles, *stages)
+        return completed(made, *stages)
 
     def table(
         self,
@@ -941,7 +977,8 @@ class Output:
             If a column in *columns* is not in the files.
         """
         _check_kind(kind)
-        nothing = _NO_PARTICLES if kind == "particles" else _NO_STAGE_FILES
+        _parquet_only(kind)
+        nothing = _NO_PARTICLES if kind in RESULT_TYPES else _NO_STAGE_FILES
         folder = self._found(kind, kind, variant, realization)
         if folder is None:
             return nothing
@@ -1099,6 +1136,44 @@ class Output:
             metadata=file_stamp(variant.particles_hash, realization),
         )
 
+    def write_result(
+        self,
+        variant: Variant,
+        release: Release,
+        result: Any,
+        met_files: list[Path],
+        realization: int | None = None,
+    ) -> Path | UPath:
+        """
+        Write a release's result of the type *variant* makes (:attr:`runtraj.config.Variant.result`).
+
+        Particles as :meth:`write_particles` writes them; another type as
+        the type writes its file (:mod:`runtraj.results`), with the same
+        record of the run's settings and the same stamp.
+
+        Raises
+        ------
+        ValueError
+            If *result* is not one of the type, or holds nothing: its file
+            makes the simulation complete.
+        """
+        made = variant.result
+        if made == "particles":
+            return self.write_particles(
+                variant, release, result, met_files, realization
+            )
+        result_type(made).check(result)
+        folder = self._made(made, made, variant, realization)
+        return write_result(
+            made,
+            _release_file(folder, str(release.id), result_type(made).suffix),
+            result,
+            release,
+            variant.run_settings,
+            met_files,
+            metadata=file_stamp(variant.particles_hash, realization),
+        )
+
     def logged(
         self,
         variant: Variant,
@@ -1109,10 +1184,10 @@ class Output:
         Return the releases that have a transport model log for *variant*.
 
         Only the date folders of *release_ids* are listed. A log with no
-        particles and no failure record is a run that started and did not
+        result and no failure record is a run that started and did not
         finish (``interrupted`` in :meth:`runtraj.Project.status`).
         """
-        logs = self._found("particles", "logs", variant, realization)
+        logs = self._found(variant.result, "logs", variant, realization)
         if logs is None:
             return frozenset()
         return frozenset(_list_release_files(logs, ".log", release_ids))
@@ -1125,7 +1200,7 @@ class Output:
         realization: int | None = None,
     ) -> Path | UPath:
         """Write the log of a release's transport model run."""
-        logs = self._made("particles", "logs", variant, realization)
+        logs = self._made(variant.result, "logs", variant, realization)
         path = _release_file(logs, release_id, ".log")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text)
@@ -1146,7 +1221,7 @@ class Output:
         output can be read after the job ends. The files named in
         *leave_out*, at the top of *workdir*, are not copied.
         """
-        scratch = self._made("particles", "scratch", variant, realization)
+        scratch = self._made(variant.result, "scratch", variant, realization)
         kept = scratch / _date_dir(release_id) / release_id
 
         def skip(folder: str, names: list[str]) -> list[str]:

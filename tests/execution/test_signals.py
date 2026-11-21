@@ -114,7 +114,7 @@ class SlowModel:
         )
         exe.chmod(0o755)
         run_hycs_std(workdir)
-        return ModelRun(particles=pd.DataFrame({
+        return ModelRun(result=pd.DataFrame({
             "particle": [1, 2, 1, 2],
             "age": [0, 0, -60, -60],
             "lon": release.longitude,

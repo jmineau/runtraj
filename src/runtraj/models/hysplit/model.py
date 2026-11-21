@@ -327,7 +327,7 @@ class HysplitModel:
             raise
         # The record names the files found for the run: the archive's, or a
         # crop that served it; the crop settings are in the run's settings.
-        return ModelRun(particles=particles, log=_read_log(workdir), met_files=source)
+        return ModelRun(result=particles, log=_read_log(workdir), met_files=source)
 
 
 def _write_inputs(

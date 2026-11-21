@@ -34,6 +34,6 @@ def test_hycs_std_writes_a_column_for_every_name_varsiwant_accepts(tmp_path, met
 
     run = run_model("hysplit", release, config, reference_met(met_dir), tmp_path, 600)
 
-    assert not run.particles.empty
-    assert list(run.particles.columns) == [PARTICLE_COLUMNS.get(n, n) for n in NAMES]
-    assert "zcfx" in run.particles.columns
+    assert not run.result.empty
+    assert list(run.result.columns) == [PARTICLE_COLUMNS.get(n, n) for n in NAMES]
+    assert "zcfx" in run.result.columns

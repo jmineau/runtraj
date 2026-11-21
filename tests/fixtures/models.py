@@ -15,7 +15,11 @@ one differs from HYSPLIT wherever it can:
 - it numbers its particles 10, 20, 30, ... (:data:`PARTICLE_STEP`), not 1 to N;
 - its settings have names of their own (``n_particles``, ``step``) and
   share none of HYSPLIT's;
-- it writes no ``foot``.
+- it writes no ``foot``;
+- with ``counts: true`` it makes a concentration result
+  (:mod:`runtraj.concentration`) instead of particles: the count of its
+  particles on one small grid, its own way, as a model of another package
+  would.
 
 A config names it by import path, ``class: tests.fixtures.models.ToyModel``
 (:data:`TOY`), as it names a model in another package. Like such a model,
@@ -30,6 +34,7 @@ from typing import Any, ClassVar
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 from pydantic import BaseModel, ConfigDict, Field
 
 from runtraj import Release
@@ -59,6 +64,17 @@ class ToyConfig(TransportConfig):
         None,
         description="A note kept out of the run's settings, as a build's folder is.",
     )
+    counts: bool = Field(
+        False,
+        description="Make a concentration result, the particles counted on a grid, in place of particles.",
+    )
+
+    def settings(self) -> dict[str, Any]:
+        """Return the run's record: a particles run's names no ``counts``, as HYSPLIT's names no ``mode``."""
+        record = super().settings()
+        if not self.counts:
+            del record["counts"]
+        return record
 
 
 class ToyMet(BaseModel):
@@ -90,6 +106,10 @@ class ToyModel:
     config_class = ToyConfig
     met_config_class = ToyMet
     needs_workdir = False
+
+    def result(self, config: ToyConfig) -> str:
+        """The toy makes particles, or with ``counts`` a concentration result."""
+        return "concentration" if config.counts else "particles"
 
     def sha256(self, config: ToyConfig) -> None:
         """The toy runs no executable."""
@@ -129,7 +149,9 @@ class ToyModel:
                 "zagl": np.tile(alt, len(ages)) + RISE * hours,
             }
         )
-        return ModelRun(particles=particles)
+        if config.counts:
+            return ModelRun(result=_counted(particles, release))
+        return ModelRun(result=particles)
 
     def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
         """Return where each particle started: its first row, with the drift taken back."""
@@ -145,6 +167,34 @@ class ToyModel:
                 "height": first["zagl"].to_numpy() - RISE * hours,
             }
         )
+
+
+#: The toy's grid: 3 by 3 cells of this size, in degrees, centered on the release.
+CELL = 0.1
+
+
+def _counted(particles: pd.DataFrame, release: Release) -> xr.DataTree:
+    """Return the particles of the last step counted on a 3 by 3 grid at one level, in one sample."""
+    lon0, lat0, _ = release.coords()[0]
+    last = particles[particles["age"].abs() == particles["age"].abs().max()]
+    lats = lat0 + CELL * np.arange(-1, 2)
+    lons = lon0 + CELL * np.arange(-1, 2)
+    i = np.clip(np.round((last["lat"] - lat0) / CELL).astype(int) + 1, 0, 2)
+    j = np.clip(np.round((last["lon"] - lon0) / CELL).astype(int) + 1, 0, 2)
+    counts = np.zeros((1, 1, 3, 3), dtype=np.float32)
+    np.add.at(counts, (0, 0, i.to_numpy(), j.to_numpy()), 1.0)
+    time = pd.Timestamp(release.time)
+    grid = xr.Dataset(
+        {"TOY": (("time", "z", "lat", "lon"), counts)},
+        coords={
+            "time": [time],
+            "time_end": ("time", [time]),
+            "z": [100],
+            "lat": lats,
+            "lon": lons,
+        },
+    )
+    return xr.DataTree.from_dict({"cells": grid})
 
 
 def _starts(

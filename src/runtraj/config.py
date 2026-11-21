@@ -53,6 +53,7 @@ from runtraj.models import (
     TransportConfig,
     get_model,
 )
+from runtraj.results import model_result
 from runtraj.stages import Stage, get_stage, ordered, reads
 
 #: Pattern for variant and met names, which become directory names.
@@ -275,8 +276,25 @@ class Variant:
 
     @cached_property
     def particles_hash(self) -> str:
-        """Hash of :attr:`run_settings`, which finds the particles folder."""
+        """
+        Hash of :attr:`run_settings`, which finds the folder of the transport model's result.
+
+        The particles folder, or the folder of another type of result
+        (:attr:`result`): the name is the particles' for the variants that
+        make them, which are most.
+        """
         return settings_hash(self.run_settings)
+
+    @cached_property
+    def result(self) -> str:
+        """
+        The type of result the variant's transport model makes, such as ``particles`` or ``concentration``.
+
+        The model's ``result`` with the variant's config
+        (:mod:`runtraj.results`), and the name of the tree of the output
+        directory that holds its files.
+        """
+        return model_result(get_model(self.model), self.transport)
 
     def stage(self, name: str) -> Stage:
         """
@@ -712,8 +730,9 @@ class ProjectConfig(BaseModel):
         ------
         ValueError
             If a variant's transport settings are invalid for its model, its
-            realizations would repeat one another, or a stage's settings do
-            not fit the variant's model.
+            realizations would repeat one another, a stage's settings do
+            not fit the variant's model, or the variant has a stage and its
+            model makes a result other than particles, which a stage reads.
         """
         start = None if directory is None else Path(directory)
         mets: dict[tuple[str, str], Any] = {}
@@ -725,6 +744,14 @@ class ProjectConfig(BaseModel):
                 declared.transport,
                 f"Variant {group!r} ({declared.model})",
             )
+            made = model_result(get_model(declared.model), transport)
+            if made != "particles" and declared.stages:
+                names = ", ".join(declared.stages)
+                raise ValueError(
+                    f"Variant {group!r} makes {made}, not particles, and its "
+                    f"stages ({names}) read particles. Give the variant "
+                    f"{names}: null under stages to leave them out of it."
+                )
             stages: dict[str, Any] = {}
             for name, config in declared.stages.items():
                 stage = self._stages[name].stage

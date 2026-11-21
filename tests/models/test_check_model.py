@@ -75,7 +75,7 @@ class _Forward(ToyModel):
 
     def run(self, release, config, met, window, workdir=None, timeout=None):
         run = super().run(release, config, met, window, workdir, timeout)
-        return ModelRun(run.particles.assign(age=run.particles["age"].abs()))
+        return ModelRun(run.result.assign(age=run.result["age"].abs()))
 
 
 class _TooLong(ToyModel):
@@ -83,7 +83,7 @@ class _TooLong(ToyModel):
 
     def run(self, release, config, met, window, workdir=None, timeout=None):
         run = super().run(release, config, met, window, workdir, timeout)
-        return ModelRun(run.particles.assign(age=run.particles["age"] * 2))
+        return ModelRun(run.result.assign(age=run.result["age"] * 2))
 
 
 class _NoReleaseRows(ToyModel):
@@ -93,7 +93,7 @@ class _NoReleaseRows(ToyModel):
 class _NoLon(ToyModel):
     def run(self, release, config, met, window, workdir=None, timeout=None):
         run = super().run(release, config, met, window, workdir, timeout)
-        return ModelRun(run.particles.drop(columns="lon"))
+        return ModelRun(run.result.drop(columns="lon"))
 
 
 @pytest.mark.parametrize(
@@ -121,7 +121,7 @@ def test_a_batched_model_returns_a_release_column():
 
         def run_many(self, releases, config, met, windows, workdir=None, timeout=None):
             runs = [
-                self.run(r, config, met, w).particles.assign(release=str(r.id))
+                self.run(r, config, met, w).result.assign(release=str(r.id))
                 for r, w in zip(releases, windows, strict=True)
             ]
             return ModelRun(pd.concat(runs, ignore_index=True))
@@ -131,7 +131,7 @@ def test_a_batched_model_returns_a_release_column():
     class NoColumn(Batched):
         def run_many(self, *args, **kwargs):
             return ModelRun(
-                super().run_many(*args, **kwargs).particles.drop(columns="release")
+                super().run_many(*args, **kwargs).result.drop(columns="release")
             )
 
     with pytest.raises(SimulationError, match="release column"):
@@ -150,7 +150,7 @@ class _Batched(ToyModel):
 
     def run_many(self, releases, config, met, windows, workdir=None, timeout=None):
         runs = [
-            self.run(r, config, met, w).particles.assign(release=str(r.id))
+            self.run(r, config, met, w).result.assign(release=str(r.id))
             for r, w in zip(releases, windows, strict=True)
         ]
         return ModelRun(pd.concat(runs, ignore_index=True))
@@ -207,19 +207,19 @@ class _IntKeys(ToyModel):
 
 class _Frame(ToyModel):
     def run(self, release, config, met, window, workdir=None, timeout=None):
-        return super().run(release, config, met, window, workdir, timeout).particles
+        return super().run(release, config, met, window, workdir, timeout).result
 
 
 class _ByteLog(ToyModel):
     def run(self, release, config, met, window, workdir=None, timeout=None):
         run = super().run(release, config, met, window, workdir, timeout)
-        return ModelRun(run.particles, log=b"done")
+        return ModelRun(run.result, log=b"done")
 
 
 class _HalfMinutes(ToyModel):
     def run(self, release, config, met, window, workdir=None, timeout=None):
         run = super().run(release, config, met, window, workdir, timeout)
-        return ModelRun(run.particles.assign(age=run.particles["age"] + 0.5))
+        return ModelRun(run.result.assign(age=run.result["age"] + 0.5))
 
 
 class _LosesAParticle(ToyModel):

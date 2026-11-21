@@ -47,10 +47,13 @@ from runtraj.releases.table import (
     releases_from_rows,
     releases_to_csv,
 )
+from runtraj.results import RESULT_TYPES
 from runtraj.simulation import Simulation
 from runtraj.stages import reads
 
 if TYPE_CHECKING:
+    import xarray as xr
+
     from runtraj.visualization import ProjectPlotAccessor
 
 
@@ -675,12 +678,13 @@ class Project:
 
     def _present(self, frame: pd.DataFrame) -> dict[_Key, _Present]:
         """
-        Return, per variant and realization, the selected releases with particles and with each stage's file.
+        Return, per variant and realization, the selected releases with the model's result and with each stage's file.
 
         Read from a listing of the date folders the selection falls in
         (:meth:`runtraj.output.Output.present`), in place of a file check per
         simulation: on a large project the checks are the slow part. A
-        variant has a set for ``particles`` and one for each stage it uses.
+        variant has a set for its result type (``particles``, for most) and
+        one for each stage it uses.
         """
         present: dict[_Key, _Present] = {}
         for name, k, rows in _groups(frame):
@@ -688,7 +692,7 @@ class Project:
             among = set(rows["release"])
             present[(name, k)] = {
                 kind: self.output.present(kind, variant, among, k)
-                for kind in ("particles", *variant.stage_order)
+                for kind in (variant.result, *variant.stage_order)
             }
         return present
 
@@ -717,8 +721,10 @@ class Project:
         Returns
         -------
         pandas.DataFrame
-            The selection with more columns. ``particles``, and one
-            column named for each stage the project has,
+            The selection with more columns. ``particles`` (and a column
+            for each other result type a variant makes, such as
+            ``concentration``), and one column named for each stage the
+            project has,
             are ``True`` when the result exists, ``False`` when it is
             missing, and ``NA`` when the variant does not make it. ``state``
             is ``complete`` when every expected result exists
@@ -726,7 +732,8 @@ class Project:
             run failed, ``interrupted`` when a run of its particles started
             and stopped before it finished (a time limit, preemption, or a
             killed process), and ``pending`` when nothing has run.
-            ``stage`` (``particles``, or the stage that failed), ``reason``,
+            ``stage`` (``particles``, the other result type, or the stage
+            that failed), ``reason``,
             and ``message`` say why a failed simulation failed
             (:attr:`runtraj.simulation.Simulation.failure`), and are ``NA`` for the
             others.
@@ -741,8 +748,12 @@ class Project:
         present = self._present(frame)
         rows = _rows(frame)
         # One column for each kind of result any variant of the project makes.
+        made = {v.result for v in self.variants.values()}
         kinds = dict.fromkeys(
-            ["particles", *(s for v in self.variants.values() for s in v.stage_order)]
+            [
+                *(t for t in RESULT_TYPES if t == "particles" or t in made),
+                *(s for v in self.variants.values() for s in v.stage_order),
+            ]
         )
         has = {
             kind: pd.array(
@@ -783,8 +794,8 @@ class Project:
         """
         Return the failure record of each selected simulation missing a result, by ``(release, variant, realization)``.
 
-        A simulation without particles is explained by its particles'
-        record. One with particles is explained by the record of the first
+        A simulation without the model's result is explained by that
+        result's record. One with it is explained by the record of the first
         stage, in the order they run, that has no file where what it reads
         exists and that has a record (:attr:`runtraj.simulation.Simulation.failure`).
         Only those releases' date folders are listed, and only the records
@@ -799,8 +810,8 @@ class Project:
                 # Where a stage could have run: its inputs are there.
                 inputs = (
                     ()
-                    if kind == "particles"
-                    else ("particles", *reads(variant.stage(kind)))
+                    if kind in RESULT_TYPES
+                    else (variant.result, *reads(variant.stage(kind)))
                 )
                 ready = releases.intersection(*(have[i] for i in inputs))
                 missing = ready - have[kind]
@@ -817,14 +828,15 @@ class Project:
         failed: dict[tuple[str, str, int | None], dict[str, Any]],
     ) -> set[tuple[str, str, int | None]]:
         """
-        Return the selected simulations whose particles run started and did not finish.
+        Return the selected simulations whose transport model run started and did not finish.
 
-        That is a log with no particles and no failure record. Only the
-        date folders of releases without particles are listed.
+        That is a log with no result and no failure record. Only the
+        date folders of releases without a result are listed.
         """
         started: set[tuple[str, str, int | None]] = set()
         for name, k, rows in _groups(frame):
-            missing = set(rows["release"]) - present[(name, k)]["particles"]
+            made = self.variants[name].result
+            missing = set(rows["release"]) - present[(name, k)][made]
             if not missing:
                 continue
             logged = self.output.logged(self.variants[name], missing, k)
@@ -853,7 +865,8 @@ class Project:
         Parameters
         ----------
         sel : DataFrame or mask, optional
-            The simulations, as for :meth:`status`. All of them by default.
+            The simulations, as for :meth:`status`. Every simulation of a
+            variant that makes particles by default.
         columns : list of str, optional
             Only these particle columns, such as ``["particle", "age",
             "lon", "lat", "foot"]``, after ``release``, ``variant``, and
@@ -877,6 +890,12 @@ class Project:
         some 250 MB in memory, so this suits a selection of tens. For a
         whole large project, read the ``particles/`` tree of the output
         directory with pyarrow, DuckDB, or polars instead.
+
+        Raises
+        ------
+        ValueError
+            If a selected variant makes another type of result, such as
+            concentration (:meth:`concentration`).
         """
         first = ["release", "variant", "realization"]
         with_time = columns is None or "time" in columns
@@ -886,6 +905,23 @@ class Project:
             if with_time and "age" not in stored:
                 stored.append("age")
         frame = self._selected(sel)
+        if sel is None:
+            frame = frame.loc[
+                [self.variants[v].result == "particles" for v in frame["variant"]]
+            ]
+        others = sorted(
+            {
+                name
+                for name in frame["variant"].unique()
+                if self.variants[name].result != "particles"
+            }
+        )
+        if others:
+            made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
+            raise ValueError(
+                f"Variants {made} make no particles. Leave them out of the "
+                "selection, and read their results with project.concentration."
+            )
         parts = []
         for name, k, rows in _groups(frame):
             variant = self.variants[name]
@@ -903,6 +939,67 @@ class Project:
         particles = pd.concat(parts, ignore_index=True)
         rest = particles.columns if columns is None else columns
         return particles.loc[:, first + [c for c in rest if c not in first]]
+
+    def concentration(
+        self, sel: Any = None
+    ) -> dict[tuple[str, str, int | None], xr.DataTree]:
+        """
+        Load the concentration result of every selected simulation that has one.
+
+        A result is a tree with a child per grid
+        (:mod:`runtraj.concentration`). The grids of two releases are
+        centered on different places, and so not joined into one: each
+        simulation keeps its own.
+
+        Parameters
+        ----------
+        sel : DataFrame or mask, optional
+            The simulations, as for :meth:`status`. Every simulation of a
+            variant that makes concentration by default.
+
+        Returns
+        -------
+        dict
+            ``{(release, variant, realization): xarray.DataTree}``, in the
+            order of *sel*. Simulations without a result are left out.
+
+        Raises
+        ------
+        ValueError
+            If *sel* names a variant that makes another type of result.
+
+        Examples
+        --------
+        >>> results = project.concentration()  # doctest: +SKIP
+        >>> tree = results[
+        ...     ("202107150130_-111.848_40.766_10", "conc", None)
+        ... ]  # doctest: +SKIP
+        >>> tree["local"]["TEST"].sum("time")  # doctest: +SKIP
+        """
+        frame = self._selected(sel)
+        if sel is None:
+            frame = frame.loc[
+                [self.variants[v].result == "concentration" for v in frame["variant"]]
+            ]
+        others = sorted(
+            {
+                name
+                for name in frame["variant"].unique()
+                if self.variants[name].result != "concentration"
+            }
+        )
+        if others:
+            made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
+            raise ValueError(
+                f"Variants {made} make no concentration. Leave them out of "
+                "the selection."
+            )
+        found: dict[tuple[str, str, int | None], xr.DataTree] = {}
+        present = self._present(frame)
+        for rid, name, k in _rows(frame):
+            if rid in present[(name, k)]["concentration"]:
+                found[(rid, name, k)] = self.simulation(rid, name, k).concentration
+        return found
 
     # -- running ---------------------------------------------------------------
 
@@ -1023,13 +1120,14 @@ class Project:
         return fetch_project(self, self._unrun(sel, skip_existing=skip_existing))
 
     def _unrun(self, sel: Any = None, *, skip_existing: bool = True) -> pd.DataFrame:
-        """Return the rows of the simulations in *sel* whose particles are missing (all of them unless *skip_existing*): the ones a fetch gets met for."""
+        """Return the rows of the simulations in *sel* whose model result is missing (all of them unless *skip_existing*): the ones a fetch gets met for."""
         frame = self._selected(sel)
         if not skip_existing:
             return frame
         present = self._present(frame)
         has = np.array(
-            [r in present[(v, k)]["particles"] for r, v, k in _rows(frame)], dtype=bool
+            [r in present[(v, k)][self.variants[v].result] for r, v, k in _rows(frame)],
+            dtype=bool,
         )
         return frame.loc[~has]
 

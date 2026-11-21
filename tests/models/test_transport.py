@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pandas as pd
 import pytest
 
@@ -144,7 +146,7 @@ def test_run_particles_goes_through_the_model_the_settings_name(
                     "foot": [1e-5],
                 }
             )
-            return ModelRun(particles=particles, met_files=[tmp_path / "met_file"])
+            return ModelRun(result=particles, met_files=[tmp_path / "met_file"])
 
     asked: list[str] = []
     monkeypatch.setattr(
@@ -281,10 +283,13 @@ def test_a_run_keeps_each_column_the_model_wrote_unchanged():
         foot=[1e-5, 2e-5], dens=1.2, samt=1.0, sigw=0.1, tlgr=10.0, mlht=500.0
     )
     run = _finish(
-        ModelRun(particles, met_files=[]), _release(), TransportConfig(n_hours=-24)
+        ModelRun(particles, met_files=[]),
+        _release(),
+        SimpleNamespace(),  # a model with no release_rows and no result
+        TransportConfig(n_hours=-24),
     )
 
-    pd.testing.assert_frame_equal(run.particles, particles)
+    pd.testing.assert_frame_equal(run.result, particles)
 
 
 def test_a_run_adds_no_column_the_model_did_not_write(tmp_path):
@@ -293,8 +298,9 @@ def test_a_run_adds_no_column_the_model_did_not_write(tmp_path):
     run = _finish(
         ModelRun(_positions_only(), log="model log\n", met_files=[tmp_path / "met"]),
         _release(),
+        SimpleNamespace(),
         TransportConfig(n_hours=-24),
     )
 
-    assert list(run.particles.columns) == list(_positions_only().columns)
+    assert list(run.result.columns) == list(_positions_only().columns)
     assert run.log == "model log\n"

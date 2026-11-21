@@ -76,7 +76,7 @@ def _run(
         varsiwant=["time", "indx", "long", "lati", "zagl", "foot", *COLUMNS],
     )
     run = run_model("hysplit", release, config, reference_met(met_dir), workdir, 900)
-    particles = run.particles.copy()
+    particles = run.result.copy()
     particles["time"] = pd.Timestamp(time) + pd.to_timedelta(
         particles["age"], unit="min"
     )
@@ -181,8 +181,8 @@ def test_calc_pbl_height_finds_the_mixed_layer_hysplit_finds(
     run = run_model(
         "hysplit", release, config, reference_met(met_dir), tmp_path / "run", 900
     )
-    hysplit = run.particles.assign(
-        time=pd.Timestamp(time) + pd.to_timedelta(run.particles["age"], unit="min")
+    hysplit = run.result.assign(
+        time=pd.Timestamp(time) + pd.to_timedelta(run.result["age"], unit="min")
     )
 
     ours = np.maximum(calc_pbl_height(hysplit, run.met_files, method=method), KMIX0)

@@ -2,7 +2,8 @@
 The transport model interface.
 
 A transport model turns one release and one set of transport settings into
-a particle table. HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)
+a result: a particle table, or another type of result
+(:mod:`runtraj.results`). HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)
 is the one built in; a model in another package is named by its import
 path. The worker reaches
 a model through :func:`get_model` by the name a run's settings record, so
@@ -34,6 +35,7 @@ from runtraj.particles import (
     write_particles,
 )
 from runtraj.releases import releases_to_frame
+from runtraj.results import model_result, result_type
 
 if TYPE_CHECKING:
     from runtraj.releases import Release
@@ -47,19 +49,21 @@ class ModelRun:
 
     Attributes
     ----------
-    particles : pandas.DataFrame
-        The particle table, one row per particle per time step
-        (:data:`runtraj.particles.PARTICLE_SCHEMA`).
+    result : pandas.DataFrame or xarray.DataTree
+        What the run made, of the type the model makes with the run's
+        config (:mod:`runtraj.results`): the particle table, one row per
+        particle per time step (:data:`runtraj.particles.PARTICLE_SCHEMA`),
+        or a concentration result (:mod:`runtraj.concentration`).
     log : str
-        The model's log of the run, kept with the particles
+        The model's log of the run, kept with the result
         (:attr:`runtraj.Simulation.log`). Empty for a model that writes none.
     met_files : list of Path
-        The meteorology files the run read, recorded in the particle file
+        The meteorology files the run read, recorded in the result's file
         (:func:`runtraj.particles.particles_metadata`). Empty for a model that reads
         no files.
     """
 
-    particles: pd.DataFrame
+    result: Any
     log: str = ""
     met_files: list[Path] = field(default_factory=list)
 
@@ -245,6 +249,12 @@ class TransportModel(Protocol):
         ``run_many`` never get such a release. HYSPLIT refuses a multipoint
         release whose points share a horizontal location, which it would
         join into a line source. A model without it runs every release.
+    result : callable, optional
+        ``result(config)``: the type of result the model makes with
+        *config*, a name in :data:`runtraj.results.RESULT_TYPES`, such as
+        ``"concentration"``. ``"particles"`` when the model does not say. A
+        variant's stages read particles, so a variant whose model makes
+        another type has none.
     release_rows : callable, optional
         ``release_rows(particles, release)``, for a model that writes no
         row at ``age = 0``: returns where each particle of a column or
@@ -308,11 +318,10 @@ class TransportModel(Protocol):
         timeout: int | None = None,
     ) -> ModelRun:
         """
-        Run one release and return its particles.
+        Run one release and return what it made.
 
-        The particles are the model's own: runtraj checks them and adds the
-        release heights, and ``foot`` when the model wrote none, afterwards
-        (:func:`run_model`).
+        The result is the model's own: runtraj checks it afterwards, and
+        adds the release heights to particles (:func:`run_model`).
 
         Parameters
         ----------
@@ -481,9 +490,10 @@ def run_model(
     timeout: int | None = None,
 ) -> ModelRun:
     """
-    Run the transport model called *name* for one release, and finish its particles.
+    Run the transport model called *name* for one release, and finish its result.
 
-    The particles are checked against the particle table
+    The result is checked against its type (:mod:`runtraj.results`).
+    Particles are checked against the particle table
     (:func:`runtraj.particles.check_particles`) and get their release heights
     (:func:`runtraj.particles.add_release_heights`). These steps are
     runtraj's, the same for any model. Nothing else is added: ``foot`` is
@@ -511,7 +521,7 @@ def run_model(
         If the model's ``check_releases`` refuses the release
         (``RELEASE_REFUSED``), before it runs; if the run fails, as when the
         meteorology does not cover it (``MET_COVERAGE``), or the model wrote
-        no particles; or if where the particles of a column or multipoint
+        no result (``NO_PARTICLE_DATA``, ``NO_CONCENTRATION_DATA``); or if where the particles of a column or multipoint
         release started is not known (``NO_RELEASE_ROWS``).
     """
     return _run_one(get_model(name), release, config, met, workdir, timeout)
@@ -531,7 +541,7 @@ def _run_one(
         raise refused
     window = run_window(release.time, config.n_hours)
     run = _returned(model.run(release, config, met, window, workdir, timeout=timeout))
-    return _finish(run, release, model)
+    return _finish(run, release, model, config)
 
 
 def run_model_many(
@@ -577,6 +587,13 @@ def _run_many(
     run_many = getattr(model, "run_many", None)
     if run_many is None:
         raise TypeError(f"Transport model {model.name!r} has no run_many.")
+    made = model_result(model, config)
+    if made != "particles":
+        raise TypeError(
+            f"Transport model {model.name!r} is batched and makes {made}: a "
+            "batched model returns one particle table for many releases, so it "
+            "makes particles."
+        )
     results: dict[str, ModelRun | SimulationError] = dict(
         _refused(model, releases, config)
     )
@@ -585,25 +602,25 @@ def _run_many(
         return results
     windows = [run_window(r.time, config.n_hours) for r in releases]
     run = _returned(run_many(releases, config, met, windows, workdir, timeout=timeout))
-    if "release" not in run.particles.columns:
+    if not isinstance(run.result, pd.DataFrame) or "release" not in run.result.columns:
         raise SimulationError(
             "A batched transport model's particles need a release column.",
             reason="NO_PARTICLE_DATA",
             log=run.log,
         )
-    by_release = dict(tuple(run.particles.groupby("release", sort=False)))
+    by_release = dict(tuple(run.result.groupby("release", sort=False)))
     for release in releases:
         rows = by_release.get(str(release.id))
         own = replace(
             run,
-            particles=(
+            result=(
                 pd.DataFrame()
                 if rows is None
                 else rows.drop(columns="release").reset_index(drop=True)
             ),
         )
         try:
-            results[str(release.id)] = _finish(own, release, model)
+            results[str(release.id)] = _finish(own, release, model, config)
         except SimulationError as error:
             error.log = run.log
             results[str(release.id)] = error
@@ -653,37 +670,51 @@ def _refused(
     }
 
 
-def _finish(run: ModelRun, release: Release, model: TransportModel) -> ModelRun:
+def _finish(
+    run: ModelRun, release: Release, model: TransportModel, config: TransportConfig
+) -> ModelRun:
     """
-    Return *run* with its particles checked and their release heights.
+    Return *run* with its result checked, and particles with their release heights.
 
     Particles that stop before the end of the run are kept: the transport
     model fails a run cut short by its meteorology itself, and particles
     that all left the met's domain are a complete run. The particles keep
     the columns the model wrote: ``foot`` is the model's own, or missing.
+    Another type of result is checked by its type (:mod:`runtraj.results`).
 
     Raises
     ------
     SimulationError
-        With the run's log, if the model wrote no particles, or where each
-        particle of a column or multipoint release started is not known.
+        With the run's log, if the model wrote no particles
+        (``NO_PARTICLE_DATA``), or another type of result that its type
+        refuses (``NO_CONCENTRATION_DATA``, ...), or where each particle of
+        a column or multipoint release started is not known.
     """
-    if run.particles.empty:
+    made = model_result(model, config)
+    if made != "particles":
+        try:
+            result_type(made).check(run.result)
+        except ValueError as error:
+            raise SimulationError(
+                str(error), reason=f"NO_{made.upper()}_DATA", log=run.log
+            ) from error
+        return run
+    if not isinstance(run.result, pd.DataFrame) or run.result.empty:
         raise SimulationError(
             "The transport model wrote no particles.",
             reason="NO_PARTICLE_DATA",
             log=run.log,
         )
-    check_particles(run.particles)
+    check_particles(run.result)
     try:
         particles = add_release_heights(
-            run.particles, release, getattr(model, "release_rows", None)
+            run.result, release, getattr(model, "release_rows", None)
         )
     except ValueError as error:
         raise SimulationError(
             str(error), reason="NO_RELEASE_ROWS", log=run.log
         ) from error
-    return replace(run, particles=particles)
+    return replace(run, result=particles)
 
 
 def run_trajectories(
@@ -758,6 +789,12 @@ def run_trajectories(
     """
     transport_model = get_model(model)
     config = transport_model.config_class(**params)
+    made = model_result(transport_model, config)
+    if made != "particles":
+        raise ValueError(
+            f"run_trajectories returns particles, and these settings make {made}. "
+            "Use runtraj.models.run_model, whose result is the run's."
+        )
     met_config = transport_model.met_config_class.model_validate(met)
     if workdir is not None:
         workdir = Path(workdir)
@@ -767,9 +804,7 @@ def run_trajectories(
                 "another run; give an empty or new directory."
             )
         workdir.mkdir(parents=True, exist_ok=True)
-    particles = run_model(
-        model, release, config, met_config, workdir, timeout
-    ).particles
+    particles = run_model(model, release, config, met_config, workdir, timeout).result
     particles["time"] = pd.Timestamp(release.time) + pd.to_timedelta(
         particles["age"].to_numpy(), unit="min"
     )
@@ -810,7 +845,9 @@ def check_model(
 
     With a *release* and its *met* (of ``met_config_class``), it also runs
     the model once, through the code a project's run uses (``run``, and
-    ``run_many`` too for a batched model), and checks the particles: the
+    ``run_many`` too for a batched model), and checks the result. A result
+    of a type other than particles (the model's ``result``) is checked by
+    its type and stored and read back. Particles are checked further: the
     columns of the particle table, ages that go the way ``n_hours`` does and
     stay within it, the release heights of a column or multipoint release
     (from a row at ``age = 0`` or the model's ``release_rows``), and a
@@ -979,8 +1016,12 @@ def _check_run(
             if isinstance(result, SimulationError):
                 raise result
             runs["run_many"] = result
+        made = model_result(model, config)
         for how, run in runs.items():
-            _check_particles(f"{name}.{how}", run, config, release, Path(tmp))
+            if made == "particles":
+                _check_particles(f"{name}.{how}", run, config, release, Path(tmp))
+            else:
+                _check_stored(f"{name}.{how}", run, made, config, release, Path(tmp))
 
 
 def _promised(name: str, run: Callable[..., Any], *args: Any) -> Any:
@@ -996,7 +1037,7 @@ def _check_particles(
 ) -> None:
     """Check the finished particles of one run, and that a particle file stores them."""
     assert isinstance(run.log, str), f"{what}'s ModelRun.log must be a string"
-    finished = run.particles
+    finished = run.result
     age = finished["age"].to_numpy(dtype=float)
     backward = config.n_hours < 0
     assert ((age <= 0) if backward else (age >= 0)).all(), (
@@ -1017,6 +1058,26 @@ def _check_particles(
         raise AssertionError(f"{what}'s particles cannot be stored: {error}") from error
     missing = set(finished.columns) - set(read_particles(path).columns)
     assert not missing, f"a particle file does not store {what}'s {sorted(missing)}"
+    path.unlink()
+
+
+def _check_stored(
+    what: str,
+    run: ModelRun,
+    made: str,
+    config: TransportConfig,
+    release: Release,
+    tmp: Path,
+) -> None:
+    """Check that a result of the type *made*, not particles, is stored and read back by its type."""
+    assert isinstance(run.log, str), f"{what}'s ModelRun.log must be a string"
+    kind = result_type(made)
+    path = tmp / f"result{kind.suffix}"
+    try:
+        kind.write(path, run.result, release, config.settings(), run.met_files)
+    except ValueError as error:
+        raise AssertionError(f"{what}'s {made} cannot be stored: {error}") from error
+    kind.check(kind.read(path))
     path.unlink()
 
 

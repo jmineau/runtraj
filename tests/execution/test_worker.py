@@ -211,7 +211,7 @@ def test_run_particles_without_particles_is_a_simulation_error(
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
-            return ModelRun(particles=pd.DataFrame(), met_files=[])
+            return ModelRun(result=pd.DataFrame(), met_files=[])
 
     monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     with pytest.raises(SimulationError) as caught:

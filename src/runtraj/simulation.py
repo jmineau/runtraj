@@ -18,9 +18,11 @@ import pandas as pd
 from runtraj.output import Output, completed
 from runtraj.particles import read_particles
 from runtraj.releases import Release
+from runtraj.results import result_type
 from runtraj.stages import reads
 
 if TYPE_CHECKING:
+    import xarray as xr
     from upath import UPath
 
     from runtraj.config import Variant
@@ -34,7 +36,8 @@ class Simulation:
     One release run under one variant, as one realization of an ensemble or alone.
 
     A simulation is a value: its release, its variant, and the output
-    directory its results are in. From those it knows where its particles,
+    directory its results are in. From those it knows where the transport
+    model's result (its particles, or another type: :attr:`result_path`),
     the file of each stage (:meth:`path`), and its log are, whether they
     exist (:meth:`has`, :attr:`is_complete`), and how to read them. It runs
     nothing itself; the workers in :mod:`runtraj.execution` run the transport
@@ -121,9 +124,11 @@ class Simulation:
         """
         Return the path of this simulation's file of *kind* in the output directory.
 
-        *kind* is ``"particles"`` or the name of a stage, such as
-        ``"footprint"``. ``None`` before the variant's folder of that kind
-        exists, and for a stage the variant does not use. The file may not
+        *kind* is a result type, ``"particles"`` for most variants
+        (:attr:`runtraj.config.Variant.result`), or the name of a stage,
+        such as ``"footprint"``. ``None`` before the variant's folder of
+        that kind exists, for a stage the variant does not use, and for a
+        result type it does not make. The file may not
         exist yet (:meth:`has`). A stage that reads another stage's file
         finds it here, and reads it with that stage's own reader.
 
@@ -137,8 +142,8 @@ class Simulation:
         """
         Return whether this simulation's file of *kind* exists.
 
-        *kind* is ``"particles"`` or the name of a stage. A stage's file is
-        a finished result whatever it holds.
+        *kind* is a result type, such as ``"particles"``, or the name of a
+        stage. A stage's file is a finished result whatever it holds.
         """
         path = self.path(kind)
         return path is not None and path.exists()
@@ -147,6 +152,17 @@ class Simulation:
     def particles_path(self) -> Path | UPath | None:
         """Path of the particle file in the output directory, or ``None`` before its folder exists."""
         return self.path("particles")
+
+    @property
+    def result_path(self) -> Path | UPath | None:
+        """
+        Path of the transport model's result in the output directory, or ``None`` before its folder exists.
+
+        The particle file for a variant that makes particles
+        (:attr:`particles_path`), the concentration file for one that makes
+        concentration: the type of :attr:`runtraj.config.Variant.result`.
+        """
+        return self.path(self.variant.result)
 
     @property
     def log_path(self) -> Path | UPath | None:
@@ -173,19 +189,28 @@ class Simulation:
         return self.has("particles")
 
     @property
+    def has_result(self) -> bool:
+        """
+        Whether the transport model's result exists, whatever its type.
+
+        :attr:`has_particles`, for a variant that makes particles.
+        """
+        return self.has(self.variant.result)
+
+    @property
     def is_complete(self) -> bool:
         """
         Whether every expected result exists.
 
-        That is the particles, and the file of every stage the variant
-        uses. It is :func:`runtraj.output.completed`,
+        That is the transport model's result (the particles, for most
+        variants), and the file of every stage the variant uses. It is :func:`runtraj.output.completed`,
         the one definition of done, for one release, from a file check for
         each.
         """
         rid = self.release.id
         mine: frozenset[str] = frozenset([rid])
         none: frozenset[str] = frozenset()
-        kinds = ("particles", *self.variant.stage_order)
+        kinds = (self.variant.result, *self.variant.stage_order)
         return rid in completed(*(mine if self.has(k) else none for k in kinds))
 
     # -- status ------------------------------------------------------------
@@ -196,8 +221,8 @@ class Simulation:
         Why this simulation is not complete, as the worker recorded it, or ``None``.
 
         ``None`` when it is complete, or has not run, or what failed has
-        since succeeded. Otherwise a dict with ``stage`` (``"particles"``
-        for the transport model run, or the name of the stage that failed,
+        since succeeded. Otherwise a dict with ``stage`` (``"particles"``,
+        or the variant's other result type, for the transport model run, or the name of the stage that failed,
         such as ``"footprint"``), ``reason`` (a short cause such as
         ``"MET_COVERAGE"``, or the error's class when it has none),
         ``message``, and ``time``. An unexpected error also has a
@@ -213,11 +238,12 @@ class Simulation:
          'message': 'HYSPLIT: start point not within (x,y,t) any data file', ...}
         """
         variant, rid = self.variant, self.release.id
-        if not self.has("particles"):
-            return self.output.failure("particles", variant, rid, self.realization)
+        made = variant.result
+        if not self.has(made):
+            return self.output.failure(made, variant, rid, self.realization)
         # A stage can have failed only where what it reads exists: the first
         # such stage with a record, in the order the stages run.
-        there = {"particles"}
+        there = {made}
         for name in variant.stage_order:
             if self.has(name):
                 there.add(name)
@@ -268,6 +294,34 @@ class Simulation:
         if path is None or not path.exists():
             raise FileNotFoundError(f"{self} has no particles yet.")
         return read_particles(path)
+
+    @cached_property
+    def concentration(self) -> xr.DataTree:
+        """
+        The concentration result, a child per grid (:mod:`runtraj.concentration`).
+
+        For a variant that makes concentration, such as HYSPLIT's ``mode:
+        concentration``. Read from the output directory on first access and
+        kept. Check :attr:`has_result` first when the run may not have
+        finished.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the result has not been written yet, or the variant makes
+            another type of result.
+
+        Examples
+        --------
+        >>> sim.concentration["local"]["TEST"].sel(z=100).max()  # doctest: +SKIP
+        """
+        path = self.path("concentration")
+        if path is None or not path.exists():
+            made = self.variant.result
+            if made != "concentration":
+                raise FileNotFoundError(f"{self} makes {made}, not concentration.")
+            raise FileNotFoundError(f"{self} has no concentration yet.")
+        return result_type("concentration").read(path)
 
 
 __all__ = ["Simulation"]
