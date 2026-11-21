@@ -996,9 +996,12 @@ class Project:
             )
         found: dict[tuple[str, str, int | None], xr.DataTree] = {}
         present = self._present(frame)
+        read = RESULT_TYPES["concentration"].read
         for rid, name, k in _rows(frame):
             if rid in present[(name, k)]["concentration"]:
-                found[(rid, name, k)] = self.simulation(rid, name, k).concentration
+                path = self.output.path("concentration", self.variants[name], rid, k)
+                if path is not None:
+                    found[(rid, name, k)] = read(path)
         return found
 
     # -- running ---------------------------------------------------------------
