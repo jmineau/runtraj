@@ -978,7 +978,8 @@ class Project:
         Raises
         ------
         ValueError
-            If *sel* names a variant that makes another type of result.
+            If *sel* names a variant that makes another type of result, or no
+            variant of the project makes concentration.
 
         Examples
         --------
@@ -988,6 +989,7 @@ class Project:
         ... ]  # doctest: +SKIP
         >>> tree["local"]["TEST"].sum("time")  # doctest: +SKIP
         """
+        self._require_type("concentration", "concentration")
         frame = self._of_type("concentration", sel)
         found: dict[tuple[str, str, int | None], xr.DataTree] = {}
         present = self._present(frame)
@@ -998,6 +1000,16 @@ class Project:
                 if path is not None:
                     found[(rid, name, k)] = read(path)
         return found
+
+    def _require_type(self, kind: str, mode: str) -> None:
+        """Raise unless a variant of the project makes results of the type *kind*, which HYSPLIT's *mode* does."""
+        made = sorted({v.result for v in self.variants.values()})
+        if kind not in made:
+            raise ValueError(
+                f"No variant of this project makes {kind}: its variants make "
+                f"{' and '.join(made)}. A variant makes {kind} when its "
+                f"transport model does, as HYSPLIT does with mode: {mode}."
+            )
 
     def trajectories(self, sel: Any = None) -> pd.DataFrame:
         """
@@ -1016,12 +1028,13 @@ class Project:
             ``release`` and ``variant`` first. A trajectory is told from
             another by ``release``, ``variant`` and ``trajectory``
             together. Simulations without a result are left out, and the
-            table is empty when none has one.
+            table is empty when none has one yet.
 
         Raises
         ------
         ValueError
-            If *sel* names a variant that makes another type of result.
+            If *sel* names a variant that makes another type of result, or no
+            variant of the project makes trajectories.
 
         Examples
         --------
@@ -1031,6 +1044,7 @@ class Project:
         ... ].max()  # doctest: +SKIP
         """
         first = ["release", "variant"]
+        self._require_type("trajectories", "trajectory")
         frame = self._selected(sel)
         if sel is None:
             frame = frame.loc[

@@ -492,3 +492,14 @@ def test_a_stage_that_reads_concentration_runs_on_that_type_alone(tmp_path):
     (settings,) = project.output.directory.joinpath("cells").glob("*/_settings.yaml")
     record = yaml.safe_load(settings.read_text())
     assert set(record["reads"]) == {"concentration"}
+
+
+def test_a_verb_of_a_type_no_variant_makes_says_so(tmp_path):
+    # An empty result would hide a variant that was meant to make the type.
+    project = _project(tmp_path)
+    with pytest.raises(
+        ValueError, match="No variant of this project makes concentration"
+    ):
+        project.concentration()
+    with pytest.raises(ValueError, match="its variants make particles"):
+        project.trajectories()
