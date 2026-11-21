@@ -61,8 +61,9 @@ import path, in a block named for the stage, and the class provides
 (`CONTRIBUTING.md`, "Adding a stage").
 
 **A model's result has a type** (`runtraj.results`): `particles` (the
-particle table, Parquet) or `concentration` (a `DataTree` of grids, NetCDF;
-HYSPLIT's `mode: concentration`). A model's optional `result(config)` names
+particle table, Parquet), `concentration` (a `DataTree` of grids, NetCDF;
+HYSPLIT's `mode: concentration`) or `trajectories` (the trajectory table,
+Parquet; HYSPLIT's `mode: trajectory`, which runs `hyts_std`). A model's optional `result(config)` names
 it (`particles` when it does not), `Variant.result` holds it, and it names
 the tree its files are in; models that make one type follow its one
 schema. A stage reads one type, its optional `result` (`particles` when it does not say), and a variant of another type refuses it; its folder's hash is keyed by that type. A
@@ -97,11 +98,12 @@ src/runtraj/
   config.py       ProjectConfig and Variant;  identity.py  settings records, hashes
   stages.py       the Stage protocol, get_stage, check_stage;  _plugins.py  a class by import path
   releases/       release classes, releases.csv, shared validation
-  results.py      the result types (particles, concentration): suffix, check, write, read
+  results.py      the result types (particles, concentration, trajectories): suffix, check, write, read
   particles/      the particle table and files, release heights, the particles.runtraj accessor
   concentration.py  the concentration result: a DataTree of grids, its NetCDF file
+  trajectories.py   the trajectory table and its Parquet file
   models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model, check_model
-    hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump reader, failures
+    hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
   execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
@@ -145,7 +147,7 @@ each stage to read the files its settings name, and the model its version.
 - **Identity is content.** runtraj never deletes or overwrites a results folder.
 - **The CLI stays thin.** Orchestration does not belong in `cli.py`.
 - **Meteorology I/O goes through [arlmet](https://github.com/jmineau/arl-met).**
-- **runtraj ships no HYSPLIT file**: `directory/exec/hycs_std` and `bdyfiles/`, else `PATH`. The SHA-256
+- **runtraj ships no HYSPLIT file**: `directory/exec/hycs_std` and `bdyfiles/`, else `PATH`. The trajectory mode runs `exec/hyts_std`, found and hashed the same way. The SHA-256
   of `hycs_std` is in the particles hash, read on first use (`Variant.build`); its
   printed version is recorded as `model_version`, never hashed. Without `hycs_std` a
   project opens and `Output` compares on `Variant.readable_run_settings`.
@@ -185,6 +187,7 @@ in `tests.yml`:
   `PATH` (unit tests get a stand-in) and `RUNTRAJ_TEST_MET_DIR` (HRRR ARL files) or
   `RUNTRAJ_TEST_FETCH_MET=1` (downloads seven 6 h blocks, 23.9 GB in all, and keeps
   211 MB in the ignored `tests/met_cache/`); otherwise they skip.
+  The trajectory mode's also need a `hyts_std` on `PATH` (NOAA's public build has one) and skip without.
 - `tests/kubernetes/`: the end-to-end test on a kind cluster, run by `kubernetes.yml`
   only (it needs Docker); its README says what it checks.
 
@@ -282,6 +285,12 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   met file per met, to count its time periods (HYSPLIT stops on a file with
   one, and `Met.check` refuses it), and one per grid the catalog lists, for
   the domain; so a damaged file still fails at run time.
+- **`hyts_std` reads the dispersion entries of `SETUP.CFG`** (`ICHEM` and
+  `IDSP` change a trajectory), so a trajectory run writes only
+  `TRAJECTORY_SETUP_SETTINGS`, and records only `TRAJECTORY_SETTINGS`. It
+  starts a trajectory at every `CONTROL` location (no line source: a column
+  release is refused), and drops a location outside the met's domain and
+  numbers the rest from 1, which fails the run.
 - **Realizations are an axis**: `realizations: N` is one variant with a
   `realization` column and `realization=k/` partitions, run with `seed + k`.
   HYSPLIT gets `SEED = -(|seed| + 1)` (`setup_seed`), and `seed` needs `krand: 2`.

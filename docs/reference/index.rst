@@ -15,6 +15,10 @@ to do something, start with the :doc:`../guides/index` instead.
    The types of result a transport model makes, and the concentration
    grids of HYSPLIT's concentration mode.
 
+:doc:`trajectories`
+   The trajectory table of HYSPLIT's trajectory mode: its columns and
+   units.
+
 :doc:`transforms`
    Weighting particle rows (averaging kernels, pressure weighting, loss
    along the way), and sampling a gridded field at particles.
@@ -46,6 +50,7 @@ to do something, start with the :doc:`../guides/index` instead.
    core
    particles
    concentration
+   trajectories
    transforms
    layout
    configuration

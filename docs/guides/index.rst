@@ -33,6 +33,8 @@ word in the :doc:`../getting_started/glossary`.
   many, and open them in DuckDB, R, or CF trajectory tools
 - :doc:`concentration`: HYSPLIT's concentration grids, of pollutants you
   release, in place of particles
+- :doc:`trajectories`: HYSPLIT's single trajectories, one from each
+  release location, with no turbulence
 
 **HYSPLIT**
 
@@ -67,6 +69,7 @@ word in the :doc:`../getting_started/glossary`.
    output
    particles
    concentration
+   trajectories
 
 .. toctree::
    :hidden:

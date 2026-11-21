@@ -6,7 +6,8 @@ names another. The worker gets it as
 :class:`runtraj.models.hysplit.HysplitModel` (see :doc:`execution`), which
 picks the met files, writes HYSPLIT's input files, runs ``hycs_std``, and
 reads the particles it writes, or, with ``mode: concentration``, its
-concentration grids (:ref:`hysplit-concentration`).
+concentration grids (:ref:`hysplit-concentration`). With ``mode:
+trajectory`` it runs ``hyts_std`` instead (:ref:`hysplit-trajectory`).
 
 Config
 ------
@@ -40,6 +41,7 @@ run uses, from the ``bdyfiles/`` folder of ``directory`` or beside the
    :nosignatures:
 
    runtraj.models.hysplit.find_hycs_std
+   runtraj.models.hysplit.find_program
    runtraj.models.hysplit.data_tables
 
 Running HYSPLIT
@@ -156,6 +158,72 @@ hold all that was released. Set ``maxpar`` only above that.
    runtraj.models.hysplit.ConcentrationGrid
    runtraj.models.hysplit.read_cdump
 
+.. _hysplit-trajectory:
+
+The trajectory mode
+-------------------
+
+With ``mode: trajectory`` runtraj runs HYSPLIT's trajectory program,
+``hyts_std``, from ``exec/`` of the same HYSPLIT folder (or ``PATH``), and
+its SHA-256 is the one in the run's settings. ``CONTROL`` has the lines
+both programs read (the release time and locations, ``n_hours``,
+``w_option``, ``z_top``, the met files), then ``./`` and ``tdump``, where
+the trajectories are written.
+
+``SETUP.CFG`` is one namelist for both programs, and ``hyts_std`` reads
+the dispersion model's entries too: ``ICHEM`` and ``IDSP`` change its
+trajectories. So a trajectory run's ``SETUP.CFG`` holds only:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - In ``SETUP.CFG``
+     - In runtraj
+   * - ``KAGL``
+     - Fixed at 1: heights above ground, ``zagl``. A config that sets
+       ``kagl`` to another value is refused.
+   * - ``KMSL``
+     - The release's ``altitude_ref``
+   * - ``TOUT``
+     - ``tout``, 60 unless set. Under an hour it must divide 60;
+       ``hyts_std`` lowers any other value to one that does, so the
+       config refuses it.
+   * - ``TM_TPOT``, ``TM_TAMB``, ``TM_RAIN``, ``TM_MIXD``, ``TM_RELH``,
+       ``TM_SPHU``, ``TM_MIXR``, ``TM_TERR``, ``TM_DSWF``
+     - The ``tm_`` settings, each a column of the table
+       (:doc:`trajectories`). ``hyts_std`` always writes the pressure.
+   * - ``DELT``, ``TRATIO``, ``MGMIN``, ``KHMAX``, ``K10M``, ``KMIXD``,
+       ``KMIX0``, ``WBBH``, ``WBWF``, ``WBWR``
+     - The settings of those names. ``kmix0`` is 0 unless set, the
+       default of ``hyts_std``.
+
+Every other setting is the dispersion model's and is left out of a
+trajectory run, neither written nor recorded
+(:data:`~runtraj.models.hysplit.config.TRAJECTORY_SETTINGS`). ``nstr`` and
+``nver`` (restarts and splits) are refused: a release starts its own
+trajectories, and runtraj does not read a split run's file.
+
+``hyts_std`` starts a trajectory at every location in ``CONTROL``, so a
+multipoint release may hold two points at one place, which ``hycs_std``
+would join into a line source. A column release is refused
+(``RELEASE_REFUSED``), since there is no line source to make of it.
+
+:func:`~runtraj.models.hysplit.read_tdump` reads the file by the widths of
+its fields. A run fails as ``NO_TRAJECTORIES_DATA`` when there is no file
+or no row in it, and as ``MET_COVERAGE`` when it holds fewer trajectories
+than the release has locations: ``hyts_std`` leaves out a location outside
+the met's domain and numbers the rest from 1. A trajectory that leaves the
+domain later ends there, and its run is complete. Met that runs out is
+found as in any run, from the files before it starts and from HYSPLIT's
+warning after.
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.models.hysplit.read_tdump
+
 Reading the input files
 -----------------------
 
@@ -263,6 +331,9 @@ Each reason, what happened, and what to do:
        or one with fewer samples than the run holds. A
        ``sampling_interval`` longer than the run gives no sample; for
        anything else, read the log.
+   * - ``NO_TRAJECTORIES_DATA``
+     - A trajectory run wrote no ``tdump`` file, or one with no row. Read
+       the log.
    * - ``FORTRAN_RUNTIME_ERROR``
      - HYSPLIT stopped with a Fortran error, which the message names. Read
        the log and the kept workdir's ``MESSAGE`` file.

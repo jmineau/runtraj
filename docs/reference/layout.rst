@@ -11,7 +11,8 @@ The folders
 
 Each kind of result has its own tree: ``particles/`` for what the transport
 model wrote (``concentration/`` for a variant that makes concentration,
-:doc:`concentration`), and one named for each stage of the project, which is what is
+:doc:`concentration`, and ``trajectories/`` for one that makes
+trajectories, :doc:`trajectories`), and one named for each stage of the project, which is what is
 made from a simulation's results afterward. PYSTILT's footprint is a stage,
 and its tree is ``footprint/``; the examples here show it. Inside a tree,
 each settings folder holds the
@@ -32,6 +33,10 @@ results of one set of settings, split by the release's date:
        settings=conc-41e9a0/
          _settings.yaml
          date=2024-07-15/<release id>.nc
+     trajectories/                               a variant with mode: trajectory
+       settings=traj-9c05d2/
+         _settings.yaml
+         date=2024-07-15/<release id>.parquet
      footprint/
        settings=hrrr-f82d40/
          _settings.yaml
@@ -52,7 +57,8 @@ release's release date in UTC. An ensemble (``realizations: N``) has a
 The ``logs/`` tree follows the folders of the results:
 
 - ``<release id>.log`` is the transport model's log, under the particles'
-  settings folder (the concentration's, for a variant that makes it).
+  settings folder (the concentration's or the trajectories', for a
+  variant that makes them).
 - ``<release id>.failure.yaml`` says why a result failed, and at which
   ``stage``. A failed run writes it under the particles' settings folder,
   with ``stage: particles``. A failed footprint writes it under the
@@ -64,8 +70,8 @@ particles' settings folder. A failed run's workdir is kept without the
 transport model's particle file, and with ``keep_workdir: true`` under
 ``execution:`` every run's is, whole.
 
-The ``particles/`` and ``footprint/`` trees hold only Parquet files and
-``_settings.yaml``, so each reads as one dataset. ``concentration/`` holds
+The ``particles/``, ``trajectories/`` and ``footprint/`` trees hold only
+Parquet files and ``_settings.yaml``, so each reads as one dataset. ``concentration/`` holds
 one NetCDF file per release, a group per grid (:doc:`concentration`). A stage from another
 package has a tree under its own name, with files in the format and with
 the extension that stage chooses.

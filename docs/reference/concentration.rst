@@ -21,6 +21,10 @@ makes a type follows its one schema (:mod:`runtraj.results`):
      - Grids of concentration, from HYSPLIT's ``mode: concentration``
        (:doc:`../guides/concentration`).
      - NetCDF, under ``concentration/``
+   * - ``trajectories``
+     - The trajectory table (:doc:`trajectories`), from HYSPLIT's ``mode:
+       trajectory`` (:doc:`../guides/trajectories`).
+     - Parquet, under ``trajectories/``
 
 A model says which type a config makes with ``result(config)``
 (:class:`~runtraj.models.TransportModel`), and makes particles when it does
@@ -28,7 +32,8 @@ not say. :attr:`runtraj.config.Variant.result` is the variant's type, and the
 name of its tree in the output directory. ``project.status()`` has a column
 for each type a variant makes, and each type has its own read:
 :meth:`Project.particles` and ``sim.particles``,
-:meth:`Project.concentration` and ``sim.concentration``. A stage reads
+:meth:`Project.concentration` and ``sim.concentration``,
+:meth:`Project.trajectories` and ``sim.trajectories``. A stage reads
 particles, so a variant that makes another type has no stages.
 
 .. autosummary::
