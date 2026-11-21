@@ -298,8 +298,8 @@ class Simulation:
 
         :attr:`particles` for a variant that makes particles,
         :attr:`concentration` for one that makes concentration
-        (:attr:`runtraj.config.Variant.result`). Read on first access and
-        kept.
+        (:attr:`runtraj.config.Variant.result`). It is that attribute, so
+        the file is read once whichever name reads it.
 
         Raises
         ------
@@ -310,7 +310,7 @@ class Simulation:
         --------
         >>> sim.result  # doctest: +SKIP
         """
-        return self._read(self.variant.result)
+        return getattr(self, self.variant.result)
 
     def _read(self, kind: str) -> Any:
         """Return the result of type *kind*, read by its type's reader."""

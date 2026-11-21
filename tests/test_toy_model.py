@@ -375,7 +375,9 @@ def test_a_concentration_result_reads_back_as_the_model_made_it(tmp_path):
     assert sim.has_result and not sim.has_particles
     assert float(sim.result["cells"].to_dataset()["TOY"].sum()) == 4
     particles = project.simulation(project.releases["release"].iloc[0], "toy")
-    assert particles.result.equals(particles.particles)
+    # One read, whichever name reads it.
+    assert particles.result is particles.particles
+    assert sim.result is sim.concentration
     assert sim.result_path.suffix == ".nc"
 
 
