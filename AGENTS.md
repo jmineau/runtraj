@@ -150,7 +150,10 @@ each stage to read the files its settings name, and the model its version.
   printed version is recorded as `model_version`, never hashed. Without `hycs_std` a
   project opens and `Output` compares on `Variant.readable_run_settings`.
 - **Pydantic for all configuration**: every field a plain
-  `Field(default, description=...)`, and the settings inside a block stay flat.
+  `Field(default, description=...)`, and the settings inside a block stay flat:
+  no nested blocks. The one exception is a list of records of one kind that
+  the model itself takes as a list (HYSPLIT's `pollutants` and `grids`), each
+  record flat in turn.
 
 ## Development
 
