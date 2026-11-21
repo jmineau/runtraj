@@ -99,7 +99,9 @@ def read_cdump(path: str | Path, cmass: int = 0) -> xr.Dataset:
     -------
     xarray.Dataset
         Dimensions ``time``, ``z``, ``lat``, ``lon``, and a float32
-        variable per pollutant, as the module describes. Its attributes
+        variable per pollutant, as the module describes. ``lat`` and
+        ``lon`` are the decimal degrees the grid was given, not the 4-byte
+        floats the file holds (``40.266``, not ``40.26599884``). Its attributes
         hold ``cpack``, ``met_model`` (the met's four-letter name), and the
         release ``locations`` as ``[[lon, lat, height], ...]``. Two-digit
         years are read as 1940 to 2039.
@@ -176,8 +178,8 @@ def _read_records(records: _Records, path: Path, cmass: int) -> xr.Dataset:
         "time": ("time", pd.DatetimeIndex(starts, dtype="datetime64[ns]")),
         "time_end": ("time", pd.DatetimeIndex(ends, dtype="datetime64[ns]")),
         "z": ("z", np.asarray(levels, dtype=np.int32)),
-        "lat": ("lat", (lat1 + dlat * np.arange(nlat)).astype(np.float64)),
-        "lon": ("lon", (lon1 + dlon * np.arange(nlon)).astype(np.float64)),
+        "lat": ("lat", _cell_centers(lat1, dlat, nlat)),
+        "lon": ("lon", _cell_centers(lon1, dlon, nlon)),
     }
     variables = {name: (CONCENTRATION_DIMS, data[k]) for k, name in enumerate(names)}
     ds = xr.Dataset(variables, coords=coords)
@@ -200,6 +202,26 @@ def _read_records(records: _Records, path: Path, cmass: int) -> xr.Dataset:
         units="mass m-3, mass m-2 at z = 0 (mass in the unit of the emission rate)",
         long_name="{name} concentration, or deposition at z = 0",
     )
+
+
+def _cell_centers(first: float, step: float, count: int) -> np.ndarray:
+    """
+    Return the centers of *count* cells, as the decimal degrees HYSPLIT was given.
+
+    ``cdump`` holds the first center and the spacing as 4-byte floats, so
+    that ``40.266`` reads as ``40.26599884``. The centers are rounded to
+    the decimals a 4-byte float holds at the largest of them: twice its
+    spacing from the next float, as a step in the last decimal. That is 4
+    decimals from 128 to 360 degrees, where a spacing of 0.001 degree is
+    still kept whole, and 5 from 16 to 128, where 40.266 reads
+    back as 40.266.
+    """
+    centers = first + step * np.arange(count, dtype=np.float64)
+    largest = float(np.abs(centers).max())
+    if largest == 0:
+        return centers
+    decimals = int(np.floor(-np.log10(2 * float(np.spacing(np.float32(largest))))))
+    return np.round(centers, decimals)
 
 
 def _read_level(

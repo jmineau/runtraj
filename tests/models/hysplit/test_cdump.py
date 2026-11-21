@@ -126,3 +126,38 @@ def test_a_cmass_run_is_labeled_as_mass_not_concentration():
     # The coordinates say the same whatever the variables hold.
     assert mass["lat"].attrs == concentration["lat"].attrs
     np.testing.assert_array_equal(mass["TRCA"].values, concentration["TRCA"].values)
+
+
+def test_the_cells_of_a_grid_are_the_decimal_degrees_it_was_given():
+    ds = read_cdump(HERE / "average_cpack1")
+    # The file holds 4-byte floats: 40.266 is 40.26599884 there.
+    np.testing.assert_array_equal(ds["lat"].values[:2], [40.266, 40.316])
+    np.testing.assert_array_equal(ds["lon"].values[:2], [-112.348, -112.298])
+    assert float(ds["TRCA"].sel(lat=40.416, lon=-112.248, z=100).isel(time=0)) >= 0
+    snapshot = read_cdump(HERE / "snapshot_cpack1")
+    np.testing.assert_array_equal(snapshot["lat"].values[:3], [39.7, 39.8, 39.9])
+    np.testing.assert_array_equal(snapshot["lon"].values[:2], [-112.9, -112.8])
+
+
+def _empty_grid(path: Path, nlat, nlon, dlat, dlon, lat1, lon1) -> Path:
+    """Write a ``cdump`` with a header and no sample: one pollutant, one level."""
+    body = [
+        b"HRRR" + struct.pack(">7i", 21, 7, 15, 0, 0, 1, 1),
+        struct.pack(">4i3fi", 21, 7, 15, 0, 40.0, -112.0, 10.0, 0),
+        struct.pack(">2i4f", nlat, nlon, dlat, dlon, lat1, lon1),
+        struct.pack(">2i", 1, 100),
+        struct.pack(">i", 1) + b"TEST",
+    ]
+    path.write_bytes(b"".join(_record(b) for b in body))
+    return path
+
+
+@pytest.mark.parametrize("first", [-179.9, 359.0, -112.0])
+def test_a_fine_spacing_keeps_every_decimal_it_has(tmp_path, first):
+    # 0.001 degree is a few steps of a 4-byte float near 180 or 360 degrees.
+    path = _empty_grid(tmp_path / "cdump", 2, 300, 0.001, 0.001, 40.0, first)
+    ds = read_cdump(path)
+    np.testing.assert_array_equal(
+        ds["lon"].values, np.round(first + 0.001 * np.arange(300), 3)
+    )
+    np.testing.assert_array_equal(ds["lat"].values, [40.0, 40.001])
