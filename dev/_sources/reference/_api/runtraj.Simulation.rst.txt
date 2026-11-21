@@ -35,6 +35,7 @@ Attributes
    ~Simulation.particles_path
    ~Simulation.result
    ~Simulation.result_path
+   ~Simulation.trajectories
    ~Simulation.transport
 
 

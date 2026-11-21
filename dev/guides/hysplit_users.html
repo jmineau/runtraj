@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,12 +61,12 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Your Own HYSPLIT Build And Data Tables" href="hysplit_build.html" />
-    <link rel="prev" title="Concentration Grids" href="concentration.html" />
+    <link rel="prev" title="Trajectories" href="trajectories.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -430,6 +430,7 @@
 <li class="toctree-l1"><a class="reference internal" href="output.html">The Output Directory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="particles.html">Reading And Plotting Particles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concentration.html">Concentration Grids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories.html">Trajectories</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">HYSPLIT</span></p>
 <ul class="current nav bd-sidenav">
@@ -721,7 +722,8 @@ rest itself:</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> pollutant, concentration grid and deposition</p></td>
 <td><p>Fixed: one pollutant, a placeholder grid, no deposition; with
 <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code>, your <code class="docutils literal notranslate"><span class="pre">pollutants</span></code> and <code class="docutils literal notranslate"><span class="pre">grids</span></code>
-(<a class="reference internal" href="concentration.html"><span class="doc">Concentration Grids</span></a>)</p></td>
+(<a class="reference internal" href="concentration.html"><span class="doc">Concentration Grids</span></a>); with <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">trajectory</span></code>, the two lines
+<code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> reads in their place (<a class="reference internal" href="trajectories.html"><span class="doc">Trajectories</span></a>)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> <code class="docutils literal notranslate"><span class="pre">KMSL</span></code></p></td>
 <td><p>The release’s <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code></p></td>
@@ -743,6 +745,10 @@ rest itself:</p>
 (<code class="xref py py-data docutils literal notranslate"><span class="pre">FIXED_SETUP</span></code>); with <code class="docutils literal notranslate"><span class="pre">mode:</span>
 <span class="pre">concentration</span></code>, <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code> 0 and <code class="docutils literal notranslate"><span class="pre">IDSP</span></code> left to HYSPLIT</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> <code class="docutils literal notranslate"><span class="pre">KAGL</span></code>, <code class="docutils literal notranslate"><span class="pre">TOUT</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_*</span></code></p></td>
+<td><p>With <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">trajectory</span></code>: <code class="docutils literal notranslate"><span class="pre">KAGL</span></code> fixed at 1 (heights above
+ground), <code class="docutils literal notranslate"><span class="pre">tout</span></code>, and the <code class="docutils literal notranslate"><span class="pre">tm_</span></code> settings</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -755,8 +761,10 @@ rest itself:</p>
 <p>runtraj runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> with <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>, which writes
 particle positions and the met along them, or, with <code class="docutils literal notranslate"><span class="pre">mode:</span>
 <span class="pre">concentration</span></code>, HYSPLIT’s concentration grids (<code class="docutils literal notranslate"><span class="pre">cdump</span></code>), which it reads
-for you (<a class="reference internal" href="concentration.html"><span class="doc">Concentration Grids</span></a>). Puffs and <code class="docutils literal notranslate"><span class="pre">tdump</span></code> trajectory files come
-from HYSPLIT run on its own, and NOAA’s
+for you (<a class="reference internal" href="concentration.html"><span class="doc">Concentration Grids</span></a>). With <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">trajectory</span></code> it runs
+<code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> and reads its <code class="docutils literal notranslate"><span class="pre">tdump</span></code> trajectory file
+(<a class="reference internal" href="trajectories.html"><span class="doc">Trajectories</span></a>). The ensemble programs and the particle dump file
+(<code class="docutils literal notranslate"><span class="pre">PARDUMP</span></code>) come from HYSPLIT run on its own, and NOAA’s
 <a class="reference external" href="https://github.com/noaa-oar-arl/monetio">monetio</a> reads those files in
 Python.</p>
 <p>When a run fails, <code class="docutils literal notranslate"><span class="pre">project.status()</span></code> gives its reason and
@@ -775,12 +783,12 @@ Python.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="concentration.html"
+       href="trajectories.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Concentration Grids</p>
+        <p class="prev-next-title">Trajectories</p>
       </div>
     </a>
     <a class="right-next"

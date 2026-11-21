@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -453,7 +453,7 @@
 
 <span class="sd">A project's results live in an output directory that several projects can</span>
 <span class="sd">share. It has one tree per kind of result: one per type of result a</span>
-<span class="sd">transport model makes (``particles``, or ``concentration``;</span>
+<span class="sd">transport model makes (``particles``, ``concentration``, or ``trajectories``;</span>
 <span class="sd">:mod:`runtraj.results`) and one named for each stage. Inside each is a</span>
 <span class="sd">folder per set of settings, in hive form so every tree reads as one</span>
 <span class="sd">dataset. Here the stage is PYSTILT's footprint::</span>
@@ -468,6 +468,9 @@
 <span class="sd">      concentration/                     a variant in HYSPLIT's concentration mode</span>
 <span class="sd">        settings=conc-5d01aa/</span>
 <span class="sd">          date=2024-07-01/&lt;release&gt;.nc</span>
+<span class="sd">      trajectories/                      a variant in HYSPLIT's trajectory mode</span>
+<span class="sd">        settings=traj-81c2e0/</span>
+<span class="sd">          date=2024-07-01/&lt;release&gt;.parquet</span>
 <span class="sd">      footprint/</span>
 <span class="sd">        settings=hrrr-93278c/            variant name + short hash of transport + stage settings</span>
 <span class="sd">          _settings.yaml                 names the particles folder it was made from</span>
@@ -484,8 +487,8 @@
 <span class="sd">same settings share one folder, and a changed setting lands in a new folder</span>
 <span class="sd">beside the old one instead of overwriting it. ``pyarrow.dataset``, DuckDB,</span>
 <span class="sd">polars, and R's arrow read ``settings`` and ``date`` as columns of the whole</span>
-<span class="sd">tree. Particles are one Parquet file per release, and a concentration</span>
-<span class="sd">result one NetCDF file. A stage writes its own</span>
+<span class="sd">tree. Particles and trajectories are one Parquet file per release, and a</span>
+<span class="sd">concentration result one NetCDF file. A stage writes its own</span>
 <span class="sd">file per release, with the extension it declares</span>
 <span class="sd">(:attr:`runtraj.stages.Stage.suffix`), at the path this module gives it, and</span>
 <span class="sd">this module never looks inside one.</span>

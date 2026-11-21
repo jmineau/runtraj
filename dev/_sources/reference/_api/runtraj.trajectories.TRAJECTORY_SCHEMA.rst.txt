@@ -1,0 +1,6 @@
+﻿runtraj.trajectories.TRAJECTORY\_SCHEMA
+=======================================
+
+.. currentmodule:: runtraj.trajectories
+
+.. autodata:: TRAJECTORY_SCHEMA

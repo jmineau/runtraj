@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -456,9 +456,10 @@
 
 <span class="sd">:class:`HysplitConfig` holds them. Most are HYSPLIT's own, under HYSPLIT's</span>
 <span class="sd">names; a few are used by runtraj itself. Its ``mode`` says what a run</span>
-<span class="sd">makes: particles (HYSPLIT's particle output, ``ICHEM=8``, the default) or concentration</span>
+<span class="sd">makes: particles (HYSPLIT's particle output, ``ICHEM=8``, the default), concentration</span>
 <span class="sd">grids, whose pollutants and grids are :class:`Pollutant` and</span>
-<span class="sd">:class:`ConcentrationGrid` records. Which input file each setting goes to</span>
+<span class="sd">:class:`ConcentrationGrid` records, or trajectories, from HYSPLIT's</span>
+<span class="sd">trajectory program ``hyts_std``. Which input file each setting goes to</span>
 <span class="sd">is the HYSPLIT driver's business (:mod:`runtraj.models.hysplit.driver`).</span>
 <span class="sd">"""</span>
 
@@ -529,6 +530,82 @@
 
 <span class="c1">#: Settings only the concentration mode reads.</span>
 <span class="n">CONCENTRATION_SETTINGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pollutants"</span><span class="p">,</span> <span class="s2">"grids"</span><span class="p">)</span>
+
+<span class="c1">#: The values ``hyts_std`` can write along a trajectory beside its pressure,</span>
+<span class="c1">#: each asked for with its ``tm_`` setting: the setting, HYSPLIT's label for</span>
+<span class="c1">#: it in the trajectory file, and the column of the trajectory table.</span>
+<span class="n">TRAJECTORY_DIAGNOSTICS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"tm_tpot"</span><span class="p">,</span> <span class="s2">"THETA"</span><span class="p">,</span> <span class="s2">"tpot"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_tamb"</span><span class="p">,</span> <span class="s2">"AIR_TEMP"</span><span class="p">,</span> <span class="s2">"temp"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_rain"</span><span class="p">,</span> <span class="s2">"RAINFALL"</span><span class="p">,</span> <span class="s2">"rain"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_mixd"</span><span class="p">,</span> <span class="s2">"MIXDEPTH"</span><span class="p">,</span> <span class="s2">"mlht"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_relh"</span><span class="p">,</span> <span class="s2">"RELHUMID"</span><span class="p">,</span> <span class="s2">"relh"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_sphu"</span><span class="p">,</span> <span class="s2">"SPCHUMID"</span><span class="p">,</span> <span class="s2">"sphu"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_mixr"</span><span class="p">,</span> <span class="s2">"H2OMIXRA"</span><span class="p">,</span> <span class="s2">"mixr"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_terr"</span><span class="p">,</span> <span class="s2">"TERR_MSL"</span><span class="p">,</span> <span class="s2">"zsfc"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_dswf"</span><span class="p">,</span> <span class="s2">"SUN_FLUX"</span><span class="p">,</span> <span class="s2">"dswf"</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1">#: Settings only the trajectory mode reads: which values are written along a</span>
+<span class="c1">#: trajectory. Another mode refuses one that is set, and records none.</span>
+<span class="n">TRAJECTORY_ONLY_SETTINGS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">TRAJECTORY_DIAGNOSTICS</span><span class="p">)</span>
+
+<span class="c1">#: The ``SETUP.CFG`` entries of a trajectory run, the settings ``hyts_std``</span>
+<span class="c1">#: reads that runtraj lets a config set. The rest of ``SETUP.CFG`` is the</span>
+<span class="c1">#: dispersion model's, and is not written.</span>
+<span class="n">TRAJECTORY_SETUP_SETTINGS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"delt"</span><span class="p">,</span>
+    <span class="s2">"tratio"</span><span class="p">,</span>
+    <span class="s2">"mgmin"</span><span class="p">,</span>
+    <span class="s2">"khmax"</span><span class="p">,</span>
+    <span class="s2">"k10m"</span><span class="p">,</span>
+    <span class="s2">"kmixd"</span><span class="p">,</span>
+    <span class="s2">"kmix0"</span><span class="p">,</span>
+    <span class="s2">"tout"</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">TRAJECTORY_ONLY_SETTINGS</span><span class="p">,</span>
+    <span class="s2">"wbbh"</span><span class="p">,</span>
+    <span class="s2">"wbwf"</span><span class="p">,</span>
+    <span class="s2">"wbwr"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#: Every setting a trajectory run records: its mode, what goes to</span>
+<span class="c1">#: ``CONTROL``, and :data:`TRAJECTORY_SETUP_SETTINGS`. A setting of the</span>
+<span class="c1">#: other modes, such as ``numpar``, is neither written nor recorded, so a</span>
+<span class="c1">#: ``hysplit`` block that sets it for its particle variants serves a</span>
+<span class="c1">#: trajectory variant too.</span>
+<span class="n">TRAJECTORY_SETTINGS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"mode"</span><span class="p">,</span>
+    <span class="s2">"n_hours"</span><span class="p">,</span>
+    <span class="s2">"w_option"</span><span class="p">,</span>
+    <span class="s2">"z_top"</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">TRAJECTORY_SETUP_SETTINGS</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#: ``SETUP.CFG`` entries written in every run of the trajectory mode:</span>
+<span class="c1">#: heights above ground (``KAGL=1``), as ``zagl`` is in the particle table.</span>
+<span class="n">FIXED_TRAJECTORY_SETUP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"kagl"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+<span class="c1">#: The defaults of ``hyts_std`` that differ from the dispersion model's,</span>
+<span class="c1">#: which a trajectory config gets where it sets none: an output row every</span>
+<span class="c1">#: hour, and no minimum mixed-layer depth.</span>
+<span class="n">TRAJECTORY_DEFAULTS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"tout"</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span> <span class="s2">"kmix0"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+<span class="c1">#: Settings of ``hyts_std`` that runtraj fixes in the trajectory mode, with</span>
+<span class="c1">#: the value each must have when a config sets it, and why.</span>
+<span class="n">TRAJECTORY_FIXED</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"kagl"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">"runtraj writes KAGL=1, so zagl is the height above ground; set "</span>
+        <span class="s2">"tm_terr: 1 for the terrain height (zsfc), and add it for heights "</span>
+        <span class="s2">"above sea level"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"nstr"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"a trajectory starts at each release's time; add releases to start "</span>
+        <span class="s2">"trajectories at more times"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"nver"</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"runtraj does not read the file of a run that splits trajectories"</span><span class="p">),</span>
+<span class="p">}</span>
 
 <span class="c1">#: The ``CPACK`` values whose concentration file runtraj reads: 0 every cell,</span>
 <span class="c1">#: 1 and 3 only the cells that are not zero (written the same way).</span>
@@ -789,6 +866,19 @@
 <span class="sd">    concentration`` are refused. A particles-mode run</span>
 <span class="sd">    records no ``mode``, ``pollutants`` or ``grids``, so its settings</span>
 <span class="sd">    folder is the one it had before the mode existed.</span>
+
+<span class="sd">    ``trajectory`` runs HYSPLIT's trajectory program, ``hyts_std``, which</span>
+<span class="sd">    follows one air parcel from each release location with the mean wind</span>
+<span class="sd">    and no turbulence, and gives the trajectory table</span>
+<span class="sd">    (:mod:`runtraj.trajectories`). It reads few settings</span>
+<span class="sd">    (:data:`TRAJECTORY_SETTINGS`): the run's length, vertical motion and</span>
+<span class="sd">    top, ``tout``, the ``tm_`` settings that add a column each, and a</span>
+<span class="sd">    handful ``hyts_std`` shares with ``hycs_std``. Every other setting,</span>
+<span class="sd">    such as ``numpar``, is left out of a trajectory run, neither written</span>
+<span class="sd">    nor recorded. ``tout`` is 60 and ``kmix0`` is 0 unless set, the</span>
+<span class="sd">    defaults of ``hyts_std`` (:data:`TRAJECTORY_DEFAULTS`). Heights are</span>
+<span class="sd">    always above ground (``KAGL=1``), and ``realizations`` above 1 are</span>
+<span class="sd">    refused, since nothing in a trajectory run is random.</span>
 <span class="sd">    """</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -798,12 +888,14 @@
     <span class="c1">#: table.</span>
     <span class="n">UNRECORDED</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"directory"</span><span class="p">})</span>
 
-    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"particles"</span><span class="p">,</span> <span class="s2">"concentration"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"particles"</span><span class="p">,</span> <span class="s2">"concentration"</span><span class="p">,</span> <span class="s2">"trajectory"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="s2">"particles"</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"What HYSPLIT makes: ``particles``, the particle table, or "</span>
+            <span class="s2">"What HYSPLIT makes: ``particles``, the particle table; "</span>
             <span class="s2">"``concentration``, grids of each pollutant's concentration "</span>
-            <span class="s2">"(``grids`` and ``pollutants``)."</span>
+            <span class="s2">"(``grids`` and ``pollutants``); or ``trajectory``, the "</span>
+            <span class="s2">"trajectory table, from HYSPLIT's trajectory program "</span>
+            <span class="s2">"``hyts_std``."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">pollutants</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Pollutant</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1019,7 +1111,9 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Trajectory heights above ground (1) or above sea level (0). "</span>
-            <span class="s2">"Read only by HYSPLIT's trajectory model, not by ``hycs_std``."</span>
+            <span class="s2">"Read only by HYSPLIT's trajectory model, not by ``hycs_std``. "</span>
+            <span class="s2">"In ``mode: trajectory`` runtraj always writes 1, and refuses "</span>
+            <span class="s2">"another value."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">kbls</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1056,7 +1150,10 @@
     <span class="p">)</span>
     <span class="n">kmix0</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="mi">150</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">"Minimum mixed-layer depth, in meters."</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Minimum mixed-layer depth, in meters. 0 by default in ``mode: "</span>
+            <span class="s2">"trajectory``, as in ``hyts_std``."</span>
+        <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">kmixd</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="kc">None</span><span class="p">,</span>
@@ -1184,7 +1281,9 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Trajectory restart interval, in hours. "</span>
-            <span class="s2">"Read only by HYSPLIT's trajectory model, not by ``hycs_std``."</span>
+            <span class="s2">"Read only by HYSPLIT's trajectory model, not by ``hycs_std``. "</span>
+            <span class="s2">"Refused in ``mode: trajectory``, where each release starts its "</span>
+            <span class="s2">"own trajectories."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">nturb</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1195,7 +1294,8 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Trajectory vertical split number. "</span>
-            <span class="s2">"Read only by HYSPLIT's trajectory model, not by ``hycs_std``."</span>
+            <span class="s2">"Read only by HYSPLIT's trajectory model, not by ``hycs_std``. "</span>
+            <span class="s2">"Refused in ``mode: trajectory``."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">outdt</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1270,9 +1370,75 @@
     <span class="p">)</span>
     <span class="n">tout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="mi">0</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Trajectory output interval, in minutes. "</span>
-            <span class="s2">"Read only by HYSPLIT's trajectory model, not by ``hycs_std``."</span>
+            <span class="s2">"Trajectory output interval, in minutes: the time between the "</span>
+            <span class="s2">"rows of a trajectory. Read only in ``mode: trajectory``, where "</span>
+            <span class="s2">"it is 60 by default, and under an hour must divide 60 (HYSPLIT "</span>
+            <span class="s2">"lowers any other to one that does)."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_tpot</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the potential temperature along each trajectory (1), as "</span>
+            <span class="s2">"``tpot``, in K. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_tamb</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the air temperature along each trajectory (1), as "</span>
+            <span class="s2">"``temp``, in K. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_rain</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the rainfall along each trajectory (1), as ``rain``, in "</span>
+            <span class="s2">"mm per hour. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_mixd</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the mixed-layer depth along each trajectory (1), as "</span>
+            <span class="s2">"``mlht``, in m. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_relh</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the relative humidity along each trajectory (1), as "</span>
+            <span class="s2">"``relh``, in percent. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_sphu</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the specific humidity along each trajectory (1), as "</span>
+            <span class="s2">"``sphu``, in g/kg. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_mixr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the water vapor mixing ratio along each trajectory (1), "</span>
+            <span class="s2">"as ``mixr``, in g/kg. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_terr</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the terrain height along each trajectory (1), as "</span>
+            <span class="s2">"``zsfc``, in m above sea level. In ``mode: trajectory`` only."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">tm_dswf</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Write the downward shortwave flux along each trajectory (1), "</span>
+            <span class="s2">"as ``dswf``, in W/m2. In ``mode: trajectory`` only."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">tratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1423,17 +1589,36 @@
             <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">value</span>
 
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_trajectory_defaults</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Give a trajectory config the defaults of ``hyts_std`` where it sets none (:data:`TRAJECTORY_DEFAULTS`)."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">TRAJECTORY_DEFAULTS</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">data</span>
+
     <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Refuse pollutants and grids outside the concentration mode, and a concentration run without a pollutant or a grid."""</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse the settings of another mode, a concentration run without a pollutant or a grid, and a trajectory run HYSPLIT would change."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+            <span class="n">used</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">TRAJECTORY_ONLY_SETTINGS</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">used</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">used</span><span class="p">)</span><span class="si">}</span><span class="s2"> are settings of HYSPLIT's mode: "</span>
+                    <span class="sa">f</span><span class="s2">"trajectory, and this config's mode is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">. Set "</span>
+                    <span class="s2">"mode: trajectory, or leave them out."</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">"concentration"</span><span class="p">:</span>
             <span class="n">used</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">CONCENTRATION_SETTINGS</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
             <span class="k">if</span> <span class="n">used</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">used</span><span class="p">)</span><span class="si">}</span><span class="s2"> are settings of HYSPLIT's mode: "</span>
-                    <span class="s2">"concentration, and this config's mode is particles. Set "</span>
+                    <span class="sa">f</span><span class="s2">"concentration, and this config's mode is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">. Set "</span>
                     <span class="s2">"mode: concentration, or leave them out."</span>
                 <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_trajectory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">"concentration"</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">CONCENTRATION_SETTINGS</span><span class="p">:</span>
             <span class="n">records</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
@@ -1454,24 +1639,45 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a trajectory config whose ``tout`` HYSPLIT would lower, or that sets what runtraj fixes."""</span>
+        <span class="n">tout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tout</span>
+        <span class="k">if</span> <span class="n">tout</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="p">(</span><span class="n">tout</span> <span class="o">&lt;</span> <span class="mi">60</span> <span class="ow">and</span> <span class="mi">60</span> <span class="o">%</span> <span class="n">tout</span><span class="p">):</span>
+            <span class="n">fits</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="n">tout</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"tout=</span><span class="si">{</span><span class="n">tout</span><span class="si">}</span><span class="s2">: in mode: trajectory the output interval is 1 "</span>
+                <span class="s2">"minute or more, and under an hour it must divide 60, or "</span>
+                <span class="sa">f</span><span class="s2">"HYSPLIT lowers it (to </span><span class="si">{</span><span class="n">fits</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">fits</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">). Use one "</span>
+                <span class="s2">"of 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, or 60 or more."</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">why</span><span class="p">)</span> <span class="ow">in</span> <span class="n">TRAJECTORY_FIXED</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_fields_set</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2"> is not a setting of mode: "</span>
+                    <span class="sa">f</span><span class="s2">"trajectory: </span><span class="si">{</span><span class="n">why</span><span class="si">}</span><span class="s2">. Leave </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> out."</span>
+                <span class="p">)</span>
+
 <div class="viewcode-block" id="HysplitConfig.settings">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitConfig.settings.html#runtraj.models.hysplit.HysplitConfig.settings">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return what a run records of this config: the settings of its mode.</span>
 
-<span class="sd">        A particles-mode record has no ``mode``, ``pollutants`` or</span>
-<span class="sd">        ``grids``, so it is the record (and the settings folder) a run had</span>
-<span class="sd">        before the mode existed. A concentration-mode record has no</span>
-<span class="sd">        :data:`PARTICLES_SETTINGS`.</span>
+<span class="sd">        A particles-mode record has no ``mode``, ``pollutants``, ``grids``</span>
+<span class="sd">        or ``tm_`` setting, so it is the record (and the settings folder) a</span>
+<span class="sd">        run had before the modes existed. A concentration-mode record has</span>
+<span class="sd">        no :data:`PARTICLES_SETTINGS`, and a trajectory-mode record only</span>
+<span class="sd">        :data:`TRAJECTORY_SETTINGS`.</span>
 <span class="sd">        """</span>
         <span class="n">record</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">settings</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">record</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">TRAJECTORY_SETTINGS</span><span class="p">}</span>
         <span class="n">drop</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="o">*</span><span class="n">CONCENTRATION_SETTINGS</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
             <span class="k">else</span> <span class="n">PARTICLES_SETTINGS</span>
         <span class="p">)</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">drop</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">drop</span><span class="p">,</span> <span class="o">*</span><span class="n">TRAJECTORY_ONLY_SETTINGS</span><span class="p">):</span>
             <span class="n">record</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">record</span></div>
 
@@ -1601,9 +1807,15 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If *n* is more than one and the runs would repeat one another:</span>
-<span class="sd">            only ``krand=4`` (HYSPLIT seeds each run from the clock) and</span>
+<span class="sd">            a trajectory run draws no random numbers, and otherwise only ``krand=4`` (HYSPLIT seeds each run from the clock) and</span>
 <span class="sd">            ``krand=2`` with a seed give each realization its own draws.</span>
 <span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"realizations=</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> with mode: trajectory would run the same "</span>
+                <span class="s2">"trajectories each time: hyts_std draws no random numbers. "</span>
+                <span class="s2">"Leave realizations out."</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">krand</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">krand</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
         <span class="p">):</span>
@@ -1624,6 +1836,13 @@
     <span class="s2">"CPACK_READ"</span><span class="p">,</span>
     <span class="s2">"FIXED_CONCENTRATION_SETUP"</span><span class="p">,</span>
     <span class="s2">"FIXED_SETUP"</span><span class="p">,</span>
+    <span class="s2">"FIXED_TRAJECTORY_SETUP"</span><span class="p">,</span>
+    <span class="s2">"TRAJECTORY_DEFAULTS"</span><span class="p">,</span>
+    <span class="s2">"TRAJECTORY_DIAGNOSTICS"</span><span class="p">,</span>
+    <span class="s2">"TRAJECTORY_FIXED"</span><span class="p">,</span>
+    <span class="s2">"TRAJECTORY_ONLY_SETTINGS"</span><span class="p">,</span>
+    <span class="s2">"TRAJECTORY_SETTINGS"</span><span class="p">,</span>
+    <span class="s2">"TRAJECTORY_SETUP_SETTINGS"</span><span class="p">,</span>
     <span class="s2">"PARTICLES_SETTINGS"</span><span class="p">,</span>
     <span class="s2">"SAMPLING_TYPES"</span><span class="p">,</span>
     <span class="s2">"ConcentrationGrid"</span><span class="p">,</span>

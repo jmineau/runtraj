@@ -119,8 +119,9 @@ a concentration variant too; each pollutant has its own ``hours``. A
 particles unless its class says another type (its ``result``), so a stage of
 particles is refused on a concentration variant; give the variant
 ``<stage>: null`` under ``stages``. The particle
-transforms, the plots of particles, and :func:`runtraj.run_trajectories`
-are for particles too.
+transforms and the plots of particles are for particles too.
+:func:`runtraj.run_trajectories` runs one release in any mode, and returns
+the tree of grids in this one.
 
 runtraj does not yet expose HYSPLIT's other ``ICHEM`` modes, time-varying
 emissions (``EMITIMES``), or sampling that starts or stops inside the run;

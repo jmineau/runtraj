@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -438,6 +438,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.status.html">runtraj.Project.status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.submit.html">runtraj.Project.submit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.table_path.html">runtraj.Project.table_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.trajectories.html">runtraj.Project.trajectories</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Release.html">runtraj.Release</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -488,6 +489,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.particles_path.html">runtraj.Simulation.particles_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.result.html">runtraj.Simulation.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.result_path.html">runtraj.Simulation.result_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.trajectories.html">runtraj.Simulation.trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.transport.html">runtraj.Simulation.transport</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.has.html">runtraj.Simulation.has</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.path.html">runtraj.Simulation.path</a></li>
@@ -552,6 +554,14 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.write_concentration.html">runtraj.concentration.write_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.require_netcdf4.html">runtraj.concentration.require_netcdf4</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="trajectories.html">Trajectories</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.TRAJECTORY_SCHEMA.html">runtraj.trajectories.TRAJECTORY_SCHEMA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.check_trajectories.html">runtraj.trajectories.check_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.read_trajectories.html">runtraj.trajectories.read_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.write_trajectories.html">runtraj.trajectories.write_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.trajectories_from_table.html">runtraj.trajectories.trajectories_from_table</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="transforms.html">Transforms and Sampling</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -779,6 +789,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.find_hycs_std.html">runtraj.models.hysplit.find_hycs_std</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.find_program.html">runtraj.models.hysplit.find_program</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.data_tables.html">runtraj.models.hysplit.data_tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
@@ -786,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
@@ -873,7 +885,8 @@ names another. The worker gets it as
 <a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html#runtraj.models.hysplit.HysplitModel" title="runtraj.models.hysplit.HysplitModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitModel</span></code></a> (see <a class="reference internal" href="execution.html"><span class="doc">Execution</span></a>), which
 picks the met files, writes HYSPLIT’s input files, runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, and
 reads the particles it writes, or, with <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code>, its
-concentration grids (<a class="reference internal" href="#hysplit-concentration"><span class="std std-ref">The concentration mode</span></a>).</p>
+concentration grids (<a class="reference internal" href="#hysplit-concentration"><span class="std std-ref">The concentration mode</span></a>). With <code class="docutils literal notranslate"><span class="pre">mode:</span>
+<span class="pre">trajectory</span></code> it runs <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> instead (<a class="reference internal" href="#hysplit-trajectory"><span class="std std-ref">The trajectory mode</span></a>).</p>
 <section id="config">
 <h2>Config<a class="headerlink" href="#config" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitConfig</span></code></a> holds every setting that
@@ -905,7 +918,10 @@ run uses, from the <code class="docutils literal notranslate"><span class="pre">
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.find_hycs_std.html#runtraj.models.hysplit.find_hycs_std" title="runtraj.models.hysplit.find_hycs_std"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.find_hycs_std</span></code></a></p></td>
 <td><p>Return the <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> a run uses: <code class="docutils literal notranslate"><span class="pre">exec/hycs_std</span></code> under <em>directory</em>, else the first on <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.data_tables.html#runtraj.models.hysplit.data_tables" title="runtraj.models.hysplit.data_tables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.data_tables</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program" title="runtraj.models.hysplit.find_program"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.find_program</span></code></a></p></td>
+<td><p>Return the HYSPLIT program called <em>name</em> that a run uses: <code class="docutils literal notranslate"><span class="pre">exec/&lt;name&gt;</span></code> under <em>directory</em>, else the first on <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.data_tables.html#runtraj.models.hysplit.data_tables" title="runtraj.models.hysplit.data_tables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.data_tables</span></code></a></p></td>
 <td><p>Return HYSPLIT's data tables a run uses, by name: a file to link, or the text to write.</p></td>
 </tr>
 </tbody>
@@ -957,7 +973,7 @@ the input files of a run. A project run then adds the release heights
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html#runtraj.models.hysplit.write_inputs" title="runtraj.models.hysplit.write_inputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.write_inputs</span></code></a></p></td>
-<td><p>Write everything <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> reads for one run into <em>workdir</em>.</p></td>
+<td><p>Write everything <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> reads for one run into <em>workdir</em>, or <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> in the trajectory mode.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html#runtraj.models.hysplit.run_hycs_std" title="runtraj.models.hysplit.run_hycs_std"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.run_hycs_std</span></code></a></p></td>
 <td><p>Run the <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> in <em>workdir</em>, writing its output to <code class="docutils literal notranslate"><span class="pre">hysplit.log</span></code>.</p></td>
@@ -1041,6 +1057,79 @@ hold all that was released. Set <code class="docutils literal notranslate"><span
 </table>
 </div>
 </section>
+<section id="the-trajectory-mode">
+<span id="hysplit-trajectory"></span><h2>The trajectory mode<a class="headerlink" href="#the-trajectory-mode" title="Link to this heading">#</a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">trajectory</span></code> runtraj runs HYSPLIT’s trajectory program,
+<code class="docutils literal notranslate"><span class="pre">hyts_std</span></code>, from <code class="docutils literal notranslate"><span class="pre">exec/</span></code> of the same HYSPLIT folder (or <code class="docutils literal notranslate"><span class="pre">PATH</span></code>), and
+its SHA-256 is the one in the run’s settings. <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> has the lines
+both programs read (the release time and locations, <code class="docutils literal notranslate"><span class="pre">n_hours</span></code>,
+<code class="docutils literal notranslate"><span class="pre">w_option</span></code>, <code class="docutils literal notranslate"><span class="pre">z_top</span></code>, the met files), then <code class="docutils literal notranslate"><span class="pre">./</span></code> and <code class="docutils literal notranslate"><span class="pre">tdump</span></code>, where
+the trajectories are written.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> is one namelist for both programs, and <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> reads
+the dispersion model’s entries too: <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code> and <code class="docutils literal notranslate"><span class="pre">IDSP</span></code> change its
+trajectories. So a trajectory run’s <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> holds only:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 40.0%" />
+<col style="width: 60.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>In <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code></p></th>
+<th class="head"><p>In runtraj</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KAGL</span></code></p></td>
+<td><p>Fixed at 1: heights above ground, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>. A config that sets
+<code class="docutils literal notranslate"><span class="pre">kagl</span></code> to another value is refused.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KMSL</span></code></p></td>
+<td><p>The release’s <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TOUT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tout</span></code>, 60 unless set. Under an hour it must divide 60;
+<code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> lowers any other value to one that does, so the
+config refuses it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TM_TPOT</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_TAMB</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_RAIN</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_MIXD</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_RELH</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TM_SPHU</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_MIXR</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_TERR</span></code>, <code class="docutils literal notranslate"><span class="pre">TM_DSWF</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">tm_</span></code> settings, each a column of the table
+(<a class="reference internal" href="trajectories.html"><span class="doc">Trajectories</span></a>). <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> always writes the pressure.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DELT</span></code>, <code class="docutils literal notranslate"><span class="pre">TRATIO</span></code>, <code class="docutils literal notranslate"><span class="pre">MGMIN</span></code>, <code class="docutils literal notranslate"><span class="pre">KHMAX</span></code>, <code class="docutils literal notranslate"><span class="pre">K10M</span></code>, <code class="docutils literal notranslate"><span class="pre">KMIXD</span></code>,
+<code class="docutils literal notranslate"><span class="pre">KMIX0</span></code>, <code class="docutils literal notranslate"><span class="pre">WBBH</span></code>, <code class="docutils literal notranslate"><span class="pre">WBWF</span></code>, <code class="docutils literal notranslate"><span class="pre">WBWR</span></code></p></td>
+<td><p>The settings of those names. <code class="docutils literal notranslate"><span class="pre">kmix0</span></code> is 0 unless set, the
+default of <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Every other setting is the dispersion model’s and is left out of a
+trajectory run, neither written nor recorded
+(<code class="xref py py-data docutils literal notranslate"><span class="pre">TRAJECTORY_SETTINGS</span></code>). <code class="docutils literal notranslate"><span class="pre">nstr</span></code> and
+<code class="docutils literal notranslate"><span class="pre">nver</span></code> (restarts and splits) are refused: a release starts its own
+trajectories, and runtraj does not read a split run’s file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> starts a trajectory at every location in <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>, so a
+multipoint release may hold two points at one place, which <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>
+would join into a line source. A column release is refused
+(<code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code>), since there is no line source to make of it.</p>
+<p><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html#runtraj.models.hysplit.read_tdump" title="runtraj.models.hysplit.read_tdump"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_tdump()</span></code></a> reads the file by the widths of
+its fields. A run fails as <code class="docutils literal notranslate"><span class="pre">NO_TRAJECTORIES_DATA</span></code> when there is no file
+or no row in it, and as <code class="docutils literal notranslate"><span class="pre">MET_COVERAGE</span></code> when it holds fewer trajectories
+than the release has locations: <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> leaves out a location outside
+the met’s domain and numbers the rest from 1. A trajectory that leaves the
+domain later ends there, and its run is complete. Met that runs out is
+found as in any run, from the files before it starts and from HYSPLIT’s
+warning after.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html#runtraj.models.hysplit.read_tdump" title="runtraj.models.hysplit.read_tdump"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.read_tdump</span></code></a></p></td>
+<td><p>Read a trajectory file <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> wrote.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="reading-the-input-files">
 <h2>Reading the input files<a class="headerlink" href="#reading-the-input-files" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html#runtraj.models.hysplit.ControlFile" title="runtraj.models.hysplit.ControlFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">ControlFile</span></code></a> holds what a <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file
@@ -1051,7 +1140,7 @@ was made without runtraj.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html#runtraj.models.hysplit.ControlFile" title="runtraj.models.hysplit.ControlFile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.ControlFile</span></code></a></p></td>
-<td><p>Contents of a HYSPLIT <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file for one run of <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>.</p></td>
+<td><p>Contents of a HYSPLIT <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file for one run of <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> or <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.read_namelist.html#runtraj.models.hysplit.read_namelist" title="runtraj.models.hysplit.read_namelist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.read_namelist</span></code></a></p></td>
 <td><p>Return the entries of a <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> namelist, by lowercase name.</p></td>
@@ -1162,16 +1251,20 @@ or one with fewer samples than the run holds. A
 <code class="docutils literal notranslate"><span class="pre">sampling_interval</span></code> longer than the run gives no sample; for
 anything else, read the log.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FORTRAN_RUNTIME_ERROR</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NO_TRAJECTORIES_DATA</span></code></p></td>
+<td><p>A trajectory run wrote no <code class="docutils literal notranslate"><span class="pre">tdump</span></code> file, or one with no row. Read
+the log.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FORTRAN_RUNTIME_ERROR</span></code></p></td>
 <td><p>HYSPLIT stopped with a Fortran error, which the message names. Read
 the log and the kept workdir’s <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code> file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PARTICLE_LIMIT</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PARTICLE_LIMIT</span></code></p></td>
 <td><p>HYSPLIT reached <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> before every location of a multipoint
 release got its particles, so the last ones would have fewer or
 none. Leave <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> unset, or raise it (<a class="reference internal" href="../guides/releases.html"><span class="doc">Releases</span></a>).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EXIT_STATUS</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EXIT_STATUS</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> was killed by a signal, or exited with a non-zero
 status, and its log holds no other known message. The message names
 the signal or the status, and the log ends with the last lines of
@@ -1181,17 +1274,17 @@ memory per task, or run fewer releases at once. The particles
 HYSPLIT had written are not kept, and running again runs the
 simulation again.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code></p></td>
 <td><p>A multipoint release whose points share a horizontal location,
 which HYSPLIT would join into a line source. Use a
 <a class="reference internal" href="_api/runtraj.ColumnRelease.html#runtraj.ColumnRelease" title="runtraj.ColumnRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnRelease</span></code></a> for a column, or one
 <a class="reference internal" href="_api/runtraj.PointRelease.html#runtraj.PointRelease" title="runtraj.PointRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointRelease</span></code></a> per height (<a class="reference internal" href="../guides/releases.html"><span class="doc">Releases</span></a>).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TIMEOUT</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TIMEOUT</span></code></p></td>
 <td><p>The run took longer than <code class="docutils literal notranslate"><span class="pre">timeout</span></code> under <code class="docutils literal notranslate"><span class="pre">execution:</span></code>. Raise it,
 or look for a slow node or a met file read over a slow filesystem.</p></td>
 </tr>
-<tr class="row-odd"><td><p>an error’s name</p></td>
+<tr class="row-even"><td><p>an error’s name</p></td>
 <td><p>Any other error is recorded by its class, such as <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>,
 with its traceback. That is usually a bug or a setup problem worth
 reporting.</p></td>
@@ -1261,6 +1354,7 @@ reporting.</p></td>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-hysplit-build">The HYSPLIT build</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-hysplit">Running HYSPLIT</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-concentration-mode">The concentration mode</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-trajectory-mode">The trajectory mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-input-files">Reading the input files</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-reasons">Failure reasons</a></li>

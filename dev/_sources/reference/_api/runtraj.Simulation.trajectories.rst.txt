@@ -1,0 +1,6 @@
+runtraj.Simulation.trajectories
+===============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.trajectories

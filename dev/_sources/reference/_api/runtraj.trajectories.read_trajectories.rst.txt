@@ -1,0 +1,6 @@
+﻿runtraj.trajectories.read\_trajectories
+=======================================
+
+.. currentmodule:: runtraj.trajectories
+
+.. autofunction:: read_trajectories

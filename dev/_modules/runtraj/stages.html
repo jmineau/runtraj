@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -495,8 +495,7 @@
 <span class="n">STAGE_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[a-z][a-z0-9_]*$"</span><span class="p">)</span>
 
 <span class="c1">#: Names a stage may not take: the output directory's own trees (the result</span>
-<span class="c1">#: types of :mod:`runtraj.results`, and ``trajectories``, kept for the type a</span>
-<span class="c1">#: trajectory model will make), and the columns of ``project.status()``.</span>
+<span class="c1">#: types of :mod:`runtraj.results`), and the columns of ``project.status()``.</span>
 <span class="n">RESERVED_NAMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
     <span class="p">{</span>
         <span class="s2">"particles"</span><span class="p">,</span>

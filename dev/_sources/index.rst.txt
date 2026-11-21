@@ -22,8 +22,8 @@ The particles follow the air, backward from a measurement or forward from
 a source, over hours to days, at the resolution of the meteorology you give
 it. They carry no mass and do not settle. A transform weights each
 particle's rows for a species lost on the way (to a lifetime, deposition,
-or oxidation) or for a column measurement, and runtraj writes particle
-positions, not concentration grids.
+or oxidation) or for a column measurement. HYSPLIT's other outputs are a
+``mode`` of its block: concentration grids, and single trajectories.
 
 .. note::
 

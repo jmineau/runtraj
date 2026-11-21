@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -500,6 +500,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">RESULT_TYPES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">reads</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.trajectories</span><span class="w"> </span><span class="kn">import</span> <span class="n">trajectories_from_table</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
@@ -1391,7 +1392,8 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If a selected variant makes another type of result, such as</span>
-<span class="sd">            concentration (:meth:`concentration`).</span>
+<span class="sd">            concentration (:meth:`concentration`) or trajectories</span>
+<span class="sd">            (:meth:`trajectories`).</span>
 <span class="sd">        """</span>
         <span class="n">first</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"release"</span><span class="p">,</span> <span class="s2">"variant"</span><span class="p">,</span> <span class="s2">"realization"</span><span class="p">]</span>
         <span class="n">with_time</span> <span class="o">=</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s2">"time"</span> <span class="ow">in</span> <span class="n">columns</span>
@@ -1441,9 +1443,13 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">others</span><span class="p">:</span>
             <span class="n">made</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">result</span><span class="si">}</span><span class="s2">)"</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">others</span><span class="p">)</span>
+            <span class="n">verbs</span> <span class="o">=</span> <span class="s2">" or "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"project.</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">"</span>
+                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">result</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">others</span><span class="p">})</span>
+            <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Variants </span><span class="si">{</span><span class="n">made</span><span class="si">}</span><span class="s2"> make no </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">. Leave them out of the "</span>
-                <span class="s2">"selection, and read each type with its own method."</span>
+                <span class="sa">f</span><span class="s2">"selection, and read their results with </span><span class="si">{</span><span class="n">verbs</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">frame</span>
 
@@ -1475,7 +1481,8 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If *sel* names a variant that makes another type of result.</span>
+<span class="sd">            If *sel* names a variant that makes another type of result, or no</span>
+<span class="sd">            variant of the project makes concentration.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1485,6 +1492,7 @@
 <span class="sd">        ... ]  # doctest: +SKIP</span>
 <span class="sd">        &gt;&gt;&gt; tree["local"]["TEST"].sum("time")  # doctest: +SKIP</span>
 <span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_type</span><span class="p">(</span><span class="s2">"concentration"</span><span class="p">,</span> <span class="s2">"concentration"</span><span class="p">)</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of_type</span><span class="p">(</span><span class="s2">"concentration"</span><span class="p">,</span> <span class="n">sel</span><span class="p">)</span>
         <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">present</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_present</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
@@ -1495,6 +1503,68 @@
                 <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">found</span><span class="p">[(</span><span class="n">rid</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">found</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Raise unless a variant of the project makes results of the type *kind*, which HYSPLIT's *mode* does."""</span>
+        <span class="n">made</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">v</span><span class="o">.</span><span class="n">result</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">()})</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">made</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"No variant of this project makes </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">: its variants make "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">' and '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">made</span><span class="p">)</span><span class="si">}</span><span class="s2">. A variant makes </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> when its "</span>
+                <span class="sa">f</span><span class="s2">"transport model does, as HYSPLIT does with mode: </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="Project.trajectories">
+<a class="viewcode-back" href="../../reference/_api/runtraj.Project.trajectories.html#runtraj.Project.trajectories">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Load the trajectories of every selected simulation that has them, as one table.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sel : DataFrame or mask, optional</span>
+<span class="sd">            The simulations, as for :meth:`status`. Every simulation of a</span>
+<span class="sd">            variant that makes trajectories by default.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The trajectory table (:mod:`runtraj.trajectories`) with</span>
+<span class="sd">            ``release`` and ``variant`` first. A trajectory is told from</span>
+<span class="sd">            another by ``release``, ``variant`` and ``trajectory``</span>
+<span class="sd">            together. Simulations without a result are left out, and the</span>
+<span class="sd">            table is empty when none has one yet.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If *sel* names a variant that makes another type of result, or no</span>
+<span class="sd">            variant of the project makes trajectories.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; trajectories = project.trajectories()  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; trajectories.groupby(["release", "trajectory"])[</span>
+<span class="sd">        ...     "zagl"</span>
+<span class="sd">        ... ].max()  # doctest: +SKIP</span>
+<span class="sd">        """</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"release"</span><span class="p">,</span> <span class="s2">"variant"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_type</span><span class="p">(</span><span class="s2">"trajectories"</span><span class="p">,</span> <span class="s2">"trajectory"</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of_type</span><span class="p">(</span><span class="s2">"trajectories"</span><span class="p">,</span> <span class="n">sel</span><span class="p">)</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+            <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">present</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">present</span><span class="p">(</span><span class="s2">"trajectories"</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">rows</span><span class="p">[</span><span class="s2">"release"</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
+            <span class="c1"># In selection order: a set would follow each process's string hashing.</span>
+            <span class="n">releases</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">"release"</span><span class="p">])</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">present</span><span class="p">]</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s2">"trajectories"</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">num_rows</span><span class="p">:</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trajectories_from_table</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">variant</span><span class="o">=</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">first</span><span class="p">))</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">first</span> <span class="o">+</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">found</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">first</span><span class="p">]]</span></div>
 
 
     <span class="c1"># -- running ---------------------------------------------------------------</span>

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -452,12 +452,13 @@
                   
   <h1>Source code for runtraj.models.hysplit.driver</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""</span>
-<span class="sd">Write HYSPLIT's input files, run ``hycs_std``, and read the particles it writes.</span>
+<span class="sd">Write HYSPLIT's input files, run ``hycs_std`` or ``hyts_std``, and read the particles it writes.</span>
 
 <span class="sd">:func:`write_inputs` fills a working directory with everything</span>
-<span class="sd">``hycs_std`` reads, and :func:`read_particle_dat` reads the particle file</span>
+<span class="sd">the program reads, and :func:`read_particle_dat` reads the particle file</span>
 <span class="sd">it writes (:func:`runtraj.models.hysplit.read_cdump` the concentration</span>
-<span class="sd">file of a concentration run). :class:`~runtraj.models.hysplit.HysplitModel` runs the two</span>
+<span class="sd">file of a concentration run, and :func:`runtraj.models.hysplit.read_tdump`</span>
+<span class="sd">the trajectory file of a trajectory run). :class:`~runtraj.models.hysplit.HysplitModel` runs the two</span>
 <span class="sd">around ``hycs_std`` in one directory; call them yourself to look at the</span>
 <span class="sd">input files of a run, or to read a particle file from elsewhere.</span>
 <span class="sd">"""</span>
@@ -479,7 +480,10 @@
     <span class="n">CONCENTRATION_SETTINGS</span><span class="p">,</span>
     <span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">,</span>
     <span class="n">FIXED_SETUP</span><span class="p">,</span>
+    <span class="n">FIXED_TRAJECTORY_SETUP</span><span class="p">,</span>
     <span class="n">PARTICLES_SETTINGS</span><span class="p">,</span>
+    <span class="n">TRAJECTORY_ONLY_SETTINGS</span><span class="p">,</span>
+    <span class="n">TRAJECTORY_SETUP_SETTINGS</span><span class="p">,</span>
     <span class="n">WIND_ERROR_SETTINGS</span><span class="p">,</span>
     <span class="n">ZI_ERROR_SETTINGS</span><span class="p">,</span>
     <span class="n">HysplitConfig</span><span class="p">,</span>
@@ -498,6 +502,8 @@
 <span class="n">CONTROL_FILE</span> <span class="o">=</span> <span class="s2">"CONTROL"</span>
 <span class="n">SETUP_FILE</span> <span class="o">=</span> <span class="s2">"SETUP.CFG"</span>
 <span class="n">HYCS_STD_FILE</span> <span class="o">=</span> <span class="s2">"hycs_std"</span>
+<span class="c1">#: HYSPLIT's trajectory program, which the trajectory mode runs.</span>
+<span class="n">HYTS_STD_FILE</span> <span class="o">=</span> <span class="s2">"hyts_std"</span>
 <span class="c1">#: HYSPLIT's folders, as its download unpacks: the programs and the data tables.</span>
 <span class="n">EXEC_DIR</span> <span class="o">=</span> <span class="s2">"exec"</span>
 <span class="n">BDYFILES_DIR</span> <span class="o">=</span> <span class="s2">"bdyfiles"</span>
@@ -531,8 +537,71 @@
         <span class="o">*</span><span class="n">ZI_ERROR_SETTINGS</span><span class="p">,</span>
         <span class="o">*</span><span class="n">RUNTRAJ_SETTINGS</span><span class="p">,</span>
         <span class="o">*</span><span class="n">CONCENTRATION_SETTINGS</span><span class="p">,</span>  <span class="c1"># CONTROL</span>
+        <span class="o">*</span><span class="n">TRAJECTORY_ONLY_SETTINGS</span><span class="p">,</span>  <span class="c1"># hyts_std's</span>
     <span class="p">}</span>
 <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">program_name</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the HYSPLIT program a run with *config* is: ``hyts_std`` in the trajectory mode, else ``hycs_std``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; program_name(HysplitConfig(n_hours=-24, mode="trajectory"))</span>
+<span class="sd">    'hyts_std'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">HYTS_STD_FILE</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span> <span class="k">else</span> <span class="n">HYCS_STD_FILE</span>
+
+
+<div class="viewcode-block" id="find_program">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_program</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the HYSPLIT program called *name* that a run uses: ``exec/&lt;name&gt;`` under *directory*, else the first on ``PATH``.</span>
+
+<span class="sd">    runtraj does not include HYSPLIT, so the build is yours. *directory* is</span>
+<span class="sd">    the HYSPLIT folder as unpacked (``directory`` under ``models: hysplit:``</span>
+<span class="sd">    in ``config.yaml``), which holds ``exec/`` and ``bdyfiles/``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The program: ``hycs_std``, or ``hyts_std`` for a trajectory run.</span>
+<span class="sd">    directory : str or Path, optional</span>
+<span class="sd">        The HYSPLIT folder.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HYSPLITNotFoundError</span>
+<span class="sd">        If *directory* has no ``exec/&lt;name&gt;``, or it is not executable;</span>
+<span class="sd">        without *directory*, if no such program is on ``PATH``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exe</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">EXEC_DIR</span> <span class="o">/</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exe</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">HYSPLITNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"No </span><span class="si">{</span><span class="n">EXEC_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">. Set directory "</span>
+                <span class="s2">"(under models: hysplit: in config.yaml) to the HYSPLIT folder "</span>
+                <span class="sa">f</span><span class="s2">"as unpacked, the one that holds </span><span class="si">{</span><span class="n">EXEC_DIR</span><span class="si">}</span><span class="s2">/ and </span><span class="si">{</span><span class="n">BDYFILES_DIR</span><span class="si">}</span><span class="s2">/."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">HYSPLITNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">exe</span><span class="si">}</span><span class="s2"> is not executable, so it cannot run. A HYSPLIT folder "</span>
+                <span class="s2">"unpacked on Windows, or copied from there, loses that permission; "</span>
+                <span class="sa">f</span><span class="s2">"make it executable with: chmod +x </span><span class="si">{</span><span class="n">exe</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">exe</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HYSPLITNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"No </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> on PATH. runtraj does not include HYSPLIT: get "</span>
+            <span class="s2">"it from NOAA ARL (https://www.ready.noaa.gov/HYSPLIT.php), then set directory (under "</span>
+            <span class="s2">"models: hysplit: in config.yaml) to the HYSPLIT folder, or put the "</span>
+            <span class="sa">f</span><span class="s2">"folder that holds an executable </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> on PATH."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">found</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="find_hycs_std">
@@ -551,42 +620,22 @@
 <span class="sd">        If *directory* has no ``exec/hycs_std``, or its ``hycs_std`` is not</span>
 <span class="sd">        executable; without *directory*, if no ``hycs_std`` is on ``PATH``.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">exe</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">EXEC_DIR</span> <span class="o">/</span> <span class="n">HYCS_STD_FILE</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">exe</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="n">HYSPLITNotFoundError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"No </span><span class="si">{</span><span class="n">EXEC_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">HYCS_STD_FILE</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">. Set directory "</span>
-                <span class="s2">"(under models: hysplit: in config.yaml) to the HYSPLIT folder "</span>
-                <span class="sa">f</span><span class="s2">"as unpacked, the one that holds </span><span class="si">{</span><span class="n">EXEC_DIR</span><span class="si">}</span><span class="s2">/ and </span><span class="si">{</span><span class="n">BDYFILES_DIR</span><span class="si">}</span><span class="s2">/."</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">exe</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">HYSPLITNotFoundError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">exe</span><span class="si">}</span><span class="s2"> is not executable, so it cannot run. A HYSPLIT folder "</span>
-                <span class="s2">"unpacked on Windows, or copied from there, loses that permission; "</span>
-                <span class="sa">f</span><span class="s2">"make it executable with: chmod +x </span><span class="si">{</span><span class="n">exe</span><span class="si">}</span><span class="s2">"</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">exe</span>
-    <span class="n">found</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">HYCS_STD_FILE</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">HYSPLITNotFoundError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"No </span><span class="si">{</span><span class="n">HYCS_STD_FILE</span><span class="si">}</span><span class="s2"> on PATH. runtraj does not include HYSPLIT: get "</span>
-            <span class="s2">"it from NOAA ARL (https://www.ready.noaa.gov/HYSPLIT.php), then set directory (under "</span>
-            <span class="s2">"models: hysplit: in config.yaml) to the HYSPLIT folder, or put the "</span>
-            <span class="sa">f</span><span class="s2">"folder that holds an executable </span><span class="si">{</span><span class="n">HYCS_STD_FILE</span><span class="si">}</span><span class="s2"> on PATH."</span>
-        <span class="p">)</span>
-    <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">found</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">find_program</span><span class="p">(</span><span class="n">HYCS_STD_FILE</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="data_tables">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.data_tables.html#runtraj.models.hysplit.data_tables">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">data_tables</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">data_tables</span><span class="p">(</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">program</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">HYCS_STD_FILE</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return HYSPLIT's data tables a run uses, by name: a file to link, or the text to write.</span>
 
 <span class="sd">    They come from ``bdyfiles/`` under *directory*, or, without</span>
 <span class="sd">    *directory*, from a ``bdyfiles/`` folder beside the folder of the</span>
-<span class="sd">    ``hycs_std`` on ``PATH``, as HYSPLIT's download lays them out. runtraj</span>
+<span class="sd">    ``hycs_std`` on ``PATH`` (or of *program*, such as ``hyts_std`` for a</span>
+<span class="sd">    trajectory run), as HYSPLIT's download lays them out. runtraj</span>
 <span class="sd">    includes none. HYSPLIT's own ``ASCDATA.CFG`` says the tables are in</span>
 <span class="sd">    ``../bdyfiles/``; a run links them into its workdir, so its</span>
 <span class="sd">    ``ASCDATA.CFG`` is returned as text with that line, the sixth, set to</span>
@@ -596,12 +645,12 @@
 <span class="sd">    ------</span>
 <span class="sd">    HYSPLITNotFoundError</span>
 <span class="sd">        If the folder is missing or lacks one of the four tables, or,</span>
-<span class="sd">        without *directory*, no ``hycs_std`` is on ``PATH``.</span>
+<span class="sd">        without *directory*, no *program* is on ``PATH``.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">BDYFILES_DIR</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">folder</span> <span class="o">=</span> <span class="n">find_hycs_std</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">BDYFILES_DIR</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">BDYFILES_DIR</span>
     <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">DATA_TABLES</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">()]</span>
     <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">HYSPLITNotFoundError</span><span class="p">(</span>
@@ -712,7 +761,20 @@
 <span class="sd">    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``</span>
 <span class="sd">    is unset, which depend on the release locations or follow from other</span>
 <span class="sd">    settings.</span>
+
+<span class="sd">    A trajectory run gets :data:`FIXED_TRAJECTORY_SETUP` and the settings</span>
+<span class="sd">    of :data:`TRAJECTORY_SETUP_SETTINGS` only: ``hyts_std`` reads the</span>
+<span class="sd">    dispersion model's entries too (``ICHEM`` and ``IDSP`` change its</span>
+<span class="sd">    trajectories), so none of them is written. The driver adds ``KMSL``.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">FIXED_TRAJECTORY_SETUP</span><span class="p">)</span>
+        <span class="n">entries</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">TRAJECTORY_SETUP_SETTINGS</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">entries</span>
     <span class="n">particles</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
     <span class="n">entries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">FIXED_SETUP</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="n">FIXED_CONCENTRATION_SETUP</span><span class="p">)</span>
     <span class="n">skip</span> <span class="o">=</span> <span class="n">NOT_IN_SETUP</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="n">NOT_IN_SETUP</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">PARTICLES_SETTINGS</span><span class="p">)</span>
@@ -944,10 +1006,10 @@
     <span class="n">kmsl</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Write everything ``hycs_std`` reads for one run into *workdir*.</span>
+<span class="sd">    Write everything ``hycs_std`` reads for one run into *workdir*, or ``hyts_std`` in the trajectory mode.</span>
 
-<span class="sd">    Links ``hycs_std`` (from ``config.directory``, or else ``PATH``:</span>
-<span class="sd">    :func:`find_hycs_std`) and HYSPLIT's data tables</span>
+<span class="sd">    Links the program (from ``config.directory``, or else ``PATH``:</span>
+<span class="sd">    :func:`find_program`) and HYSPLIT's data tables</span>
 <span class="sd">    (:func:`data_tables`), and writes ``CONTROL`` and ``SETUP.CFG``, plus</span>
 <span class="sd">    ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for</span>
 <span class="sd">    them. *workdir* is created if needed, and should be empty.</span>
@@ -972,15 +1034,17 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    HYSPLITNotFoundError</span>
-<span class="sd">        If there is no ``hycs_std`` to link (:func:`find_hycs_std`).</span>
+<span class="sd">        If there is no program to link (:func:`find_program`).</span>
 <span class="sd">    """</span>
     <span class="n">workdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
     <span class="n">workdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Link the binary and the data tables; only hycs_std is</span>
     <span class="c1"># taken from exec/, which holds dozens of other programs.</span>
-    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="n">HYCS_STD_FILE</span><span class="p">:</span> <span class="n">find_hycs_std</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">)}</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">data_tables</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">program</span> <span class="o">=</span> <span class="n">program_name</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">trajectory</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="n">program</span><span class="p">:</span> <span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">data_tables</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">program</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
             <span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -998,10 +1062,16 @@
         <span class="n">met_files</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">met_files</span><span class="p">),</span>
         <span class="n">pollutants</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">pollutants</span><span class="p">,</span>
         <span class="n">grids</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">grids</span><span class="p">,</span>
+        <span class="n">trajectory</span><span class="o">=</span><span class="n">trajectory</span><span class="p">,</span>
     <span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">CONTROL_FILE</span><span class="p">)</span>
 
     <span class="n">entries</span> <span class="o">=</span> <span class="n">setup_entries</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"kmsl"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kmsl</span>
+    <span class="k">if</span> <span class="n">trajectory</span><span class="p">:</span>  <span class="c1"># none of the dispersion model's entries or files</span>
+        <span class="n">setup</span> <span class="o">=</span> <span class="n">NameList</span><span class="p">(</span><span class="s2">"SETUP"</span><span class="p">)</span>
+        <span class="n">setup</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+        <span class="n">setup</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">SETUP_FILE</span><span class="p">)</span>
+        <span class="k">return</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"maxpar"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">maxpar_for</span><span class="p">(</span><span class="n">release_locations</span><span class="p">(</span><span class="n">locations</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
         <span class="n">entries</span><span class="p">[</span><span class="s2">"ivmax"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>  <span class="c1"># number of output variables</span>
@@ -1022,11 +1092,14 @@
 
 <div class="viewcode-block" id="run_hycs_std">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.run_hycs_std.html#runtraj.models.hysplit.run_hycs_std">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_hycs_std</span><span class="p">(</span><span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_hycs_std</span><span class="p">(</span>
+    <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">program</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">HYCS_STD_FILE</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Run the ``hycs_std`` in *workdir*, writing its output to ``hysplit.log``.</span>
 
-<span class="sd">    *workdir* holds the inputs :func:`write_inputs` wrote. With *timeout*</span>
+<span class="sd">    *workdir* holds the inputs :func:`write_inputs` wrote. *program* names</span>
+<span class="sd">    another HYSPLIT program linked there, ``hyts_std`` for a trajectory run. With *timeout*</span>
 <span class="sd">    seconds the run is stopped when it takes longer; without it, it may run</span>
 <span class="sd">    as long as HYSPLIT does. If this process is interrupted while it waits</span>
 <span class="sd">    (``KeyboardInterrupt`` or ``SystemExit``), the run is stopped too.</span>
@@ -1048,7 +1121,7 @@
     <span class="k">with</span> <span class="p">(</span>
         <span class="n">log_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">,</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-            <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">HYCS_STD_FILE</span><span class="p">)],</span>
+            <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">program</span><span class="p">)],</span>
             <span class="n">cwd</span><span class="o">=</span><span class="n">workdir</span><span class="p">,</span>
             <span class="n">stdout</span><span class="o">=</span><span class="n">handle</span><span class="p">,</span>
             <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>

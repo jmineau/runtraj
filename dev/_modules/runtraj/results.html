@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -458,11 +458,13 @@
 <span class="sd">  Parquet file per release.</span>
 <span class="sd">- ``concentration``: grids of concentration</span>
 <span class="sd">  (:mod:`runtraj.concentration`), one NetCDF file per release.</span>
+<span class="sd">- ``trajectories``: the trajectory table (:mod:`runtraj.trajectories`),</span>
+<span class="sd">  one Parquet file per release.</span>
 
 <span class="sd">A model says which type a config makes with an optional</span>
 <span class="sd">``result(config)`` (:class:`runtraj.models.TransportModel`), and makes</span>
 <span class="sd">particles when it does not say. The type names the tree of the output</span>
-<span class="sd">directory its files are kept in (``particles/``, ``concentration/``),</span>
+<span class="sd">directory its files are kept in (``particles/``, ``concentration/``, ``trajectories/``),</span>
 <span class="sd">beside the trees of the stages. A stage reads particles, so a variant that</span>
 <span class="sd">makes another type has no stages.</span>
 <span class="sd">"""</span>
@@ -483,6 +485,12 @@
     <span class="n">write_concentration</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_particles</span><span class="p">,</span> <span class="n">read_particles</span><span class="p">,</span> <span class="n">write_particles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.trajectories</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TRAJECTORIES_SUFFIX</span><span class="p">,</span>
+    <span class="n">check_trajectories</span><span class="p">,</span>
+    <span class="n">read_trajectories</span><span class="p">,</span>
+    <span class="n">write_trajectories</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">upath</span><span class="w"> </span><span class="kn">import</span> <span class="n">UPath</span>
@@ -543,6 +551,13 @@
         <span class="n">check_concentration</span><span class="p">,</span>
         <span class="n">write_concentration</span><span class="p">,</span>
         <span class="n">read_concentration</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"trajectories"</span><span class="p">:</span> <span class="n">ResultType</span><span class="p">(</span>
+        <span class="s2">"trajectories"</span><span class="p">,</span>
+        <span class="n">TRAJECTORIES_SUFFIX</span><span class="p">,</span>
+        <span class="n">check_trajectories</span><span class="p">,</span>
+        <span class="n">write_trajectories</span><span class="p">,</span>
+        <span class="n">read_trajectories</span><span class="p">,</span>
     <span class="p">),</span>
 <span class="p">}</span>
 

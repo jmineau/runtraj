@@ -55,6 +55,7 @@ Methods
    ~Project.status
    ~Project.submit
    ~Project.table_path
+   ~Project.trajectories
 
 
 

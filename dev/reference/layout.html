@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -438,6 +438,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.status.html">runtraj.Project.status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.submit.html">runtraj.Project.submit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.table_path.html">runtraj.Project.table_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.trajectories.html">runtraj.Project.trajectories</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Release.html">runtraj.Release</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -488,6 +489,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.particles_path.html">runtraj.Simulation.particles_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.result.html">runtraj.Simulation.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.result_path.html">runtraj.Simulation.result_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.trajectories.html">runtraj.Simulation.trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.transport.html">runtraj.Simulation.transport</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.has.html">runtraj.Simulation.has</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.path.html">runtraj.Simulation.path</a></li>
@@ -552,6 +554,14 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.write_concentration.html">runtraj.concentration.write_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.require_netcdf4.html">runtraj.concentration.require_netcdf4</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="trajectories.html">Trajectories</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.TRAJECTORY_SCHEMA.html">runtraj.trajectories.TRAJECTORY_SCHEMA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.check_trajectories.html">runtraj.trajectories.check_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.read_trajectories.html">runtraj.trajectories.read_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.write_trajectories.html">runtraj.trajectories.write_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.trajectories_from_table.html">runtraj.trajectories.trajectories_from_table</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="transforms.html">Transforms and Sampling</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -779,6 +789,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.find_hycs_std.html">runtraj.models.hysplit.find_hycs_std</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.find_program.html">runtraj.models.hysplit.find_program</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.data_tables.html">runtraj.models.hysplit.data_tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
@@ -786,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
@@ -876,7 +888,8 @@ of this for you.</p>
 <h2>The folders<a class="headerlink" href="#the-folders" title="Link to this heading">#</a></h2>
 <p>Each kind of result has its own tree: <code class="docutils literal notranslate"><span class="pre">particles/</span></code> for what the transport
 model wrote (<code class="docutils literal notranslate"><span class="pre">concentration/</span></code> for a variant that makes concentration,
-<a class="reference internal" href="concentration.html"><span class="doc">Result Types and Concentration</span></a>), and one named for each stage of the project, which is what is
+<a class="reference internal" href="concentration.html"><span class="doc">Result Types and Concentration</span></a>, and <code class="docutils literal notranslate"><span class="pre">trajectories/</span></code> for one that makes
+trajectories, <a class="reference internal" href="trajectories.html"><span class="doc">Trajectories</span></a>), and one named for each stage of the project, which is what is
 made from a simulation’s results afterward. PYSTILT’s footprint is a stage,
 and its tree is <code class="docutils literal notranslate"><span class="pre">footprint/</span></code>; the examples here show it. Inside a tree,
 each settings folder holds the
@@ -894,6 +907,10 @@ results of one set of settings, split by the release’s date:</p>
     settings=conc-41e9a0/
       _settings.yaml
       date=2024-07-15/&lt;release id&gt;.nc
+  trajectories/                               a variant with mode: trajectory
+    settings=traj-9c05d2/
+      _settings.yaml
+      date=2024-07-15/&lt;release id&gt;.parquet
   footprint/
     settings=hrrr-f82d40/
       _settings.yaml
@@ -914,7 +931,8 @@ release’s release date in UTC. An ensemble (<code class="docutils literal notr
 <p>The <code class="docutils literal notranslate"><span class="pre">logs/</span></code> tree follows the folders of the results:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;release</span> <span class="pre">id&gt;.log</span></code> is the transport model’s log, under the particles’
-settings folder (the concentration’s, for a variant that makes it).</p></li>
+settings folder (the concentration’s or the trajectories’, for a
+variant that makes them).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;release</span> <span class="pre">id&gt;.failure.yaml</span></code> says why a result failed, and at which
 <code class="docutils literal notranslate"><span class="pre">stage</span></code>. A failed run writes it under the particles’ settings folder,
 with <code class="docutils literal notranslate"><span class="pre">stage:</span> <span class="pre">particles</span></code>. A failed footprint writes it under the
@@ -925,8 +943,8 @@ particles were fine. It is removed when the result is written.</p></li>
 particles’ settings folder. A failed run’s workdir is kept without the
 transport model’s particle file, and with <code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> under
 <code class="docutils literal notranslate"><span class="pre">execution:</span></code> every run’s is, whole.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">particles/</span></code> and <code class="docutils literal notranslate"><span class="pre">footprint/</span></code> trees hold only Parquet files and
-<code class="docutils literal notranslate"><span class="pre">_settings.yaml</span></code>, so each reads as one dataset. <code class="docutils literal notranslate"><span class="pre">concentration/</span></code> holds
+<p>The <code class="docutils literal notranslate"><span class="pre">particles/</span></code>, <code class="docutils literal notranslate"><span class="pre">trajectories/</span></code> and <code class="docutils literal notranslate"><span class="pre">footprint/</span></code> trees hold only
+Parquet files and <code class="docutils literal notranslate"><span class="pre">_settings.yaml</span></code>, so each reads as one dataset. <code class="docutils literal notranslate"><span class="pre">concentration/</span></code> holds
 one NetCDF file per release, a group per grid (<a class="reference internal" href="concentration.html"><span class="doc">Result Types and Concentration</span></a>). A stage from another
 package has a tree under its own name, with files in the format and with
 the extension that stage chooses.</p>

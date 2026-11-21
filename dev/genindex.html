@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -553,16 +553,18 @@
       </ul></li>
       <li><a href="reference/_api/runtraj.stages.check_stage.html#runtraj.stages.check_stage">check_stage() (in module runtraj.stages)</a>
 </li>
+      <li><a href="reference/_api/runtraj.trajectories.check_trajectories.html#runtraj.trajectories.check_trajectories">check_trajectories() (in module runtraj.trajectories)</a>
+</li>
       <li><a href="reference/_api/runtraj.output.Output.clear_failure.html#runtraj.output.Output.clear_failure">clear_failure() (runtraj.output.Output method)</a>
 </li>
       <li><a href="reference/_api/runtraj.ColumnRelease.html#runtraj.ColumnRelease">ColumnRelease (class in runtraj)</a>
 </li>
       <li><a href="reference/_api/runtraj.output.Output.complete.html#runtraj.output.Output.complete">complete() (runtraj.output.Output method)</a>
 </li>
-      <li><a href="reference/_api/runtraj.output.completed.html#runtraj.output.completed">completed() (in module runtraj.output)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/_api/runtraj.output.completed.html#runtraj.output.completed">completed() (in module runtraj.output)</a>
+</li>
       <li><a href="getting_started/glossary.html#term-compute-root"><strong>compute root</strong></a>
 </li>
       <li><a href="reference/_api/runtraj.Simulation.concentration.html#runtraj.Simulation.concentration">concentration (runtraj.Simulation property)</a>
@@ -681,13 +683,15 @@
 </li>
       <li><a href="reference/_api/runtraj.transforms.Oxidation.field.html#runtraj.transforms.Oxidation.field">field() (runtraj.transforms.Oxidation method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.identity.file_stamp.html#runtraj.identity.file_stamp">file_stamp() (in module runtraj.identity)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.models.hysplit.Met.files_for.html#runtraj.models.hysplit.Met.files_for">files_for() (runtraj.models.hysplit.Met method)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.hysplit.find_hycs_std.html#runtraj.models.hysplit.find_hycs_std">find_hycs_std() (in module runtraj.models.hysplit)</a>
+</li>
+      <li><a href="reference/_api/runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program">find_program() (in module runtraj.models.hysplit)</a>
 </li>
       <li><a href="reference/_api/runtraj.transforms.FirstOrderLifetime.html#runtraj.transforms.FirstOrderLifetime">FirstOrderLifetime (class in runtraj.transforms)</a>
 </li>
@@ -915,13 +919,15 @@
 </li>
       <li><a href="reference/_api/runtraj.sampling.nearest_cell.html#runtraj.sampling.nearest_cell">nearest_cell() (in module runtraj.sampling)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.needs_workdir.html#runtraj.models.hysplit.HysplitModel.needs_workdir">needs_workdir (runtraj.models.hysplit.HysplitModel attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.models.hysplit.FailureReason.html#runtraj.models.hysplit.FailureReason.NO_CONCENTRATION_DATA">NO_CONCENTRATION_DATA (runtraj.models.hysplit.FailureReason attribute)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.hysplit.FailureReason.html#runtraj.models.hysplit.FailureReason.NO_PARTICLE_DATA">NO_PARTICLE_DATA (runtraj.models.hysplit.FailureReason attribute)</a>
+</li>
+      <li><a href="reference/_api/runtraj.models.hysplit.FailureReason.html#runtraj.models.hysplit.FailureReason.NO_TRAJECTORIES_DATA">NO_TRAJECTORIES_DATA (runtraj.models.hysplit.FailureReason attribute)</a>
 </li>
       <li><a href="getting_started/glossary.html#term-numpar"><strong>numpar</strong></a>
 </li>
@@ -1051,6 +1057,10 @@
 </li>
       <li><a href="reference/_api/runtraj.execution.schedule.read_sites.html#runtraj.execution.schedule.read_sites">read_sites() (in module runtraj.execution.schedule)</a>
 </li>
+      <li><a href="reference/_api/runtraj.models.hysplit.read_tdump.html#runtraj.models.hysplit.read_tdump">read_tdump() (in module runtraj.models.hysplit)</a>
+</li>
+      <li><a href="reference/_api/runtraj.trajectories.read_trajectories.html#runtraj.trajectories.read_trajectories">read_trajectories() (in module runtraj.trajectories)</a>
+</li>
       <li><a href="reference/_api/runtraj.models.hysplit.Met.readable.html#runtraj.models.hysplit.Met.readable">readable() (runtraj.models.hysplit.Met method)</a>
 </li>
       <li><a href="reference/_api/runtraj.config.Variant.readable_run_settings.html#runtraj.config.Variant.readable_run_settings">readable_run_settings (runtraj.config.Variant property)</a>
@@ -1095,10 +1105,10 @@
 </li>
       <li><a href="reference/_api/runtraj.Project.releases_path.html#runtraj.Project.releases_path">releases_path (runtraj.Project property)</a>
 </li>
-      <li><a href="reference/_api/runtraj.releases.releases_to_frame.html#runtraj.releases.releases_to_frame">releases_to_frame() (in module runtraj.releases)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/_api/runtraj.releases.releases_to_frame.html#runtraj.releases.releases_to_frame">releases_to_frame() (in module runtraj.releases)</a>
+</li>
       <li><a href="reference/_api/runtraj.concentration.require_netcdf4.html#runtraj.concentration.require_netcdf4">require_netcdf4() (in module runtraj.concentration)</a>
 </li>
       <li><a href="reference/_api/runtraj.ProjectConfig.resolve.html#runtraj.ProjectConfig.resolve">resolve() (runtraj.ProjectConfig method)</a>
@@ -1275,9 +1285,17 @@
 </li>
       <li><a href="reference/_api/runtraj.ProjectConfig.to_yaml.html#runtraj.ProjectConfig.to_yaml">to_yaml() (runtraj.ProjectConfig method)</a>
 </li>
+      <li><a href="reference/_api/runtraj.Simulation.trajectories.html#runtraj.Simulation.trajectories">trajectories (runtraj.Simulation property)</a>
+</li>
+      <li><a href="reference/_api/runtraj.Project.trajectories.html#runtraj.Project.trajectories">trajectories() (runtraj.Project method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/_api/runtraj.trajectories.trajectories_from_table.html#runtraj.trajectories.trajectories_from_table">trajectories_from_table() (in module runtraj.trajectories)</a>
+</li>
       <li><a href="getting_started/glossary.html#term-trajectory"><strong>trajectory</strong></a>
+</li>
+      <li><a href="reference/_api/runtraj.trajectories.TRAJECTORY_SCHEMA.html#runtraj.trajectories.TRAJECTORY_SCHEMA">TRAJECTORY_SCHEMA (in module runtraj.trajectories)</a>
 </li>
       <li><a href="getting_started/glossary.html#term-transform"><strong>transform</strong></a>
 </li>
@@ -1372,6 +1390,8 @@
       <li><a href="reference/_api/runtraj.releases.write_releases.html#runtraj.releases.write_releases">write_releases() (in module runtraj.releases)</a>
 </li>
       <li><a href="reference/_api/runtraj.output.Output.write_result.html#runtraj.output.Output.write_result">write_result() (runtraj.output.Output method)</a>
+</li>
+      <li><a href="reference/_api/runtraj.trajectories.write_trajectories.html#runtraj.trajectories.write_trajectories">write_trajectories() (in module runtraj.trajectories)</a>
 </li>
   </ul></td>
 </tr></table>

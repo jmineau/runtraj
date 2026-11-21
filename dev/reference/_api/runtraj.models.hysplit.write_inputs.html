@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -438,6 +438,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.status.html">runtraj.Project.status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.submit.html">runtraj.Project.submit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Project.table_path.html">runtraj.Project.table_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.Project.trajectories.html">runtraj.Project.trajectories</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Release.html">runtraj.Release</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -488,6 +489,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.particles_path.html">runtraj.Simulation.particles_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.result.html">runtraj.Simulation.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.result_path.html">runtraj.Simulation.result_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.trajectories.html">runtraj.Simulation.trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.transport.html">runtraj.Simulation.transport</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.has.html">runtraj.Simulation.has</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Simulation.path.html">runtraj.Simulation.path</a></li>
@@ -552,6 +554,14 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.write_concentration.html">runtraj.concentration.write_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.concentration.require_netcdf4.html">runtraj.concentration.require_netcdf4</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../trajectories.html">Trajectories</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.trajectories.TRAJECTORY_SCHEMA.html">runtraj.trajectories.TRAJECTORY_SCHEMA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.trajectories.check_trajectories.html">runtraj.trajectories.check_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.trajectories.read_trajectories.html">runtraj.trajectories.read_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.trajectories.write_trajectories.html">runtraj.trajectories.write_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.trajectories.trajectories_from_table.html">runtraj.trajectories.trajectories_from_table</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../transforms.html">Transforms and Sampling</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -779,6 +789,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.find_hycs_std.html">runtraj.models.hysplit.find_hycs_std</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.find_program.html">runtraj.models.hysplit.find_program</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.data_tables.html">runtraj.models.hysplit.data_tables</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
@@ -786,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
@@ -874,9 +886,9 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.models.hysplit.write_inputs">
 <span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.</span></span><span class="sig-name descname"><span class="pre">write_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">workdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmsl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/driver.html#write_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.write_inputs" title="Link to this definition">#</a></dt>
-<dd><p>Write everything <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> reads for one run into <em>workdir</em>.</p>
-<p>Links <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> (from <code class="docutils literal notranslate"><span class="pre">config.directory</span></code>, or else <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:
-<a class="reference internal" href="runtraj.models.hysplit.find_hycs_std.html#runtraj.models.hysplit.find_hycs_std" title="runtraj.models.hysplit.find_hycs_std"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_hycs_std()</span></code></a>) and HYSPLIT’s data tables
+<dd><p>Write everything <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> reads for one run into <em>workdir</em>, or <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> in the trajectory mode.</p>
+<p>Links the program (from <code class="docutils literal notranslate"><span class="pre">config.directory</span></code>, or else <code class="docutils literal notranslate"><span class="pre">PATH</span></code>:
+<a class="reference internal" href="runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program" title="runtraj.models.hysplit.find_program"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_program()</span></code></a>) and HYSPLIT’s data tables
 (<a class="reference internal" href="runtraj.models.hysplit.data_tables.html#runtraj.models.hysplit.data_tables" title="runtraj.models.hysplit.data_tables"><code class="xref py py-func docutils literal notranslate"><span class="pre">data_tables()</span></code></a>), and writes <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> and <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code>, plus
 <code class="docutils literal notranslate"><span class="pre">ZICONTROL</span></code>, <code class="docutils literal notranslate"><span class="pre">WINDERR</span></code>, and <code class="docutils literal notranslate"><span class="pre">ZIERR</span></code> when the settings call for
 them. <em>workdir</em> is created if needed, and should be empty.</p>
@@ -894,7 +906,7 @@ when they are above sea level.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="runtraj.exceptions.HYSPLITNotFoundError.html#runtraj.exceptions.HYSPLITNotFoundError" title="runtraj.exceptions.HYSPLITNotFoundError"><strong>HYSPLITNotFoundError</strong></a> – If there is no <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> to link (<a class="reference internal" href="runtraj.models.hysplit.find_hycs_std.html#runtraj.models.hysplit.find_hycs_std" title="runtraj.models.hysplit.find_hycs_std"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_hycs_std()</span></code></a>).</p>
+<dd class="field-even"><p><a class="reference internal" href="runtraj.exceptions.HYSPLITNotFoundError.html#runtraj.exceptions.HYSPLITNotFoundError" title="runtraj.exceptions.HYSPLITNotFoundError"><strong>HYSPLITNotFoundError</strong></a> – If there is no program to link (<a class="reference internal" href="runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program" title="runtraj.models.hysplit.find_program"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_program()</span></code></a>).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>

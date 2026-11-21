@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -809,6 +809,31 @@
 <span class="sd">        &gt;&gt;&gt; sim.concentration["local"]["TEST"].sel(z=100).max()  # doctest: +SKIP</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="s2">"concentration"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulation.trajectories">
+<a class="viewcode-back" href="../../reference/_api/runtraj.Simulation.trajectories.html#runtraj.Simulation.trajectories">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The trajectory table, one row per trajectory per output time (:mod:`runtraj.trajectories`).</span>
+
+<span class="sd">        For a variant that makes trajectories, such as HYSPLIT's ``mode:</span>
+<span class="sd">        trajectory``. Read from the output directory on first access and</span>
+<span class="sd">        kept. Check :attr:`has_result` first when the run may not have</span>
+<span class="sd">        finished.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If the result has not been written yet, or the variant makes</span>
+<span class="sd">            another type of result.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; sim.trajectories.groupby("trajectory")["zagl"].max()  # doctest: +SKIP</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="s2">"trajectories"</span><span class="p">)</span></div>
 </div>
 
 

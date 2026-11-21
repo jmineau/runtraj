@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="runtraj For HYSPLIT Users" href="hysplit_users.html" />
+    <link rel="next" title="Trajectories" href="trajectories.html" />
     <link rel="prev" title="Reading And Plotting Particles" href="particles.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -430,6 +430,7 @@
 <li class="toctree-l1"><a class="reference internal" href="output.html">The Output Directory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="particles.html">Reading And Plotting Particles</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Concentration Grids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories.html">Trajectories</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">HYSPLIT</span></p>
 <ul class="nav bd-sidenav">
@@ -632,8 +633,9 @@ a concentration variant too; each pollutant has its own <code class="docutils li
 particles unless its class says another type (its <code class="docutils literal notranslate"><span class="pre">result</span></code>), so a stage of
 particles is refused on a concentration variant; give the variant
 <code class="docutils literal notranslate"><span class="pre">&lt;stage&gt;:</span> <span class="pre">null</span></code> under <code class="docutils literal notranslate"><span class="pre">stages</span></code>. The particle
-transforms, the plots of particles, and <a class="reference internal" href="../reference/_api/runtraj.run_trajectories.html#runtraj.run_trajectories" title="runtraj.run_trajectories"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.run_trajectories()</span></code></a>
-are for particles too.</p>
+transforms and the plots of particles are for particles too.
+<a class="reference internal" href="../reference/_api/runtraj.run_trajectories.html#runtraj.run_trajectories" title="runtraj.run_trajectories"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.run_trajectories()</span></code></a> runs one release in any mode, and returns
+the tree of grids in this one.</p>
 <p>runtraj does not yet expose HYSPLIT’s other <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code> modes, time-varying
 emissions (<code class="docutils literal notranslate"><span class="pre">EMITIMES</span></code>), or sampling that starts or stops inside the run;
 open an issue if you need one.</p>
@@ -678,11 +680,11 @@ center of its own is the same for every release, and
       </div>
     </a>
     <a class="right-next"
-       href="hysplit_users.html"
+       href="trajectories.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">runtraj For HYSPLIT Users</p>
+        <p class="prev-next-title">Trajectories</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

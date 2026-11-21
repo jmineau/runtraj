@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1226,12 +1226,15 @@
     <span class="n">workdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Run the transport model for one release and return its particles.</span>
+<span class="sd">    Run the transport model for one release and return what it made, particles unless the settings say another type.</span>
 
 <span class="sd">    This is what a project runs for each release, without a project: the</span>
-<span class="sd">    particles are returned, not stored.</span>
+<span class="sd">    result is returned, not stored. Its type follows the settings, as a</span>
+<span class="sd">    variant's does (:mod:`runtraj.results`): particles, or with HYSPLIT's</span>
+<span class="sd">    ``mode="trajectory"`` the trajectory table, or with</span>
+<span class="sd">    ``mode="concentration"`` the grids.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1259,11 +1262,14 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    pandas.DataFrame</span>
+<span class="sd">    pandas.DataFrame or xarray.DataTree</span>
 <span class="sd">        The particle table, one row per particle per output step, with</span>
 <span class="sd">        ``time`` (UTC), the release time plus ``age``, as a table read from</span>
 <span class="sd">        a particle file has. ``foot`` is the model's own (HYSPLIT's, made</span>
 <span class="sd">        with ``veght``). A model that writes no ``foot`` returns none.</span>
+<span class="sd">        With settings that make another type, that type's result: the</span>
+<span class="sd">        trajectory table (:mod:`runtraj.trajectories`), or a tree of</span>
+<span class="sd">        concentration grids (:mod:`runtraj.concentration`).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1287,15 +1293,13 @@
 <span class="sd">    ...     n_hours=-24,</span>
 <span class="sd">    ...     numpar=200,  # HYSPLIT's particle count</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; table = runtraj.run_trajectories(</span>
+<span class="sd">    ...     release, "/data/hrrr", n_hours=-24, mode="trajectory"</span>
+<span class="sd">    ... )  # doctest: +SKIP</span>
 <span class="sd">    """</span>
     <span class="n">transport_model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">transport_model</span><span class="o">.</span><span class="n">config_class</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
     <span class="n">made</span> <span class="o">=</span> <span class="n">model_result</span><span class="p">(</span><span class="n">transport_model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">made</span> <span class="o">!=</span> <span class="s2">"particles"</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"run_trajectories returns particles, and these settings make </span><span class="si">{</span><span class="n">made</span><span class="si">}</span><span class="s2">. "</span>
-            <span class="s2">"Use runtraj.models.run_model, whose result is the run's."</span>
-        <span class="p">)</span>
     <span class="n">met_config</span> <span class="o">=</span> <span class="n">transport_model</span><span class="o">.</span><span class="n">met_config_class</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">met</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">workdir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">workdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
@@ -1306,6 +1310,8 @@
             <span class="p">)</span>
         <span class="n">workdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">particles</span> <span class="o">=</span> <span class="n">run_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">met_config</span><span class="p">,</span> <span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span><span class="o">.</span><span class="n">result</span>
+    <span class="k">if</span> <span class="n">made</span> <span class="o">!=</span> <span class="s2">"particles"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">particles</span>
     <span class="n">particles</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span>
         <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"min"</span>
     <span class="p">)</span>

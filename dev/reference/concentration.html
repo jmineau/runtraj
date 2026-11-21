@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d72d97a0"></script>
+    <script src="../_static/documentation_options.js?v=4b18f6ba"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4.dev21+g4c1e58abe" />
+  <meta name="docsearch:version" content="0.1.0a4.dev26+g0af88c138" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -438,6 +438,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.status.html">runtraj.Project.status</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.submit.html">runtraj.Project.submit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.table_path.html">runtraj.Project.table_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Project.trajectories.html">runtraj.Project.trajectories</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Release.html">runtraj.Release</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -488,6 +489,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.particles_path.html">runtraj.Simulation.particles_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.result.html">runtraj.Simulation.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.result_path.html">runtraj.Simulation.result_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.trajectories.html">runtraj.Simulation.trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.transport.html">runtraj.Simulation.transport</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.has.html">runtraj.Simulation.has</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Simulation.path.html">runtraj.Simulation.path</a></li>
@@ -552,6 +554,14 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.read_concentration.html">runtraj.concentration.read_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.write_concentration.html">runtraj.concentration.write_concentration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.concentration.require_netcdf4.html">runtraj.concentration.require_netcdf4</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="trajectories.html">Trajectories</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.TRAJECTORY_SCHEMA.html">runtraj.trajectories.TRAJECTORY_SCHEMA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.check_trajectories.html">runtraj.trajectories.check_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.read_trajectories.html">runtraj.trajectories.read_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.write_trajectories.html">runtraj.trajectories.write_trajectories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.trajectories.trajectories_from_table.html">runtraj.trajectories.trajectories_from_table</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="transforms.html">Transforms and Sampling</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -779,6 +789,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.find_hycs_std.html">runtraj.models.hysplit.find_hycs_std</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.find_program.html">runtraj.models.hysplit.find_program</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.data_tables.html">runtraj.models.hysplit.data_tables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html">runtraj.models.hysplit.write_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html">runtraj.models.hysplit.run_hycs_std</a></li>
@@ -786,6 +797,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.Pollutant.html">runtraj.models.hysplit.Pollutant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.ConcentrationGrid.html">runtraj.models.hysplit.ConcentrationGrid</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_cdump.html">runtraj.models.hysplit.read_cdump</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html">runtraj.models.hysplit.read_tdump</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.html">runtraj.models.hysplit.ControlFile</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.read.html">runtraj.models.hysplit.ControlFile.read</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.ControlFile.write.html">runtraj.models.hysplit.ControlFile.write</a></li>
@@ -893,6 +905,11 @@ or another model that follows particles.</p></td>
 (<a class="reference internal" href="../guides/concentration.html"><span class="doc">Concentration Grids</span></a>).</p></td>
 <td><p>NetCDF, under <code class="docutils literal notranslate"><span class="pre">concentration/</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">trajectories</span></code></p></td>
+<td><p>The trajectory table (<a class="reference internal" href="trajectories.html"><span class="doc">Trajectories</span></a>), from HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">mode:</span>
+<span class="pre">trajectory</span></code> (<a class="reference internal" href="../guides/trajectories.html"><span class="doc">Trajectories</span></a>).</p></td>
+<td><p>Parquet, under <code class="docutils literal notranslate"><span class="pre">trajectories/</span></code></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -902,7 +919,8 @@ not say. <a class="reference internal" href="_api/runtraj.config.Variant.result.
 name of its tree in the output directory. <code class="docutils literal notranslate"><span class="pre">project.status()</span></code> has a column
 for each type a variant makes, and each type has its own read:
 <a class="reference internal" href="_api/runtraj.Project.particles.html#runtraj.Project.particles" title="runtraj.Project.particles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.particles()</span></code></a> and <code class="docutils literal notranslate"><span class="pre">sim.particles</span></code>,
-<a class="reference internal" href="_api/runtraj.Project.concentration.html#runtraj.Project.concentration" title="runtraj.Project.concentration"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.concentration()</span></code></a> and <code class="docutils literal notranslate"><span class="pre">sim.concentration</span></code>. A stage reads
+<a class="reference internal" href="_api/runtraj.Project.concentration.html#runtraj.Project.concentration" title="runtraj.Project.concentration"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.concentration()</span></code></a> and <code class="docutils literal notranslate"><span class="pre">sim.concentration</span></code>,
+<a class="reference internal" href="_api/runtraj.Project.trajectories.html#runtraj.Project.trajectories" title="runtraj.Project.trajectories"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Project.trajectories()</span></code></a> and <code class="docutils literal notranslate"><span class="pre">sim.trajectories</span></code>. A stage reads
 particles, so a variant that makes another type has no stages.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
