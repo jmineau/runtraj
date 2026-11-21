@@ -132,6 +132,13 @@ def test_a_pollutant_name_is_hysplits_four_characters():
         Pollutant(name="TOOLONG")
 
 
+@pytest.mark.parametrize("name", ["lat", "lon", "z", "time"])
+def test_a_pollutant_cannot_be_named_like_a_coordinate(name):
+    # A grid's variable and its coordinate cannot share a name in one Dataset.
+    with pytest.raises(ValidationError, match="name of a coordinate"):
+        Pollutant(name=name)
+
+
 def test_setup_writes_hysplits_concentration_output_and_no_particle_file():
     entries = setup_entries(_concentration())
     assert entries["ichem"] == 0

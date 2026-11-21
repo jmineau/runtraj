@@ -50,7 +50,8 @@ deep, as hourly averages:
 
 ``time`` is when each sample starts and ``time_end`` when it ends; ``z`` is
 the top of each level in meters above ground. Each pollutant is a variable
-of its own name. Its unit is the unit of mass of its ``rate`` per cubic
+of its own name (never ``lat``, ``lon``, ``z`` or ``time``, which are
+coordinates). Its unit is the unit of mass of its ``rate`` per cubic
 meter, so with a rate in grams per hour, the concentration is in g/m³.
 With ``cmass: 1`` each cell holds the mass in it instead, in grams, and
 no deposition is counted at ``z = 0``; the variable's ``units`` and

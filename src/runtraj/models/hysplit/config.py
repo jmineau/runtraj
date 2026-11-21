@@ -87,6 +87,11 @@ Sampling = Literal["average", "snapshot", "maximum"]
 SAMPLING_TYPES: dict[Sampling, int] = {"average": 0, "snapshot": 1, "maximum": 2}
 
 
+#: Names a pollutant cannot have: a grid's coordinates, which its variables share a Dataset with.
+#: (``time_end`` is a coordinate too, but longer than a pollutant's four characters.)
+RESERVED_POLLUTANT_NAMES = frozenset({"lat", "lon", "z", "time"})
+
+
 class Pollutant(BaseModel):
     """
     One pollutant of a HYSPLIT concentration run: what is released, and how it is removed.
@@ -104,7 +109,8 @@ class Pollutant(BaseModel):
         pattern=r"^[A-Za-z0-9_]{1,4}$",
         description=(
             "Up to four letters or digits: HYSPLIT's identifier, and the name "
-            "of the pollutant's variable in each grid."
+            "of the pollutant's variable in each grid. Not ``lat``, ``lon``, "
+            "``z`` or ``time``, which name the grid's coordinates."
         ),
     )
     rate: float = Field(
@@ -163,6 +169,18 @@ class Pollutant(BaseModel):
     resuspension: float = Field(
         0.0, ge=0, description="Resuspension factor of deposited mass, in 1/m."
     )
+
+    @field_validator("name")
+    @classmethod
+    def _not_a_coordinate(cls, value: str) -> str:
+        """Refuse a name a grid's coordinates use, which its variable cannot have."""
+        if value in RESERVED_POLLUTANT_NAMES:
+            raise ValueError(
+                f"{value!r} is the name of a coordinate of every grid, and a "
+                "grid's pollutant is a variable of the same Dataset. Use "
+                f"another name, not one of {sorted(RESERVED_POLLUTANT_NAMES)}."
+            )
+        return value
 
 
 class ConcentrationGrid(BaseModel):
