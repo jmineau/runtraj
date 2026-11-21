@@ -285,6 +285,10 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   met file per met, to count its time periods (HYSPLIT stops on a file with
   one, and `Met.check` refuses it), and one per grid the catalog lists, for
   the domain; so a damaged file still fails at run time.
+- **A `cdump` does not say which `ICHEM` wrote it.** `read_cdump` is told
+  the run's `ichem` and `cmass`; 1 and 10 are read as a `source` or
+  `release_time` dimension. Each rule of `_validate_ichem` is something a
+  run of HYSPLIT 5.4.2 showed (`docs/reference/hysplit.rst`).
 - **`hyts_std` reads the dispersion entries of `SETUP.CFG`** (`ICHEM` and
   `IDSP` change a trajectory), so a trajectory run writes only
   `TRAJECTORY_SETUP_SETTINGS`, and records only `TRAJECTORY_SETTINGS`. It

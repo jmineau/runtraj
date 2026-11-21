@@ -1351,16 +1351,18 @@ def test_integer_setup_fields_reject_fractions(name):
 def test_fixed_setup_entries_are_written_and_are_no_settings():
     entries = setup_entries(HysplitConfig(n_hours=-24))
     for name, value in FIXED_SETUP.items():
-        assert name not in HysplitConfig.model_fields
         assert entries[name] == value
+    assert "idsp" not in HysplitConfig.model_fields
 
 
-@pytest.mark.parametrize("name", ["ichem", "idsp"])
-def test_ichem_and_idsp_are_refused_as_settings(name):
+def test_idsp_is_refused_as_a_setting_and_ichem_is_8_or_unset():
     # Only ICHEM=8 with IDSP=2 writes particles.
     assert FIXED_SETUP == {"ichem": 8, "idsp": 2}
-    with pytest.raises(ValidationError, match=name):
-        HysplitConfig(n_hours=-24, **{name: FIXED_SETUP[name]})
+    with pytest.raises(ValidationError, match="idsp"):
+        HysplitConfig(n_hours=-24, idsp=2)
+    with pytest.raises(ValidationError, match="ichem=0"):
+        HysplitConfig(n_hours=-24, ichem=0)
+    assert setup_entries(HysplitConfig(n_hours=-24, ichem=8))["ichem"] == 8
 
 
 def test_setup_entries_default_to_hysplits_own():

@@ -43,7 +43,18 @@ COLUMN_TRAJECTORY = (
 )
 
 
-def check_releases(releases: pd.DataFrame, trajectory: bool = False) -> pd.DataFrame:
+#: Why a run that counts each release location apart cannot take a column release.
+COLUMN_SOURCES = (
+    "HYSPLIT's ichem: 1 gives each release location a grid of its own, and "
+    "a ColumnRelease is one line source between two locations: HYSPLIT "
+    "leaves the grid of the first empty and puts the column in the second. "
+    "Use a MultiPointRelease, whose points are the sources, or another ichem."
+)
+
+
+def check_releases(
+    releases: pd.DataFrame, trajectory: bool = False, sources: bool = False
+) -> pd.DataFrame:
     """
     Return the releases HYSPLIT cannot run, one row each, with ``check``, ``release`` and ``message``.
 
@@ -57,6 +68,11 @@ def check_releases(releases: pd.DataFrame, trajectory: bool = False) -> pd.DataF
     instead: every location starts a trajectory of its own, so a
     multipoint release may repeat a location, and there is no line source
     for a column.
+
+    With *sources*, for a concentration run with ``ichem: 1``, a column
+    release is refused as well as a multipoint one that repeats a
+    location: the run's grids are one per release location, and a column
+    is two locations and one source.
     """
     if trajectory:
         columns = pd.unique(releases.loc[releases["kind"] == "column", "release"])
@@ -71,9 +87,26 @@ def check_releases(releases: pd.DataFrame, trajectory: bool = False) -> pd.DataF
     multi = releases[releases["kind"] == "multipoint"]
     repeated = _repeated(multi["release"], multi["longitude"], multi["latitude"])
     bad = pd.unique(multi["release"].to_numpy()[repeated])
-    return pd.DataFrame(
+    refused = pd.DataFrame(
         {"check": "release_refused", "release": bad, "message": REPEATED_LOCATION},
         columns=["check", "release", "message"],
+    )
+    if not sources:
+        return refused
+    columns = pd.unique(releases.loc[releases["kind"] == "column", "release"])
+    return pd.concat(
+        [
+            refused,
+            pd.DataFrame(
+                {
+                    "check": "release_refused",
+                    "release": columns,
+                    "message": COLUMN_SOURCES,
+                },
+                columns=["check", "release", "message"],
+            ),
+        ],
+        ignore_index=True,
     )
 
 

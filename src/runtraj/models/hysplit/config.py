@@ -62,10 +62,47 @@ HYSPLIT_VARSIWANT = (
 #: with ``IDSP=1`` the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).
 FIXED_SETUP: dict[str, Any] = {"ichem": 8, "idsp": 2}
 
-#: ``SETUP.CFG`` entries written in every run of the concentration mode:
-#: HYSPLIT's own concentration output (``ICHEM=0``), with its own dispersion
-#: scheme (``IDSP`` unset, HYSPLIT's 1).
-FIXED_CONCENTRATION_SETUP: dict[str, Any] = {"ichem": 0}
+#: The ``ICHEM`` of the particles mode, the only value with which
+#: ``hycs_std`` writes the particle file.
+PARTICLES_ICHEM = 8
+
+#: The ``ICHEM`` values of a concentration run that runtraj writes and
+#: reads, and what each makes HYSPLIT do. The file has the same form with
+#: every one of them; what differs is what a cell or a pollutant of it means,
+#: which :func:`~runtraj.models.hysplit.read_cdump` is told.
+CONCENTRATION_ICHEM: dict[int, str] = {
+    0: "concentration, HYSPLIT's default",
+    1: "a grid for each release location (a source-receptor matrix)",
+    2: "pollutants that convert into one another (conversions)",
+    5: "deposition of whole particles, by probability",
+    6: "mass divided by air density: a mixing ratio",
+    9: "a lowest level whose top follows the mixed layer",
+    10: "a grid for each emission cycle (a matrix by release time)",
+}
+
+#: The ``ICHEM`` values a concentration run refuses, and why.
+ICHEM_REFUSED: dict[int, str] = {
+    3: (
+        "HYSPLIT's dust emission needs an emission and an area on each "
+        "release location, which a release does not have"
+    ),
+    4: (
+        "it counts on the met model's own grid, for HYSPLIT's chemistry "
+        "builds, which runtraj does not run"
+    ),
+    7: (
+        "it carries deposited particles on the sea surface and needs "
+        "momentum fluxes in the met files"
+    ),
+    8: (
+        "it is HYSPLIT's particle output, which is mode: particles; a "
+        "concentration run that sets it would write no particles"
+    ),
+    11: (
+        "HYSPLIT's daughter products need a DAUGHTER.TXT that its own "
+        "preprocessor writes"
+    ),
+}
 
 
 #: Settings only the particles mode reads: the particle file's variables
@@ -75,8 +112,13 @@ FIXED_CONCENTRATION_SETUP: dict[str, Any] = {"ichem": 0}
 #: that sets them for its particle variants serves a concentration variant too.
 PARTICLES_SETTINGS = ("varsiwant", "outdt", "veght", "emisshrs")
 
-#: Settings only the concentration mode reads.
+#: Settings only the concentration mode reads, and needs at least one of.
 CONCENTRATION_SETTINGS = ("pollutants", "grids")
+
+#: Settings only the concentration mode reads: :data:`CONCENTRATION_SETTINGS`
+#: and the conversions of ``ichem: 2``. Another mode refuses one that is
+#: set, and records none.
+CONCENTRATION_ONLY_SETTINGS = (*CONCENTRATION_SETTINGS, "conversions")
 
 #: The values ``hyts_std`` can write along a trajectory beside its pressure,
 #: each asked for with its ``tm_`` setting: the setting, HYSPLIT's label for
@@ -261,6 +303,44 @@ class Pollutant(BaseModel):
         return value
 
 
+class Conversion(BaseModel):
+    """
+    One conversion of a HYSPLIT concentration run with ``ichem: 2``: a pollutant that turns into another.
+
+    Every time step HYSPLIT moves a fraction of the mass of ``source`` on
+    each particle to ``product``. The conversions are a line each of the
+    ``CHEMRATE.TXT`` file HYSPLIT reads, in order.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source: str = Field(..., description="The name of the pollutant that is converted.")
+    product: str = Field(..., description="The name of the pollutant it becomes.")
+    rate: float = Field(
+        ...,
+        gt=0,
+        le=1,
+        description="The fraction of ``source`` converted per hour, such as 0.1.",
+    )
+    weight_ratio: float = Field(
+        1.0,
+        gt=0,
+        description=(
+            "Mass of ``product`` made per mass of ``source`` converted: the "
+            "ratio of their molecular weights, such as 1.5 for SO2 to SO4."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _two_pollutants(self) -> Self:
+        """Refuse a pollutant that converts into itself."""
+        if self.source == self.product:
+            raise ValueError(
+                f"A conversion needs two pollutants, not {self.source!r} twice."
+            )
+        return self
+
+
 class ConcentrationGrid(BaseModel):
     """
     One grid of a HYSPLIT concentration run: where and how often the particles are counted.
@@ -379,9 +459,10 @@ class HysplitConfig(TransportConfig):
     ``foot`` by a random mixed-layer height error. Each group is set in full
     or not at all.
 
-    ``ichem`` and ``idsp`` are not settings: runtraj always writes
-    ``ICHEM=8`` and ``IDSP=2`` (:data:`FIXED_SETUP`), the only values with
-    which HYSPLIT writes particles, and a config that sets one is refused. Some settings act only together with
+    In the particles mode runtraj always writes ``ICHEM=8`` and ``IDSP=2``
+    (:data:`FIXED_SETUP`), the only values with which HYSPLIT writes
+    particles: ``idsp`` is not a setting, and ``ichem`` may be 8 or left
+    out there. Some settings act only together with
     another: the puff settings (``conage``, ``kpuff``, ``kspl``, ``krnd``,
     ``splitf`` and the ``fr`` group) when ``initd`` releases puffs, and
     ``khinp`` and ``pinpf`` when ``ninit`` reads particles from a file. A few
@@ -397,12 +478,16 @@ class HysplitConfig(TransportConfig):
 
     ``mode`` says what a run makes. ``particles`` (the default) is the
     particle table, from HYSPLIT's particle output (``ICHEM=8``). ``concentration`` is
-    HYSPLIT's own concentration grids (``ICHEM=0``), one grid of each of
-    ``grids`` with a variable for each of ``pollutants``. A concentration
+    HYSPLIT's own concentration grids, one grid of each of
+    ``grids`` with a variable for each of ``pollutants``. There ``ichem``
+    (0 unless set, and recorded) picks one of the other things HYSPLIT can
+    count (:data:`CONCENTRATION_ICHEM`); the values runtraj does not run
+    are refused with the reason (:data:`ICHEM_REFUSED`), and so are the
+    settings HYSPLIT would change, ignore or stop on with the one set. A concentration
     run leaves out the particle file's settings
     (:data:`PARTICLES_SETTINGS`), which a ``hysplit`` block may set for
-    its particle variants; ``pollutants`` and ``grids`` without ``mode:
-    concentration`` are refused. A particles-mode run
+    its particle variants; ``pollutants``, ``grids`` and ``conversions``
+    without ``mode: concentration`` are refused. A particles-mode run
     records no ``mode``, ``pollutants`` or ``grids``, so its settings
     folder is the one it had before the mode existed.
 
@@ -450,6 +535,27 @@ class HysplitConfig(TransportConfig):
         description=(
             "The grids of a concentration run. At least one in ``mode: "
             "concentration``; none otherwise."
+        ),
+    )
+    conversions: list[Conversion] = Field(
+        default_factory=list,
+        description=(
+            "The conversions of a concentration run with ``ichem: 2``, each "
+            "from one of ``pollutants`` to another. At least one with "
+            "``ichem: 2``; none otherwise."
+        ),
+    )
+    ichem: int | None = Field(
+        None,
+        description=(
+            "HYSPLIT's ``ICHEM``, which in ``mode: concentration`` changes "
+            "what a run counts: 0 concentration (the default); 1 a grid "
+            "for each release location; 2 pollutants that convert "
+            "(``conversions``); 5 deposition of whole particles by "
+            "probability; 6 mass divided by air density; 9 a lowest level "
+            "that follows the mixed layer; 10 a grid for each emission "
+            "cycle (``qcycle``). The particles mode is ``ICHEM=8``, the only "
+            "value it takes, and a trajectory run reads none."
         ),
     )
     numpar: int = Field(
@@ -1136,6 +1242,18 @@ class HysplitConfig(TransportConfig):
             return {**TRAJECTORY_DEFAULTS, **data}
         return data
 
+    @model_validator(mode="before")
+    @classmethod
+    def _concentration_ichem(cls, data: Any) -> Any:
+        """Give a concentration config ``ichem: 0``, HYSPLIT's own, where it sets none, so every record holds it."""
+        if (
+            isinstance(data, dict)
+            and data.get("mode") == "concentration"
+            and data.get("ichem") is None
+        ):
+            return {**data, "ichem": 0}
+        return data
+
     @model_validator(mode="after")
     def _validate_mode(self) -> Self:
         """Refuse the settings of another mode, a concentration run without a pollutant or a grid, and a trajectory run HYSPLIT would change."""
@@ -1148,7 +1266,7 @@ class HysplitConfig(TransportConfig):
                     "mode: trajectory, or leave them out."
                 )
         if self.mode != "concentration":
-            used = [n for n in CONCENTRATION_SETTINGS if getattr(self, n)]
+            used = [n for n in CONCENTRATION_ONLY_SETTINGS if getattr(self, n)]
             if used:
                 raise ValueError(
                     f"{', '.join(used)} are settings of HYSPLIT's mode: "
@@ -1157,6 +1275,14 @@ class HysplitConfig(TransportConfig):
                 )
         if self.mode == "trajectory":
             self._validate_trajectory()
+        if self.mode == "particles" and self.ichem not in (None, PARTICLES_ICHEM):
+            raise ValueError(
+                f"ichem={self.ichem} is not a setting of mode: particles, "
+                f"which is HYSPLIT's ICHEM={PARTICLES_ICHEM}: with another "
+                "value HYSPLIT writes no particles. Set mode: concentration "
+                "on the variant that counts on a grid, with ichem there, or "
+                "leave ichem out."
+            )
         if self.mode != "concentration":
             return self
         for name in CONCENTRATION_SETTINGS:
@@ -1176,7 +1302,112 @@ class HysplitConfig(TransportConfig):
                 f"cpack={self.cpack} is not read: runtraj reads HYSPLIT's "
                 f"concentration files with cpack {', '.join(map(str, CPACK_READ))}."
             )
+        self._validate_ichem()
         return self
+
+    def _validate_ichem(self) -> None:
+        """Refuse an ``ichem`` runtraj does not run, and the settings HYSPLIT would change, ignore or stop on with the one set."""
+        ichem = self.ichem
+        if ichem in ICHEM_REFUSED:
+            raise ValueError(f"ichem={ichem} is not run: {ICHEM_REFUSED[ichem]}.")
+        if ichem not in CONCENTRATION_ICHEM:
+            raise ValueError(
+                f"ichem={ichem} is not one of HYSPLIT's, which ignores it. "
+                f"Use one of {', '.join(map(str, CONCENTRATION_ICHEM))}."
+            )
+        if self.conversions and ichem != 2:
+            raise ValueError(
+                "conversions are read only with ichem: 2. Set ichem: 2, or "
+                "leave them out."
+            )
+        why = f"ichem={ichem} ({CONCENTRATION_ICHEM[ichem]})"
+        if ichem in (1, 10) and len(self.pollutants) != 1:
+            raise ValueError(
+                f"{why} takes one pollutant, not {len(self.pollutants)}: "
+                "HYSPLIT uses the pollutants of the file for the release "
+                "locations or the emission cycles, and drops every pollutant "
+                "after the first."
+            )
+        if ichem in (1, 2) and self.nbptyp != 1:
+            raise ValueError(
+                f"{why} needs nbptyp: 1, not {self.nbptyp}: HYSPLIT stops."
+            )
+        if ichem in (1, 5, 10) and self.maxdim != 1:
+            raise ValueError(f"{why} needs maxdim: 1, not {self.maxdim}.")
+        if ichem == 2:
+            self._validate_conversions()
+        if ichem == 5 and self.initd != 0:
+            raise ValueError(
+                f"{why} releases particles only: HYSPLIT would change "
+                f"initd={self.initd} to 0. Set initd: 0."
+            )
+        if ichem == 9:
+            for grid in self.grids:
+                if not 1 <= grid.levels[0] <= 100:
+                    raise ValueError(
+                        f"Grid {grid.name!r}: with {why} the first of levels is "
+                        "a percentage of the mixed layer depth, 1 to 100, not "
+                        f"{grid.levels[0]}. A level of 0, for deposition, is "
+                        "not counted with it."
+                    )
+        if ichem == 10:
+            self._validate_cycles()
+
+    def _validate_conversions(self) -> None:
+        """Refuse an ``ichem: 2`` run whose particles cannot carry its pollutants, or whose conversions name none."""
+        names = [p.name for p in self.pollutants]
+        if len(names) < 2 or self.maxdim != len(names):
+            raise ValueError(
+                "ichem=2 converts pollutants carried on one particle: it needs "
+                "two pollutants or more, and maxdim set to their number "
+                f"({len(names)}), not {self.maxdim}. With maxdim: 1 HYSPLIT "
+                "stops and leaves an empty file."
+            )
+        if not self.conversions:
+            raise ValueError(
+                "ichem=2 needs at least one of conversions: without them "
+                "HYSPLIT converts the first pollutant to the second at 0.10 "
+                "per hour. Write that conversion, or your own."
+            )
+        for c in self.conversions:
+            unknown = [n for n in (c.source, c.product) if n not in names]
+            if unknown:
+                raise ValueError(
+                    f"A conversion names {unknown}, which is not one of "
+                    f"pollutants ({names})."
+                )
+
+    def _validate_cycles(self) -> None:
+        """Refuse an ``ichem: 10`` run whose emission cycles HYSPLIT would drop or not make."""
+        qcycle = self.qcycle
+        hours = self.pollutants[0].hours
+        if self.n_hours is not None and self.n_hours < 0:
+            raise ValueError(
+                "ichem=10 needs a forward run: in a backward one HYSPLIT "
+                "releases the first emission cycle only and leaves the others "
+                "zero."
+            )
+        if qcycle < 1 or qcycle != int(qcycle):
+            raise ValueError(
+                "ichem=10 gives a grid to each emission cycle of qcycle "
+                f"hours, and qcycle={qcycle!r} must be a whole number of hours, "
+                "1 or more: HYSPLIT stops on 0, and releases only some of "
+                "the cycles that are shorter than an hour."
+            )
+        if self.n_hours is not None and (self.n_hours % qcycle or self.n_hours > 999):
+            raise ValueError(
+                f"ichem=10: n_hours={self.n_hours} must be a multiple of "
+                f"qcycle={qcycle!r}, and 999 at most. HYSPLIT makes "
+                "n_hours // qcycle cycles and releases nothing after them."
+            )
+        if hours > qcycle:
+            raise ValueError(
+                f"ichem=10: the pollutant is released for {hours!r} hours in "
+                f"each cycle, longer than qcycle={qcycle!r}. Give it hours of "
+                f"{qcycle!r} or less."
+            )
+        if self.efile.strip():
+            raise ValueError("ichem=10 cannot be used with an efile: HYSPLIT stops.")
 
     def _validate_trajectory(self) -> None:
         """Refuse a trajectory config whose ``tout`` HYSPLIT would lower, or that sets what runtraj fixes."""
@@ -1200,8 +1431,8 @@ class HysplitConfig(TransportConfig):
         """
         Return what a run records of this config: the settings of its mode.
 
-        A particles-mode record has no ``mode``, ``pollutants``, ``grids``
-        or ``tm_`` setting, so it is the record (and the settings folder) a
+        A particles-mode record has no ``mode``, ``ichem``, ``pollutants``,
+        ``grids``, ``conversions`` or ``tm_`` setting, so it is the record (and the settings folder) a
         run had before the modes existed. A concentration-mode record has
         no :data:`PARTICLES_SETTINGS`, and a trajectory-mode record only
         :data:`TRAJECTORY_SETTINGS`.
@@ -1210,7 +1441,7 @@ class HysplitConfig(TransportConfig):
         if self.mode == "trajectory":
             return {name: record[name] for name in TRAJECTORY_SETTINGS}
         drop = (
-            ("mode", *CONCENTRATION_SETTINGS)
+            ("mode", "ichem", *CONCENTRATION_ONLY_SETTINGS)
             if self.mode == "particles"
             else PARTICLES_SETTINGS
         )
@@ -1358,9 +1589,12 @@ class HysplitConfig(TransportConfig):
 
 
 __all__ = [
+    "CONCENTRATION_ICHEM",
+    "CONCENTRATION_ONLY_SETTINGS",
     "CONCENTRATION_SETTINGS",
     "CPACK_READ",
-    "FIXED_CONCENTRATION_SETUP",
+    "ICHEM_REFUSED",
+    "PARTICLES_ICHEM",
     "FIXED_SETUP",
     "FIXED_TRAJECTORY_SETUP",
     "TRAJECTORY_DEFAULTS",
@@ -1372,6 +1606,7 @@ __all__ = [
     "PARTICLES_SETTINGS",
     "SAMPLING_TYPES",
     "ConcentrationGrid",
+    "Conversion",
     "Pollutant",
     "HYSPLIT_VARSIWANT",
     "MAX_ZISCALE_HOURS",

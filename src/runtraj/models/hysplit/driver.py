@@ -24,8 +24,7 @@ import pandas as pd
 
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
 from runtraj.models.hysplit.config import (
-    CONCENTRATION_SETTINGS,
-    FIXED_CONCENTRATION_SETUP,
+    CONCENTRATION_ONLY_SETTINGS,
     FIXED_SETUP,
     FIXED_TRAJECTORY_SETUP,
     PARTICLES_SETTINGS,
@@ -61,6 +60,8 @@ PARTICLE_FILE = "PARTICLE_STILT.DAT"
 WINDERR_FILE = "WINDERR"
 ZIERR_FILE = "ZIERR"
 ZICONTROL_FILE = "ZICONTROL"
+#: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.
+CHEMRATE_FILE = "CHEMRATE.TXT"
 LOG_FILE = "hysplit.log"
 #: HYSPLIT's own file of warnings, such as the met running out.
 WARNING_FILE = "WARNING"
@@ -83,7 +84,7 @@ NOT_IN_SETUP = frozenset(
         *WIND_ERROR_SETTINGS,
         *ZI_ERROR_SETTINGS,
         *RUNTRAJ_SETTINGS,
-        *CONCENTRATION_SETTINGS,  # CONTROL
+        *CONCENTRATION_ONLY_SETTINGS,  # CONTROL and CHEMRATE.TXT
         *TRAJECTORY_ONLY_SETTINGS,  # hyts_std's
     }
 )
@@ -288,11 +289,11 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
     """
     Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.
 
-    The entries of :data:`FIXED_SETUP` come first
-    (:data:`FIXED_CONCENTRATION_SETUP` in the concentration mode), then
-    every setting not in :data:`NOT_IN_SETUP`, in declaration order, under
-    their own names; the concentration mode leaves out the particle file's
-    settings (:data:`PARTICLES_SETTINGS`). The driver adds
+    In the particles mode the entries of :data:`FIXED_SETUP` come first.
+    Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,
+    under their own names; the concentration mode leaves out the particle
+    file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the
+    config's ``ichem``, 0 unless set. The driver adds
     ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
     is unset, which depend on the release locations or follow from other
     settings.
@@ -311,7 +312,7 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
         )
         return entries
     particles = params.mode == "particles"
-    entries = dict(FIXED_SETUP if particles else FIXED_CONCENTRATION_SETUP)
+    entries = dict(FIXED_SETUP) if particles else {}
     skip = NOT_IN_SETUP if particles else NOT_IN_SETUP | set(PARTICLES_SETTINGS)
     entries.update(
         (name, getattr(params, name))
@@ -507,6 +508,25 @@ def zicontroltf(params: HysplitConfig) -> int:
     return int(ziscale_factors(params) is not None)
 
 
+def chemrate(params: HysplitConfig) -> list[str] | None:
+    """
+    Return the lines of ``CHEMRATE.TXT`` for *params*, or ``None`` when it has no conversions.
+
+    One line per conversion, as ``CHEM02`` reads them: the number of the
+    pollutant converted and of the one it becomes, counted from 1 in the
+    order of ``pollutants``, the fraction converted per hour, and the
+    weight ratio. A run with ``ichem: 2`` always gets the file: without
+    one HYSPLIT converts pollutant 1 to 2 at 0.10 per hour.
+    """
+    if not params.conversions:
+        return None
+    number = {p.name: k for k, p in enumerate(params.pollutants, start=1)}
+    return [
+        f"{number[c.source]} {number[c.product]} {c.rate!r} {c.weight_ratio!r}"
+        for c in params.conversions
+    ]
+
+
 def winderr(params: HysplitConfig) -> list[float] | None:
     """Return the ``WINDERR`` values, in the file's order, or ``None`` when unset."""
     values = [getattr(params, name) for name in WIND_ERROR_SETTINGS]
@@ -618,6 +638,9 @@ def write_inputs(
         (workdir / ZICONTROL_FILE).write_text(
             "\n".join([str(len(factors)), *(str(v) for v in factors)]) + "\n"
         )
+    rates = chemrate(config)
+    if rates is not None:
+        (workdir / CHEMRATE_FILE).write_text("\n".join(rates) + "\n")
     _write_values(workdir / WINDERR_FILE, winderr(config))
     _write_values(workdir / ZIERR_FILE, zierr(config))
 

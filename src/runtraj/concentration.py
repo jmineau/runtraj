@@ -24,6 +24,13 @@ Each grid's Dataset has:
   meter at ``z = 0``, or, with ``cmass: 1``, the mass in each cell. Cells
   HYSPLIT did not write are zero.
 
+A model may count each pollutant several times over, apart: HYSPLIT can
+keep the mass of each release location, or of each hour of emission, in a
+grid of its own (``ichem: 1`` and ``ichem: 10``). The variables then have
+one more dimension, before the four: ``source``, numbered from 1 in the
+order of the release's locations, or ``release_time``, the UTC time each
+part of the emission started.
+
 A transport model reads its own output into such grids (HYSPLIT's
 :func:`runtraj.models.hysplit.read_cdump`). :func:`write_concentration` and
 :func:`read_concentration` store and read the whole result.
@@ -49,8 +56,14 @@ if TYPE_CHECKING:
 #: The extension of a stored concentration result.
 CONCENTRATION_SUFFIX = ".nc"
 
-#: The dimensions of every grid's variables, in order.
+#: The dimensions of every grid's variables, in order. A variable may have
+#: one more before them, one of :data:`SPLIT_DIMS`.
 CONCENTRATION_DIMS = ("time", "z", "lat", "lon")
+
+#: The dimensions a grid's variables may have before
+#: :data:`CONCENTRATION_DIMS`, when the model counts each pollutant apart
+#: by where or when it was released.
+SPLIT_DIMS = ("source", "release_time")
 
 
 def describe_grid(ds: xr.Dataset, units: str, long_name: str) -> xr.Dataset:
@@ -116,7 +129,8 @@ def check_concentration(result: Any) -> None:
     Raise unless *result* is a concentration result: a DataTree of grids.
 
     Each child is a grid with the dimensions of :data:`CONCENTRATION_DIMS`,
-    at least one sample, and at least one pollutant.
+    at least one sample, and at least one pollutant. Its variables may
+    have one dimension more, before those: one of :data:`SPLIT_DIMS`.
 
     Raises
     ------
@@ -140,10 +154,14 @@ def check_concentration(result: Any) -> None:
         if ds.sizes["time"] == 0:
             raise ValueError(f"Grid {name!r} has no sampling time.")
         for var in ds.data_vars.values():
-            if var.dims != CONCENTRATION_DIMS:
+            split = var.dims[: -len(CONCENTRATION_DIMS)]
+            if var.dims[len(split) :] != CONCENTRATION_DIMS or (
+                split and (len(split) > 1 or split[0] not in SPLIT_DIMS)
+            ):
                 raise ValueError(
                     f"Grid {name!r}'s {var.name} has dimensions {var.dims}, "
-                    f"not {CONCENTRATION_DIMS}."
+                    f"not {CONCENTRATION_DIMS}, alone or after one of "
+                    f"{SPLIT_DIMS}."
                 )
 
 
@@ -264,6 +282,7 @@ def require_netcdf4() -> None:
 __all__ = [
     "CONCENTRATION_DIMS",
     "CONCENTRATION_SUFFIX",
+    "SPLIT_DIMS",
     "check_concentration",
     "describe_grid",
     "read_concentration",

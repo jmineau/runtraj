@@ -1,7 +1,7 @@
 """HYSPLIT, the transport model: its config and its met config, writing its input files, running ``hycs_std`` or ``hyts_std``, and reading what it writes."""
 
 from .cdump import read_cdump
-from .config import ConcentrationGrid, HysplitConfig, Pollutant
+from .config import ConcentrationGrid, Conversion, HysplitConfig, Pollutant
 from .control import ControlFile
 from .driver import (
     data_tables,
@@ -20,6 +20,7 @@ from .tdump import read_tdump
 __all__ = [
     "ConcentrationGrid",
     "ControlFile",
+    "Conversion",
     "FailureReason",
     "HysplitConfig",
     "HysplitModel",

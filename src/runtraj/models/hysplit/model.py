@@ -303,10 +303,16 @@ class HysplitModel:
 
         Multipoint releases whose points share a location, which
         ``hycs_std`` joins into a line source; in the trajectory mode,
-        column releases, since ``hyts_std`` has no line source. See
+        column releases, since ``hyts_std`` has no line source; and in a
+        concentration run with ``ichem: 1``, column releases too, which
+        are one source at two locations. See
         :func:`runtraj.models.hysplit.releases.check_releases`.
         """
-        return check_releases(releases, trajectory=config.mode == "trajectory")
+        return check_releases(
+            releases,
+            trajectory=config.mode == "trajectory",
+            sources=config.mode == "concentration" and config.ichem == 1,
+        )
 
     def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
         """
@@ -472,7 +478,12 @@ def _read_grids(workdir: Path, config: HysplitConfig) -> xr.DataTree:
                 reason=FailureReason.NO_CONCENTRATION_DATA,
             )
         try:
-            ds = read_cdump(path, config.cmass)
+            ds = read_cdump(
+                path,
+                config.cmass,
+                config.ichem or 0,
+                pollutant=config.pollutants[0].name,
+            )
         except ValueError as error:
             raise SimulationError(
                 str(error), reason=FailureReason.NO_CONCENTRATION_DATA

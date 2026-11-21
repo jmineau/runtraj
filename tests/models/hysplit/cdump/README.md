@@ -15,3 +15,22 @@ and two grids:
 
 `*.con2asc.txt` are HYSPLIT's own `con2asc -s -x` dumps of the packed files:
 each sample's end hour, and the cells that are not zero, to 4 digits.
+
+## Files for the `ichem` values
+
+Made the same way (5.4.2, `numpar = 2000`, the same release time and met, 4
+hours forward), each from `CONTROL.ichem` with the changes named: one
+pollutant `TRCA` (1 per hour for 1 hour), one grid centered on the release
+(0.05° cells over 1°, levels 0 and 100 m, hourly averages), three release
+locations.
+
+| File | `SETUP.CFG` | Change to `CONTROL.ichem` |
+|---|---|---|
+| `ichem1_3loc` | `ichem = 1` | none |
+| `ichem0_3loc` | `ichem = 0` | none: the same run counted together |
+| `ichem0` | `ichem = 0` | the first location only |
+| `ichem6` | `ichem = 6` | the first location only |
+| `ichem10_qcycle1` | `ichem = 10`, `qcycle = 1.0` | the first location only |
+| `ichem0_qcycle1` | `ichem = 0`, `qcycle = 1.0` | the first location only: the same emissions counted together |
+| `ichem9_levels50` | `ichem = 9` | the first location only; levels `50 1000` |
+| `ichem0_levels50` | `ichem = 0` | the first location only; levels `50 1000` |
