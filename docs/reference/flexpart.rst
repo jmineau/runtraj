@@ -111,7 +111,8 @@ same cores.
 Repeating a run
 ~~~~~~~~~~~~~~~
 
-FLEXPART has no seed setting, so ``seed`` is refused. each thread's random numbers with a fixed number, which is why ``threads``
+FLEXPART has no seed setting, so ``seed`` is refused. It seeds each
+thread's random numbers with a fixed number, which is why ``threads``
 is part of a run's settings. Runs with several threads still
 differ: two runs with the same build, met and 8 threads gave median
 particle heights of 1335 m and 1397 m over the first three hours.
