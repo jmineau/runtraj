@@ -1,0 +1,6 @@
+runtraj.config.Variant.stage\_settings
+======================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.stage_settings

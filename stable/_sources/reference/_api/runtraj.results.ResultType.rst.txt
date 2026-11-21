@@ -1,0 +1,21 @@
+﻿runtraj.results.ResultType
+==========================
+
+.. currentmodule:: runtraj.results
+
+
+
+
+
+
+.. class-signature:: runtraj.results.ResultType
+
+
+.. class-parameters:: runtraj.results.ResultType
+
+
+
+
+
+
+

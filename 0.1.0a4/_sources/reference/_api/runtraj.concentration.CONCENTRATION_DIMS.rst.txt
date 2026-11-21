@@ -1,0 +1,6 @@
+﻿runtraj.concentration.CONCENTRATION\_DIMS
+=========================================
+
+.. currentmodule:: runtraj.concentration
+
+.. autodata:: CONCENTRATION_DIMS

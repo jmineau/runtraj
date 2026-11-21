@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.simulation &#8212; runtraj 0.1.0a3</title>
+    <title>runtraj.simulation &#8212; runtraj 0.1.0a4</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=da35e9cb"></script>
+    <script src="../../_static/documentation_options.js?v=11bc7906"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3" />
+  <meta name="docsearch:version" content="0.1.0a4" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -466,11 +466,12 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span><span class="p">,</span> <span class="n">completed</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_particles</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">Release</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">result_type</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">reads</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">upath</span><span class="w"> </span><span class="kn">import</span> <span class="n">UPath</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Variant</span>
@@ -486,7 +487,8 @@
 <span class="sd">    One release run under one variant, as one realization of an ensemble or alone.</span>
 
 <span class="sd">    A simulation is a value: its release, its variant, and the output</span>
-<span class="sd">    directory its results are in. From those it knows where its particles,</span>
+<span class="sd">    directory its results are in. From those it knows where the transport</span>
+<span class="sd">    model's result (its particles, or another type: :attr:`result_path`),</span>
 <span class="sd">    the file of each stage (:meth:`path`), and its log are, whether they</span>
 <span class="sd">    exist (:meth:`has`, :attr:`is_complete`), and how to read them. It runs</span>
 <span class="sd">    nothing itself; the workers in :mod:`runtraj.execution` run the transport</span>
@@ -575,9 +577,11 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the path of this simulation's file of *kind* in the output directory.</span>
 
-<span class="sd">        *kind* is ``"particles"`` or the name of a stage, such as</span>
-<span class="sd">        ``"footprint"``. ``None`` before the variant's folder of that kind</span>
-<span class="sd">        exists, and for a stage the variant does not use. The file may not</span>
+<span class="sd">        *kind* is a result type, ``"particles"`` for most variants</span>
+<span class="sd">        (:attr:`runtraj.config.Variant.result`), or the name of a stage,</span>
+<span class="sd">        such as ``"footprint"``. ``None`` before the variant's folder of</span>
+<span class="sd">        that kind exists, for a stage the variant does not use, and for a</span>
+<span class="sd">        result type it does not make. The file may not</span>
 <span class="sd">        exist yet (:meth:`has`). A stage that reads another stage's file</span>
 <span class="sd">        finds it here, and reads it with that stage's own reader.</span>
 
@@ -594,8 +598,8 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return whether this simulation's file of *kind* exists.</span>
 
-<span class="sd">        *kind* is ``"particles"`` or the name of a stage. A stage's file is</span>
-<span class="sd">        a finished result whatever it holds.</span>
+<span class="sd">        *kind* is a result type, such as ``"particles"``, or the name of a</span>
+<span class="sd">        stage. A stage's file is a finished result whatever it holds.</span>
 <span class="sd">        """</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span></div>
@@ -605,6 +609,17 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">particles_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Path of the particle file in the output directory, or ``None`` before its folder exists."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="s2">"particles"</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">result_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Path of the transport model's result in the output directory, or ``None`` before its folder exists.</span>
+
+<span class="sd">        The particle file for a variant that makes particles</span>
+<span class="sd">        (:attr:`particles_path`), the concentration file for one that makes</span>
+<span class="sd">        concentration: the type of :attr:`runtraj.config.Variant.result`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">log_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -631,19 +646,28 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">"particles"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether the transport model's result exists, whatever its type.</span>
+
+<span class="sd">        :attr:`has_particles`, for a variant that makes particles.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Whether every expected result exists.</span>
 
-<span class="sd">        That is the particles, and the file of every stage the variant</span>
-<span class="sd">        uses. It is :func:`runtraj.output.completed`,</span>
+<span class="sd">        That is the transport model's result (the particles, for most</span>
+<span class="sd">        variants), and the file of every stage the variant uses. It is :func:`runtraj.output.completed`,</span>
 <span class="sd">        the one definition of done, for one release, from a file check for</span>
 <span class="sd">        each.</span>
 <span class="sd">        """</span>
         <span class="n">rid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span>
         <span class="n">mine</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">rid</span><span class="p">])</span>
         <span class="n">none</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
-        <span class="n">kinds</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"particles"</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">stage_order</span><span class="p">)</span>
+        <span class="n">kinds</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">stage_order</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">completed</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">mine</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">else</span> <span class="n">none</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kinds</span><span class="p">))</span>
 
     <span class="c1"># -- status ------------------------------------------------------------</span>
@@ -654,8 +678,8 @@
 <span class="sd">        Why this simulation is not complete, as the worker recorded it, or ``None``.</span>
 
 <span class="sd">        ``None`` when it is complete, or has not run, or what failed has</span>
-<span class="sd">        since succeeded. Otherwise a dict with ``stage`` (``"particles"``</span>
-<span class="sd">        for the transport model run, or the name of the stage that failed,</span>
+<span class="sd">        since succeeded. Otherwise a dict with ``stage`` (``"particles"``,</span>
+<span class="sd">        or the variant's other result type, for the transport model run, or the name of the stage that failed,</span>
 <span class="sd">        such as ``"footprint"``), ``reason`` (a short cause such as</span>
 <span class="sd">        ``"MET_COVERAGE"``, or the error's class when it has none),</span>
 <span class="sd">        ``message``, and ``time``. An unexpected error also has a</span>
@@ -671,11 +695,12 @@
 <span class="sd">         'message': 'HYSPLIT: start point not within (x,y,t) any data file', ...}</span>
 <span class="sd">        """</span>
         <span class="n">variant</span><span class="p">,</span> <span class="n">rid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">"particles"</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">failure</span><span class="p">(</span><span class="s2">"particles"</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">rid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">realization</span><span class="p">)</span>
+        <span class="n">made</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">result</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">made</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">failure</span><span class="p">(</span><span class="n">made</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">rid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">realization</span><span class="p">)</span>
         <span class="c1"># A stage can have failed only where what it reads exists: the first</span>
         <span class="c1"># such stage with a record, in the order the stages run.</span>
-        <span class="n">there</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"particles"</span><span class="p">}</span>
+        <span class="n">there</span> <span class="o">=</span> <span class="p">{</span><span class="n">made</span><span class="p">}</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage_order</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
                 <span class="n">there</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
@@ -724,10 +749,91 @@
 <span class="sd">            If the particles have not been written yet. Nothing is kept, so</span>
 <span class="sd">            a read after the run finishes loads them.</span>
 <span class="sd">        """</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">particles_path</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="s2">"particles"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulation.result">
+<a class="viewcode-back" href="../../reference/_api/runtraj.Simulation.result.html#runtraj.Simulation.result">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The transport model's result, of the type the variant makes.</span>
+
+<span class="sd">        :attr:`particles` for a variant that makes particles,</span>
+<span class="sd">        :attr:`concentration` for one that makes concentration</span>
+<span class="sd">        (:attr:`runtraj.config.Variant.result`). It is that attribute, so</span>
+<span class="sd">        the file is read once whichever name reads it.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If the result has not been written yet.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; sim.result  # doctest: +SKIP</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the result of type *kind*, read by its type's reader."""</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> has no particles yet."</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">read_particles</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+            <span class="n">made</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span>
+            <span class="k">if</span> <span class="n">made</span> <span class="o">!=</span> <span class="n">kind</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> makes </span><span class="si">{</span><span class="n">made</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> yet."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result_type</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Simulation.concentration">
+<a class="viewcode-back" href="../../reference/_api/runtraj.Simulation.concentration.html#runtraj.Simulation.concentration">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">concentration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The concentration result, a child per grid (:mod:`runtraj.concentration`).</span>
+
+<span class="sd">        For a variant that makes concentration, such as HYSPLIT's ``mode:</span>
+<span class="sd">        concentration``. Read from the output directory on first access and</span>
+<span class="sd">        kept. Check :attr:`has_result` first when the run may not have</span>
+<span class="sd">        finished.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If the result has not been written yet, or the variant makes</span>
+<span class="sd">            another type of result.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; sim.concentration["local"]["TEST"].sel(z=100).max()  # doctest: +SKIP</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="s2">"concentration"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Simulation.trajectories">
+<a class="viewcode-back" href="../../reference/_api/runtraj.Simulation.trajectories.html#runtraj.Simulation.trajectories">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The trajectory table, one row per trajectory per output time (:mod:`runtraj.trajectories`).</span>
+
+<span class="sd">        For a variant that makes trajectories, such as HYSPLIT's ``mode:</span>
+<span class="sd">        trajectory``. Read from the output directory on first access and</span>
+<span class="sd">        kept. Check :attr:`has_result` first when the run may not have</span>
+<span class="sd">        finished.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If the result has not been written yet, or the variant makes</span>
+<span class="sd">            another type of result.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; sim.trajectories.groupby("trajectory")["zagl"].max()  # doctest: +SKIP</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="s2">"trajectories"</span><span class="p">)</span></div>
 </div>
 
 

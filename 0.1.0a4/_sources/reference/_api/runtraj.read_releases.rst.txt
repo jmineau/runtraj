@@ -1,0 +1,6 @@
+﻿runtraj.read\_releases
+======================
+
+.. currentmodule:: runtraj
+
+.. autofunction:: read_releases

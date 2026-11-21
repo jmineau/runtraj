@@ -1,0 +1,6 @@
+runtraj.execution.SlurmConfig.options
+=====================================
+
+.. currentmodule:: runtraj.execution
+
+.. autoproperty:: SlurmConfig.options

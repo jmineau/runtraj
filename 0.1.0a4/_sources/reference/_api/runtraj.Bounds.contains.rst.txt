@@ -1,0 +1,5 @@
+runtraj.Bounds.contains
+=======================
+
+.. currentmodule:: runtraj
+.. automethod:: Bounds.contains

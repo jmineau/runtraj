@@ -1,0 +1,6 @@
+﻿runtraj.trajectories.trajectories\_from\_table
+==============================================
+
+.. currentmodule:: runtraj.trajectories
+
+.. autofunction:: trajectories_from_table

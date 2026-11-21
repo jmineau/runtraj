@@ -19,7 +19,7 @@ work underneath.
   schedule`` calls: a CronJob (:func:`~runtraj.execution.kubernetes.cron_job_manifest`)
   whose pod each hour runs ``runtraj tick``, which adds the hours now due
   (:func:`~runtraj.execution.schedule.add_due_releases`) and runs them.
-- :func:`~runtraj.execution.worker.run_particles` runs the transport model for one
+- :func:`~runtraj.execution.worker.run_result` runs the transport model for one
   :class:`~runtraj.Simulation` and writes its particles and log.
 - :func:`~runtraj.execution.worker.run_stages` runs the stages of the variants
   that share those particles: each stage file
@@ -66,7 +66,7 @@ Internal: importable from their modules, and free to change.
    :nosignatures:
 
    runtraj.execution.runner.resolve_compute_root
-   runtraj.execution.worker.run_particles
+   runtraj.execution.worker.run_result
    runtraj.execution.worker.run_stage
    runtraj.execution.worker.run_stages
    runtraj.execution.worker.run_release
@@ -93,6 +93,7 @@ Kubernetes indexed Jobs
    runtraj.execution.kubernetes.submit_job
    runtraj.execution.kubernetes.project_jobs
    runtraj.execution.kubernetes.job_summary
+   runtraj.execution.runner.fetch_shared
    runtraj.execution.inputs.push
    runtraj.execution.inputs.pull
    runtraj.execution.inputs.hash_inputs

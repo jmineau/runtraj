@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.identity &#8212; runtraj 0.1.0a3</title>
+    <title>runtraj.identity &#8212; runtraj 0.1.0a4</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=da35e9cb"></script>
+    <script src="../../_static/documentation_options.js?v=11bc7906"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3" />
+  <meta name="docsearch:version" content="0.1.0a4" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -624,7 +624,7 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return what a result file records besides its contents, as Parquet file metadata.</span>
 
-<span class="sd">    Its folder's settings hash (*digest*: ``variant.particles_hash``, or</span>
+<span class="sd">    Its folder's settings hash (*digest*: ``variant.result_hash``, or</span>
 <span class="sd">    ``variant.stage_hashes[name]`` for a stage's file), the runtraj</span>
 <span class="sd">    version, and, for an ensemble, its realization number. A particle file</span>
 <span class="sd">    carries it; a stage may write it too, so that its files say what made</span>
@@ -648,14 +648,16 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">stage_hash</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-    <span class="n">particles_hash</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">result_hash</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">reads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">result</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"particles"</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the hash of the results of the stage *name* with *settings*.</span>
 
 <span class="sd">    A stage's results are named by what they were made from and with: the</span>
-<span class="sd">    particles' hash (*particles_hash*), the hash of each stage it reads</span>
+<span class="sd">    hash of the transport model's result (*result_hash*, keyed by its type</span>
+<span class="sd">    *result*, ``particles`` unless the stage reads another), the hash of each stage it reads</span>
 <span class="sd">    (*reads*, by the stage's name), and the stage's own settings record</span>
 <span class="sd">    (:meth:`runtraj.stages.Stage.settings`). So results made from other</span>
 <span class="sd">    particles, or from another stage's results under other settings, never</span>
@@ -668,7 +670,7 @@
 <span class="sd">    ... )</span>
 <span class="sd">    True</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">settings_hash</span><span class="p">({</span><span class="s2">"particles"</span><span class="p">:</span> <span class="n">particles_hash</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">reads</span> <span class="ow">or</span> <span class="p">{}),</span> <span class="n">name</span><span class="p">:</span> <span class="n">settings</span><span class="p">})</span></div>
+    <span class="k">return</span> <span class="n">settings_hash</span><span class="p">({</span><span class="n">result</span><span class="p">:</span> <span class="n">result_hash</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">reads</span> <span class="ow">or</span> <span class="p">{}),</span> <span class="n">name</span><span class="p">:</span> <span class="n">settings</span><span class="p">})</span></div>
 
 
 

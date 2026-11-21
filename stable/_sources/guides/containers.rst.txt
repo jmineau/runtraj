@@ -4,7 +4,8 @@ In Containers (Kubernetes)
 A project can run in many containers at once, such as the pods of a
 Kubernetes Job, without Slurm. ``runtraj submit`` makes that Job for you
 (:ref:`kubernetes-submit`); the rest of this page is what each pod does,
-for a Job you write yourself or another scheduler.
+for a Job you write yourself or another scheduler. :doc:`kubernetes_setup`
+makes the image, the cluster and the bucket.
 
 Each container runs one share of the releases:
 
@@ -101,8 +102,9 @@ differently among the tasks. Submit again after changing them.
 
 A Job runs every unfinished release of the project and skips the complete
 ones, so ``runtraj submit`` on Kubernetes takes no ``--releases`` and no
-``--no-skip``. It does not fetch the met first: run ``runtraj fetch``
-before it (:ref:`fetch-once`) when the pods share the met volume.
+``--no-skip``. With a met that downloads, set ``fetch: true`` in the
+block when the pods share the met volume, so the files are downloaded once
+(:ref:`fetch-once`).
 Afterwards ``runtraj status`` counts the project's simulations, as for any
 run, and lists the project's Jobs on the cluster ``kubectl`` points at:
 
@@ -192,13 +194,37 @@ Fetching the meteorology once
 -----------------------------
 
 With ``download`` set, a run downloads the met files its hours need into the
-met ``directory``. Pods on one shared volume find the files the first pod
-fetched. Pods with their own disks do not: 50 pods whose releases fall on
-the same days download, and crop, the same files 50 times.
+met ``directory``. 50 pods whose releases fall on the same days, started
+together, each download and crop the same files, even when they share the
+met directory on one volume: none finds a file another is still getting.
 
-A task (``runtraj run --task``) never fetches for the others, so
-``runtraj fetch`` gets the files once, before the Job starts (``runtraj submit``
-does this for you on Slurm, :ref:`slurm-fetch`):
+On Kubernetes, put the met ``directory`` on a volume every pod mounts
+(read-write, such as a ``ReadWriteMany`` claim) and set ``fetch``:
+
+.. code-block:: yaml
+
+   execution:
+     backend: kubernetes
+     kubernetes:
+       image: registry.example.org/runtraj-hysplit:1
+       fetch: true
+       volumes:
+         - {claim_name: hrrr-arl, mount_path: /met}
+
+``runtraj submit`` then gives each pod ``--fetch``: before its share runs,
+a pod gets the met files of every unfinished simulation, as ``runtraj
+fetch`` does, holding a lock where the inputs are (``.fetch.lock`` beside
+``config.yaml``, on the bucket or the project's volume). The pods take
+their turn. The first downloads the files while the others wait; each
+after it finds them there and downloads nothing, and starts its share. The
+lock is rewritten every minute while it is held, so a long download keeps
+it. Pods with their own met directories gain nothing from waiting, so
+leave ``fetch`` off for them. With no met that downloads, the pods get no
+``--fetch``.
+
+``runtraj submit`` does the same for you on Slurm, with one fetch job
+before the array (:ref:`slurm-fetch`). Anywhere else, ``runtraj fetch``
+gets the files once, before the tasks start:
 
 .. code-block:: bash
 

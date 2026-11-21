@@ -1,0 +1,5 @@
+runtraj.Release.to\_dict
+========================
+
+.. currentmodule:: runtraj
+.. automethod:: Release.to_dict

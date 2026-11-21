@@ -147,7 +147,8 @@ Commands
    archive was busy or unreachable (:ref:`fetch-once`).
 
    ``runtraj submit`` and ``runtraj run`` fetch first on their own: on Slurm in
-   a job the array waits for (:ref:`slurm-fetch`), and locally before the
+   a job the array waits for (:ref:`slurm-fetch`), on Kubernetes in each pod
+   in turn with ``fetch: true`` (:ref:`fetch-once`), and locally before the
    workers start when ``cpus`` is above 1. Run ``runtraj fetch`` yourself to
    see whether the archive has every file before you submit, or before you
    start tasks with ``runtraj run --task`` from another scheduler, which does

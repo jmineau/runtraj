@@ -1,0 +1,5 @@
+runtraj.config.Variant.transport\_for
+=====================================
+
+.. currentmodule:: runtraj.config
+.. automethod:: Variant.transport_for

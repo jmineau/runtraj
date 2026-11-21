@@ -1,0 +1,5 @@
+runtraj.particles.ParticlesAccessor.grid\_exits
+===============================================
+
+.. currentmodule:: runtraj.particles
+.. automethod:: ParticlesAccessor.grid_exits

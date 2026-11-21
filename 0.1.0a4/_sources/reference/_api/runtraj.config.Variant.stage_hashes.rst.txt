@@ -1,0 +1,6 @@
+runtraj.config.Variant.stage\_hashes
+====================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.stage_hashes

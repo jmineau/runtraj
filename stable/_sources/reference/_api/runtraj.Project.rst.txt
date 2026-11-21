@@ -43,6 +43,7 @@ Methods
    ~Project.add_releases
    ~Project.add_table
    ~Project.check
+   ~Project.concentration
    ~Project.fetch
    ~Project.folders
    ~Project.incomplete
@@ -54,6 +55,7 @@ Methods
    ~Project.status
    ~Project.submit
    ~Project.table_path
+   ~Project.trajectories
 
 
 

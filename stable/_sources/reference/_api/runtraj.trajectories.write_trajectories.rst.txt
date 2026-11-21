@@ -1,0 +1,6 @@
+﻿runtraj.trajectories.write\_trajectories
+========================================
+
+.. currentmodule:: runtraj.trajectories
+
+.. autofunction:: write_trajectories

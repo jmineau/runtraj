@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.models.hysplit.releases &#8212; runtraj 0.1.0a3</title>
+    <title>runtraj.models.hysplit.releases &#8212; runtraj 0.1.0a4</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=da35e9cb"></script>
+    <script src="../../../../_static/documentation_options.js?v=11bc7906"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3" />
+  <meta name="docsearch:version" content="0.1.0a4" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -487,9 +487,29 @@
 <span class="p">)</span>
 
 
+<span class="c1">#: Why HYSPLIT's trajectory program cannot run a column release.</span>
+<span class="n">COLUMN_TRAJECTORY</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"HYSPLIT's trajectory mode cannot run a ColumnRelease: a column is a "</span>
+    <span class="s2">"line source of particles, and hyts_std follows one trajectory from "</span>
+    <span class="s2">"each location. Use a PointRelease at each height (distinct group), or "</span>
+    <span class="s2">"a MultiPointRelease."</span>
+<span class="p">)</span>
+
+
+<span class="c1">#: Why a run that counts each release location apart cannot take a column release.</span>
+<span class="n">COLUMN_SOURCES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"HYSPLIT's ichem: 1 gives each release location a grid of its own, and "</span>
+    <span class="s2">"a ColumnRelease is one line source between two locations: HYSPLIT "</span>
+    <span class="s2">"leaves the grid of the first empty and puts the column in the second. "</span>
+    <span class="s2">"Use a MultiPointRelease, whose points are the sources, or another ichem."</span>
+<span class="p">)</span>
+
+
 <div class="viewcode-block" id="check_releases">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.releases.check_releases.html#runtraj.models.hysplit.releases.check_releases">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">check_releases</span><span class="p">(</span><span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_releases</span><span class="p">(</span>
+    <span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sources</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the releases HYSPLIT cannot run, one row each, with ``check``, ``release`` and ``message``.</span>
 
@@ -498,13 +518,50 @@
 <span class="sd">    of its points share a horizontal location: HYSPLIT joins consecutive</span>
 <span class="sd">    release locations at one latitude and longitude, to 5 decimal places,</span>
 <span class="sd">    into a vertical line source and releases only from the last pair.</span>
+
+<span class="sd">    With *trajectory*, for ``hyts_std``, a column release is refused</span>
+<span class="sd">    instead: every location starts a trajectory of its own, so a</span>
+<span class="sd">    multipoint release may repeat a location, and there is no line source</span>
+<span class="sd">    for a column.</span>
+
+<span class="sd">    With *sources*, for a concentration run with ``ichem: 1``, a column</span>
+<span class="sd">    release is refused as well as a multipoint one that repeats a</span>
+<span class="sd">    location: the run's grids are one per release location, and a column</span>
+<span class="sd">    is two locations and one source.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">trajectory</span><span class="p">:</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">releases</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">releases</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"column"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"release_refused"</span><span class="p">,</span>
+                <span class="s2">"release"</span><span class="p">:</span> <span class="n">columns</span><span class="p">,</span>
+                <span class="s2">"message"</span><span class="p">:</span> <span class="n">COLUMN_TRAJECTORY</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">],</span>
+        <span class="p">)</span>
     <span class="n">multi</span> <span class="o">=</span> <span class="n">releases</span><span class="p">[</span><span class="n">releases</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"multipoint"</span><span class="p">]</span>
     <span class="n">repeated</span> <span class="o">=</span> <span class="n">_repeated</span><span class="p">(</span><span class="n">multi</span><span class="p">[</span><span class="s2">"release"</span><span class="p">],</span> <span class="n">multi</span><span class="p">[</span><span class="s2">"longitude"</span><span class="p">],</span> <span class="n">multi</span><span class="p">[</span><span class="s2">"latitude"</span><span class="p">])</span>
     <span class="n">bad</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">multi</span><span class="p">[</span><span class="s2">"release"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[</span><span class="n">repeated</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">refused</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
         <span class="p">{</span><span class="s2">"check"</span><span class="p">:</span> <span class="s2">"release_refused"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">:</span> <span class="n">bad</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">:</span> <span class="n">REPEATED_LOCATION</span><span class="p">},</span>
         <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sources</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">refused</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">releases</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">releases</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"column"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">refused</span><span class="p">,</span>
+            <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"release_refused"</span><span class="p">,</span>
+                    <span class="s2">"release"</span><span class="p">:</span> <span class="n">columns</span><span class="p">,</span>
+                    <span class="s2">"message"</span><span class="p">:</span> <span class="n">COLUMN_SOURCES</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">],</span>
+            <span class="p">),</span>
+        <span class="p">],</span>
+        <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 

@@ -1,0 +1,6 @@
+runtraj.Project.releases\_path
+==============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.releases_path

@@ -9,7 +9,8 @@ One release, without a project
 -------------------------------
 
 :func:`run_trajectories` runs the transport model for one release and
-returns its particles. A project runs the same step for each of its
+returns what it made: its particles, or the result of another ``mode``
+(HYSPLIT's trajectory table or concentration grids). A project runs the same step for each of its
 releases and stores the results.
 
 .. code-block:: python

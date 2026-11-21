@@ -1,0 +1,6 @@
+﻿runtraj.execution.kubernetes.job\_summary
+=========================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autofunction:: job_summary

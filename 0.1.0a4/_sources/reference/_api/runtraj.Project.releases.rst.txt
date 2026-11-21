@@ -1,0 +1,6 @@
+runtraj.Project.releases
+========================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Project.releases

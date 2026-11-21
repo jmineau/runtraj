@@ -24,9 +24,10 @@ Attributes
 
    ~Variant.build
    ~Variant.met_settings
-   ~Variant.particles_hash
    ~Variant.readable_run_settings
    ~Variant.realization_numbers
+   ~Variant.result
+   ~Variant.result_hash
    ~Variant.run_settings
    ~Variant.stage_hashes
    ~Variant.stage_order

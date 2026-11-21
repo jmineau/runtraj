@@ -1,0 +1,6 @@
+runtraj.config.Variant.readable\_run\_settings
+==============================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.readable_run_settings

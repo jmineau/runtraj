@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>In Containers (Kubernetes) &#8212; runtraj 0.1.0a3</title>
+    <title>In Containers (Kubernetes) &#8212; runtraj 0.1.0a4</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=da35e9cb"></script>
+    <script src="../_static/documentation_options.js?v=11bc7906"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a3';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="The Output Directory" href="output.html" />
+    <link rel="next" title="Setting Up Kubernetes" href="kubernetes_setup.html" />
     <link rel="prev" title="On An HPC Cluster (Slurm)" href="slurm.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a3" />
+  <meta name="docsearch:version" content="0.1.0a4" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -423,11 +423,14 @@
 <li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="output.html">The Output Directory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="particles.html">Reading And Plotting Particles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concentration.html">Concentration Grids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trajectories.html">Trajectories</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">HYSPLIT</span></p>
 <ul class="nav bd-sidenav">
@@ -498,7 +501,8 @@
 <p>A project can run in many containers at once, such as the pods of a
 Kubernetes Job, without Slurm. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> makes that Job for you
 (<a class="reference internal" href="#kubernetes-submit"><span class="std std-ref">Submitting to Kubernetes</span></a>); the rest of this page is what each pod does,
-for a Job you write yourself or another scheduler.</p>
+for a Job you write yourself or another scheduler. <a class="reference internal" href="kubernetes_setup.html"><span class="doc">Setting Up Kubernetes</span></a>
+makes the image, the cluster and the bucket.</p>
 <p>Each container runs one share of the releases:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>run<span class="w"> </span>/project<span class="w"> </span>--task<span class="w"> </span><span class="m">3</span>/20
 </pre></div>
@@ -581,8 +585,9 @@ a <code class="docutils literal notranslate"><span class="pre">releases.csv</spa
 differently among the tasks. Submit again after changing them.</p>
 <p>A Job runs every unfinished release of the project and skips the complete
 ones, so <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> on Kubernetes takes no <code class="docutils literal notranslate"><span class="pre">--releases</span></code> and no
-<code class="docutils literal notranslate"><span class="pre">--no-skip</span></code>. It does not fetch the met first: run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code>
-before it (<a class="reference internal" href="#fetch-once"><span class="std std-ref">Fetching the meteorology once</span></a>) when the pods share the met volume.
+<code class="docutils literal notranslate"><span class="pre">--no-skip</span></code>. With a met that downloads, set <code class="docutils literal notranslate"><span class="pre">fetch:</span> <span class="pre">true</span></code> in the
+block when the pods share the met volume, so the files are downloaded once
+(<a class="reference internal" href="#fetch-once"><span class="std std-ref">Fetching the meteorology once</span></a>).
 Afterwards <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> counts the project’s simulations, as for any
 run, and lists the project’s Jobs on the cluster <code class="docutils literal notranslate"><span class="pre">kubectl</span></code> points at:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Project: /project  total=480  complete=455  failed=5  interrupted=0  pending=20
@@ -657,12 +662,33 @@ lists each hour’s Job with the others.</p>
 <section id="fetching-the-meteorology-once">
 <span id="fetch-once"></span><h2>Fetching the meteorology once<a class="headerlink" href="#fetching-the-meteorology-once" title="Link to this heading">#</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">download</span></code> set, a run downloads the met files its hours need into the
-met <code class="docutils literal notranslate"><span class="pre">directory</span></code>. Pods on one shared volume find the files the first pod
-fetched. Pods with their own disks do not: 50 pods whose releases fall on
-the same days download, and crop, the same files 50 times.</p>
-<p>A task (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code>) never fetches for the others, so
-<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code> gets the files once, before the Job starts (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>
-does this for you on Slurm, <a class="reference internal" href="slurm.html#slurm-fetch"><span class="std std-ref">Met files that download</span></a>):</p>
+met <code class="docutils literal notranslate"><span class="pre">directory</span></code>. 50 pods whose releases fall on the same days, started
+together, each download and crop the same files, even when they share the
+met directory on one volume: none finds a file another is still getting.</p>
+<p>On Kubernetes, put the met <code class="docutils literal notranslate"><span class="pre">directory</span></code> on a volume every pod mounts
+(read-write, such as a <code class="docutils literal notranslate"><span class="pre">ReadWriteMany</span></code> claim) and set <code class="docutils literal notranslate"><span class="pre">fetch</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">execution</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kubernetes</span>
+<span class="w">  </span><span class="nt">kubernetes</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">registry.example.org/runtraj-hysplit:1</span>
+<span class="w">    </span><span class="nt">fetch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">claim_name</span><span class="p">:</span><span class="w"> </span><span class="nv">hrrr-arl</span><span class="p p-Indicator">,</span><span class="nt"> mount_path</span><span class="p">:</span><span class="w"> </span><span class="nv">/met</span><span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> then gives each pod <code class="docutils literal notranslate"><span class="pre">--fetch</span></code>: before its share runs,
+a pod gets the met files of every unfinished simulation, as <code class="docutils literal notranslate"><span class="pre">runtraj</span>
+<span class="pre">fetch</span></code> does, holding a lock where the inputs are (<code class="docutils literal notranslate"><span class="pre">.fetch.lock</span></code> beside
+<code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, on the bucket or the project’s volume). The pods take
+their turn. The first downloads the files while the others wait; each
+after it finds them there and downloads nothing, and starts its share. The
+lock is rewritten every minute while it is held, so a long download keeps
+it. Pods with their own met directories gain nothing from waiting, so
+leave <code class="docutils literal notranslate"><span class="pre">fetch</span></code> off for them. With no met that downloads, the pods get no
+<code class="docutils literal notranslate"><span class="pre">--fetch</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> does the same for you on Slurm, with one fetch job
+before the array (<a class="reference internal" href="slurm.html#slurm-fetch"><span class="std std-ref">Met files that download</span></a>). Anywhere else, <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code>
+gets the files once, before the tasks start:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>fetch<span class="w"> </span>/project
 </pre></div>
 </div>
@@ -851,11 +877,11 @@ that drives the Job.</p>
       </div>
     </a>
     <a class="right-next"
-       href="output.html"
+       href="kubernetes_setup.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">The Output Directory</p>
+        <p class="prev-next-title">Setting Up Kubernetes</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

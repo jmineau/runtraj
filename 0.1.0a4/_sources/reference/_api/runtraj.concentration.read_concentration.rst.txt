@@ -1,0 +1,6 @@
+﻿runtraj.concentration.read\_concentration
+=========================================
+
+.. currentmodule:: runtraj.concentration
+
+.. autofunction:: read_concentration

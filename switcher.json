@@ -5,10 +5,15 @@
     "url": "https://jmineau.github.io/runtraj/dev/"
   },
   {
-    "name": "0.1.0a3 (latest)",
-    "version": "0.1.0a3",
+    "name": "0.1.0a4 (latest)",
+    "version": "0.1.0a4",
     "url": "https://jmineau.github.io/runtraj/stable/",
     "preferred": true
+  },
+  {
+    "name": "0.1.0a3",
+    "version": "0.1.0a3",
+    "url": "https://jmineau.github.io/runtraj/0.1.0a3/"
   },
   {
     "name": "0.1.0a2",

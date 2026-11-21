@@ -1,0 +1,6 @@
+runtraj.config.Variant.result
+=============================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.result

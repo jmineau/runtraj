@@ -169,7 +169,7 @@ For an ensemble of the same run with different turbulence, give a variant
 Where each ``CONTROL`` and ``SETUP.CFG`` line comes from
 --------------------------------------------------------
 
-Every ``SETUP.CFG`` entry but ``ICHEM`` and ``IDSP`` is a setting of the same name in
+Every ``SETUP.CFG`` entry but ``IDSP`` is a setting of the same name in
 lowercase, such as ``numpar``, ``kmixd`` or ``tlfrac``
 (:doc:`../reference/configuration` lists them). Each defaults to HYSPLIT's
 own value with ``ICHEM=8``. A setting HYSPLIT decides only after reading the
@@ -197,7 +197,10 @@ rest itself:
    * - ``CONTROL`` hours of emission
      - ``emisshrs``; the release starts at the starting time
    * - ``CONTROL`` pollutant, concentration grid and deposition
-     - Fixed: one pollutant, a placeholder grid, no deposition
+     - Fixed: one pollutant, a placeholder grid, no deposition; with
+       ``mode: concentration``, your ``pollutants`` and ``grids``
+       (:doc:`concentration`); with ``mode: trajectory``, the two lines
+       ``hyts_std`` reads in their place (:doc:`trajectories`)
    * - ``SETUP.CFG`` ``KMSL``
      - The release's ``altitude_ref``
    * - ``SETUP.CFG`` ``MAXPAR``
@@ -209,8 +212,16 @@ rest itself:
    * - ``SETUP.CFG`` ``WINDERRTF``, ``ZICONTROLTF``
      - The wind and mixed-layer error settings, and ``ziscale``
    * - ``SETUP.CFG`` ``ICHEM``, ``IDSP``
-     - Fixed at 8 and 2, the only values with which HYSPLIT writes particles
-       (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`)
+     - 8 and 2, the only values with which HYSPLIT writes particles
+       (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`; ``ichem`` may
+       be 8 or left out); with ``mode: concentration``, ``ICHEM`` from
+       ``ichem``, 0 unless set, and ``IDSP`` left to HYSPLIT
+       (:doc:`concentration`)
+   * - ``CHEMRATE.TXT``
+     - ``conversions``, with ``mode: concentration`` and ``ichem: 2``
+   * - ``SETUP.CFG`` ``KAGL``, ``TOUT``, ``TM_*``
+     - With ``mode: trajectory``: ``KAGL`` fixed at 1 (heights above
+       ground), ``tout``, and the ``tm_`` settings
 
 To read the files of one run, pass ``workdir="run"`` to
 :func:`~runtraj.run_trajectories`: the folder keeps ``CONTROL``,
@@ -220,10 +231,14 @@ What runtraj leaves to other tools
 ----------------------------------
 
 runtraj runs ``hycs_std`` with ``ICHEM=8``, which writes
-particle positions and the met along them. Concentration grids
-(``cdump``), puffs and ``tdump`` trajectory files come from HYSPLIT run on
-its own, and NOAA's `monetio <https://github.com/noaa-oar-arl/monetio>`_
-reads those files in Python.
+particle positions and the met along them, or, with ``mode:
+concentration``, HYSPLIT's concentration grids (``cdump``), which it reads
+for you (:doc:`concentration`). With ``mode: trajectory`` it runs
+``hyts_std`` and reads its ``tdump`` trajectory file
+(:doc:`trajectories`). The ensemble programs and the particle dump file
+(``PARDUMP``) come from HYSPLIT run on its own, and NOAA's
+`monetio <https://github.com/noaa-oar-arl/monetio>`_ reads those files in
+Python.
 
 When a run fails, ``project.status()`` gives its reason and
 ``sim.log`` HYSPLIT's log of it.

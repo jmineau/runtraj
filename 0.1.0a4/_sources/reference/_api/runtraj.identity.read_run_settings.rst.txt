@@ -1,0 +1,6 @@
+﻿runtraj.identity.read\_run\_settings
+====================================
+
+.. currentmodule:: runtraj.identity
+
+.. autofunction:: read_run_settings

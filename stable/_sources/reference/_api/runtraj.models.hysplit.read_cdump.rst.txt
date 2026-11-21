@@ -1,0 +1,6 @@
+﻿runtraj.models.hysplit.read\_cdump
+==================================
+
+.. currentmodule:: runtraj.models.hysplit
+
+.. autofunction:: read_cdump

@@ -1,0 +1,6 @@
+runtraj.config.Variant.stage\_order
+===================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.stage_order
