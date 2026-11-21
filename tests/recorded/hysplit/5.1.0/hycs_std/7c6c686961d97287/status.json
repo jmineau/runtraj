@@ -1,0 +1,9 @@
+{
+ "status": 0,
+ "outputs": [
+  "MESSAGE",
+  "PARTICLE_STILT.DAT",
+  "WARNING",
+  "cdump"
+ ]
+}
