@@ -88,9 +88,16 @@ jobs:
       - name: Test
         run: uv run just test
 
+  # The integration tests replay real HYSPLIT runs recorded on the oldest
+  # supported version and the newest (tests/recorded/hysplit/; CONTRIBUTING.md,
+  # "Testing against real HYSPLIT"). No HYSPLIT program is on the runner.
   integration:
-    name: Integration tests
-    runs-on: ubuntu-latest  # the hycs_std install_hysplit.sh takes is linux_x64
+    name: Integration tests / HYSPLIT ${{ matrix.hysplit }} (recorded)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        hysplit: ["5.1.0", "5.4.2"]
     env:
       UV_NO_SYNC: "1"
 
@@ -108,17 +115,16 @@ jobs:
       - name: Install
         run: uv sync --locked
 
-      - name: Install HYSPLIT
-        run: .github/scripts/install_hysplit.sh
-
       - name: Restore HRRR met cache
         id: met-cache
         uses: actions/cache/restore@v6
         with:
           path: tests/met_cache
           # Bump the version suffix when _MET_BLOCKS changes in conftest.py
-          # (the same key in docs.yml)
-          key: met-hrrr-2021-v1
+          # (the same key in docs.yml). The recorded HYSPLIT runs were recorded
+          # on the files this fetch makes with the locked arlmet (their
+          # recorded.yaml); a replay stops when the files here differ.
+          key: met-hrrr-2021-v2
 
       - name: Prewarm HRRR met cache
         if: steps.met-cache.outputs.cache-hit != 'true'
@@ -136,12 +142,12 @@ jobs:
           path: tests/met_cache
           key: ${{ steps.met-cache.outputs.cache-primary-key }}
 
-      - name: Run integration tests
+      - name: Run integration tests on the recorded runs
         env:
           RUNTRAJ_TEST_MET_DIR: ${{ github.workspace }}/tests/met_cache
         # One worker per core (4 on ubuntu-latest); conftest.py groups the tests
         # that share a HYSPLIT run.
-        run: uv run pytest tests/ -v -m integration -n auto --dist loadgroup
+        run: uv run just test-replay ${{ matrix.hysplit }} -v
 
   package:
     name: Package smoke test

@@ -59,7 +59,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: tests/met_cache
-          key: met-hrrr-2021-v1
+          key: met-hrrr-2021-v2
 
       - name: Prewarm HRRR met cache
         if: steps.met-cache.outputs.cache-hit != 'true'
