@@ -53,24 +53,24 @@ def test_each_trajectory_starts_where_control_put_it():
 
 
 def test_a_row_holds_the_values_of_its_line():
-    # "2 1 21 7 15 4 30 1 2.5 41.037 -111.865 1047.2 691.3 319.3 287.3 0.0
-    #  983.6 29.4 4.2 4.3 2245.9 0.0" in the file.
+    # "2 1 21 7 15 4 30 1 2.5 41.019 -111.855 1090.2 682.5 319.4 286.4 0.0
+    #  764.3 30.3 4.2 4.2 2305.2 0.0" in the file.
     table = read_tdump(HERE / "forward")
     row = table[(table["trajectory"] == 2) & (table["age"] == 150)].iloc[0]
     assert row["time"] == pd.Timestamp("2021-07-15 04:30", tz="UTC")
     assert row.drop(["trajectory", "time", "age"]).to_dict() == {
-        "lon": -111.865,
-        "lat": 41.037,
-        "zagl": 1047.2,
-        "pres": 691.3,
-        "tpot": 319.3,
-        "temp": 287.3,
+        "lon": -111.855,
+        "lat": 41.019,
+        "zagl": 1090.2,
+        "pres": 682.5,
+        "tpot": 319.4,
+        "temp": 286.4,
         "rain": 0.0,
-        "mlht": 983.6,
-        "relh": 29.4,
+        "mlht": 764.3,
+        "relh": 30.3,
         "sphu": 4.2,
-        "mixr": 4.3,
-        "zsfc": 2245.9,
+        "mixr": 4.2,
+        "zsfc": 2305.2,
         "dswf": 0.0,
     }
 

@@ -2,7 +2,10 @@
 
 Made by NOAA ARL's public HYSPLIT 5.4.2 (`hyts_std`, RHEL 8 build), with the
 spaces at the ends of their lines trimmed, on two
-cropped HRRR blocks of 2021-07-15 around Salt Lake City.
+cropped HRRR blocks of 2021-07-15 around Salt Lake City. `forward` is on the
+test met cache as `RUNTRAJ_TEST_FETCH_MET=1` makes it (the files CI uses),
+so `tests/integration/test_trajectories.py` makes it again; `backward` is on an
+earlier crop of the same hours.
 
 - `forward`: from this folder's `CONTROL` (the met directory shortened to
   `<met_cache>/`) and `SETUP.CFG`. Three trajectories from 02:00 UTC, 6 hours
