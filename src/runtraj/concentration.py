@@ -192,15 +192,21 @@ def write_concentration(
         "runtraj:met_files": json.dumps([str(p) for p in met_files]),
         **{k.decode(): v.decode() for k, v in (metadata or {}).items()},
     }
+    # Most cells of a grid are zero, so each variable is compressed.
+    encoding = {
+        node.path: {name: {"zlib": True, "complevel": 4} for name in node.data_vars}
+        for node in tree.subtree
+        if node.data_vars
+    }
     target = location(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(target, Path):
         with atomic_path(target) as tmp:
-            tree.to_netcdf(tmp, engine="netcdf4")
+            tree.to_netcdf(tmp, engine="netcdf4", encoding=encoding)
         return target
     with tempfile.TemporaryDirectory(prefix="runtraj-") as tmp:
         local = Path(tmp) / target.name
-        tree.to_netcdf(local, engine="netcdf4")
+        tree.to_netcdf(local, engine="netcdf4", encoding=encoding)
         target.write_bytes(local.read_bytes())
     return target
 
