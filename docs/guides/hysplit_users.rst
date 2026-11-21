@@ -169,7 +169,7 @@ For an ensemble of the same run with different turbulence, give a variant
 Where each ``CONTROL`` and ``SETUP.CFG`` line comes from
 --------------------------------------------------------
 
-Every ``SETUP.CFG`` entry but ``ICHEM`` and ``IDSP`` is a setting of the same name in
+Every ``SETUP.CFG`` entry but ``IDSP`` is a setting of the same name in
 lowercase, such as ``numpar``, ``kmixd`` or ``tlfrac``
 (:doc:`../reference/configuration` lists them). Each defaults to HYSPLIT's
 own value with ``ICHEM=8``. A setting HYSPLIT decides only after reading the
@@ -212,9 +212,13 @@ rest itself:
    * - ``SETUP.CFG`` ``WINDERRTF``, ``ZICONTROLTF``
      - The wind and mixed-layer error settings, and ``ziscale``
    * - ``SETUP.CFG`` ``ICHEM``, ``IDSP``
-     - Fixed at 8 and 2, the only values with which HYSPLIT writes particles
-       (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`); with ``mode:
-       concentration``, ``ICHEM`` 0 and ``IDSP`` left to HYSPLIT
+     - 8 and 2, the only values with which HYSPLIT writes particles
+       (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`; ``ichem`` may
+       be 8 or left out); with ``mode: concentration``, ``ICHEM`` from
+       ``ichem``, 0 unless set, and ``IDSP`` left to HYSPLIT
+       (:doc:`concentration`)
+   * - ``CHEMRATE.TXT``
+     - ``conversions``, with ``mode: concentration`` and ``ichem: 2``
    * - ``SETUP.CFG`` ``KAGL``, ``TOUT``, ``TM_*``
      - With ``mode: trajectory``: ``KAGL`` fixed at 1 (heights above
        ground), ``tout``, and the ``tm_`` settings
