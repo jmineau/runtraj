@@ -14,11 +14,15 @@ import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
+import pandas as pd
+
 from runtraj.exceptions import SimulationError
 from runtraj.models import ModelRun
+from runtraj.releases import ColumnRelease, MultiPointRelease
 
 from .config import FlexpartConfig, FlexpartMetConfig, flexpart_version
-from .inputs import write_inputs
+from .inputs import split, write_inputs
 from .met import catalog, files_for, open_era5, open_gfs
 from .output import read_partoutput
 
@@ -126,6 +130,51 @@ class FlexpartModel:
         if met.source == "era5":
             return open_era5(files)
         return open_gfs(files, bounds)
+
+    def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+        """
+        Return where each particle of a column or multipoint release started, which FLEXPART writes no row for.
+
+        FLEXPART numbers particles from 1 in the order they are released,
+        and ``RELEASES`` (:func:`~runtraj.models.flexpart.inputs.releases`)
+        releases a column's particle *k* in slab *k* of ``numpar``, and a
+        multipoint release's particles point by point, so the number says
+        where each started. ``numpar`` is taken to be the highest
+        ``particle`` in *particles*: a run whose last-released particles
+        left the met's domain before the first output step has them missing,
+        and the slabs or points of the others shift.
+
+        Raises
+        ------
+        ValueError
+            If *release* is not a column or multipoint release.
+        """
+        numpar = int(particles["particle"].max())
+        particle = np.arange(1, numpar + 1)
+        if isinstance(release, ColumnRelease):
+            step = (release.top - release.bottom) / numpar
+            return pd.DataFrame(
+                {
+                    "particle": particle,
+                    "lon": release.longitude,
+                    "lat": release.latitude,
+                    "height": (particle - 0.5) * step + release.bottom,
+                }
+            )
+        if isinstance(release, MultiPointRelease):
+            point = np.repeat(
+                np.arange(len(release.longitudes)),
+                split(numpar, len(release.longitudes)),
+            )
+            return pd.DataFrame(
+                {
+                    "particle": particle,
+                    "lon": np.asarray(release.longitudes, dtype=float)[point],
+                    "lat": np.asarray(release.latitudes, dtype=float)[point],
+                    "height": np.asarray(release.altitudes, dtype=float)[point],
+                }
+            )
+        raise ValueError(f"A {release.kind} release needs no release rows.")
 
     def run(
         self,

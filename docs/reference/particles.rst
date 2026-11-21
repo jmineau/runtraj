@@ -55,7 +55,8 @@ its first position, and takes a column's particles to be released bottom to
 top in ``particle`` order. A HYSPLIT build that writes the release rows
 (``directory``) makes the matching exact.
 FLEXPART writes no release row either: its first row is one output step
-after release (:doc:`flexpart`).
+after release. Its ``release_rows`` reads where each particle started from
+its number, in the order FLEXPART released them (:doc:`flexpart`).
 
 Columns the model adds
 ----------------------

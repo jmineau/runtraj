@@ -178,6 +178,17 @@ def command(
     )
 
 
+def split(numpar: int, n: int) -> list[int]:
+    """
+    Return how many of *numpar* particles each of *n* release points gets: as even as they go, the first points taking any extra.
+
+    >>> split(10, 3)
+    [4, 3, 3]
+    """
+    share, extra = divmod(numpar, n)
+    return [share + (1 if i < extra else 0) for i in range(n)]
+
+
 def releases(release: Release, numpar: int) -> str:
     """
     Return the ``RELEASES`` file for *release*: where and when its particles start.
@@ -185,11 +196,11 @@ def releases(release: Release, numpar: int) -> str:
     Every release is at the release's time. A point is one release. A
     column is ``numpar`` releases of one particle each, in slabs of equal
     depth from the bottom up: FLEXPART numbers particles in release order,
-    so particle *k* starts in slab *k*, which is what
-    :func:`runtraj.particles.add_release_heights` takes for a model that
-    writes no release row. A multipoint release is one release per point,
-    the particles split as evenly as they go, the first points taking any
-    extra. Heights are above ground (``ZKIND`` 1) or above sea level
+    so particle *k* starts in slab *k*. A multipoint release is one
+    release per point, the particles split as evenly as they go
+    (:func:`split`). FLEXPART writes no release row, so
+    :meth:`~runtraj.models.flexpart.FlexpartModel.release_rows` reads where
+    each particle started from its number. Heights are above ground (``ZKIND`` 1) or above sea level
     (``ZKIND`` 2), as the release's ``altitude_ref`` says.
 
     Raises
@@ -217,12 +228,14 @@ def releases(release: Release, numpar: int) -> str:
                 (release.longitude, release.latitude, bottom, bottom + step, 1)
             )
     elif isinstance(release, MultiPointRelease):
-        n = len(release.longitudes)
-        share, extra = divmod(numpar, n)
-        for i, (lon, lat, alt) in enumerate(
-            zip(release.longitudes, release.latitudes, release.altitudes, strict=True)
+        for lon, lat, alt, parts in zip(
+            release.longitudes,
+            release.latitudes,
+            release.altitudes,
+            split(numpar, len(release.longitudes)),
+            strict=True,
         ):
-            boxes.append((lon, lat, alt, alt, share + (1 if i < extra else 0)))
+            boxes.append((lon, lat, alt, alt, parts))
     else:
         raise TypeError(f"FLEXPART cannot release from a {type(release).__name__}.")
 
