@@ -904,24 +904,7 @@ class Project:
             stored = [c for c in columns if c not in (*first, "time")]
             if with_time and "age" not in stored:
                 stored.append("age")
-        frame = self._selected(sel)
-        if sel is None:
-            frame = frame.loc[
-                [self.variants[v].result == "particles" for v in frame["variant"]]
-            ]
-        others = sorted(
-            {
-                name
-                for name in frame["variant"].unique()
-                if self.variants[name].result != "particles"
-            }
-        )
-        if others:
-            made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
-            raise ValueError(
-                f"Variants {made} make no particles. Leave them out of the "
-                "selection, and read their results with project.concentration."
-            )
+        frame = self._of_type("particles", sel)
         parts = []
         for name, k, rows in _groups(frame):
             variant = self.variants[name]
@@ -939,6 +922,33 @@ class Project:
         particles = pd.concat(parts, ignore_index=True)
         rest = particles.columns if columns is None else columns
         return particles.loc[:, first + [c for c in rest if c not in first]]
+
+    def _of_type(self, kind: str, sel: Any) -> pd.DataFrame:
+        """
+        Return the simulations *sel* selects, which must make results of type *kind*.
+
+        Unselected, the variants that make *kind*.
+
+        Raises
+        ------
+        ValueError
+            If *sel* names a variant that makes another type.
+        """
+        frame = self._selected(sel)
+        if sel is None:
+            return frame.loc[
+                [self.variants[v].result == kind for v in frame["variant"]]
+            ]
+        others = sorted(
+            {n for n in frame["variant"].unique() if self.variants[n].result != kind}
+        )
+        if others:
+            made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
+            raise ValueError(
+                f"Variants {made} make no {kind}. Leave them out of the "
+                "selection, and read each type with its own method."
+            )
+        return frame
 
     def concentration(
         self, sel: Any = None
@@ -976,24 +986,7 @@ class Project:
         ... ]  # doctest: +SKIP
         >>> tree["local"]["TEST"].sum("time")  # doctest: +SKIP
         """
-        frame = self._selected(sel)
-        if sel is None:
-            frame = frame.loc[
-                [self.variants[v].result == "concentration" for v in frame["variant"]]
-            ]
-        others = sorted(
-            {
-                name
-                for name in frame["variant"].unique()
-                if self.variants[name].result != "concentration"
-            }
-        )
-        if others:
-            made = ", ".join(f"{n} ({self.variants[n].result})" for n in others)
-            raise ValueError(
-                f"Variants {made} make no concentration. Leave them out of "
-                "the selection."
-            )
+        frame = self._of_type("concentration", sel)
         found: dict[tuple[str, str, int | None], xr.DataTree] = {}
         present = self._present(frame)
         read = RESULT_TYPES["concentration"].read

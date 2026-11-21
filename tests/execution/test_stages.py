@@ -52,7 +52,7 @@ def model_runs(monkeypatch):
         sim.output.write_particles(sim.variant, sim.release, particles, [])
         return particles
 
-    monkeypatch.setattr(worker, "run_particles", fake)
+    monkeypatch.setattr(worker, "run_result", fake)
     return ran
 
 
@@ -136,7 +136,7 @@ def test_a_stage_folder_records_what_it_was_made_from(tmp_path, release, model_r
     assert record["reads"] == {
         "particles": {
             "folder": project.output.folder("particles", variant).name[9:],
-            "hash": variant.particles_hash,
+            "hash": variant.result_hash,
         },
         "count": {
             "folder": project.output.folder("count", variant).name[9:],
@@ -418,7 +418,7 @@ def test_failed_particles_run_no_stage(tmp_path, release, monkeypatch, runs):
     def fails(sim, **kwargs):
         raise ValueError("no met")
 
-    monkeypatch.setattr(worker, "run_particles", fails)
+    monkeypatch.setattr(worker, "run_result", fails)
 
     assert _run(project, release) == [
         "hrrr failed during particles (ValueError): no met"

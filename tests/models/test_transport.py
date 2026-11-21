@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 
 from runtraj.config import ProjectConfig
-from runtraj.execution.worker import run_particles
+from runtraj.execution.worker import run_result
 from runtraj.meteorology import run_window
 from runtraj.models import ModelRun, get_model
 from runtraj.models.hysplit import HysplitConfig, HysplitModel, Met, MetConfig
@@ -156,7 +156,7 @@ def test_run_particles_goes_through_the_model_the_settings_name(
     variant = make_variant(met_config=met_config, n_hours=-1, numpar=1)
     sim = Simulation(point_release, variant, Output(tmp_path / "output"))
 
-    traj = run_particles(sim, workdir=tmp_path / "work", timeout=45)
+    traj = run_result(sim, workdir=tmp_path / "work", timeout=45)
 
     assert asked == ["hysplit"]
     assert calls[0]["release"] == point_release

@@ -201,7 +201,7 @@ def test_a_variant_changes_a_stages_settings_or_turns_it_off(tmp_path):
     assert resolved["plain"].stages == {}
     assert list(resolved["counted"].stages) == ["count"]
     # Equal particles for all four; a stage's folder follows its own settings.
-    assert len({v.particles_hash for v in resolved.values()}) == 1
+    assert len({v.result_hash for v in resolved.values()}) == 1
     count = {name: v.stage_hashes.get("count") for name, v in resolved.items()}
     assert count["hrrr"] == count["counted"] != count["tripled"]
     assert count["plain"] is None
@@ -229,14 +229,14 @@ def test_a_stages_hash_takes_the_particles_and_what_it_reads(tmp_path):
     hrrr, tripled = resolved["hrrr"], resolved["tripled"]
     assert hrrr.stage_hashes["count"] == settings_hash(
         {
-            "particles": hrrr.particles_hash,
+            "particles": hrrr.result_hash,
             "count": {"scale": 1, "fail": False, "silent": False, "stale": False},
         }
     )
     assert hrrr.stage_hashes["double"] == stage_hash(
         "double",
         {"add": 0},
-        hrrr.particles_hash,
+        hrrr.result_hash,
         {"count": hrrr.stage_hashes["count"]},
     )
     # The same settings of double, made from another count: another folder.

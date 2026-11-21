@@ -223,7 +223,7 @@ def test_a_model_is_named_by_its_import_path_without_registering_it(tmp_path):
     # The record names the import path, so another process imports it again.
     assert variant.build == ModelInfo(name=TOY, version="toy-1")
     stored = read_run_settings(variant.run_settings)
-    assert settings_hash(stored) == variant.particles_hash
+    assert settings_hash(stored) == variant.result_hash
 
 
 def test_a_record_of_a_model_not_installed_still_reads(tmp_path):

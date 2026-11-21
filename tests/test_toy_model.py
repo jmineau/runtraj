@@ -99,7 +99,7 @@ def test_a_changed_toy_setting_is_another_settings_folder(tmp_path):
     )
     _run(project)
 
-    folders = {name: v.particles_hash for name, v in project.variants.items()}
+    folders = {name: v.result_hash for name, v in project.variants.items()}
     assert folders["few"] != folders["many"]
     assert folders["few"] == folders["noted"]  # an unrecorded field changes nothing
     counts = project.particles(project.simulations).groupby("variant")["particle"]
@@ -373,6 +373,9 @@ def test_a_concentration_result_reads_back_as_the_model_made_it(tmp_path):
     assert tree.attrs["release"] == next(iter(results))[0]
     sim = project.simulation(project.releases["release"].iloc[0], "grid")
     assert sim.has_result and not sim.has_particles
+    assert float(sim.result["cells"].to_dataset()["TOY"].sum()) == 4
+    particles = project.simulation(project.releases["release"].iloc[0], "toy")
+    assert particles.result.equals(particles.particles)
     assert sim.result_path.suffix == ".nc"
 
 

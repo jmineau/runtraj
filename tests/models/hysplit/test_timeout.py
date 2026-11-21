@@ -43,9 +43,9 @@ def sim(monkeypatch, tmp_path, point_release):
 
 
 def _run(sim, tmp_path, **kwargs):
-    from runtraj.execution.worker import run_particles
+    from runtraj.execution.worker import run_result
 
-    return run_particles(sim, workdir=tmp_path / "scratch", **kwargs)
+    return run_result(sim, workdir=tmp_path / "scratch", **kwargs)
 
 
 def test_timeout_is_an_execution_setting():

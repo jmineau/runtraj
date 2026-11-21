@@ -102,7 +102,7 @@ def _model(tmp_path, releases, **config_kwargs) -> Project:
 
 
 # ---------------------------------------------------------------------------
-# run_particles
+# run_result
 # ---------------------------------------------------------------------------
 
 
@@ -138,7 +138,7 @@ def test_run_particles_starts_in_an_empty_directory(
 
     monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     with pytest.raises(RuntimeError):
-        worker.run_particles(sim, workdir=workdir)
+        worker.run_result(sim, workdir=workdir)
     assert seen == [[]]
 
 
@@ -155,7 +155,7 @@ def test_a_run_stopped_partway_leaves_its_start_in_the_log(
 
     monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     with pytest.raises(KeyboardInterrupt):
-        worker.run_particles(sim, workdir=compute_root / "w")
+        worker.run_result(sim, workdir=compute_root / "w")
 
     assert "runtraj started this run" in sim.log
     assert not sim.has_particles and sim.failure is None
@@ -176,7 +176,7 @@ def test_a_model_that_needs_no_workdir_gets_none(sim, met, compute_root, monkeyp
     monkeypatch.setattr(worker, "get_model", lambda name: _Model())
     workdir = compute_root / sim.release.id / sim.variant.name
     with pytest.raises(SimulationError):
-        worker.run_particles(sim, workdir=workdir)
+        worker.run_result(sim, workdir=workdir)
 
     assert seen == [None]
     assert not workdir.exists()
@@ -195,9 +195,7 @@ def test_run_particles_keeps_no_empty_scratch_copy(sim, met, compute_root, monke
 
     monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     with pytest.raises(MeteorologyError):
-        worker.run_particles(
-            sim, workdir=compute_root / sim.release.id / sim.variant.name
-        )
+        worker.run_result(sim, workdir=compute_root / sim.release.id / sim.variant.name)
 
     kept = sim.output.kept_workdir(sim.variant, sim.release.id)
     assert kept is None or not kept.exists()
@@ -215,9 +213,7 @@ def test_run_particles_without_particles_is_a_simulation_error(
 
     monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     with pytest.raises(SimulationError) as caught:
-        worker.run_particles(
-            sim, workdir=compute_root / sim.release.id / sim.variant.name
-        )
+        worker.run_result(sim, workdir=compute_root / sim.release.id / sim.variant.name)
     assert caught.value.reason == "NO_PARTICLE_DATA"
 
 
@@ -234,7 +230,7 @@ def test_a_batched_model_that_writes_no_log_leaves_no_started_line(
         },
     )
 
-    written, failed = worker.run_particles_batch(sims)
+    written, failed = worker.run_result_batch(sims)
 
     assert len(written) == 2 and not failed
     for sim in sims:
@@ -253,7 +249,7 @@ def test_a_run_that_fails_without_a_model_log_leaves_no_started_line(
 
     monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     with pytest.raises(SimulationError):
-        worker.run_particles(sim, workdir=compute_root / "w")
+        worker.run_result(sim, workdir=compute_root / "w")
 
     with pytest.raises(FileNotFoundError, match="No log"):
         sim.log  # noqa: B018
@@ -270,7 +266,7 @@ def test_a_run_that_fails_unexpectedly_without_a_model_log_keeps_its_started_lin
 
     monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
     with pytest.raises(RuntimeError):
-        worker.run_particles(sim, workdir=compute_root / "w")
+        worker.run_result(sim, workdir=compute_root / "w")
 
     assert "runtraj started this run" in sim.log
 
@@ -286,7 +282,7 @@ def test_a_batched_model_that_fails_without_a_log_leaves_no_started_line(
 
     monkeypatch.setattr(worker, "run_model_many", fail)
 
-    written, failed = worker.run_particles_batch(sims)
+    written, failed = worker.run_result_batch(sims)
 
     assert not written and len(failed) == 2
     for sim in sims:
@@ -305,7 +301,7 @@ def test_a_batched_model_that_fails_unexpectedly_keeps_its_started_lines(
 
     monkeypatch.setattr(worker, "run_model_many", fail)
 
-    worker.run_particles_batch(sims)
+    worker.run_result_batch(sims)
 
     for sim in sims:
         assert "runtraj started this run" in sim.log
@@ -388,7 +384,7 @@ def test_each_run_gets_a_new_workdir_named_after_its_simulation(
         workdirs.append(workdir)
         raise RuntimeError("stop here")
 
-    monkeypatch.setattr(worker, "run_particles", fake)
+    monkeypatch.setattr(worker, "run_result", fake)
     for _ in range(2):  # the same simulations again
         run_release(project, str(release.id), compute_root=compute_root)
 
@@ -407,7 +403,7 @@ def test_the_execution_settings_given_reach_the_run(tmp_path, release, monkeypat
         seen.update(kwargs)
         return _write_particles(sim)
 
-    monkeypatch.setattr(worker, "run_particles", fake)
+    monkeypatch.setattr(worker, "run_result", fake)
     override = ExecutionConfig(timeout=42, keep_workdir=True)
     _run_release(project, release, execution=override)
 
@@ -426,7 +422,7 @@ def test_run_release_takes_timeout_and_keep_workdir_from_execution(
         seen.append(kwargs)
         return _write_particles(sim)
 
-    monkeypatch.setattr(worker, "run_particles", fake)
+    monkeypatch.setattr(worker, "run_result", fake)
     _run_release(project, release)
 
     assert seen and all(k["timeout"] == 120 and k["keep_workdir"] for k in seen)
@@ -446,7 +442,7 @@ def test_run_release_stops_on_preemption_with_what_finished_written(
             raise KeyboardInterrupt
         return _write_particles(sim)
 
-    monkeypatch.setattr(worker, "run_particles", fake)
+    monkeypatch.setattr(worker, "run_result", fake)
 
     with pytest.raises(KeyboardInterrupt):
         _run_release(project, release)
@@ -497,7 +493,7 @@ def test_an_earlier_record_that_cannot_be_removed_does_not_stop_the_run(
 ):
     """With the output unreachable the old record stays, and the run goes on to the next release."""
     project = _model(tmp_path, [release, other_release])
-    monkeypatch.setattr(worker, "run_particles", _fails_with(ConnectionError("down")))
+    monkeypatch.setattr(worker, "run_result", _fails_with(ConnectionError("down")))
     monkeypatch.setattr(
         Output, "clear_failure", _fails_with(ConnectionError("down too"))
     )
@@ -513,7 +509,7 @@ def test_runtraj_run_still_exits_1_for_a_simulation_that_failed(
     project = _model(tmp_path, [release])
     (tmp_path / "met").mkdir(exist_ok=True)
     monkeypatch.setattr(
-        worker, "run_particles", _fails_with(MeteorologyError("No met file."))
+        worker, "run_result", _fails_with(MeteorologyError("No met file."))
     )
     result = CliRunner().invoke(app, ["run", str(project.directory)])
     assert result.exit_code == 1, result.output

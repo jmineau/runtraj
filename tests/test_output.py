@@ -258,7 +258,7 @@ def test_two_workers_starting_a_run_at_once_both_succeed(tmp_path, monkeypatch):
 
     folder = Output(path).folder("particles", VARIANT)
     record = yaml.safe_load((folder / "_settings.yaml").read_text())
-    assert record["hash"] == VARIANT.particles_hash
+    assert record["hash"] == VARIANT.result_hash
     assert [p.name for p in folder.iterdir()] == ["_settings.yaml"]
 
 

@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 
 from runtraj.output import Output, completed
-from runtraj.particles import read_particles
 from runtraj.releases import Release
 from runtraj.results import result_type
 from runtraj.stages import reads
@@ -290,10 +289,38 @@ class Simulation:
             If the particles have not been written yet. Nothing is kept, so
             a read after the run finishes loads them.
         """
-        path = self.particles_path
+        return self._read("particles")
+
+    @cached_property
+    def result(self) -> Any:
+        """
+        The transport model's result, of the type the variant makes.
+
+        :attr:`particles` for a variant that makes particles,
+        :attr:`concentration` for one that makes concentration
+        (:attr:`runtraj.config.Variant.result`). Read on first access and
+        kept.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the result has not been written yet.
+
+        Examples
+        --------
+        >>> sim.result  # doctest: +SKIP
+        """
+        return self._read(self.variant.result)
+
+    def _read(self, kind: str) -> Any:
+        """Return the result of type *kind*, read by its type's reader."""
+        path = self.path(kind)
         if path is None or not path.exists():
-            raise FileNotFoundError(f"{self} has no particles yet.")
-        return read_particles(path)
+            made = self.variant.result
+            if made != kind:
+                raise FileNotFoundError(f"{self} makes {made}, not {kind}.")
+            raise FileNotFoundError(f"{self} has no {kind} yet.")
+        return result_type(kind).read(path)
 
     @cached_property
     def concentration(self) -> xr.DataTree:
@@ -315,13 +342,7 @@ class Simulation:
         --------
         >>> sim.concentration["local"]["TEST"].sel(z=100).max()  # doctest: +SKIP
         """
-        path = self.path("concentration")
-        if path is None or not path.exists():
-            made = self.variant.result
-            if made != "concentration":
-                raise FileNotFoundError(f"{self} makes {made}, not concentration.")
-            raise FileNotFoundError(f"{self} has no concentration yet.")
-        return result_type("concentration").read(path)
+        return self._read("concentration")
 
 
 __all__ = ["Simulation"]

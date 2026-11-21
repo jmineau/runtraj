@@ -472,14 +472,14 @@ def test_an_ensemble_keeps_its_folder_when_its_realizations_grow(tmp_path):
     assert variants["e"].realization_numbers == [0]
     assert variants["single"].realization_numbers == [None]
     # An ensemble records that it is one, so it is not the single run.
-    assert variants["e"].particles_hash != variants["single"].particles_hash
+    assert variants["e"].result_hash != variants["single"].result_hash
     more = _variant_config(
         tmp_path, krand=4, variants={"e": {"realizations": 3}, "single": {}}
     ).resolve()
     one = _variant_config(
         tmp_path, krand=4, variants={"e": {"realizations": 1}, "single": {}}
     ).resolve()
-    assert more["e"].particles_hash == one["e"].particles_hash
+    assert more["e"].result_hash == one["e"].result_hash
     assert "realization" not in variants["single"].run_settings
     assert "ensemble" not in variants["single"].run_settings
     assert variants["e"].run_settings["ensemble"] is True

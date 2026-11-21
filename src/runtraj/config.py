@@ -123,7 +123,7 @@ class Variant:
     realization ``k`` with ``seed + k`` (:meth:`transport_for`), and its
     results share one folder, a ``realization=k`` partition each.
 
-    Variants with equal :attr:`particles_hash` share one run of the
+    Variants with equal :attr:`result_hash` share one run of the
     transport model per release (and realization) and differ only in what
     their stages make of it. The hashes are
     computed once. Change a variant with :func:`dataclasses.replace`, which
@@ -276,13 +276,12 @@ class Variant:
         return settings
 
     @cached_property
-    def particles_hash(self) -> str:
+    def result_hash(self) -> str:
         """
         Hash of :attr:`run_settings`, which finds the folder of the transport model's result.
 
-        The particles folder, or the folder of another type of result
-        (:attr:`result`): the name is the particles' for the variants that
-        make them, which are most.
+        The particles folder, or the folder of the variant's other type of
+        result (:attr:`result`).
         """
         return settings_hash(self.run_settings)
 
@@ -331,22 +330,22 @@ class Variant:
         """
         if not self.stages:
             return {}  # without the particles' hash, which reads the met and the build
-        return self.stage_hashes_on(self.particles_hash)
+        return self.stage_hashes_on(self.result_hash)
 
-    def stage_hashes_on(self, particles_hash: str) -> dict[str, str]:
+    def stage_hashes_on(self, result_hash: str) -> dict[str, str]:
         """
-        Return the hash of each stage's settings folder for particles hashed *particles_hash*.
+        Return the hash of each stage's settings folder for a result hashed *result_hash*.
 
         :attr:`stage_hashes` for the variant's own particles. Given the hash
         of a stored particles folder, it finds the stage folders made from
-        it where :attr:`particles_hash` cannot be computed, as on a machine
+        it where :attr:`result_hash` cannot be computed, as on a machine
         without the model's executable.
         """
         hashes: dict[str, str] = {}
         for name in self.stage_order:
             read = {r: hashes[r] for r in reads(self.stage(name))}
             hashes[name] = stage_hash(
-                name, self.stage_settings[name], particles_hash, read, self.result
+                name, self.stage_settings[name], result_hash, read, self.result
             )
         return hashes
 

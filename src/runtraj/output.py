@@ -88,7 +88,6 @@ from runtraj.identity import (
     settings_hash,
     stage_hash,
 )
-from runtraj.particles import write_particles
 from runtraj.particles.table import OLD_FILE
 from runtraj.releases import Release, parse_release_id
 from runtraj.results import RESULT_TYPES, result_type, write_result
@@ -606,7 +605,7 @@ class Output:
         """Return the hash that names *variant*'s folder of *kind*, ``None`` for a stage the variant does not use or a result type it does not make."""
         _check_kind(kind)
         if kind in RESULT_TYPES:
-            return variant.particles_hash if kind == variant.result else None
+            return variant.result_hash if kind == variant.result else None
         if kind not in variant.stages:
             return None  # without reading the met or the build for the particles' hash
         return variant.stage_hashes[kind]
@@ -728,7 +727,7 @@ class Output:
                 f"Variant {variant.name!r} makes {variant.result}, not {kind}."
             )
         if kind in RESULT_TYPES:
-            digest = variant.particles_hash
+            digest = variant.result_hash
             record: dict[str, Any] = {
                 "name": variant.name,
                 "hash": digest,
@@ -740,7 +739,7 @@ class Output:
             if kind not in variant.stages:
                 raise ValueError(f"Variant {variant.name!r} has no {kind} stage.")
             digest = variant.stage_hashes[kind]
-            made_from = {variant.result: variant.particles_hash}
+            made_from = {variant.result: variant.result_hash}
             made_from.update(
                 {
                     read: variant.stage_hashes[read]
@@ -1126,15 +1125,11 @@ class Output:
                 f"No particles to write for {release.id}: a particle file "
                 "would make the simulation complete."
             )
-        folder = self._made("particles", "particles", variant, realization)
-        return write_particles(
-            _release_file(folder, str(release.id)),
-            particles,
-            release,
-            variant.run_settings,
-            met_files,
-            metadata=file_stamp(variant.particles_hash, realization),
-        )
+        if variant.result != "particles":
+            raise ValueError(
+                f"Variant {variant.name!r} makes {variant.result}, not particles."
+            )
+        return self.write_result(variant, release, particles, met_files, realization)
 
     def write_result(
         self,
@@ -1158,10 +1153,6 @@ class Output:
             makes the simulation complete.
         """
         made = variant.result
-        if made == "particles":
-            return self.write_particles(
-                variant, release, result, met_files, realization
-            )
         result_type(made).check(result)
         folder = self._made(made, made, variant, realization)
         return write_result(
@@ -1171,7 +1162,7 @@ class Output:
             release,
             variant.run_settings,
             met_files,
-            metadata=file_stamp(variant.particles_hash, realization),
+            metadata=file_stamp(variant.result_hash, realization),
         )
 
     def logged(

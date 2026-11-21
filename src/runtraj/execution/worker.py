@@ -4,7 +4,7 @@ Worker functions that run one release, or many releases.
 Workers are handed releases. :func:`run_release` runs every variant of
 one release. Variants with the same transport settings share one set of
 particles, so it groups them: the transport model runs once per group where the
-particles are missing (:func:`run_particles`), then each variant's stages
+particles are missing (:func:`run_result`), then each variant's stages
 make their files from the particles in memory (:func:`run_stages`). A stage
 is the class its ``stages`` block of ``config.yaml`` names
 (:class:`runtraj.stages.Stage`), so this module imports none.
@@ -176,13 +176,13 @@ def _succeeded(sim: Simulation, stage: str) -> None:
     sim.output.clear_failure(stage, sim.variant, sim.release.id, sim.realization)
 
 
-def run_particles(
+def run_result(
     sim: Simulation,
     *,
     workdir: Path,
     keep_workdir: bool = False,
     timeout: int | None = None,
-) -> pd.DataFrame:
+) -> Any:
     """
     Run the transport model for a simulation and write its result to the output directory.
 
@@ -309,7 +309,7 @@ def _log_end(sim: Simulation, log: str) -> None:
             path.unlink(missing_ok=True)
 
 
-def run_particles_batch(
+def run_result_batch(
     sims: list[Simulation], *, timeout: int | None = None
 ) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
     """
@@ -585,7 +585,7 @@ def _groups(project: Project) -> dict[tuple[str, int | None], list[str]]:
     groups: dict[tuple[str, int | None], list[str]] = {}
     for name, variant in project.variants.items():
         for k in variant.realization_numbers:
-            groups.setdefault((variant.particles_hash, k), []).append(name)
+            groups.setdefault((variant.result_hash, k), []).append(name)
     return groups
 
 
@@ -607,7 +607,7 @@ def _run_batched(
 
     For each group of variants that share particles, the releases whose
     particles are missing (all of them, without *skip_existing*) run in one
-    call (:func:`run_particles_batch`); then each variant's stages run
+    call (:func:`run_result_batch`); then each variant's stages run
     per release. Returns the failures by release id.
     """
     problems: dict[str, list[str]] = {rid: [] for rid in release_ids}
@@ -618,7 +618,7 @@ def _run_batched(
         todo = [s for s in firsts if not (skip_existing and s.has_result)]
         written: dict[str, pd.DataFrame] = {}
         if todo:
-            written, failed = run_particles_batch(todo, timeout=execution.timeout)
+            written, failed = run_result_batch(todo, timeout=execution.timeout)
             for rid, line in failed.items():
                 problems[rid].append(line)
         ran = {s.release.id for s in todo}
@@ -659,7 +659,7 @@ def _run_group(
     rerun = not (skip_existing and first.has_result)
     if rerun:
         try:
-            result = run_particles(
+            result = run_result(
                 first,
                 workdir=_new_workdir(compute_root, first),
                 keep_workdir=execution.keep_workdir,
@@ -1017,8 +1017,8 @@ def run_releases(
 
 
 __all__ = [
-    "run_particles",
-    "run_particles_batch",
+    "run_result",
+    "run_result_batch",
     "run_release",
     "run_releases",
     "run_stage",

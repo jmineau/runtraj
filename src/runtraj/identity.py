@@ -160,7 +160,7 @@ def file_stamp(digest: str, realization: int | None = None) -> dict[bytes, bytes
     """
     Return what a result file records besides its contents, as Parquet file metadata.
 
-    Its folder's settings hash (*digest*: ``variant.particles_hash``, or
+    Its folder's settings hash (*digest*: ``variant.result_hash``, or
     ``variant.stage_hashes[name]`` for a stage's file), the runtraj
     version, and, for an ensemble, its realization number. A particle file
     carries it; a stage may write it too, so that its files say what made
