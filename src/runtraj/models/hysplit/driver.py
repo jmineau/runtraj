@@ -17,7 +17,7 @@ import shutil
 import signal
 import subprocess
 import sys
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -730,6 +730,7 @@ def run_hycs_std(
     log_path = workdir / LOG_FILE
     with (
         log_path.open("w", encoding="utf-8") as handle,
+        _ended_if_this_process_dies() as watch,
         subprocess.Popen(
             [str(program_file(workdir, program))],
             cwd=workdir,
@@ -737,8 +738,8 @@ def run_hycs_std(
             stderr=subprocess.STDOUT,
             **_own_group(),
         ) as proc,
-        _ended_if_this_process_dies(proc),
     ):
+        watch(proc)
         try:
             proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired as e:
@@ -798,38 +799,46 @@ def _own_group() -> dict[str, Any]:
     return {"start_new_session": True}
 
 
-#: The watchdog of a HYSPLIT run on POSIX: it waits for its standard input
-#: to close, which happens when the process that started it ends however it
-#: ends, then kills the process group its argument names.
-_WATCHDOG = 'read line; kill -s KILL -"$0" 2>/dev/null'
+#: The watchdog of a HYSPLIT run on POSIX: it reads the process group to
+#: kill, then waits for its standard input to close, which happens when the
+#: process that started it ends however it ends, and kills the group. ``kill
+#: -9 -PGID`` is the form both bash and dash read as a group.
+_WATCHDOG = 'read group && read line; kill -9 -"$group" 2>/dev/null'
 
 
 @contextmanager
-def _ended_if_this_process_dies(proc: subprocess.Popen[Any]) -> Iterator[None]:
+def _ended_if_this_process_dies() -> Iterator[Callable[[subprocess.Popen[Any]], None]]:
     """
-    End HYSPLIT (*proc*) if this process dies while the block runs, even when it is killed outright.
+    Yield a call that makes HYSPLIT end if this process dies while the block runs, even when it is killed outright.
 
     A worker the out-of-memory killer or ``kill -9`` ends runs no
     ``finally`` block, and HYSPLIT, in a session of its own, would run on.
-    On POSIX a watchdog shell, in a session of its own too, reads a pipe from
-    this process, which the system closes when this process dies; it then
-    kills HYSPLIT's process group. On Windows HYSPLIT is put in a job object
-    that ends it when the job's last handle, held here, closes. Either is in
-    place a moment after HYSPLIT starts, so a process killed in that moment
-    still leaves it running. Where neither can be set up, HYSPLIT runs
-    without it.
+    Call the yielded function with HYSPLIT's process as soon as it starts.
+    On POSIX a watchdog shell, started before HYSPLIT and in a session of
+    its own, is sent HYSPLIT's process group, then reads a pipe from this
+    process, which the system closes when this process dies; it then kills
+    the group. On Windows HYSPLIT is put in a job object that ends it when
+    the job's one handle, held here, closes. A process killed between
+    HYSPLIT's start and the call still leaves it running. Where neither can
+    be set up, HYSPLIT runs without it, with a warning.
     """
     if sys.platform == "win32":
-        job = _job_that_ends(proc.pid)
-        try:
-            yield
-        finally:
+        jobs: list[int] = []
+
+        def join_job(proc: subprocess.Popen[Any]) -> None:
+            job = _job_that_ends(proc.pid)
             if job is not None:
+                jobs.append(job)
+
+        try:
+            yield join_job
+        finally:
+            for job in jobs:
                 _close_handle(job)  # HYSPLIT has ended, or is ended now
         return
     try:
         watchdog = subprocess.Popen(
-            ["/bin/sh", "-c", _WATCHDOG, str(proc.pid)],
+            ["/bin/sh", "-c", _WATCHDOG],
             stdin=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -837,15 +846,24 @@ def _ended_if_this_process_dies(proc: subprocess.Popen[Any]) -> Iterator[None]:
         )
     except OSError as e:
         logger.warning("HYSPLIT runs without a watchdog: %s", e)
-        yield
+        yield lambda proc: None
         return
+    pipe = watchdog.stdin
+    assert pipe is not None
+
+    def tell_watchdog(proc: subprocess.Popen[Any]) -> None:
+        try:
+            pipe.write(f"{proc.pid}\n".encode())
+            pipe.flush()
+        except OSError as e:  # the watchdog has ended
+            logger.warning("HYSPLIT runs without a watchdog: %s", e)
+
     try:
-        yield
+        yield tell_watchdog
     finally:
         watchdog.kill()  # before its pipe closes, so it kills nothing
         watchdog.wait()
-        if watchdog.stdin is not None:
-            watchdog.stdin.close()
+        pipe.close()
 
 
 if sys.platform == "win32":  # Windows' job objects, through ctypes

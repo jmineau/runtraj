@@ -343,9 +343,10 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   no SIGTERM: `terminate` ends a worker alone and its HYSPLIT runs on, so
   `_end_worker` ends the tree with `taskkill /T`. A worker killed outright
   runs no `finally`, so HYSPLIT ends with it by other means
-  (`driver._ended_if_this_process_dies`): a watchdog `sh` on POSIX, which
-  kills HYSPLIT's group when the worker's pipe to it closes, and a job object
-  that ends on close on Windows.
+  (`driver._ended_if_this_process_dies`): a watchdog `sh` on POSIX, started
+  before HYSPLIT and sent its group, which kills the group when the worker's
+  pipe to it closes (`kill -9 -PGID`, the form dash reads too), and a job
+  object that ends on close on Windows.
 - **A pool with `cpus` above 1 first starts one worker that does nothing**
   (`_check_workers_can_start`), unless the start method is `fork`. Under `spawn`
   and `forkserver` a worker runs the user's script again, and a script without
