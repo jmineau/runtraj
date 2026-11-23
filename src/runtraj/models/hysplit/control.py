@@ -116,19 +116,19 @@ class ControlFile(BaseModel):
         lines.append(f"1 {len(self.met_files)}")
         for met_file in self.met_files:
             lines.append(
-                str(met_file.parent) + "/"
+                met_file.parent.as_posix() + "/"
             )  # (8) met file directory (trailing slash important for HYSPLIT)
             lines.append(met_file.name)  # (9) met file name
 
         if self.trajectory:
             lines.append("./")  # (10) output directory
             lines.append(TDUMP_FILE)  # (11) output file
-            Path(path).write_text("\n".join(lines) + "\n")
+            Path(path).write_text("\n".join(lines) + "\n", newline="\n")
             return
 
         if self.pollutants or self.grids:
             lines += _concentration_lines(self.pollutants, self.grids)
-            Path(path).write_text("\n".join(lines) + "\n")
+            Path(path).write_text("\n".join(lines) + "\n", newline="\n")
             return
 
         # Concentration / Pollutant Definition
@@ -171,7 +171,7 @@ class ControlFile(BaseModel):
         lines.append("0.0")  # (30) radioactive decay half-life (days)
         lines.append("0.0")  # (31) pollutant resuspension (1/m)
 
-        Path(path).write_text("\n".join(lines) + "\n")
+        Path(path).write_text("\n".join(lines) + "\n", newline="\n")
 
     @classmethod
     def read(cls, path: str | Path) -> "ControlFile":

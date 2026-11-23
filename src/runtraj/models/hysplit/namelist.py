@@ -68,7 +68,7 @@ class NameList:
         for key, fmt in self._entries:
             lines.append(f"{key}={fmt},")
         lines.append("$END\n")
-        Path(path).write_text("\n".join(lines))
+        Path(path).write_text("\n".join(lines), newline="\n")
 
     # ------------------------------------------------------------------
 

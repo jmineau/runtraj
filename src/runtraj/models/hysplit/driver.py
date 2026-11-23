@@ -15,6 +15,7 @@ import os
 import shutil
 import signal
 import subprocess
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -102,6 +103,28 @@ def program_name(config: HysplitConfig) -> str:
     return HYTS_STD_FILE if config.mode == "trajectory" else HYCS_STD_FILE
 
 
+def program_file(folder: Path, name: str) -> Path:
+    """
+    Return the file in *folder* that is the HYSPLIT program *name*: ``folder/name``, or on Windows the first of ``PATHEXT`` that exists.
+
+    HYSPLIT's Windows download names its programs ``hycs_std.exe``. Without
+    one in *folder*, the path of ``folder/name`` is returned, so a message
+    can name it.
+
+    Examples
+    --------
+    >>> program_file(Path("exec"), "hycs_std").stem
+    'hycs_std'
+    """
+    path = folder / name
+    if sys.platform == "win32":
+        extensions = os.environ.get("PATHEXT", ".COM;.EXE;.BAT;.CMD").split(";")
+        for extension in extensions:
+            if extension and (found := folder / f"{name}{extension.lower()}").is_file():
+                return found
+    return path
+
+
 def find_program(name: str, directory: str | Path | None = None) -> Path:
     """
     Return the HYSPLIT program called *name* that a run uses: ``exec/<name>`` under *directory*, else the first on ``PATH``.
@@ -124,10 +147,10 @@ def find_program(name: str, directory: str | Path | None = None) -> Path:
         without *directory*, if no such program is on ``PATH``.
     """
     if directory is not None:
-        exe = Path(directory) / EXEC_DIR / name
+        exe = program_file(Path(directory) / EXEC_DIR, name)
         if not exe.is_file():
             raise HYSPLITNotFoundError(
-                f"No {EXEC_DIR}/{name} in {directory}. Set directory "
+                f"No {EXEC_DIR}/{exe.name} in {directory}. Set directory "
                 "(under models: hysplit: in config.yaml) to the HYSPLIT folder "
                 f"as unpacked, the one that holds {EXEC_DIR}/ and {BDYFILES_DIR}/."
             )
@@ -547,7 +570,9 @@ def winderrtf(params: HysplitConfig) -> int:
 def _write_values(path: Path, values: list[float] | None) -> None:
     """Write one value per line to ``path``; nothing is written when ``values`` is ``None``."""
     if values is not None:
-        path.write_text("\n".join(str(v) for v in values) + "\n", encoding="utf-8")
+        path.write_text(
+            "\n".join(str(v) for v in values) + "\n", encoding="utf-8", newline="\n"
+        )
 
 
 def write_inputs(
@@ -596,14 +621,17 @@ def write_inputs(
     # taken from exec/, which holds dozens of other programs.
     program = program_name(config)
     trajectory = config.mode == "trajectory"
-    links = {program: find_program(program, config.directory)}
+    found = find_program(program, config.directory)
+    # On Windows the link keeps the program's extension, which finds it again.
+    linked = program + found.suffix if sys.platform == "win32" else program
+    links = {linked: found}
     for name, table in data_tables(config.directory, program).items():
         if isinstance(table, bytes):
             (workdir / name).write_bytes(table)
         else:
             links[name] = table
     for name, target in links.items():
-        (workdir / name).symlink_to(target.resolve())
+        _link(workdir / name, target.resolve())
 
     ControlFile(
         release_time=release_time,
@@ -636,13 +664,29 @@ def write_inputs(
     factors = ziscale_factors(config)
     if factors is not None:
         (workdir / ZICONTROL_FILE).write_text(
-            "\n".join([str(len(factors)), *(str(v) for v in factors)]) + "\n"
+            "\n".join([str(len(factors)), *(str(v) for v in factors)]) + "\n",
+            newline="\n",
         )
     rates = chemrate(config)
     if rates is not None:
-        (workdir / CHEMRATE_FILE).write_text("\n".join(rates) + "\n")
+        (workdir / CHEMRATE_FILE).write_text("\n".join(rates) + "\n", newline="\n")
     _write_values(workdir / WINDERR_FILE, winderr(config))
     _write_values(workdir / ZIERR_FILE, zierr(config))
+
+
+def _link(path: Path, target: Path) -> None:
+    """
+    Make *path* a symbolic link to *target*, or on Windows a copy when it may not make links.
+
+    Windows lets only an administrator, or a user in developer mode, create a
+    symbolic link. A copy of a data table or a program does what the link does.
+    """
+    try:
+        path.symlink_to(target)
+    except OSError:
+        if sys.platform != "win32":
+            raise
+        shutil.copy2(target, path)
 
 
 def run_hycs_std(
@@ -674,11 +718,11 @@ def run_hycs_std(
     with (
         log_path.open("w", encoding="utf-8") as handle,
         subprocess.Popen(
-            [str(workdir / program)],
+            [str(program_file(workdir, program))],
             cwd=workdir,
             stdout=handle,
             stderr=subprocess.STDOUT,
-            start_new_session=True,
+            **_own_group(),
         ) as proc,
     ):
         try:
@@ -691,7 +735,8 @@ def run_hycs_std(
             ) from e
         except BaseException:
             # Ctrl-C, or a worker told to stop: HYSPLIT runs in a session of
-            # its own, so no signal reached it and it would run on, unseen.
+            # its own (a process group on Windows), so no signal reached it and
+            # it would run on, unseen.
             _terminate(proc)
             raise
     messages = log_path.read_text(encoding="utf-8", errors="replace")
@@ -732,10 +777,17 @@ def _exit_status_error(workdir: Path, status: int) -> SimulationError:
     return SimulationError(message, reason=FailureReason.EXIT_STATUS)
 
 
+def _own_group() -> dict[str, Any]:
+    """Return the ``Popen`` arguments that start HYSPLIT in a session of its own (a new process group on Windows)."""
+    if sys.platform == "win32":
+        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    return {"start_new_session": True}
+
+
 def _terminate(proc: subprocess.Popen[Any]) -> None:
-    """Stop a HYSPLIT process group with SIGTERM, then SIGKILL if it does not exit."""
+    """Stop a HYSPLIT process (its group, on POSIX) with SIGTERM, then SIGKILL if it does not exit."""
     try:
-        os.killpg(proc.pid, signal.SIGTERM)
+        _signal_group(proc, hard=False)
     except ProcessLookupError:
         return
     try:
@@ -744,10 +796,29 @@ def _terminate(proc: subprocess.Popen[Any]) -> None:
     except subprocess.TimeoutExpired:
         pass
     try:
-        os.killpg(proc.pid, signal.SIGKILL)
+        _signal_group(proc, hard=True)
     except ProcessLookupError:
         return
     try:
         proc.wait(timeout=5)
     except subprocess.TimeoutExpired:
         proc.wait()
+
+
+def _signal_group(proc: subprocess.Popen[Any], *, hard: bool) -> None:
+    """
+    Send SIGKILL (*hard*) or SIGTERM to *proc*'s process group.
+
+    Windows has no process group to signal: ``terminate`` and ``kill`` end
+    the process alone, which is all HYSPLIT is (it starts no other).
+    """
+    if sys.platform == "win32":
+        try:
+            if hard:
+                proc.kill()
+            else:
+                proc.terminate()
+        except OSError as e:  # the process has already ended
+            raise ProcessLookupError from e
+        return
+    os.killpg(proc.pid, signal.SIGKILL if hard else signal.SIGTERM)

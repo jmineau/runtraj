@@ -101,13 +101,17 @@ BUILDS_EXAMPLE = """\
 # ---------------------------------------------------------------------------
 
 
+#: The start of an absolute path: ``/`` or, on Windows, a drive (``C:/``).
+_ABSOLUTE = re.compile(r"/|[A-Za-z]:/")
+
+
 def normalize(name: str, data: bytes) -> bytes:
     """Return input file *name* as it is compared: in ``CONTROL``, each met folder is ``<met>/``."""
     if name != "CONTROL":
         return data
     lines = data.decode().split("\n")
     lines = [
-        MET_FOLDER if line.startswith("/") and line.rstrip().endswith("/") else line
+        MET_FOLDER if _ABSOLUTE.match(line) and line.rstrip().endswith("/") else line
         for line in lines
     ]
     return "\n".join(lines).encode()
@@ -199,7 +203,7 @@ def record(program: str, real: Path, cases: Path) -> int:
         if name not in NOT_INPUTS | NOT_RECORDED and before.get(name) != stamp
     }
     save_case(cases, program, inputs, outputs, done.stdout, done.returncode)
-    if done.returncode < 0:  # killed by a signal: end the same way
+    if done.returncode < 0 and os.name == "posix":  # a signal: end the same way
         os.kill(os.getpid(), -done.returncode)
     return done.returncode
 
@@ -232,7 +236,7 @@ def replay(program: str, cases: Path, misses: Path) -> int:
     sys.stdout.buffer.write(lzma.decompress((folder / "printed.xz").read_bytes()))
     sys.stdout.flush()
     status = meta["status"]
-    if status < 0:  # killed by a signal: end the same way
+    if status < 0 and os.name == "posix":  # a signal: end the same way
         os.kill(os.getpid(), -status)
     return status
 
@@ -266,7 +270,7 @@ def make_folder(
     (dest / "bdyfiles").mkdir(exist_ok=True)
     if real is not None:
         real = Path(real).resolve()
-        programs = [p for p in PROGRAMS if (real / "exec" / p).is_file()]
+        programs = [p for p in PROGRAMS if _program(real / "exec", p).is_file()]
         for table in DATA_TABLES:
             shutil.copyfile(real / "bdyfiles" / table, dest / "bdyfiles" / table)
     else:
@@ -277,11 +281,27 @@ def make_folder(
     this = Path(__file__).resolve()
     for program in programs:
         if real is not None:
-            args = ["record", program, str(cases), str(real / "exec" / program)]
+            args = [
+                "record",
+                program,
+                str(cases),
+                str(_program(real / "exec", program)),
+            ]
         else:
             kept = Path(misses) if misses is not None else dest / "misses"
             args = ["replay", program, str(cases), str(kept.resolve())]
         command = [python or sys.executable, "-I", str(this), "run", *args]
+        if os.name == "nt":
+            # Windows runs a .cmd as a program, and runtraj finds it as it finds
+            # a .exe (PATHEXT); the last command's status is the script's.
+            cmd = dest / "exec" / f"{program}.cmd"
+            cmd.write_text(
+                "@echo off\r\n"
+                "rem A recorded HYSPLIT program: tests/fixtures/replay.py.\r\n"
+                f"{subprocess.list2cmdline(command)}\r\n",
+                newline="",
+            )
+            continue
         script = dest / "exec" / program
         script.write_text(
             "#!/bin/sh\n"
@@ -290,6 +310,12 @@ def make_folder(
         )
         script.chmod(0o755)
     return dest / "exec"
+
+
+def _program(folder: Path, name: str) -> Path:
+    """Return the file of the HYSPLIT program *name* in *folder*: ``name``, or ``name.exe`` on Windows."""
+    exe = folder / f"{name}.exe"
+    return exe if os.name == "nt" and exe.is_file() else folder / name
 
 
 def misses(folder: Path) -> list[Path]:
