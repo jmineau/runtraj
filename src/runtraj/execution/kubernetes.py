@@ -32,6 +32,7 @@ import logging
 import re
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -503,10 +504,18 @@ def _pods_open(project: Project, execution: ExecutionConfig) -> tuple[str, str]:
     ValueError
         If the pods would lose their results: the inputs go to a bucket but
         the output directory is a path, so each pod would write to its own
-        disk.
+        disk. Or, on Windows, if the inputs are not on a bucket: the pods
+        run Linux and cannot open a folder on this machine.
     """
     kube = execution.kubernetes
     output = str(project.output.directory)
+    if kube.inputs is None and sys.platform == "win32":
+        raise ValueError(
+            f"The pods cannot open {Path(project.directory).resolve()}: they run "
+            "Linux, and a folder on Windows is not on their volume. Set "
+            "execution.kubernetes.inputs to a bucket (s3://...), and output in "
+            "config.yaml to one too."
+        )
     if kube.inputs is not None and not is_url(project.output.directory):
         raise ValueError(
             f"The output directory {output} is a path, so each pod would write "

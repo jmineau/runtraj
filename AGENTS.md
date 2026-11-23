@@ -223,8 +223,9 @@ log, met files or `age = 0` row; particles numbered 10, 20, ...):
   (`driver.program_file`); stand-ins are `.cmd` files (`program_path` in
   `tests/fixtures/factories.py`). A test that needs a shell script, a POSIX
   signal or process group, or Slurm gets `@not_on_windows("why")`
-  (`tests/fixtures/platform.py`). The input lock and `put` are for Kubernetes
-  and Slurm, which are Linux only.
+  (`tests/fixtures/platform.py`). The input lock and `put` on a local folder
+  are for Kubernetes and Slurm, which run Linux; from Windows a Kubernetes
+  submit needs `inputs` on a bucket (`_pods_open` refuses it otherwise).
 - Python 3.11+ (use `typing.Self`, `enum.StrEnum`, `datetime.UTC`, not
   backports). Ruff rules are in `pyproject.toml`; **NumPy-style docstrings**
   with the summary on the line after the opening quotes (`D213`). Keep a

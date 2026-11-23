@@ -303,6 +303,24 @@ def test_submit_refuses_inputs_on_a_bucket_with_results_on_a_pod_s_disk(
     assert kubectl.created == []
 
 
+def test_submit_from_windows_refuses_inputs_the_pods_cannot_open(
+    tmp_path, kubectl, monkeypatch
+):
+    monkeypatch.setattr(kubernetes, "sys", SimpleNamespace(platform="win32"))
+    with pytest.raises(ValueError, match="execution.kubernetes.inputs to a bucket"):
+        runner.submit(_project(tmp_path, 1), execution=_execution())
+    assert kubectl.created == []
+
+
+def test_submit_from_windows_with_inputs_on_a_bucket_creates_the_job(
+    tmp_path, kubectl, monkeypatch
+):
+    monkeypatch.setattr(kubernetes, "sys", SimpleNamespace(platform="win32"))
+    project = _project(tmp_path, 1, output="memory://windows-bucket/out")
+    runner.submit(project, execution=_execution(inputs="memory://windows-bucket/p"))
+    assert len(kubectl.created) == 1
+
+
 def test_submit_says_why_kubectl_refused(tmp_path, kubectl):
     kubectl.answer = SimpleNamespace(returncode=1, stdout="", stderr="forbidden: quota")
     with pytest.raises(RuntimeError, match="forbidden: quota"):
