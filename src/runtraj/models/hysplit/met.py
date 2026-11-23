@@ -723,7 +723,9 @@ class Met:
         cannot be read, is made again. Each crop is written to a temporary
         name and then renamed, so a worker never reads a half-written file.
         Two workers cropping the same file at once both finish, and the
-        second rename wins.
+        first crop is kept: the second worker reads it, since on Windows a
+        rename onto a crop that a run has open fails. A crop that holds
+        fewer time steps is replaced, as before.
         """
         from arlmet import extract_subset
 
@@ -741,8 +743,16 @@ class Met:
             cache_path = crop_dir / src.name
             if not _holds_as(cache_path, src):
                 logger.info("Subsetting %s → %s", src.name, cache_path)
-                with atomic_path(cache_path) as tmp:
-                    extract_subset(src, tmp, bbox=bbox, levels=levels)
+                try:
+                    # A crop no worker has made yet is written once.
+                    with atomic_path(cache_path, replace=cache_path.exists()) as tmp:
+                        extract_subset(src, tmp, bbox=bbox, levels=levels)
+                except FileExistsError:
+                    # Another worker's crop landed first; it is used unless
+                    # it holds fewer time steps than the source.
+                    if not _holds_as(cache_path, src):
+                        with atomic_path(cache_path) as tmp:
+                            extract_subset(src, tmp, bbox=bbox, levels=levels)
             subsetted.append(cache_path)
         return subsetted
 
