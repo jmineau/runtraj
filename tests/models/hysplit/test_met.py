@@ -307,14 +307,15 @@ def test_a_short_crop_with_the_sources_name_is_made_again(tmp_path):
     assert files[0].read_text() == "cropped"
 
 
-def _another_worker_crops_first(times, opened):
-    """Stand-in for arlmet.extract_subset whose first call finds another worker's crop, holding *times*, landed meanwhile and open in its run."""
+def _another_worker_crops_first(times, opened=None):
+    """Stand-in for arlmet.extract_subset whose first call finds another worker's crop, holding *times*, landed meanwhile (and open in its run, when *opened* is a list)."""
     calls = []
 
     def extract(src, dst, **kwargs):
         if not calls:
             crop = write_arl_file(Path(dst).parent / Path(src).name, times=times)
-            opened.append(crop.open("rb"))
+            if opened is not None:
+                opened.append(crop.open("rb"))
         calls.append(dst)
         Path(dst).write_text("cropped", encoding="utf-8")
         return Path(dst)
@@ -340,14 +341,12 @@ def test_two_workers_cropping_one_file_at_once_keep_the_first_crop(tmp_path):
 
 
 def test_a_short_crop_another_worker_made_meanwhile_is_made_again(tmp_path):
+    """Its crop is replaced; on Windows a run that has it open makes this fail, and a rerun succeeds."""
     met = _archive_met(tmp_path)
-    opened = []
-    extract = _another_worker_crops_first(SIX_HOURS[:2], opened)
+    extract = _another_worker_crops_first(SIX_HOURS[:2])
 
     with patch("arlmet.extract_subset", side_effect=extract) as mock_extract:
         files = _files(met)
-    for file in opened:
-        file.close()
 
     assert mock_extract.call_count == 2
     assert files[0].read_text() == "cropped"
