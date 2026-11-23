@@ -354,7 +354,7 @@ def write_inputs(
     shutil.copyfile(species, options / "SPECIES" / "SPECIES_001")
     first = next(iter(met_files.values()))
     (options / "COMMAND").write_text(
-        command(config, window, nxshift(met.source, first))
+        command(config, window, nxshift(met.source(), first))
     )
     (options / "RELEASES").write_text(releases(release, config.numpar))
     (options / "PARTOPTIONS").write_text(partoptions())

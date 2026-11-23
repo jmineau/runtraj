@@ -62,6 +62,40 @@ def grib_valid_time(path: str | Path) -> dt.datetime:
     return dt.datetime.strptime(f"{date:08d}{time:04d}", "%Y%m%d%H%M")
 
 
+def grib_source(path: str | Path) -> str:
+    """
+    Return the weather model a GRIB file comes from, ``era5`` or ``gfs``, read from its first message.
+
+    ERA5 is ECMWF's (``centre`` ``ecmf``) with MARS class ``ea``, as
+    flex_extract writes it; GFS is NCEP's (``centre`` ``kwbc``).
+
+    Raises
+    ------
+    ValueError
+        If the file is from another centre, or is ECMWF data other than
+        ERA5, such as the operational analysis (class ``od``).
+    """
+    eccodes = _eccodes()
+    (centre,) = _first_message_keys(path, ("centre",))
+    if centre == "kwbc":
+        return "gfs"
+    if centre == "ecmf":
+        try:
+            (mars_class,) = _first_message_keys(path, ("marsClass",))
+        except eccodes.KeyValueNotFoundError:
+            mars_class = None
+        if mars_class == "ea":
+            return "era5"
+        raise ValueError(
+            f"{Path(path).name} is ECMWF data of MARS class {mars_class!r}; "
+            "FLEXPART runs here on ERA5 only (class 'ea'), as flex_extract writes it."
+        )
+    raise ValueError(
+        f"{Path(path).name} is from GRIB centre {centre!r}; FLEXPART runs here "
+        "on ERA5 only (centre 'ecmf', class 'ea'), as flex_extract writes it."
+    )
+
+
 def grib_grid(path: str | Path) -> str:
     """Return the grid of the first GRIB message in *path*, such as ``0.5x0.5 deg, 720x361``."""
     di, dj, ni, nj = _first_message_keys(

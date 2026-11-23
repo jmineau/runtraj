@@ -1,4 +1,4 @@
-"""Small GFS-like GRIB2 files for tests, written with eccodes."""
+"""Small GRIB2 files for tests, GFS-like or ERA5-like, written with eccodes."""
 
 import numpy as np
 import pandas as pd
@@ -8,8 +8,15 @@ import pandas as pd
 LEVELS = {1000: 100.0, 900: 1000.0, 800: 2000.0}
 
 
-def write_gfs(path, time, sp=95000.0, orog=500.0, levels=None, global_grid=False):
-    """Write a GFS-like GRIB2 file: sp and orog at the surface, gh on pressure levels."""
+def write_gfs(
+    path, time, sp=95000.0, orog=500.0, levels=None, global_grid=False, era5=False
+):
+    """
+    Write a GFS-like GRIB2 file: sp and orog at the surface, gh on pressure levels.
+
+    With *era5*, the messages say ERA5 as flex_extract writes it: centre
+    ``ecmf`` and MARS class ``ea``, where GFS says ``kwbc``.
+    """
     levels = LEVELS if levels is None else levels
     if global_grid:
         grid = {
@@ -49,8 +56,14 @@ def write_gfs(path, time, sp=95000.0, orog=500.0, levels=None, global_grid=False
                 "centre": "kwbc",
                 "typeOfLevel": level_type,
             }
+            if era5:
+                keys["centre"] = "ecmf"
             for key, val in keys.items():
                 eccodes.codes_set(h, key, val)
+            if era5:
+                eccodes.codes_set(h, "setLocalDefinition", 1)
+                eccodes.codes_set(h, "grib2LocalSectionNumber", 1)
+                eccodes.codes_set(h, "marsClass", "ea")
             if level:
                 eccodes.codes_set(h, "level", level)
             eccodes.codes_set(h, "shortName", name)

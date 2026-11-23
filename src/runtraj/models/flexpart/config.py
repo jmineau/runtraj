@@ -12,7 +12,14 @@ import subprocess
 from pathlib import Path
 from typing import Any, ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PrivateAttr,
+    field_validator,
+    model_validator,
+)
 
 from runtraj.models import TransportConfig
 
@@ -221,36 +228,27 @@ def flexpart_version(directory: str | Path) -> str:
 GFS_REFUSED = (
     "FLEXPART 11 does not mix its particles on GFS: it derives GFS's surface "
     "heat flux and stress from the 2 m and 10 m values, which come out near "
-    "zero, so the particles stay near the ground. Use ERA5 (source: era5)."
+    "zero, so the particles stay near the ground. Use ERA5, as flex_extract writes it."
 )
 
 
 class FlexpartMetConfig(BaseModel):
     """
-    The meteorology FLEXPART reads: a directory of GRIB files and what they are.
+    The meteorology FLEXPART reads: a directory of GRIB files.
 
     FLEXPART reads each file as ``AVAILABLE`` lists it, by valid time; runtraj
     reads the valid time from each file's first message, so the names do
-    not matter. The one source is ERA5 as flex_extract writes it (``EA*``
-    files on model levels). GFS is refused: FLEXPART 11 derives GFS's
-    surface heat flux and stress itself, they come out near zero, and its
-    particles do not mix (:doc:`/reference/flexpart`).
+    not matter. Which weather model the files come from is read from the
+    first file too (:meth:`source`): ERA5 as flex_extract writes it (``EA*``
+    files on model levels) runs, and GFS is refused, because FLEXPART 11
+    derives GFS's surface heat flux and stress itself, they come out near
+    zero, and its particles do not mix (:doc:`/reference/flexpart`).
 
     A string in ``config.yaml`` is the ``directory``: ``era5: /path/to/era5``.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    source: Literal["era5"] = Field(
-        "era5",
-        description=(
-            "The weather model the files come from: ``era5``, ECMWF's "
-            "reanalysis on model levels as flex_extract writes it, which we "
-            "run with ``eta: true`` in the model's block. ``gfs`` is refused: "
-            "FLEXPART 11 derives GFS's surface heat flux and stress itself, "
-            "they come out near zero, and its particles do not mix."
-        ),
-    )
     directory: Path = Field(
         ...,
         description=(
@@ -266,13 +264,7 @@ class FlexpartMetConfig(BaseModel):
         ),
     )
 
-    @field_validator("source", mode="before")
-    @classmethod
-    def _no_gfs(cls, source: Any) -> Any:
-        """Refuse GFS, on which FLEXPART 11 does not mix its particles."""
-        if source == "gfs":
-            raise ValueError(GFS_REFUSED)
-        return source
+    _source: str | None = PrivateAttr(None)
 
     @model_validator(mode="before")
     @classmethod
@@ -282,20 +274,16 @@ class FlexpartMetConfig(BaseModel):
             return {"directory": data}
         return data
 
-    def settings(self) -> dict[str, Any]:
+    def _first_file(self) -> Path:
         """
-        Return what a run records of this met: its source and its grid.
-
-        The grid, such as ``0.5x0.5 deg, 720x361``, is read from the first
-        GRIB file, so ERA5 on two grids runs in different settings folders.
-        Where the files are kept is not recorded.
+        Return the first GRIB file that matches ``pattern`` in ``directory``.
 
         Raises
         ------
         FileNotFoundError
             If ``directory`` holds no GRIB file that matches ``pattern``.
         """
-        from runtraj.models.flexpart.met import grib_grid, holds_grib
+        from runtraj.models.flexpart.met import holds_grib
 
         files = sorted(
             p for p in Path(self.directory).glob(self.pattern) if p.is_file()
@@ -305,7 +293,48 @@ class FlexpartMetConfig(BaseModel):
             raise FileNotFoundError(
                 f"No GRIB files match {self.pattern!r} in {self.directory}."
             )
-        return {"source": self.source, "grid": grib_grid(first)}
+        return first
+
+    def source(self) -> str:
+        """
+        Return the weather model the files come from, ``era5``, read from the first file once, and kept.
+
+        Raises
+        ------
+        FileNotFoundError
+            If ``directory`` holds no GRIB file that matches ``pattern``.
+        ValueError
+            If the files are GFS, on which FLEXPART 11 does not mix its
+            particles, or are not ERA5.
+        """
+        if self._source is None:
+            from runtraj.models.flexpart.met import grib_source
+
+            source = grib_source(self._first_file())
+            if source == "gfs":
+                raise ValueError(f"{self.directory} holds GFS. {GFS_REFUSED}")
+            self._source = source
+        return self._source
+
+    def settings(self) -> dict[str, Any]:
+        """
+        Return what a run records of this met: its source and its grid.
+
+        Both are read from the first GRIB file: the source by :meth:`source`,
+        and the grid, such as ``0.5x0.5 deg, 720x361``, so ERA5 on two grids
+        runs in different settings folders. Where the files are kept is not
+        recorded.
+
+        Raises
+        ------
+        FileNotFoundError
+            If ``directory`` holds no GRIB file that matches ``pattern``.
+        ValueError
+            If the files are not ERA5 (:meth:`source`).
+        """
+        from runtraj.models.flexpart.met import grib_grid
+
+        return {"source": self.source(), "grid": grib_grid(self._first_file())}
 
 
 __all__ = ["FlexpartConfig", "FlexpartMetConfig", "flexpart_version"]

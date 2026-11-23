@@ -58,19 +58,30 @@ def checkout(tmp_path):
     return root
 
 
-@pytest.fixture
-def gfs(tmp_path):
-    """GRIB files every 12 h around the sample run's window (GFS-shaped; the stand-in FLEXPART reads none of them)."""
-    directory = tmp_path / "gfs"
+def _met_dir(directory, era5=True):
+    """GRIB files every 12 h around the sample run's window (the stand-in FLEXPART reads none of them)."""
     directory.mkdir()
+    name = "era5" if era5 else "gfs"
     for time in (
         "2023-05-31 06:00",
         "2023-05-31 18:00",
         "2023-06-01 06:00",
         "2023-06-01 18:00",
     ):
-        write_gfs(directory / f"gfs_{time[:10]}_{time[11:13]}.grb2", time)
+        write_gfs(directory / f"{name}_{time[:10]}_{time[11:13]}.grb2", time, era5=era5)
     return directory
+
+
+@pytest.fixture
+def era5(tmp_path):
+    """ERA5-like GRIB files: centre ``ecmf``, MARS class ``ea``."""
+    return _met_dir(tmp_path / "era5")
+
+
+@pytest.fixture
+def gfs(tmp_path):
+    """GFS-like GRIB files: centre ``kwbc``."""
+    return _met_dir(tmp_path / "gfs", era5=False)
 
 
 def config(checkout, **kw):
@@ -122,15 +133,15 @@ def test_version_without_file_or_git(tmp_path):
         flexpart_version(tmp_path)
 
 
-def test_met_config_takes_a_bare_directory_and_records_the_grid(gfs):
-    met = FlexpartMetConfig.model_validate(str(gfs))
-    assert met.directory == gfs
+def test_met_config_takes_a_bare_directory_and_records_the_grid(era5):
+    met = FlexpartMetConfig.model_validate(str(era5))
+    assert met.directory == era5
     assert met.settings() == {"source": "era5", "grid": "1x1 deg, 3x3"}
 
 
-def test_met_config_reads_the_grid_past_a_file_that_is_not_grib(gfs):
-    (gfs / "a_readme.txt").write_text("not GRIB\n")
-    assert FlexpartMetConfig(directory=gfs).settings()["grid"] == "1x1 deg, 3x3"
+def test_met_config_reads_the_grid_past_a_file_that_is_not_grib(era5):
+    (era5 / "a_readme.txt").write_text("not GRIB\n")
+    assert FlexpartMetConfig(directory=era5).settings()["grid"] == "1x1 deg, 3x3"
 
 
 def test_met_config_names_a_directory_without_grib_files(tmp_path):
@@ -146,19 +157,19 @@ def test_get_model_finds_flexpart():
 # -- met files -----------------------------------------------------------------
 
 
-def test_files_for_a_window_include_one_beyond_each_end(gfs):
+def test_files_for_a_window_include_one_beyond_each_end(era5):
     files = files_for(
-        catalog(gfs), (dt.datetime(2023, 5, 31, 20), dt.datetime(2023, 6, 1, 5))
+        catalog(era5), (dt.datetime(2023, 5, 31, 20), dt.datetime(2023, 6, 1, 5))
     )
     assert list(files) == [dt.datetime(2023, 5, 31, 18), dt.datetime(2023, 6, 1, 6)]
 
 
-def test_catalog_leaves_out_the_index_cfgrib_writes_beside_a_file(gfs):
+def test_catalog_leaves_out_the_index_cfgrib_writes_beside_a_file(era5):
     """Cfgrib writes ``<file>.<hash>.idx`` beside a GRIB file, and ``pattern`` is ``*`` unless set."""
-    (gfs / "gfs_2023-05-31_18.grb2.5b78f.idx").write_bytes(
+    (era5 / "era5_2023-05-31_18.grb2.5b78f.idx").write_bytes(
         b"\x80\x04not a GRIB message"
     )
-    assert len(catalog(gfs)) == 4
+    assert len(catalog(era5)) == 4
 
 
 def test_available_refuses_a_file_name_with_a_space(tmp_path):
@@ -167,21 +178,21 @@ def test_available_refuses_a_file_name_with_a_space(tmp_path):
         available({dt.datetime(2023, 6, 1): tmp_path / "gfs 0p50.grb2"})
 
 
-def test_files_for_a_window_the_files_do_not_cover(gfs):
+def test_files_for_a_window_the_files_do_not_cover(era5):
     with pytest.raises(MeteorologyError, match="do not cover"):
-        files_for(catalog(gfs), (dt.datetime(2023, 6, 1, 12), dt.datetime(2023, 6, 2)))
+        files_for(catalog(era5), (dt.datetime(2023, 6, 1, 12), dt.datetime(2023, 6, 2)))
 
 
-def test_files_for_a_window_with_a_missing_file(gfs):
-    (gfs / "gfs_2023-06-01_06.grb2").unlink()
+def test_files_for_a_window_with_a_missing_file(era5):
+    (era5 / "era5_2023-06-01_06.grb2").unlink()
     with pytest.raises(MeteorologyError, match="a file is missing"):
-        files_for(catalog(gfs), WINDOW)
+        files_for(catalog(era5), WINDOW)
 
 
 # -- input files ---------------------------------------------------------------
 
 
-def test_command_runs_backward_over_the_window(checkout, gfs):
+def test_command_runs_backward_over_the_window(checkout, era5):
     text = command(config(checkout), WINDOW)
     for line in (
         "LDIRECT=-1,",
@@ -198,7 +209,7 @@ def test_command_runs_backward_over_the_window(checkout, gfs):
     assert text.startswith("&COMMAND\n") and text.endswith(" /\n")
 
 
-def test_command_times_before_ten_are_integers(checkout, gfs):
+def test_command_times_before_ten_are_integers(checkout, era5):
     window = (dt.datetime(2023, 6, 1, 6), dt.datetime(2023, 6, 1, 9, 30))
     text = command(config(checkout, n_hours=3), window)
     assert " LDIRECT=1,\n" in text
@@ -269,13 +280,13 @@ def test_release_rows_of_a_multipoint_follow_the_releases_split():
     assert rows["lon"].tolist() == [-111.8] * 4 + [-111.9] * 3 + [-112.0] * 3
 
 
-def test_run_trajectories_of_a_column_gives_release_heights(checkout, gfs, tmp_path):
+def test_run_trajectories_of_a_column_gives_release_heights(checkout, era5, tmp_path):
     column = ColumnRelease(
         time="2023-06-01 18:00", longitude=-111.848, latitude=40.766, bottom=0, top=50
     )
     particles = runtraj.run_trajectories(
         column,
-        {"directory": str(gfs)},
+        {"directory": str(era5)},
         model="flexpart",
         directory=str(checkout),
         n_hours=-24,
@@ -297,19 +308,19 @@ def test_partoptions_turn_on_the_met_at_each_particle():
 # -- the model -----------------------------------------------------------------
 
 
-def test_run_writes_the_inputs_and_reads_the_particles(checkout, gfs, tmp_path):
+def test_run_writes_the_inputs_and_reads_the_particles(checkout, era5, tmp_path):
     workdir = tmp_path / "work"
     workdir.mkdir()
     run = FlexpartModel().run(
-        RELEASE, config(checkout), FlexpartMetConfig(directory=gfs), WINDOW, workdir
+        RELEASE, config(checkout), FlexpartMetConfig(directory=era5), WINDOW, workdir
     )
 
     assert len(run.result) == 5 * 24
     assert "CONGRATULATIONS" in run.log
     assert [p.name for p in run.met_files] == [
-        "gfs_2023-05-31_18.grb2",
-        "gfs_2023-06-01_06.grb2",
-        "gfs_2023-06-01_18.grb2",
+        "era5_2023-05-31_18.grb2",
+        "era5_2023-06-01_06.grb2",
+        "era5_2023-06-01_18.grb2",
     ]
     assert (workdir / "pathnames").read_text() == (
         "./options/\n./output/\n./met/\n./AVAILABLE\n"
@@ -321,15 +332,37 @@ def test_run_writes_the_inputs_and_reads_the_particles(checkout, gfs, tmp_path):
     assert (workdir / "options" / "IGBP_int1.dat").is_symlink()
 
 
-def test_met_config_refuses_gfs_saying_flexpart_does_not_mix_on_it(gfs):
-    with pytest.raises(ValidationError, match="does not mix its particles on GFS"):
-        FlexpartMetConfig(source="gfs", directory=gfs)
+def test_met_config_refuses_gfs_read_from_the_files(gfs):
+    met = FlexpartMetConfig(directory=gfs)
+    with pytest.raises(ValueError, match="does not mix its particles on GFS"):
+        met.settings()
 
 
-def test_run_trajectories_returns_flexpart_s_particles(checkout, gfs, tmp_path):
+def test_met_config_refuses_ecmwf_data_that_is_not_era5(tmp_path):
+    import eccodes
+
+    directory = _met_dir(tmp_path / "od")
+    for path in directory.iterdir():
+        # The first message only, with the operational analysis's class.
+        with open(path, "rb") as f:
+            h = eccodes.codes_grib_new_from_file(f)
+        eccodes.codes_set(h, "marsClass", "od")
+        with open(path, "wb") as f:
+            eccodes.codes_write(h, f)
+        eccodes.codes_release(h)
+    with pytest.raises(ValueError, match="MARS class 'od'"):
+        FlexpartMetConfig(directory=directory).source()
+
+
+def test_met_config_has_no_source_setting(era5):
+    with pytest.raises(ValidationError, match="source"):
+        FlexpartMetConfig(directory=era5, source="era5")
+
+
+def test_run_trajectories_returns_flexpart_s_particles(checkout, era5, tmp_path):
     particles = runtraj.run_trajectories(
         RELEASE,
-        {"directory": str(gfs)},
+        {"directory": str(era5)},
         model="flexpart",
         directory=str(checkout),
         n_hours=-24,
@@ -357,9 +390,9 @@ def test_eta_runs_the_eta_build(checkout):
         FlexpartModel().sha256(config(checkout, eta=True))
 
 
-def test_era5_runs_on_the_meter_build(checkout, gfs, tmp_path):
+def test_era5_runs_on_the_meter_build(checkout, era5, tmp_path):
     """FLEXPART's meter build reads ECMWF data too (seen on a real ERA5 run)."""
-    met = FlexpartMetConfig(source="era5", directory=gfs)
+    met = FlexpartMetConfig(directory=era5)
     run = FlexpartModel().run(RELEASE, config(checkout), met, WINDOW, tmp_path)
     assert len(run.result)
 
@@ -367,7 +400,7 @@ def test_era5_runs_on_the_meter_build(checkout, gfs, tmp_path):
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="macOS refuses a stack above 64 MB"
 )
-def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, gfs, tmp_path):
+def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, era5, tmp_path):
     """FLEXPART's documentation asks for ``ulimit -s unlimited`` with OpenMP."""
     soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
     expected = "unlimited" if hard == resource.RLIM_INFINITY else str(hard // 1024)
@@ -377,7 +410,7 @@ def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, gfs, tmp_path):
         FlexpartModel().run(
             RELEASE,
             config(checkout),
-            FlexpartMetConfig(directory=gfs),
+            FlexpartMetConfig(directory=era5),
             WINDOW,
             tmp_path,
         )
@@ -387,7 +420,7 @@ def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, gfs, tmp_path):
 
 
 def test_run_goes_on_where_the_stack_limit_cannot_be_raised(
-    checkout, gfs, tmp_path, monkeypatch
+    checkout, era5, tmp_path, monkeypatch
 ):
     """MacOS reports no hard limit and refuses the raise; FLEXPART still runs."""
 
@@ -396,7 +429,7 @@ def test_run_goes_on_where_the_stack_limit_cannot_be_raised(
 
     monkeypatch.setattr(resource, "setrlimit", refuse)
     run = FlexpartModel().run(
-        RELEASE, config(checkout), FlexpartMetConfig(directory=gfs), WINDOW, tmp_path
+        RELEASE, config(checkout), FlexpartMetConfig(directory=era5), WINDOW, tmp_path
     )
     assert len(run.result)
 
@@ -405,7 +438,7 @@ def test_version_is_none_without_file_or_git(tmp_path):
     assert FlexpartModel().version(config(tmp_path)) is None
 
 
-def test_run_fails_with_flexpart_s_output(checkout, gfs, tmp_path):
+def test_run_fails_with_flexpart_s_output(checkout, era5, tmp_path):
     exe = checkout / "src" / "FLEXPART"
     exe.write_text("#!/bin/bash\necho ' #### FLEXPART MODEL ERROR! bad'\nexit 1\n")
     workdir = tmp_path / "work"
@@ -415,7 +448,7 @@ def test_run_fails_with_flexpart_s_output(checkout, gfs, tmp_path):
         FlexpartModel().run(
             RELEASE,
             config(checkout),
-            FlexpartMetConfig(directory=gfs),
+            FlexpartMetConfig(directory=era5),
             WINDOW,
             workdir,
         )
@@ -423,7 +456,7 @@ def test_run_fails_with_flexpart_s_output(checkout, gfs, tmp_path):
     assert "MODEL ERROR" in caught.value.log
 
 
-def test_run_without_particle_output(checkout, gfs, tmp_path):
+def test_run_without_particle_output(checkout, era5, tmp_path):
     exe = checkout / "src" / "FLEXPART"
     exe.write_text("#!/bin/bash\necho ' CONGRATULATIONS'\n")
     workdir = tmp_path / "work"
@@ -433,14 +466,14 @@ def test_run_without_particle_output(checkout, gfs, tmp_path):
         FlexpartModel().run(
             RELEASE,
             config(checkout),
-            FlexpartMetConfig(directory=gfs),
+            FlexpartMetConfig(directory=era5),
             WINDOW,
             workdir,
         )
     assert caught.value.reason == "NO_PARTICLE_DATA"
 
 
-def test_run_timeout(checkout, gfs, tmp_path):
+def test_run_timeout(checkout, era5, tmp_path):
     exe = checkout / "src" / "FLEXPART"
     exe.write_text("#!/bin/bash\nsleep 30\n")
     workdir = tmp_path / "work"
@@ -450,7 +483,7 @@ def test_run_timeout(checkout, gfs, tmp_path):
         FlexpartModel().run(
             RELEASE,
             config(checkout),
-            FlexpartMetConfig(directory=gfs),
+            FlexpartMetConfig(directory=era5),
             WINDOW,
             workdir,
             timeout=1,
@@ -458,7 +491,7 @@ def test_run_timeout(checkout, gfs, tmp_path):
     assert caught.value.reason == "TIMEOUT"
 
 
-def test_run_refuses_missing_met_before_running(checkout, gfs, tmp_path):
+def test_run_refuses_missing_met_before_running(checkout, era5, tmp_path):
     shutil.rmtree(checkout / "src")  # would fail if it ran
     window = (dt.datetime(2023, 6, 2), dt.datetime(2023, 6, 3))
     workdir = tmp_path / "work"
@@ -468,21 +501,21 @@ def test_run_refuses_missing_met_before_running(checkout, gfs, tmp_path):
         FlexpartModel().run(
             RELEASE,
             config(checkout),
-            FlexpartMetConfig(directory=gfs),
+            FlexpartMetConfig(directory=era5),
             window,
             workdir,
         )
     assert not np.any([p.name == "options" for p in workdir.iterdir()])
 
 
-def test_a_project_runs_flexpart(checkout, gfs, tmp_path):
+def test_a_project_runs_flexpart(checkout, era5, tmp_path):
     from runtraj import Project
 
     project = Project.init(
         tmp_path / "proj",
         [RELEASE],
         models={"flexpart": {"n_hours": -24, "directory": str(checkout)}},
-        mets={"era5": {"directory": str(gfs)}},
+        mets={"era5": {"directory": str(era5)}},
         variants={"era5": {}},
         output=str(tmp_path / "out"),
     )

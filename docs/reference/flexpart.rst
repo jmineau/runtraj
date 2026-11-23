@@ -15,9 +15,7 @@ the executable you built, and reads the particles it writes.
        n_hours: -24
        numpar: 1000
    mets:
-     era5:
-       source: era5
-       directory: /path/to/era5
+     era5: /path/to/era5
 
 FLEXPART support is new, and two things about FLEXPART 11 itself limit
 what you can use it for today: it runs on ERA5 only, and a run with
@@ -51,7 +49,12 @@ any names, except that a name cannot hold a space: FLEXPART reads a name up
 to its first space. Other files in the directory, such as the index cfgrib
 writes beside a GRIB file, are left out.
 
-``source: era5``
+You don't say which weather model the files come from: runtraj reads it
+from the first file's first message, as it reads an ARL file's header for
+HYSPLIT. A GRIB message names the center that made it (``centre``), and
+ECMWF's name their MARS class too.
+
+ERA5 (``centre`` ``ecmf``, class ``ea``)
    ECMWF's ERA5 on model levels, as `flex_extract
    <https://flexpart.img.univie.ac.at/flexextract/index.html>`_ writes it.
    Both builds read it. We run it with ``eta: true``, the build FLEXPART's
@@ -60,13 +63,15 @@ writes beside a GRIB file, are left out.
    which FLEXPART reads only when it was built with ``numpf = 3`` in
    ``src/par_mod.f90``.
 
-``source: gfs`` is refused, because FLEXPART 11 does not mix its particles
+GFS (``centre`` ``kwbc``) is refused, because FLEXPART 11 does not mix its particles
 on GFS. NCEP's ``pgrb2`` files hold no surface fluxes, so FLEXPART derives
 the surface heat flux and stress from the 2 m and 10 m values against its
 lowest level, which GFS diagnoses from that same layer. At a mountain site
 at midday they came out near zero (0 W m\ :sup:`-2` where ERA5 has -228),
 and particles released near the ground stayed at a median 8 m in a 1000 m
-mixed layer. GFS comes back once FLEXPART reads GFS's own fluxes.
+mixed layer. GFS comes back once FLEXPART reads GFS's own fluxes. Any
+other GRIB, such as ECMWF's operational analysis (class ``od``), is refused
+too, naming what its first file says it is.
 
 ``runtraj check`` and ``runtraj fetch`` do nothing for a FLEXPART met yet.
 A run still stops before FLEXPART starts when the files do not cover it or

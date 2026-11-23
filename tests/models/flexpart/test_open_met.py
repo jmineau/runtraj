@@ -13,7 +13,7 @@ converters = pytest.importorskip("arlmet.converters")
 
 
 def era5(tmp_path):
-    return FlexpartMetConfig(directory=tmp_path, source="era5")
+    return FlexpartMetConfig(directory=tmp_path)
 
 
 def test_open_met_converts_era5_with_flex_extract_s_converter(monkeypatch, tmp_path):

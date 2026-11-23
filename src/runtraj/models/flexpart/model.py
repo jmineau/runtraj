@@ -102,8 +102,8 @@ class FlexpartModel:
         """
         Return the GRIB *files* a run read as one Dataset in :func:`arlmet.open_dataset`'s layout.
 
-        The met config says what the files are, so that the met can be read
-        at the particles (:mod:`runtraj.sampling`). ERA5 files, as
+        The met is read at the particles this way (:mod:`runtraj.sampling`).
+        The files are ERA5, since the met config refuses any other. ERA5 files, as
         flex_extract writes them, are converted with
         :func:`arlmet.converters.from_flex_extract`
         (:func:`~runtraj.models.flexpart.met.open_era5`); they are already
