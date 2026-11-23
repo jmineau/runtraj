@@ -401,7 +401,8 @@ def _read_releases(path: Path) -> tuple[list[str], pd.DataFrame | None]:
         if path.suffix == ".parquet":
             rows = pd.read_parquet(path)
             return list(dict.fromkeys(rows["release"].astype(str))), rows
-        text = path.read_text(encoding="utf-8")
+        # utf-8-sig drops the byte-order mark Excel's "CSV UTF-8" starts a file with.
+        text = path.read_text(encoding="utf-8-sig")
     except (OSError, ValueError, KeyError) as error:
         _fail(f"cannot read {path}: {error}")
     lines = (line.strip() for line in text.splitlines())

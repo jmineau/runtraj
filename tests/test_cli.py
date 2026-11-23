@@ -502,6 +502,18 @@ def test_run_only_the_releases_listed_in_a_file(tmp_path, transport_runs):
     assert result.output.splitlines()[-1].startswith("This run:  total=1  complete=1")
 
 
+def test_a_releases_file_saved_with_a_byte_order_mark_is_read(tmp_path, transport_runs):
+    """Excel's "CSV UTF-8" starts the file with one, which became part of the first id."""
+    project = _project(tmp_path)
+    ids = tmp_path / "ids.txt"
+    ids.write_text(f"{_release(13).id}\n", encoding="utf-8-sig")
+
+    result = _run(project, "--releases", ids)
+
+    assert result.exit_code == 0, result.output
+    assert transport_runs.ran == [_release(13).id]
+
+
 def test_run_the_releases_of_a_submission(tmp_path, transport_runs):
     """A Slurm task reads the rows of its submission's releases, not releases.csv."""
     project = _project(tmp_path)
