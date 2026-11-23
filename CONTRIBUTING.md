@@ -74,7 +74,7 @@ A version in between is recorded only when it changes something runtraj reads.
 HYSPLIT folder whose programs replay the cases: each finds the case with the
 same inputs, writes its files and exits as it did. A met folder in `CONTROL`
 is compared as `<met>/`, so cases replay on any machine with the test met
-files. CI runs it for each version, on Linux and macOS. `just replay-folder VERSION DEST` makes
+files. CI runs it for each version, on Linux, macOS and Windows. `just replay-folder VERSION DEST` makes
 such a folder for anything else; put the `exec/` it prints first on `PATH`.
 The Kubernetes test replays its own cases, `tests/recorded/kubernetes/5.1.0/`
 (`tests/kubernetes/README.md`). The docs build replays 5.1.0 the same way,

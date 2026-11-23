@@ -26,6 +26,13 @@ stops on an older one with an error that names ``GLIBC``. Unpacked on
 Windows and copied over, ``exec/hycs_std`` loses its permission to run;
 ``chmod +x exec/hycs_std`` gives it back.
 
+On Windows, the folder holds ``exec/hycs_std.exe`` (and ``hyts_std.exe`` for
+the trajectory mode), and ``directory`` is the same setting. A run links
+the program into its workdir, or copies it where Windows does not let you
+make a link (a link needs an administrator, or developer mode). The Slurm
+and Kubernetes backends are for Linux; on Windows, ``runtraj run`` runs on
+this machine.
+
 ``directory`` is a HYSPLIT setting, so a variant can set its own and
 compare two builds on the same releases:
 

@@ -216,6 +216,15 @@ log, met files or `age = 0` row; particles numbered 10, 20, ...):
 - Prefer code that is easy to read and debug (users are scientists who read
   the source when a result looks wrong) over micro-optimizations, unless a
   profile shows the cost; HYSPLIT and I/O dominate real runs.
+- **Windows is tested** (`windows-latest`, unit and recorded-run tests). Text
+  files are read and written with `encoding="utf-8"` (Windows' default is
+  cp1252), HYSPLIT's input files with `newline="\n"` and `as_posix()` paths, so
+  they are the same bytes everywhere. A HYSPLIT program is `hycs_std.exe` there
+  (`driver.program_file`); stand-ins are `.cmd` files (`program_path` in
+  `tests/fixtures/factories.py`). A test that needs a shell script, a POSIX
+  signal or process group, or Slurm gets `@not_on_windows("why")`
+  (`tests/fixtures/platform.py`). The input lock and `put` are for Kubernetes
+  and Slurm, which are Linux only.
 - Python 3.11+ (use `typing.Self`, `enum.StrEnum`, `datetime.UTC`, not
   backports). Ruff rules are in `pyproject.toml`; **NumPy-style docstrings**
   with the summary on the line after the opening quotes (`D213`). Keep a
