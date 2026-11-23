@@ -679,16 +679,22 @@ def write_inputs(
 
 def _link(path: Path, target: Path) -> None:
     """
-    Make *path* a symbolic link to *target*, or on Windows a copy when it may not make links.
+    Make *path* a symbolic link to *target*; on Windows, a hard link or a copy where it may not.
 
     Windows lets only an administrator, or a user in developer mode, create a
-    symbolic link. A copy of a data table or a program does what the link does.
+    symbolic link. A hard link needs neither and takes no space, but only to
+    a file on the same drive (NTFS); a copy works anywhere. Each does what
+    the link does.
     """
     try:
         path.symlink_to(target)
+        return
     except OSError:
         if sys.platform != "win32":
             raise
+    try:
+        os.link(target, path)
+    except OSError:
         shutil.copy2(target, path)
 
 

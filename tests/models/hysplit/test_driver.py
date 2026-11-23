@@ -1518,9 +1518,25 @@ def test_where_windows_refuses_a_link_the_inputs_get_a_copy(
 
     program = workdir / "hycs_std.exe"
     assert program.is_file() and not program.is_symlink()
-    assert program.read_bytes() == (build / "exec" / "hycs_std.exe").read_bytes()
+    # A hard link: the same file, so a run takes no space for it.
+    assert program.samefile(build / "exec" / "hycs_std.exe")
     assert not (workdir / "ASCDATA.CFG").is_symlink()
     assert (workdir / "TERRAIN.ASC").read_text() == STAND_IN_TABLES["TERRAIN.ASC"]
+
+
+def test_on_windows_a_file_on_another_drive_is_copied(tmp_path, monkeypatch):
+    _windows(monkeypatch)
+
+    def refused(*args, **kwargs):
+        raise OSError("refused")
+
+    monkeypatch.setattr(Path, "symlink_to", refused)
+    monkeypatch.setattr(driver.os, "link", refused)  # as across drives
+    (tmp_path / "table").write_text("values")
+    driver._link(tmp_path / "copy", tmp_path / "table")
+
+    assert (tmp_path / "copy").read_text() == "values"
+    assert not (tmp_path / "copy").samefile(tmp_path / "table")
 
 
 def test_a_refused_link_is_an_error_off_windows(tmp_path, monkeypatch):
