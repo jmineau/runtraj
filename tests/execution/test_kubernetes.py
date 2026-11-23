@@ -20,6 +20,7 @@ from runtraj.execution.config import ExecutionConfig, KubernetesConfig
 from runtraj.execution.inputs import hash_inputs, pull, push
 from runtraj.project import Project
 from runtraj.releases import PointRelease
+from tests.fixtures.platform import not_on_windows
 
 from ..fixtures.factories import make_project_config
 
@@ -592,6 +593,9 @@ def fetches(monkeypatch):
     return state
 
 
+@not_on_windows(
+    "Windows cannot remove a lock file another task has open; the lock is for Kubernetes and Slurm tasks"
+)
 def test_tasks_that_share_the_inputs_fetch_one_at_a_time(
     tmp_path, fetches, monkeypatch
 ):

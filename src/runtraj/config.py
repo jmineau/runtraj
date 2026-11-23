@@ -827,7 +827,7 @@ class ProjectConfig(BaseModel):
         if path is not None:
             path = Path(path)
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(text)
+            path.write_text(text, encoding="utf-8")
         return text
 
     @classmethod
@@ -843,7 +843,7 @@ class ProjectConfig(BaseModel):
         """
         path = Path(path)
         try:
-            with path.open() as f:
+            with path.open(encoding="utf-8") as f:
                 raw: dict = yaml.load(f, Loader=_UniqueKeyLoader) or {}
         except yaml.YAMLError as error:
             # PyYAML's own message spans several lines; keep where and what.

@@ -239,6 +239,11 @@ STAND_IN_TABLES = {
 }
 
 
+def program_path(folder: Path, name: str = "hycs_std") -> Path:
+    """Return the path :func:`make_hysplit_dir` gives a stand-in program in *folder*: *name*, or ``<name>.cmd`` on Windows."""
+    return folder / f"{name}.cmd" if sys.platform == "win32" else folder / name
+
+
 def make_hysplit_dir(
     directory: Path,
     version: str | None = "hysplit.v5.1.0",

@@ -22,6 +22,7 @@ from runtraj import Project
 from runtraj._transient import is_transient
 from runtraj.cli import _resolve_project, app
 from runtraj.exceptions import WorkerDied
+from tests.fixtures.platform import not_on_windows
 
 from .fixtures.factories import (
     make_met_config,
@@ -1301,6 +1302,7 @@ def test_a_cloud_error_is_sorted_with_the_libraries_not_imported():
     assert not is_transient(denied)
 
 
+@not_on_windows("a closed pipe raises BrokenPipeError differently on Windows")
 def test_status_into_a_closed_pipe_is_quiet_and_exits_1(tmp_path):
     """A real pipe whose reader has gone: no traceback, and not Python's 120 at shutdown."""
     _write_minimal_config(tmp_path)

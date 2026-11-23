@@ -203,7 +203,7 @@ def _list_release_files(
 
 def _read_yaml(path: Path | UPath) -> dict[str, Any]:
     """Return a YAML file of one mapping as a dict; an empty file is ``{}``."""
-    return yaml.safe_load(path.read_text()) or {}
+    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
 def _write_yaml(path: Path | UPath, record: dict[str, Any]) -> None:
@@ -211,7 +211,8 @@ def _write_yaml(path: Path | UPath, record: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with atomic_path(path) as tmp:
         tmp.write_text(
-            yaml.safe_dump(record, default_flow_style=False, sort_keys=False)
+            yaml.safe_dump(record, default_flow_style=False, sort_keys=False),
+            encoding="utf-8",
         )
 
 
@@ -1197,7 +1198,7 @@ class Output:
         logs = self._made(variant.result, "logs", variant, realization)
         path = _release_file(logs, release_id, ".log")
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text)
+        path.write_text(text, encoding="utf-8")
         return path
 
     def keep_workdir(

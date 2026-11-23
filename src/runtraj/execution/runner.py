@@ -716,14 +716,15 @@ def _submit(
     stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
     folder = project.directory / "_slurm" / stamp
     folder.mkdir(parents=True)
-    (folder / "releases.txt").write_text("\n".join(pending) + "\n")
+    (folder / "releases.txt").write_text("\n".join(pending) + "\n", encoding="utf-8")
     # The checked rows, in the order the tasks split them (task_share).
     rows = project._rows_of(pending)
     write_parquet(
         pa.Table.from_pandas(rows, preserve_index=False), folder / "releases.parquet"
     )
     (folder / "execution.yaml").write_text(
-        yaml.safe_dump(execution.model_dump(exclude_unset=True), sort_keys=False)
+        yaml.safe_dump(execution.model_dump(exclude_unset=True), sort_keys=False),
+        encoding="utf-8",
     )
     n_tasks = max(1, min(execution.slurm.n_workers, len(pending)))
     script = folder / "job.sh"
@@ -735,17 +736,19 @@ def _submit(
             n_tasks,
             skip_existing=skip_existing,
             compute_root=compute_root,
-        )
+        ),
+        encoding="utf-8",
     )
     after: list[str] = []
     fetch_id, fetch_cluster = None, None
     if _to_fetch(project, pending, execution, skip_existing) is not None:
         fetch = folder / "fetch.sh"
         fetch.write_text(
-            fetch_script(project, execution, folder, skip_existing=skip_existing)
+            fetch_script(project, execution, folder, skip_existing=skip_existing),
+            encoding="utf-8",
         )
         fetch_id, fetch_cluster = _sbatch(fetch)
-        (folder / "fetch.id").write_text(fetch_id + "\n")
+        (folder / "fetch.id").write_text(fetch_id + "\n", encoding="utf-8")
         logger.info(
             "Submitted fetch job: %s%s; the job array waits for it to end. Log in %s",
             fetch_id,
@@ -892,16 +895,18 @@ class _Notice:
 
 @contextlib.contextmanager
 def _usr1_noticed() -> Iterator[_Notice]:
-    """Record SIGUSR1 inside the block (:class:`_Notice`); outside the main thread, where handlers cannot be set, nothing is."""
+    """Record SIGUSR1 inside the block (:class:`_Notice`); outside the main thread, where handlers cannot be set, or on Windows, which has no SIGUSR1, nothing is."""
     notice = _Notice()
-    if threading.current_thread() is not threading.main_thread():
+    # Windows has no SIGUSR1, and no Slurm to send it.
+    sigusr1 = getattr(signal, "SIGUSR1", None)
+    if sigusr1 is None or threading.current_thread() is not threading.main_thread():
         yield notice
         return
-    previous = signal.signal(signal.SIGUSR1, notice.handle)
+    previous = signal.signal(sigusr1, notice.handle)
     try:
         yield notice
     finally:
-        signal.signal(signal.SIGUSR1, previous)
+        signal.signal(sigusr1, previous)
 
 
 def _run_task(

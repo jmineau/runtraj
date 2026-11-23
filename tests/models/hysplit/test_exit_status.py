@@ -14,8 +14,11 @@ from runtraj.models.hysplit import FailureReason, HysplitConfig, HysplitModel
 from runtraj.models.hysplit.driver import PARTICLE_FILE
 from runtraj.releases import PointRelease
 from tests.fixtures.factories import blocks
+from tests.fixtures.platform import not_on_windows
 
 from ...fixtures.factories import make_hysplit_dir, make_met_config, make_met_files
+
+pytestmark = not_on_windows("its stand-in HYSPLIT is a shell script")
 
 VARS = ["time", "indx", "long", "lati", "zagl", "foot"]
 N_HOURS = -24
@@ -28,7 +31,7 @@ def _particle_dat(path: Path, last_minute: int) -> Path:
     """Write a particle file of one particle, hourly, whose last row is *last_minute* before release."""
     times = [-1, *range(-60, -last_minute - 1, -60)]
     lines = ["header"] + [f"{t} 1 -111.9 40.7 10.0 0.0" for t in times]
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
 
 

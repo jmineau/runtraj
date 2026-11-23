@@ -539,7 +539,7 @@ def write_releases(releases: Iterable[Release], path: str | Path) -> Path:
     """Write releases to a CSV file that :func:`read_releases` reads, and return its path."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(releases_to_csv(releases))
+    path.write_text(releases_to_csv(releases), encoding="utf-8")
     return path
 
 

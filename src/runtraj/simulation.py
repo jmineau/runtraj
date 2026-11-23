@@ -268,7 +268,7 @@ class Simulation:
         log_path = self.log_path
         if log_path is None or not log_path.exists():
             raise FileNotFoundError(f"No log for {self} yet.")
-        return log_path.read_text()
+        return log_path.read_text(encoding="utf-8")
 
     @cached_property
     def particles(self) -> pd.DataFrame:

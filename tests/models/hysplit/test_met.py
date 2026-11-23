@@ -2,6 +2,7 @@
 
 import datetime as dt
 import logging
+import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -258,7 +259,7 @@ def _fake_extract(text: str = "cropped"):
     """Stand-in for arlmet.extract_subset that writes *text* to the destination."""
 
     def extract(src, dst, **kwargs):
-        Path(dst).write_text(text)
+        Path(dst).write_text(text, encoding="utf-8")
         return Path(dst)
 
     return extract
@@ -435,9 +436,9 @@ def test_a_crop_appears_only_when_complete(tmp_path):
     def extract(src, dst, **kwargs):
         assert Path(dst).parent == met.crop_dir
         assert Path(dst) != final
-        Path(dst).write_text("half")
+        Path(dst).write_text("half", encoding="utf-8")
         assert not final.exists()
-        Path(dst).write_text("cropped")
+        Path(dst).write_text("cropped", encoding="utf-8")
         return Path(dst)
 
     with patch("arlmet.extract_subset", side_effect=extract):
@@ -452,7 +453,7 @@ def test_a_failed_crop_leaves_nothing_behind(tmp_path):
     met = _archive_met(tmp_path)
 
     def extract(src, dst, **kwargs):
-        Path(dst).write_text("half")
+        Path(dst).write_text("half", encoding="utf-8")
         raise OSError("disk full")
 
     with (
@@ -1397,7 +1398,7 @@ def test_check_refuses_files_that_hold_one_time_period(tmp_path):
     met = _make_met(tmp_path)
     with pytest.raises(
         MeteorologyError,
-        match=f"met file {files[0]} holds one time period.*Only one time period of "
+        match=f"met file {re.escape(str(files[0]))} holds one time period.*Only one time period of "
         "meteo data",
     ) as info:
         met.check(files, _WINDOW)
@@ -1410,7 +1411,9 @@ def test_check_refuses_one_file_with_one_time_period_among_longer_ones(tmp_path)
     )
     short = write_arl_file(tmp_path / "20230101_12", times=["2023-01-01 12:00"])
     met = _make_met(tmp_path)
-    with pytest.raises(MeteorologyError, match=f"met file {short} holds one time"):
+    with pytest.raises(
+        MeteorologyError, match=f"met file {re.escape(str(short))} holds one time"
+    ):
         met.check([*files, short], _WINDOW)
 
 
@@ -1481,7 +1484,7 @@ def test_check_names_a_damaged_file(tmp_path):
     met = _make_met(tmp_path)
     with pytest.raises(
         MeteorologyError,
-        match=f"met file {damaged} is damaged: 2023-01-01 11:00 has 1 of the 2 data "
+        match=f"met file {re.escape(str(damaged))} is damaged: 2023-01-01 11:00 has 1 of the 2 data "
         "records",
     ):
         met.check(files, _WINDOW)

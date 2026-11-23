@@ -20,6 +20,7 @@ from runtraj.models.hysplit import HysplitConfig, Met, MetConfig
 from runtraj.output import Output
 from runtraj.releases import PointRelease, Release
 from runtraj.simulation import Simulation
+from tests.fixtures.platform import not_on_windows
 
 from ..fixtures.factories import make_met_config, make_project_config, make_variant
 from ..fixtures.models import TOY
@@ -913,6 +914,7 @@ class KillingToy(ToyModel):
 """
 
 
+@not_on_windows("the test kills a worker with SIGKILL, which Windows lacks")
 def test_a_worker_killed_outright_stops_the_run_and_a_rerun_finishes_it(tmp_path):
     """A pool worker that dies without Python's say used to hang the run for ever."""
     import os

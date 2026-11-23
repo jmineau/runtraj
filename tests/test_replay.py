@@ -9,6 +9,7 @@ import pytest
 
 from runtraj.models.hysplit import driver
 from tests.fixtures import replay
+from tests.fixtures.platform import not_on_windows
 
 #: HYSPLIT's particle file.
 PARTICLES = driver.PARTICLE_FILE
@@ -68,6 +69,7 @@ def test_a_met_folder_is_compared_as_a_placeholder():
     assert replay.normalize("SETUP.CFG", b"/a/\n") == b"/a/\n"
 
 
+@not_on_windows("its stand-in HYSPLIT is a shell script")
 def test_a_recorded_run_replays_on_another_machine(tmp_path):
     cases = tmp_path / "cases"
     recording = replay.make_folder(tmp_path / "rec", cases, _real_hysplit(tmp_path))
@@ -94,6 +96,7 @@ def test_a_recorded_run_replays_on_another_machine(tmp_path):
     assert (workdir / "MESSAGE").read_text() == "done\n"
 
 
+@not_on_windows("its stand-in HYSPLIT is a shell script")
 def test_the_version_call_replays(tmp_path):
     cases = tmp_path / "cases"
     recording = replay.make_folder(tmp_path / "rec", cases, _real_hysplit(tmp_path))
@@ -105,6 +108,7 @@ def test_the_version_call_replays(tmp_path):
     assert "hysplit.v9.9.9" in replayed.stdout
 
 
+@not_on_windows("its stand-in HYSPLIT is a shell script")
 def test_inputs_with_no_recording_fail_and_are_kept(tmp_path):
     cases = tmp_path / "cases"
     recording = replay.make_folder(tmp_path / "rec", cases, _real_hysplit(tmp_path))
@@ -125,9 +129,10 @@ def test_a_replay_folder_has_only_the_programs_recorded(tmp_path):
     cases = tmp_path / "cases"
     (cases / "hycs_std").mkdir(parents=True)
     exec_dir = replay.make_folder(tmp_path / "rep", cases)
-    assert [p.name for p in exec_dir.iterdir()] == ["hycs_std"]
+    assert [p.stem for p in exec_dir.iterdir()] == ["hycs_std"]
 
 
+@not_on_windows("its stand-in HYSPLIT is a shell script")
 def test_a_folder_that_names_python3_is_the_same_where_it_is_made(tmp_path):
     # The Kubernetes test makes one on the runner and uses it in the image: the
     # hash of its program is part of each run's settings, so both must match.
@@ -145,7 +150,7 @@ def test_a_folder_that_names_python3_is_the_same_where_it_is_made(tmp_path):
 def test_builds_are_read_from_the_file(tmp_path, monkeypatch):
     real = _real_hysplit(tmp_path)
     config = tmp_path / "hysplit-builds.toml"
-    config.write_text(f'[builds]\n"9.9.9" = "{real}"\n')
+    config.write_text(f'[builds]\n"9.9.9" = "{real.as_posix()}"\n')
     monkeypatch.setenv("RUNTRAJ_HYSPLIT_BUILDS", str(config))
     assert replay.builds([]) == [("9.9.9", real)]
     with pytest.raises(SystemExit, match="lists no build of HYSPLIT 1.0"):

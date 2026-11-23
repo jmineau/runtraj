@@ -648,7 +648,9 @@ def _keep(project: Project, kind: str, manifest: dict[str, Any]) -> Path:
     stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
     folder = Path(project.directory) / "_kubernetes" / stamp
     folder.mkdir(parents=True)
-    (folder / f"{kind}.yaml").write_text(yaml.safe_dump(manifest, sort_keys=False))
+    (folder / f"{kind}.yaml").write_text(
+        yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
+    )
     return folder
 
 
@@ -691,7 +693,7 @@ def submit_job(project: Project, pending: list[str], execution: ExecutionConfig)
     )
     folder = _keep(project, "job", manifest)
     name = kubectl_create(manifest)
-    (folder / "job.name").write_text(name + "\n")
+    (folder / "job.name").write_text(name + "\n", encoding="utf-8")
     logger.info(
         "Created Kubernetes Job %s: %d releases in %d tasks",
         name,
@@ -742,7 +744,7 @@ def schedule_job(
     )
     folder = _keep(project, "cronjob", manifest)
     name = kubectl_apply(manifest)
-    (folder / "cronjob.name").write_text(name + "\n")
+    (folder / "cronjob.name").write_text(name + "\n", encoding="utf-8")
     logger.info(
         "Scheduled Kubernetes CronJob %s: %d sites every hour, %d h behind",
         name,

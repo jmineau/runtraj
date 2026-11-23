@@ -123,12 +123,16 @@ class ControlFile(BaseModel):
         if self.trajectory:
             lines.append("./")  # (10) output directory
             lines.append(TDUMP_FILE)  # (11) output file
-            Path(path).write_text("\n".join(lines) + "\n", newline="\n")
+            Path(path).write_text(
+                "\n".join(lines) + "\n", encoding="utf-8", newline="\n"
+            )
             return
 
         if self.pollutants or self.grids:
             lines += _concentration_lines(self.pollutants, self.grids)
-            Path(path).write_text("\n".join(lines) + "\n", newline="\n")
+            Path(path).write_text(
+                "\n".join(lines) + "\n", encoding="utf-8", newline="\n"
+            )
             return
 
         # Concentration / Pollutant Definition
@@ -171,7 +175,7 @@ class ControlFile(BaseModel):
         lines.append("0.0")  # (30) radioactive decay half-life (days)
         lines.append("0.0")  # (31) pollutant resuspension (1/m)
 
-        Path(path).write_text("\n".join(lines) + "\n", newline="\n")
+        Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
     @classmethod
     def read(cls, path: str | Path) -> "ControlFile":
@@ -194,7 +198,7 @@ class ControlFile(BaseModel):
                 "CONTROL file not found. Has the simulation been ran?"
             )
 
-        with path.open() as f:
+        with path.open(encoding="utf-8") as f:
             lines = f.readlines()
 
         # Parse the release time

@@ -20,6 +20,7 @@ from runtraj.execution.config import (
 )
 from runtraj.execution.runner import _project_slug, job_script, task_share
 from runtraj.project import Project
+from tests.fixtures.platform import not_on_windows
 
 from ..fixtures.factories import make_project_config
 
@@ -45,6 +46,7 @@ def _sbatch(script: str) -> dict[str, str | bool]:
     return options
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_job_script_asks_for_what_the_execution_settings_say(tmp_path):
     project = _project_at(tmp_path / "My_Project", output=tmp_path / "out")
     folder = tmp_path / "My_Project" / "_slurm" / "stamp"
@@ -120,6 +122,7 @@ def test_job_script_leaves_out_what_was_not_set(tmp_path):
         assert unset not in options
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_job_script_runs_again_only_on_the_first_start_and_names_a_compute_root(
     tmp_path,
 ):
@@ -150,6 +153,7 @@ def _omp_threads_after_setup(script: str) -> str:
     return done.stdout.splitlines()[-1]
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_job_script_gives_each_worker_one_thread_of_the_tasks_cpus(tmp_path):
     # Four workers on four CPUs: without this a worker's BLAS sizes its pool by the node.
     script = job_script(
@@ -162,6 +166,7 @@ def test_job_script_gives_each_worker_one_thread_of_the_tasks_cpus(tmp_path):
     assert _omp_threads_after_setup(script) == "1"
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_job_script_shares_cpus_a_slurm_option_adds_among_the_workers(tmp_path):
     # 2 workers on 8 CPUs (cpus-per-task replaced in `slurm`): 4 threads each.
     script = job_script(
@@ -175,6 +180,7 @@ def test_job_script_shares_cpus_a_slurm_option_adds_among_the_workers(tmp_path):
     assert _omp_threads_after_setup(script) == "4"
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_job_script_gives_one_thread_when_cpus_per_task_is_not_a_number(tmp_path):
     # sbatch refuses the value; writing the script must not fail first.
     script = job_script(
@@ -188,6 +194,7 @@ def test_job_script_gives_one_thread_when_cpus_per_task_is_not_a_number(tmp_path
     assert _omp_threads_after_setup(script) == "1"
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_job_script_leaves_the_thread_count_to_a_setup_line(tmp_path):
     script = job_script(
         _project_at(tmp_path, output=tmp_path / "out"),
@@ -205,6 +212,7 @@ def test_job_script_leaves_the_thread_count_to_a_setup_line(tmp_path):
     assert _omp_threads_after_setup(script) == "3"
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_job_script_is_valid_bash(tmp_path):
     script = tmp_path / "job.sh"
     script.write_text(
@@ -286,7 +294,7 @@ def test_submit_writes_a_submission_and_hands_it_to_sbatch(pending, commands, tm
     assert {"kind", "location", "altitude_ref"} <= set(rows.columns)
     stored = yaml.safe_load((folder / "execution.yaml").read_text())
     assert ExecutionConfig.model_validate(stored) == execution
-    text = Path(script).read_text()
+    text = Path(script).read_text(encoding="utf-8")
     assert _sbatch(text)["array"] == "0-1"
     assert "--no-skip" in text
 
@@ -301,7 +309,9 @@ def test_submit_uses_no_more_tasks_than_releases(pending, commands, tmp_path):
             backend="slurm", slurm={"time": "01:00:00", "n_workers": 8}
         ),
     )
-    assert _sbatch(Path(commands.ran[0][2]).read_text())["array"] == "0-0"
+    assert (
+        _sbatch(Path(commands.ran[0][2]).read_text(encoding="utf-8"))["array"] == "0-0"
+    )
 
 
 def test_submit_with_nothing_to_do_submits_nothing(pending, commands, tmp_path):
@@ -412,6 +422,7 @@ def test_a_job_on_the_default_cluster_names_none(commands):
 # ---------------------------------------------------------------------------
 
 
+@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_a_task_told_to_stop_requeues_itself(tmp_path, monkeypatch, commands):
     from runtraj.execution import worker
 
@@ -436,6 +447,7 @@ def test_a_task_told_to_stop_requeues_itself(tmp_path, monkeypatch, commands):
     assert signal.getsignal(signal.SIGUSR1) is signal.SIG_DFL
 
 
+@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_a_task_requeues_itself_only_so_many_times(tmp_path, monkeypatch, commands):
     from runtraj.execution import worker
 
@@ -449,6 +461,7 @@ def test_a_task_requeues_itself_only_so_many_times(tmp_path, monkeypatch, comman
     assert commands.ran == []
 
 
+@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_a_preempted_task_requeues_itself_and_a_cancelled_one_does_not(
     tmp_path, monkeypatch, commands
 ):
@@ -476,6 +489,7 @@ def test_a_preempted_task_requeues_itself_and_a_cancelled_one_does_not(
     assert commands.ran == [["scontrol", "show", "job", "4321"]]
 
 
+@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_a_task_on_another_cluster_asks_and_requeues_there(
     tmp_path, monkeypatch, commands
 ):
@@ -498,6 +512,7 @@ def test_a_task_on_another_cluster_asks_and_requeues_there(
     ]
 
 
+@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_a_task_that_finished_is_not_requeued(tmp_path, monkeypatch, commands):
     import pandas as pd
 
@@ -514,6 +529,7 @@ def test_a_task_that_finished_is_not_requeued(tmp_path, monkeypatch, commands):
     assert commands.ran == []
 
 
+@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_an_interrupt_that_is_not_the_notice_is_not_swallowed(
     tmp_path, monkeypatch, commands
 ):
@@ -659,6 +675,7 @@ def test_a_release_list_limits_the_run_and_keeps_its_order(tmp_path, monkeypatch
         runner.pending(project, releases=["nope", every[0]])
 
 
+@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_a_task_runs_here_whatever_the_backend(tmp_path, monkeypatch, commands):
     from runtraj.execution import worker
 
@@ -734,6 +751,7 @@ def test_fetch_is_the_setting_of_the_backend_that_runs():
     assert ExecutionConfig().fetch is True
 
 
+@not_on_windows("Slurm and its job scripts are for Linux")
 def test_submit_sends_a_fetch_job_first_and_the_array_waits_for_it(
     pending, commands, tmp_path
 ):
@@ -801,7 +819,10 @@ def test_the_array_goes_to_the_cluster_its_fetch_job_went_to(
     runner.submit(project, execution=execution)
 
     [fetch, array] = commands.ran
-    assert _sbatch(Path(fetch[-1]).read_text())["clusters"] == "kingspeak,notchpeak"
+    assert (
+        _sbatch(Path(fetch[-1]).read_text(encoding="utf-8"))["clusters"]
+        == "kingspeak,notchpeak"
+    )
     assert array[2:4] == ["--dependency=afterany:41", "--clusters=kingspeak"]
 
 
@@ -914,12 +935,12 @@ def test_the_fetch_job_takes_the_arrays_resources_and_none_of_its_other_options(
     runner.submit(project, execution=execution)
 
     [fetch, array] = commands.ran
-    options = _sbatch(Path(fetch[-1]).read_text())
+    options = _sbatch(Path(fetch[-1]).read_text(encoding="utf-8"))
     assert options["account"] == "lin-np"
     assert options["partition"] == "lin-np"
     assert options["time"] == "24:00:00"  # the array's, as job.sh has it
     assert "constraint" not in options  # another sbatch option is the array's alone
-    assert _sbatch(Path(array[-1]).read_text())["time"] == "24:00:00"
+    assert _sbatch(Path(array[-1]).read_text(encoding="utf-8"))["time"] == "24:00:00"
 
 
 def test_a_no_skip_submission_fetches_for_every_run_it_makes_again(
@@ -948,7 +969,12 @@ def test_a_no_skip_submission_fetches_for_every_run_it_makes_again(
 
     [fetch, array] = commands.ran
     assert Path(fetch[-1]).name == "fetch.sh"
-    assert Path(fetch[-1]).read_text().splitlines()[-1].endswith(" --no-skip")
+    assert (
+        Path(fetch[-1])
+        .read_text(encoding="utf-8")
+        .splitlines()[-1]
+        .endswith(" --no-skip")
+    )
 
 
 def test_a_refused_array_cancels_its_fetch_job(pending, commands, tmp_path):
@@ -1018,3 +1044,10 @@ def test_a_local_fetch_lets_the_run_go_after_a_dropped_ftp_connection(
 
     assert ran == ["run"]
     assert "The fetch stopped" in caplog.text
+
+
+def test_a_task_on_a_system_without_sigusr1_notices_nothing(monkeypatch):
+    """Windows has no SIGUSR1 and no Slurm to send it: the block runs and records nothing."""
+    monkeypatch.delattr(runner.signal, "SIGUSR1", raising=False)
+    with runner._usr1_noticed() as notice:
+        assert not notice

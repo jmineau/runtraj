@@ -68,7 +68,7 @@ class NameList:
         for key, fmt in self._entries:
             lines.append(f"{key}={fmt},")
         lines.append("$END\n")
-        Path(path).write_text("\n".join(lines), newline="\n")
+        Path(path).write_text("\n".join(lines), encoding="utf-8", newline="\n")
 
     # ------------------------------------------------------------------
 
@@ -112,7 +112,9 @@ def read_namelist(path: str | Path) -> dict[str, Any]:
         If the file is not a ``$SETUP ... $END`` namelist, or a line between
         them is not ``KEY=value``.
     """
-    lines = [line.strip() for line in Path(path).read_text().splitlines()]
+    lines = [
+        line.strip() for line in Path(path).read_text(encoding="utf-8").splitlines()
+    ]
     lines = [line for line in lines if line]
     if not lines or lines[0].upper() != "$SETUP" or lines[-1].upper() != "$END":
         raise ValueError(f"{path} is not a $SETUP ... $END namelist.")

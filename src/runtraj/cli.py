@@ -401,7 +401,7 @@ def _read_releases(path: Path) -> tuple[list[str], pd.DataFrame | None]:
         if path.suffix == ".parquet":
             rows = pd.read_parquet(path)
             return list(dict.fromkeys(rows["release"].astype(str))), rows
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
     except (OSError, ValueError, KeyError) as error:
         _fail(f"cannot read {path}: {error}")
     lines = (line.strip() for line in text.splitlines())
@@ -444,7 +444,7 @@ def _start(
         settings = opened.config.execution.model_dump(exclude_unset=True)
     else:
         try:
-            settings = yaml.safe_load(execution_file.read_text()) or {}
+            settings = yaml.safe_load(execution_file.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError) as error:
             _fail(f"cannot read {execution_file}: {error}")
     if task is not None:
@@ -683,7 +683,7 @@ def _configured_backend(project: str | None) -> str | None:
     """Return ``execution.backend`` as ``config.yaml`` writes it, or ``None``; the file is checked when the project opens."""
     path = Path(_resolve_project(project)) / "config.yaml"
     try:
-        settings = yaml.safe_load(path.read_text()) or {}
+        settings = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         return settings.get("execution", {}).get("backend")
     except (OSError, yaml.YAMLError, AttributeError):
         return None

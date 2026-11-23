@@ -49,7 +49,7 @@ def test_hysplit_model_build_is_the_hycs_std_on_path_or_in_directory(tmp_path):
 
     from runtraj.models.hysplit import find_hycs_std
 
-    from ..fixtures.factories import make_hysplit_dir
+    from ..fixtures.factories import make_hysplit_dir, program_path
 
     model = HysplitModel()
     on_path = find_hycs_std()
@@ -58,7 +58,7 @@ def test_hysplit_model_build_is_the_hycs_std_on_path_or_in_directory(tmp_path):
     )
 
     folder = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v9.9.9")
-    exe = folder / "exec" / "hycs_std"
+    exe = program_path(folder / "exec")
     config = HysplitConfig(n_hours=-1, directory=folder)
     assert model.version(config) == "hysplit.v9.9.9"
     assert model.sha256(config) == hashlib.sha256(exe.read_bytes()).hexdigest()

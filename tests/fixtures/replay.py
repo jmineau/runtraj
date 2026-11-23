@@ -386,7 +386,7 @@ def builds(versions: list[str]) -> list[tuple[str, Path]]:
     path = Path(os.environ.get("RUNTRAJ_HYSPLIT_BUILDS", BUILDS))
     if not path.is_file():
         raise SystemExit(f"No {path}. Write one like this:\n\n{BUILDS_EXAMPLE}")
-    listed = tomllib.loads(path.read_text()).get("builds", {})
+    listed = tomllib.loads(path.read_text(encoding="utf-8")).get("builds", {})
     found = []
     for version in versions or list(listed):
         if version not in listed:

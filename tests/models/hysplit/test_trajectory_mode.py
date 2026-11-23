@@ -26,7 +26,7 @@ from runtraj.models.hysplit.config import (
 )
 from runtraj.models.hysplit.driver import find_program, setup_entries
 from runtraj.models.hysplit.model import _read_trajectories
-from tests.fixtures.factories import blocks, make_met_config
+from tests.fixtures.factories import blocks, make_met_config, program_path
 
 TDUMP = Path(__file__).parent / "tdump"
 
@@ -43,7 +43,7 @@ def test_the_model_makes_trajectories_with_hyts_std():
     config = _trajectory()
     assert model.result(config) == "trajectories"
     assert model.result_files(config) == ("tdump",)
-    assert find_program("hyts_std").name == "hyts_std"
+    assert find_program("hyts_std").stem == "hyts_std"
     # Another program than a particles run's, so another build in the hash.
     assert model.sha256(config) != model.sha256(HysplitConfig(n_hours=6))
     assert model.version(config) == model.version(HysplitConfig(n_hours=6))
@@ -217,7 +217,8 @@ def test_inputs_link_hyts_std_and_write_none_of_the_dispersion_files(tmp_path):
         kmsl=1,
     )
     names = {p.name for p in tmp_path.iterdir()}
-    assert "hyts_std" in names and "hycs_std" not in names
+    assert program_path(Path(), "hyts_std").name in names
+    assert program_path(Path(), "hycs_std").name not in names
     assert "ZICONTROL" not in names
     setup = {k.lower(): v for k, v in read_namelist(tmp_path / "SETUP.CFG").items()}
     assert setup["kagl"] == 1 and setup["kmsl"] == 1 and setup["tm_terr"] == 1

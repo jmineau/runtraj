@@ -1,7 +1,10 @@
 """Tests for HYSPLIT's input files, running hycs_std, and reading its particles."""
 
 import datetime as dt
+import subprocess
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -30,8 +33,15 @@ from runtraj.models.hysplit.driver import (
     zicontroltf,
     ziscale_factors,
 )
+from tests.fixtures.platform import not_on_windows
 
-from ...fixtures.factories import make_hysplit_dir, make_met_config, make_met_files
+from ...fixtures.factories import (
+    STAND_IN_TABLES,
+    make_hysplit_dir,
+    make_met_config,
+    make_met_files,
+    program_path,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -208,7 +218,7 @@ def _config(**overrides) -> HysplitConfig:
 def _fake_build(path: Path, marker: str = "fake binary") -> Path:
     """Return a HYSPLIT folder holding a stand-in, executable ``exec/hycs_std``, and stand-in tables."""
     make_hysplit_dir(path)
-    (path / "exec" / "hycs_std").write_text(marker)
+    program_path(path / "exec").write_text(marker)
     return path
 
 
@@ -225,7 +235,7 @@ def _write_particle_dat(path: Path, rows: list[list[float]]) -> None:
     """Write a minimal particle file with one dummy header line."""
     lines = ["header"]
     lines.extend(" ".join(str(v) for v in row) for row in rows)
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -320,6 +330,8 @@ def test_read_particle_dat_of_an_empty_file_is_an_empty_table(tmp_path):
 
 def _script(workdir: Path, text: str) -> None:
     """Put a shell script where hycs_std is run from."""
+    if sys.platform == "win32":
+        pytest.skip("the stand-in HYSPLIT is a shell script")
     workdir.mkdir(parents=True, exist_ok=True)
     exe = workdir / "hycs_std"
     exe.write_text("#!/usr/bin/env bash\n" + text)
@@ -418,6 +430,7 @@ def _kill_when_started(workdir: Path, sig: int):
     return thread
 
 
+@not_on_windows("the test needs POSIX permissions, process groups or signals")
 def test_run_fails_when_hycs_std_is_killed_from_outside(tmp_path):
     """A kill the run did not send, such as the out-of-memory killer's, is a failure."""
     import signal
@@ -493,6 +506,7 @@ def test_run_that_exits_with_status_zero_is_not_a_failure(tmp_path):
 
 
 @pytest.mark.parametrize("stop", [KeyboardInterrupt, SystemExit])
+@not_on_windows("the test needs POSIX permissions, process groups or signals")
 def test_run_stops_hysplit_when_this_process_is_stopped(tmp_path, stop):
     """Ctrl-C or a worker told to exit ends hycs_std too, which has a session of its own."""
     import os
@@ -516,6 +530,7 @@ def test_run_stops_hysplit_when_this_process_is_stopped(tmp_path, stop):
         os.kill(int((tmp_path / "pid").read_text()), 0)
 
 
+@not_on_windows("the test needs POSIX permissions, process groups or signals")
 def test_terminate_escalates_when_group_kill_does_not_finish(monkeypatch):
     import signal
     import subprocess
@@ -1014,7 +1029,8 @@ def test_inputs_hold_control_setup_and_the_binary(tmp_path, point_release):
 
     assert (workdir / "CONTROL").exists()
     assert (workdir / "SETUP.CFG").exists()
-    assert (workdir / "hycs_std").is_symlink()
+    if sys.platform != "win32":  # where a link is refused, a copy stands in
+        assert program_path(workdir).is_symlink()
     for name in ("WINDERR", "ZIERR", "ZICONTROL"):
         assert not (workdir / name).exists()
 
@@ -1051,25 +1067,26 @@ def test_zicontrol_repeats_a_scalar_over_the_run(tmp_path, point_release):
 def test_directory_is_used(tmp_path, point_release):
     build = _fake_build(tmp_path / "hysplit", "patched")
     workdir = _inputs(tmp_path, point_release, _config(directory=build))
-    assert (workdir / "hycs_std").read_text() == "patched"
+    assert program_path(workdir).read_text() == "patched"
 
 
 def test_without_directory_the_hycs_std_on_path_is_used(
     tmp_path, point_release, stand_in_hycs_std
 ):
     workdir = _inputs(tmp_path, point_release)
-    assert (workdir / "hycs_std").resolve() == (
-        stand_in_hycs_std / "hycs_std"
-    ).resolve()
+    assert (
+        program_path(workdir).read_bytes()
+        == program_path(stand_in_hycs_std).read_bytes()
+    )
 
 
 def test_directory_comes_before_path(tmp_path, monkeypatch):
     build = _fake_build(tmp_path / "hysplit")
     elsewhere = _fake_build(tmp_path / "elsewhere")
     monkeypatch.setenv("PATH", str(elsewhere / "exec"))
-    assert driver.find_hycs_std(build) == build / "exec" / "hycs_std"
+    assert driver.find_hycs_std(build) == program_path(build / "exec")
     assert (
-        driver.find_hycs_std().resolve() == (elsewhere / "exec" / "hycs_std").resolve()
+        driver.find_hycs_std().resolve() == program_path(elsewhere / "exec").resolve()
     )
 
 
@@ -1089,6 +1106,7 @@ def test_directory_without_exec_hycs_std_raises(tmp_path, point_release):
         _inputs(tmp_path, point_release, _config(directory=empty))
 
 
+@not_on_windows("the test needs POSIX permissions, process groups or signals")
 def test_a_hycs_std_that_is_not_executable_says_so(tmp_path, point_release):
     """A HYSPLIT folder unpacked on Windows loses the executable bit."""
     build = _fake_build(tmp_path / "hysplit")
@@ -1103,7 +1121,7 @@ def test_only_hycs_std_is_linked_from_exec(tmp_path, point_release):
     (build / "exec" / "Makefile").write_text("")
     (build / "exec" / "concplot").write_text("")
     workdir = _inputs(tmp_path, point_release, _config(directory=build))
-    assert (workdir / "hycs_std").exists()
+    assert program_path(workdir).exists()
     assert not (workdir / "Makefile").exists()
     assert not (workdir / "concplot").exists()
     assert "directory" not in (workdir / "SETUP.CFG").read_text().lower()
@@ -1453,3 +1471,91 @@ def test_the_driver_names_only_real_settings_outside_setup_cfg():
     entries = setup_entries(HysplitConfig(n_hours=-24))
     assert "numpar" in entries
     assert not NOT_IN_SETUP & set(entries)
+
+
+# -- Windows -------------------------------------------------------------------
+# These run on every platform: a stand-in for ``sys`` says it is Windows to the
+# driver only, so the Linux and macOS jobs test what the Windows job runs.
+
+
+def _windows(monkeypatch) -> None:
+    """Make the driver, and only the driver, see Windows."""
+    monkeypatch.setattr(driver, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setenv("PATHEXT", ".COM;.EXE;.BAT;.CMD")
+
+
+def test_on_windows_a_program_is_found_by_its_extension(tmp_path, monkeypatch):
+    _windows(monkeypatch)
+    (tmp_path / "hycs_std.exe").write_text("")
+    assert driver.program_file(tmp_path, "hycs_std") == tmp_path / "hycs_std.exe"
+    assert driver.program_file(tmp_path, "hyts_std") == tmp_path / "hyts_std"
+
+
+@not_on_windows("the test renames the stand-in program to a .exe")
+def test_on_windows_a_hysplit_folder_holds_hycs_std_exe(tmp_path, monkeypatch):
+    build = make_hysplit_dir(tmp_path / "hysplit")
+    (build / "exec" / "hycs_std").rename(build / "exec" / "hycs_std.exe")
+    _windows(monkeypatch)
+    assert driver.find_hycs_std(build) == build / "exec" / "hycs_std.exe"
+    (build / "exec" / "hycs_std.exe").unlink()
+    with pytest.raises(HYSPLITNotFoundError, match="No exec/hycs_std in"):
+        driver.find_hycs_std(build)
+
+
+@not_on_windows("the test renames the stand-in program to a .exe")
+def test_where_windows_refuses_a_link_the_inputs_get_a_copy(
+    tmp_path, point_release, monkeypatch
+):
+    build = make_hysplit_dir(tmp_path / "hysplit")
+    (build / "exec" / "hycs_std").rename(build / "exec" / "hycs_std.exe")
+    _windows(monkeypatch)
+
+    def refused(self, target, target_is_directory=False):
+        raise OSError("A required privilege is not held by the client")
+
+    monkeypatch.setattr(Path, "symlink_to", refused)
+    workdir = _inputs(tmp_path, point_release, _config(directory=build))
+
+    program = workdir / "hycs_std.exe"
+    assert program.is_file() and not program.is_symlink()
+    assert program.read_bytes() == (build / "exec" / "hycs_std.exe").read_bytes()
+    assert not (workdir / "ASCDATA.CFG").is_symlink()
+    assert (workdir / "TERRAIN.ASC").read_text() == STAND_IN_TABLES["TERRAIN.ASC"]
+
+
+def test_a_refused_link_is_an_error_off_windows(tmp_path, monkeypatch):
+    def refused(self, target, target_is_directory=False):
+        raise OSError("refused")
+
+    monkeypatch.setattr(Path, "symlink_to", refused)
+    with pytest.raises(OSError, match="refused"):
+        driver._link(tmp_path / "link", tmp_path)
+
+
+def test_hysplits_input_files_have_unix_line_endings(tmp_path, point_release):
+    workdir = _inputs(tmp_path, point_release)
+    for name in ("CONTROL", "SETUP.CFG"):
+        assert b"\r" not in (workdir / name).read_bytes()
+
+
+def test_the_met_folder_of_control_has_a_forward_slash(tmp_path):
+    ControlFile(
+        release_time=dt.datetime(2021, 1, 15, 6),
+        locations=[(-112.0, 40.5, 5.0)],
+        emisshrs=0.01,
+        n_hours=-6,
+        w_option=0,
+        z_top=10000.0,
+        met_files=[tmp_path / "met" / "hrrr.arl"],
+    ).write(tmp_path / "CONTROL")
+    lines = (tmp_path / "CONTROL").read_text().splitlines()
+    assert lines[lines.index("hrrr.arl") - 1] == (tmp_path / "met").as_posix() + "/"
+
+
+def test_a_running_process_is_stopped():
+    """HYSPLIT runs in a group of its own, which :func:`_terminate` ends: a session on POSIX, a process group on Windows."""
+    proc = subprocess.Popen(
+        [sys.executable, "-c", "import time; time.sleep(60)"], **driver._own_group()
+    )
+    driver._terminate(proc)
+    assert proc.poll() is not None

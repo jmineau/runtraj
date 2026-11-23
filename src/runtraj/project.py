@@ -439,10 +439,12 @@ class Project:
         if new:
             self.directory.mkdir(parents=True, exist_ok=True)
             if self.releases_path.exists():
-                text = self.releases_path.read_text()
-                self.releases_path.write_text(append_releases_csv(text, new))
+                text = self.releases_path.read_text(encoding="utf-8")
+                self.releases_path.write_text(
+                    append_releases_csv(text, new), encoding="utf-8"
+                )
             else:
-                self.releases_path.write_text(releases_to_csv(new))
+                self.releases_path.write_text(releases_to_csv(new), encoding="utf-8")
             # These were read from the file that just changed.
             for name in ("_rows", "_positions", "releases", "_simulations"):
                 vars(self).pop(name, None)

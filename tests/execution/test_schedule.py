@@ -16,6 +16,7 @@ from runtraj.execution import inputs, kubernetes, schedule
 from runtraj.execution.config import ExecutionConfig
 from runtraj.execution.inputs import pull, push, put
 from runtraj.project import Project
+from tests.fixtures.platform import not_on_windows
 
 from ..fixtures.factories import make_project_config
 
@@ -438,6 +439,9 @@ def test_a_lock_that_cannot_be_made_is_an_os_error(bucket, monkeypatch):
         pass
 
 
+@not_on_windows(
+    "Windows cannot replace a file another reader has open; the inputs folder is for Kubernetes and Slurm tasks"
+)
 def test_put_on_a_folder_is_never_seen_half_written(tmp_path):
     """Every read gets the whole file: ``put`` replaces it, never truncates it."""
     pod, shared = tmp_path / "pod", tmp_path / "shared"

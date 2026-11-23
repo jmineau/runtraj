@@ -8,6 +8,7 @@ import time
 import pytest
 
 from runtraj.cli import _stop_once
+from tests.fixtures.platform import not_on_windows
 
 # ---------------------------------------------------------------------------
 # _stop_once, in this process
@@ -24,6 +25,7 @@ def handlers():
 
 
 @pytest.mark.parametrize("sig", [signal.SIGTERM, signal.SIGINT])
+@not_on_windows("the test sends POSIX signals to its own process")
 def test_the_first_stop_raises_and_the_next_are_ignored(handlers, sig):
     with pytest.raises(KeyboardInterrupt), _stop_once():
         os.kill(os.getpid(), sig)

@@ -665,11 +665,14 @@ def write_inputs(
     if factors is not None:
         (workdir / ZICONTROL_FILE).write_text(
             "\n".join([str(len(factors)), *(str(v) for v in factors)]) + "\n",
+            encoding="utf-8",
             newline="\n",
         )
     rates = chemrate(config)
     if rates is not None:
-        (workdir / CHEMRATE_FILE).write_text("\n".join(rates) + "\n", newline="\n")
+        (workdir / CHEMRATE_FILE).write_text(
+            "\n".join(rates) + "\n", newline="\n", encoding="utf-8"
+        )
     _write_values(workdir / WINDERR_FILE, winderr(config))
     _write_values(workdir / ZIERR_FILE, zierr(config))
 

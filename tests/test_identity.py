@@ -18,6 +18,7 @@ from .conftest import STAND_IN_VERSION
 from .fixtures.factories import (
     make_hysplit_dir,
     make_met_config,
+    program_path,
     write_arl_file,
 )
 
@@ -65,7 +66,7 @@ def test_hysplit_version_is_none_when_hycs_std_prints_none(tmp_path):
 def test_hysplit_version_is_none_for_a_hycs_std_that_cannot_run_here(tmp_path):
     """Another platform's build: the version is recorded only, so it does not stop a run."""
     folder = make_hysplit_dir(tmp_path / "b")
-    (folder / "exec" / "hycs_std").write_bytes(b"\x00not a program for this machine")
+    program_path(folder / "exec").write_bytes(b"\x00not a program for this machine")
     assert hysplit_version(folder) is None
 
 
@@ -89,7 +90,7 @@ def test_the_build_is_the_checksum_of_hycs_std(tmp_path):
     """Two builds that print one version are two runs; the version is recorded beside."""
     one = _variant(tmp_path, directory=make_hysplit_dir(tmp_path / "one", body="# 1\n"))
     two = _variant(tmp_path, directory=make_hysplit_dir(tmp_path / "two", body="# 2\n"))
-    exe = tmp_path / "one" / "exec" / "hycs_std"
+    exe = program_path(tmp_path / "one" / "exec")
     assert one.build.sha256 == hashlib.sha256(exe.read_bytes()).hexdigest()
     assert one.build.version == two.build.version == "hysplit.v5.1.0"
     assert one.run_settings["model"] == {

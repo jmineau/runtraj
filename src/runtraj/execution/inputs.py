@@ -407,7 +407,7 @@ class _KeepAlive(threading.Thread):
                 if self._done.is_set():
                     return
                 try:
-                    if self.fs.read_text(self.path) != self.token:
+                    if self.fs.read_text(self.path, encoding="utf-8") != self.token:
                         return  # taken over; the holder warns when it finishes
                     token = f"{self.base} refresh {count}"
                     self.fs.pipe_file(self.path, token.encode())
@@ -442,7 +442,7 @@ def _acquire(fs: fsspec.AbstractFileSystem, path: str, token: str) -> None:
         except FileExistsError:
             pass
         try:
-            held = fs.read_text(path)
+            held = fs.read_text(path, encoding="utf-8")
         except FileNotFoundError:
             continue  # released while we looked: try again
         if held != seen:
@@ -466,7 +466,7 @@ def _release(fs: fsspec.AbstractFileSystem, path: str, token: str | bytes) -> bo
     over since.
     """
     try:
-        if fs.read_text(path) != token:
+        if fs.read_text(path, encoding="utf-8") != token:
             return False
         fs.rm_file(path)
     except FileNotFoundError:
