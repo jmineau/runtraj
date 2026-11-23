@@ -26,6 +26,8 @@ import os
 import shutil
 import signal
 import socket
+import subprocess
+import sys
 import threading
 import traceback
 import uuid
@@ -814,9 +816,28 @@ def _stop_workers(executor: ProcessPoolExecutor) -> None:
     workers = list(executor._processes.values())
     executor.shutdown(wait=False, cancel_futures=True)
     for process in workers:
-        process.terminate()
+        _end_worker(process)
     for process in workers:
         process.join()
+
+
+def _end_worker(process: multiprocessing.Process) -> None:
+    """
+    Send a pool worker SIGTERM; on Windows, end it and every process it started.
+
+    Windows has no SIGTERM to send: ``terminate`` ends the worker at once,
+    so its ``finally`` blocks do not run and the transport model it started
+    runs on (Windows does not end a process's children with it).
+    ``taskkill /T`` ends the worker and its transport model together. The
+    workdir of the run it held is left in the compute root.
+    """
+    if sys.platform == "win32" and process.pid is not None:
+        subprocess.run(
+            ["taskkill", "/F", "/T", "/PID", str(process.pid)],
+            capture_output=True,
+            check=False,  # the worker may have ended already
+        )
+    process.terminate()  # on Windows, a worker taskkill could not end
 
 
 #: Seconds the pool loop waits for a release to finish before it looks at the workers.

@@ -335,7 +335,9 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   the ones it holds are in progress. A worker killed outright breaks it:
   `run_releases` raises `WorkerDied` naming them, and `runtraj run` exits with 3.
   Workers must exit on SIGTERM: the executor's loop catches `SystemExit`, so
-  `_pool_run` ends the process itself, or a stop waits for ever.
+  `_pool_run` ends the process itself, or a stop waits for ever. Windows has
+  no SIGTERM: `terminate` ends a worker alone and its HYSPLIT runs on, so
+  `_end_worker` ends the tree with `taskkill /T`.
 - **A pool with `cpus` above 1 first starts one worker that does nothing**
   (`_check_workers_can_start`), unless the start method is `fork`. Under `spawn`
   and `forkserver` a worker runs the user's script again, and a script without

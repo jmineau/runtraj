@@ -95,7 +95,10 @@ script runs again in every worker. ``Project.init`` there stops with a
 
 You can stop a run at any time with Ctrl-C (or ``SIGTERM`` from ``kill``,
 Slurm or Kubernetes). Releases that finished stay finished, and running
-again starts the ones that were cut off from the beginning.
+again starts the ones that were cut off from the beginning. On Windows, a
+run with ``cpus`` above 1 stops its HYSPLIT runs too, but it leaves their
+workdirs in the compute root, since Windows ends a worker before it can
+remove them.
 
 If a worker process is killed outright, most often by the kernel's
 out-of-memory killer, the run stops with an error
