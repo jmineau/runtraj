@@ -13,6 +13,7 @@ import fsspec
 import pandas as pd
 import pytest
 import yaml
+from fsspec.implementations.memory import MemoryFileSystem
 from pydantic import ValidationError
 
 from runtraj.execution import inputs, kubernetes, runner
@@ -398,7 +399,7 @@ def test_a_bucket_that_cannot_be_read_is_an_os_error(tmp_path, monkeypatch):
     def info(self, path, **kwargs):
         raise Refused("connection refused")
 
-    monkeypatch.setattr(fsspec.implementations.memory.MemoryFileSystem, "info", info)
+    monkeypatch.setattr(MemoryFileSystem, "info", info)
     with pytest.raises(OSError, match="connection refused"):
         pull("memory://down/p", tmp_path / "pod")
 
