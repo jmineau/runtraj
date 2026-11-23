@@ -243,6 +243,11 @@ def test_the_job_retries_a_task_only_on_exit_3_or_a_disruption():
 # ---------------------------------------------------------------------------
 
 
+#: A project on a shared volume is a folder the pods open by the same path,
+#: which only a Linux machine has; Windows refuses it (``_pods_open``).
+_SHARED_VOLUME = not_on_windows("a project on a shared volume is submitted from Linux")
+
+
 @pytest.fixture
 def kubectl(monkeypatch):
     """Record the manifests given to ``kubectl create``; ``answer`` is what it returns."""
@@ -264,6 +269,7 @@ def kubectl(monkeypatch):
     return state
 
 
+@_SHARED_VOLUME
 def test_submit_makes_a_job_for_a_project_on_a_shared_volume(tmp_path, kubectl):
     project = _project(tmp_path, 3)
 
@@ -321,12 +327,14 @@ def test_submit_from_windows_with_inputs_on_a_bucket_creates_the_job(
     assert len(kubectl.created) == 1
 
 
+@_SHARED_VOLUME
 def test_submit_says_why_kubectl_refused(tmp_path, kubectl):
     kubectl.answer = SimpleNamespace(returncode=1, stdout="", stderr="forbidden: quota")
     with pytest.raises(RuntimeError, match="forbidden: quota"):
         runner.submit(_project(tmp_path, 1), execution=_execution())
 
 
+@_SHARED_VOLUME
 def test_submit_without_kubectl_says_so(tmp_path, monkeypatch):
     monkeypatch.setattr(kubernetes.shutil, "which", lambda name: None)
     with pytest.raises(FileNotFoundError, match="kubectl is not installed"):
@@ -570,6 +578,7 @@ def test_listing_jobs_without_kubectl_says_so(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
+@_SHARED_VOLUME
 @pytest.mark.parametrize(
     ("fetch", "downloads", "asked"),
     [
