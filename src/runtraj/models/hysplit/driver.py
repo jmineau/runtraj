@@ -11,12 +11,14 @@ input files of a run, or to read a particle file from elsewhere.
 """
 
 import datetime as dt
+import logging
 import os
 import shutil
 import signal
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -45,6 +47,8 @@ from runtraj.models.hysplit.namelist import NameList
 
 if TYPE_CHECKING:
     from arlmet import Grid
+
+logger = logging.getLogger(__name__)
 
 CONTROL_FILE = "CONTROL"
 SETUP_FILE = "SETUP.CFG"
@@ -733,6 +737,7 @@ def run_hycs_std(
             stderr=subprocess.STDOUT,
             **_own_group(),
         ) as proc,
+        _ended_if_this_process_dies(proc),
     ):
         try:
             proc.wait(timeout=timeout)
@@ -791,6 +796,147 @@ def _own_group() -> dict[str, Any]:
     if sys.platform == "win32":
         return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
     return {"start_new_session": True}
+
+
+#: The watchdog of a HYSPLIT run on POSIX: it waits for its standard input
+#: to close, which happens when the process that started it ends however it
+#: ends, then kills the process group its argument names.
+_WATCHDOG = 'read line; kill -s KILL -"$0" 2>/dev/null'
+
+
+@contextmanager
+def _ended_if_this_process_dies(proc: subprocess.Popen[Any]) -> Iterator[None]:
+    """
+    End HYSPLIT (*proc*) if this process dies while the block runs, even when it is killed outright.
+
+    A worker the out-of-memory killer or ``kill -9`` ends runs no
+    ``finally`` block, and HYSPLIT, in a session of its own, would run on.
+    On POSIX a watchdog shell, in a session of its own too, reads a pipe from
+    this process, which the system closes when this process dies; it then
+    kills HYSPLIT's process group. On Windows HYSPLIT is put in a job object
+    that ends it when the job's last handle, held here, closes. Either is in
+    place a moment after HYSPLIT starts, so a process killed in that moment
+    still leaves it running. Where neither can be set up, HYSPLIT runs
+    without it.
+    """
+    if sys.platform == "win32":
+        job = _job_that_ends(proc.pid)
+        try:
+            yield
+        finally:
+            if job is not None:
+                _close_handle(job)  # HYSPLIT has ended, or is ended now
+        return
+    try:
+        watchdog = subprocess.Popen(
+            ["/bin/sh", "-c", _WATCHDOG, str(proc.pid)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,  # so Ctrl-C to this process leaves it
+        )
+    except OSError as e:
+        logger.warning("HYSPLIT runs without a watchdog: %s", e)
+        yield
+        return
+    try:
+        yield
+    finally:
+        watchdog.kill()  # before its pipe closes, so it kills nothing
+        watchdog.wait()
+        if watchdog.stdin is not None:
+            watchdog.stdin.close()
+
+
+if sys.platform == "win32":  # Windows' job objects, through ctypes
+    #: The limit that ends a job's processes when its last handle closes (``JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE``).
+    _KILL_ON_JOB_CLOSE = 0x2000
+    #: The class of ``SetInformationJobObject`` the limit is in (``JobObjectExtendedLimitInformation``).
+    _EXTENDED_LIMITS = 9
+    #: The access to a process that putting it in a job needs (``PROCESS_SET_QUOTA | PROCESS_TERMINATE``).
+    _JOIN_ACCESS = 0x0101
+
+    def _job_that_ends(pid: int) -> int | None:
+        """
+        Put the Windows process *pid* in a new job object that ends it when the job closes; return the job's handle.
+
+        The job closes when its last handle does, and its one handle is held by
+        this process, so the system ends *pid* when this process ends, however
+        it ends. Returns ``None`` where the job cannot be made.
+        """
+        import ctypes
+        from ctypes import wintypes
+
+        class BasicLimits(ctypes.Structure):
+            _fields_ = [
+                ("PerProcessUserTimeLimit", ctypes.c_int64),
+                ("PerJobUserTimeLimit", ctypes.c_int64),
+                ("LimitFlags", wintypes.DWORD),
+                ("MinimumWorkingSetSize", ctypes.c_size_t),
+                ("MaximumWorkingSetSize", ctypes.c_size_t),
+                ("ActiveProcessLimit", wintypes.DWORD),
+                ("Affinity", ctypes.c_size_t),
+                ("PriorityClass", wintypes.DWORD),
+                ("SchedulingClass", wintypes.DWORD),
+            ]
+
+        class ExtendedLimits(ctypes.Structure):
+            _fields_ = [
+                ("BasicLimitInformation", BasicLimits),
+                ("IoInfo", ctypes.c_uint64 * 6),
+                ("ProcessMemoryLimit", ctypes.c_size_t),
+                ("JobMemoryLimit", ctypes.c_size_t),
+                ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                ("PeakJobMemoryUsed", ctypes.c_size_t),
+            ]
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.SetInformationJobObject.argtypes = [
+            wintypes.HANDLE,
+            ctypes.c_int,
+            ctypes.c_void_p,
+            wintypes.DWORD,
+        ]
+        kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        job = kernel32.CreateJobObjectW(None, None)
+        if not job:
+            logger.warning(
+                "HYSPLIT runs outside a job object: %s",
+                ctypes.WinError(ctypes.get_last_error()),
+            )
+            return None
+        limits = ExtendedLimits()
+        limits.BasicLimitInformation.LimitFlags = _KILL_ON_JOB_CLOSE
+        process = kernel32.OpenProcess(_JOIN_ACCESS, False, pid)
+        joined = (
+            process
+            and kernel32.SetInformationJobObject(
+                job, _EXTENDED_LIMITS, ctypes.byref(limits), ctypes.sizeof(limits)
+            )
+            and kernel32.AssignProcessToJobObject(job, process)
+        )
+        error = ctypes.get_last_error()
+        if process:
+            kernel32.CloseHandle(process)
+        if not joined:
+            kernel32.CloseHandle(job)
+            logger.warning(
+                "HYSPLIT runs outside a job object: %s", ctypes.WinError(error)
+            )
+            return None
+        return job
+
+    def _close_handle(handle: int) -> None:
+        """Close a Windows handle."""
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        kernel32.CloseHandle(handle)
 
 
 def _terminate(proc: subprocess.Popen[Any]) -> None:

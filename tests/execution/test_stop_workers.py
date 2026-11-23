@@ -1,4 +1,4 @@
-"""Stopping a pool ends the transport model runs its workers started, on every platform."""
+"""Stopping a pool, or killing a worker outright, ends the transport model runs its workers started, on every platform."""
 
 import multiprocessing
 import os
@@ -39,12 +39,59 @@ def test_stopping_the_pool_ends_the_transport_model_its_worker_started(tmp_path)
     _write_stand_in(tmp_path)
     executor = ProcessPoolExecutor(1, mp_context=multiprocessing.get_context("spawn"))
     executor.submit(_run_in_worker, str(tmp_path))
-    deadline = time.monotonic() + 60
-    while not (tmp_path / "started").exists():
-        assert time.monotonic() < deadline, "the stand-in hycs_std never started"
-        time.sleep(0.1)
+    _wait_for_start(tmp_path)
 
     worker._stop_workers(executor)
     time.sleep(5)  # longer than the stand-in waits
 
     assert not (tmp_path / "finished").exists()
+
+
+def _wait_for_start(workdir: Path) -> None:
+    deadline = time.monotonic() + 60
+    while not (workdir / "started").exists():
+        assert time.monotonic() < deadline, "the stand-in hycs_std never started"
+        time.sleep(0.1)
+
+
+def _run_stand_in(workdir: str) -> None:
+    run_hycs_std(Path(workdir))
+
+
+def test_a_worker_killed_outright_ends_the_transport_model_it_started(tmp_path):
+    """A worker the out-of-memory killer ends runs no finally block; its HYSPLIT used to run on."""
+    _write_stand_in(tmp_path)
+    process = multiprocessing.get_context("spawn").Process(
+        target=_run_stand_in, args=(str(tmp_path),)
+    )
+    process.start()
+    _wait_for_start(tmp_path)
+
+    process.kill()  # SIGKILL; TerminateProcess on Windows
+    process.join()
+    time.sleep(5)  # longer than the stand-in waits
+
+    assert not (tmp_path / "finished").exists()
+
+
+def test_a_finished_run_leaves_no_process_behind(tmp_path, monkeypatch):
+    """The watchdog of a run that ended is gone too, so it can kill nothing later."""
+    import subprocess
+
+    started = []
+
+    class Recorded(subprocess.Popen):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            started.append(self)
+
+    monkeypatch.setattr(subprocess, "Popen", Recorded)
+    _write_stand_in(tmp_path)
+
+    run_hycs_std(tmp_path)
+
+    assert (tmp_path / "finished").exists()
+    assert len(started) == (
+        1 if sys.platform == "win32" else 2
+    )  # HYSPLIT, its watchdog
+    assert all(proc.returncode is not None for proc in started)
