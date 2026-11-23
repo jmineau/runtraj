@@ -91,7 +91,7 @@ Every settings folder holds a ``_settings.yaml``. A particles folder's:
 
    name: hrrr
    hash: 7d36c80b3b5a1a33cc355998f5755de469f61c53151a9d1b953fa698c81cd51f
-   runtraj: 0.1.0a23
+   runtraj: 0.1.0a4
    model_version: hysplit.v5.1.0
    settings:
      capemin: -1
@@ -124,7 +124,7 @@ were made from:
        folder: hrrr-7d36c8
        hash: 7d36c80b3b5a1a33cc355998f5755de469f61c53151a9d1b953fa698c81cd51f
    versions:
-     runtraj: 0.1.0a30
+     runtraj: 0.1.0a4
    settings:
      cells_per_target: 4
      geometry: null
