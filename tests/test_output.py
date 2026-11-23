@@ -16,6 +16,7 @@ from .fixtures.output import (
     release_at,
     write_one,
 )
+from .fixtures.platform import not_on_windows
 
 # ---------------------------------------------------------------------------
 # Folders
@@ -233,19 +234,22 @@ def test_logs_and_kept_workdirs_sit_beside_the_particles(tmp_path):
 
 
 def _interleave(monkeypatch, competitor):
-    """Make *competitor* run just before the first rename of the code under test."""
-    import runtraj.output as output_module
+    """Make *competitor* run just before the first rename (or link) of the code under test."""
+    import os
 
-    real_replace = output_module.os.replace
     state = {"raced": False}
 
-    def replace(src, dst):
-        if not state["raced"]:
-            state["raced"] = True
-            competitor()
-        real_replace(src, dst)
+    def racing(real):
+        def move(src, dst):
+            if not state["raced"]:
+                state["raced"] = True
+                competitor()
+            real(src, dst)
 
-    monkeypatch.setattr(output_module.os, "replace", replace)
+        return move
+
+    for name in ("replace", "rename", "link"):
+        monkeypatch.setattr(os, name, racing(getattr(os, name)))
 
 
 def test_two_workers_starting_a_run_at_once_both_succeed(tmp_path, monkeypatch):
@@ -260,6 +264,90 @@ def test_two_workers_starting_a_run_at_once_both_succeed(tmp_path, monkeypatch):
     record = yaml.safe_load((folder / "_settings.yaml").read_text())
     assert record["hash"] == VARIANT.result_hash
     assert [p.name for p in folder.iterdir()] == ["_settings.yaml"]
+
+
+def _settings_file(path):
+    return Output(path).folder("particles", VARIANT) / "_settings.yaml"
+
+
+def test_settings_another_worker_wrote_first_are_kept_while_it_reads_them(
+    tmp_path, monkeypatch
+):
+    """Windows refuses a rename onto a file another process has open."""
+    path = tmp_path / "output"
+    rid = release_at().id
+    Output(path).write_log(VARIANT, rid, "")
+    settings = _settings_file(path)
+    theirs = {**yaml.safe_load(settings.read_text()), "written_by": "the other worker"}
+    settings.unlink()
+    opened = []
+
+    def other_worker():
+        settings.write_text(yaml.safe_dump(theirs), encoding="utf-8")
+        opened.append(settings.open(encoding="utf-8"))  # and a third reads it
+
+    _interleave(monkeypatch, other_worker)
+    try:
+        Output(path).write_log(VARIANT, rid, "")
+    finally:
+        for file in opened:
+            file.close()
+
+    assert yaml.safe_load(settings.read_text())["written_by"] == "the other worker"
+    assert [p.name for p in settings.parent.iterdir()] == ["_settings.yaml"]
+
+
+def test_settings_another_worker_wrote_first_with_another_hash_are_refused(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "output"
+    rid = release_at().id
+    Output(path).write_log(VARIANT, rid, "")
+    settings = _settings_file(path)
+    theirs = {**yaml.safe_load(settings.read_text()), "hash": "0" * 64}
+    settings.unlink()
+    _interleave(
+        monkeypatch,
+        lambda: settings.write_text(yaml.safe_dump(theirs), encoding="utf-8"),
+    )
+
+    with pytest.raises(FileExistsError, match="0000000000"):
+        Output(path).write_log(VARIANT, rid, "")
+
+
+def test_a_file_written_once_keeps_the_one_already_there(tmp_path):
+    from runtraj._paths import atomic_path
+
+    path = tmp_path / "settings.yaml"
+    path.write_text("first", encoding="utf-8")
+
+    with pytest.raises(FileExistsError), atomic_path(path, replace=False) as tmp:
+        tmp.write_text("second", encoding="utf-8")
+
+    assert path.read_text(encoding="utf-8") == "first"
+    assert [p.name for p in tmp_path.iterdir()] == ["settings.yaml"]
+
+
+@not_on_windows("Windows' rename keeps an existing file without a hard link")
+def test_a_file_written_once_on_a_filesystem_without_hard_links_is_renamed(
+    tmp_path, monkeypatch
+):
+    import errno
+    import os
+
+    from runtraj._paths import atomic_path
+
+    def no_links(src, dst):
+        raise OSError(errno.EPERM, "Operation not permitted")
+
+    monkeypatch.setattr(os, "link", no_links)
+    path = tmp_path / "settings.yaml"
+
+    with atomic_path(path, replace=False) as tmp:
+        tmp.write_text("first", encoding="utf-8")
+
+    assert path.read_text(encoding="utf-8") == "first"
+    assert [p.name for p in tmp_path.iterdir()] == ["settings.yaml"]
 
 
 def test_two_workers_writing_one_release_at_once_both_succeed(tmp_path, monkeypatch):

@@ -206,10 +206,12 @@ def _read_yaml(path: Path | UPath) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
-def _write_yaml(path: Path | UPath, record: dict[str, Any]) -> None:
-    """Write *record* to *path* as YAML in one step, making its folder as needed."""
+def _write_yaml(
+    path: Path | UPath, record: dict[str, Any], *, replace: bool = True
+) -> None:
+    """Write *record* to *path* as YAML in one step, making its folder as needed (``replace`` as for ``atomic_path``)."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with atomic_path(path) as tmp:
+    with atomic_path(path, replace=replace) as tmp:
         tmp.write_text(
             yaml.safe_dump(record, default_flow_style=False, sort_keys=False),
             encoding="utf-8",
@@ -217,18 +219,26 @@ def _write_yaml(path: Path | UPath, record: dict[str, Any]) -> None:
 
 
 def _write_settings(path: Path | UPath, record: dict[str, Any]) -> None:
-    """Write a ``settings.yaml`` once. An existing file with the same hash is left alone."""
-    if path.exists():
-        existing = _read_yaml(path)
-        if existing.get("hash") != record["hash"]:
-            raise FileExistsError(
-                f"{path} holds settings with hash {existing.get('hash')}, "
-                f"not {record['hash']}."
-            )
-        return
-    # Another worker may write the same settings meanwhile; both files say
-    # the same thing, so whichever rename lands last is fine.
-    _write_yaml(path, record)
+    """
+    Write a ``settings.yaml`` once. An existing file with the same hash is left alone.
+
+    Another worker may write the same settings between the check and the
+    write. Its file is kept, not replaced (``atomic_path``'s
+    ``replace=False``): on Windows a rename onto it fails while a third
+    worker reads it.
+    """
+    if not path.exists():
+        try:
+            _write_yaml(path, record, replace=False)
+            return
+        except FileExistsError:
+            pass  # another worker wrote them first; check they are the same
+    existing = _read_yaml(path)
+    if existing.get("hash") != record["hash"]:
+        raise FileExistsError(
+            f"{path} holds settings with hash {existing.get('hash')}, "
+            f"not {record['hash']}."
+        )
 
 
 @functools.cache

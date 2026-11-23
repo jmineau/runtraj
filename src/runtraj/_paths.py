@@ -16,6 +16,7 @@ directly.
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -86,7 +87,7 @@ def readable(path: str | Path | UPath) -> Iterator[Path | IO[bytes]]:
 
 
 @contextmanager
-def atomic_path(path: P) -> Iterator[P]:
+def atomic_path(path: P, *, replace: bool = True) -> Iterator[P]:
     """
     Yield where to write *path* so that it appears whole: beside it on a filesystem, itself on an object store.
 
@@ -98,6 +99,13 @@ def atomic_path(path: P) -> Iterator[P]:
     dot keeps dataset readers from listing a file in progress. The
     temporary file is removed if the block raises. On an object store the
     last put wins in the same way.
+
+    With ``replace=False``, a file already at *path* on a filesystem is kept
+    and the block raises :class:`FileExistsError` when it ends. Use it for a
+    file that is written once and then read by other workers: Windows
+    refuses to rename onto a file another process has open, so replacing it
+    there fails while a worker reads it. On an object store the last put
+    still wins.
     """
     if not isinstance(path, Path):
         yield path
@@ -105,9 +113,32 @@ def atomic_path(path: P) -> Iterator[P]:
     tmp = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
     try:
         yield tmp
-        os.replace(tmp, path)
+        if replace:
+            os.replace(tmp, path)
+        else:
+            _put_once(tmp, path)
     finally:
         tmp.unlink(missing_ok=True)
+
+
+def _put_once(tmp: Path, path: Path) -> None:
+    """
+    Move *tmp* to *path*, or raise :class:`FileExistsError` if a file is there.
+
+    Windows' rename refuses an existing *path*. A POSIX rename replaces
+    it, so there *tmp* gets a hard link at *path*, which refuses it too, and
+    *tmp* is removed after. A filesystem without hard links gets the rename,
+    which on POSIX does not fail while the old file is open.
+    """
+    if sys.platform == "win32":
+        os.rename(tmp, path)
+        return
+    try:
+        os.link(tmp, path)
+    except FileExistsError:
+        raise
+    except OSError:
+        os.replace(tmp, path)
 
 
 def write_parquet(table: pa.Table, path: P) -> P:
