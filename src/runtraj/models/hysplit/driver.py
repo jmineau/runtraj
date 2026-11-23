@@ -623,7 +623,7 @@ def write_inputs(
     trajectory = config.mode == "trajectory"
     found = find_program(program, config.directory)
     # On Windows the link keeps the program's extension, which finds it again.
-    linked = program + found.suffix if sys.platform == "win32" else program
+    linked = program + found.suffix.lower() if sys.platform == "win32" else program
     links = {linked: found}
     for name, table in data_tables(config.directory, program).items():
         if isinstance(table, bytes):
