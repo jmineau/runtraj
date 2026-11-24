@@ -1,0 +1,6 @@
+runtraj.testing.ReplayModel.needs\_workdir
+==========================================
+
+.. currentmodule:: runtraj.testing
+
+.. autoattribute:: ReplayModel.needs_workdir

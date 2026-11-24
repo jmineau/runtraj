@@ -53,6 +53,7 @@ Module map
      config.py       ProjectConfig and Variant
      identity.py     settings records and hashes
      stages.py       the Stage base class, get_stage, check_stage
+     testing.py      run_stage: a stage end to end in a project, on the replay model
      releases/       release classes, releases.csv, shared validation
      particles/      the particle table and files, release heights, particles.runtraj
      models/         the TransportModel and TransportConfig base classes, MODELS, get_model, check_model

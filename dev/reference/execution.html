@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d062ad4f"></script>
+    <script src="../_static/documentation_options.js?v=30be962f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev14+g0d18422a4" />
+  <meta name="docsearch:version" content="0.1.0a5.dev15+g8b4a3d878" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -768,6 +768,13 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.stages.get_stage.html">runtraj.stages.get_stage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.stages.ordered.html">runtraj.stages.ordered</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.stages.check_stage.html">runtraj.stages.check_stage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.testing.run_stage.html">runtraj.testing.run_stage</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.testing.ReplayModel.html">runtraj.testing.ReplayModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.testing.ReplayModel.name.html">runtraj.testing.ReplayModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.testing.ReplayModel.needs_workdir.html">runtraj.testing.ReplayModel.needs_workdir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.testing.ReplayModel.run.html">runtraj.testing.ReplayModel.run</a></li>
+</ul>
+</details></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="project.html">Project And Output</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1136,7 +1143,10 @@ transport model runs. PYSTILT’s footprint is one
 (<code class="docutils literal notranslate"><span class="pre">stilt.footprint.FootprintStage</span></code>). A <code class="docutils literal notranslate"><span class="pre">stages</span></code> block of
 <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> names its stage’s class by import path, so a stage in a
 package of your own needs no registration, and CONTRIBUTING describes how to
-write one. Use <a class="reference internal" href="_api/runtraj.stages.check_stage.html#runtraj.stages.check_stage" title="runtraj.stages.check_stage"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_stage()</span></code></a> in its tests.</p>
+write one. In its tests, <a class="reference internal" href="_api/runtraj.stages.check_stage.html#runtraj.stages.check_stage" title="runtraj.stages.check_stage"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_stage()</span></code></a> checks its
+settings record, and <a class="reference internal" href="_api/runtraj.testing.run_stage.html#runtraj.testing.run_stage" title="runtraj.testing.run_stage"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_stage()</span></code></a> runs it end to end
+in a project of one release, on particles you give it and with no transport
+model installed (<a class="reference internal" href="_api/runtraj.testing.ReplayModel.html#runtraj.testing.ReplayModel" title="runtraj.testing.ReplayModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReplayModel</span></code></a>).</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.stages.Stage.html#runtraj.stages.Stage" title="runtraj.stages.Stage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.stages.Stage</span></code></a></p></td>
@@ -1150,6 +1160,12 @@ write one. Use <a class="reference internal" href="_api/runtraj.stages.check_sta
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.stages.check_stage.html#runtraj.stages.check_stage" title="runtraj.stages.check_stage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.stages.check_stage</span></code></a></p></td>
 <td><p>Check that <em>stage</em> keeps the promises the worker and the output directory rely on, for one <em>config</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.testing.run_stage.html#runtraj.testing.run_stage" title="runtraj.testing.run_stage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.testing.run_stage</span></code></a></p></td>
+<td><p>Run the stage at the import path <em>stage</em> in a project of one release, and check what a project relies on.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.testing.ReplayModel.html#runtraj.testing.ReplayModel" title="runtraj.testing.ReplayModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.testing.ReplayModel</span></code></a></p></td>
+<td><p>A transport model that runs nothing: each release's particles are the table saved for it.</p></td>
 </tr>
 </tbody>
 </table>
