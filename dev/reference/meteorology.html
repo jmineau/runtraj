@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=881e4f9d"></script>
+    <script src="../_static/documentation_options.js?v=98e7dbe6"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
+  <meta name="docsearch:version" content="0.1.0a5.dev18+g217e4a30a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -663,6 +663,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.Met.html">runtraj.models.hysplit.Met</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.Met.catalog.html">runtraj.models.hysplit.Met.catalog</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.Met.crop_dir.html">runtraj.models.hysplit.Met.crop_dir</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.Met.check.html">runtraj.models.hysplit.Met.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.Met.check_releases.html">runtraj.models.hysplit.Met.check_releases</a></li>
@@ -1007,14 +1008,17 @@ same rule, with the archive’s own step (arlmet’s <code class="docutils liter
 </section>
 <section id="the-catalog">
 <h3>The catalog<a class="headerlink" href="#the-catalog" title="Link to this heading">#</a></h3>
-<p>What the files hold is kept in a table per folder, in <code class="docutils literal notranslate"><span class="pre">catalogs/</span></code> inside
+<p>What the files hold is kept in a table per folder by <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.catalog.html#arlmet.catalog" title="(in arl-met v0.1.0b14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.catalog()</span></code></a>
+(arlmet’s “Cataloging a folder” guide), in <code class="docutils literal notranslate"><span class="pre">catalogs/</span></code> inside
 <code class="docutils literal notranslate"><span class="pre">subgrid_dir</span></code>, or under <code class="docutils literal notranslate"><span class="pre">$XDG_CACHE_HOME</span></code> (else <code class="docutils literal notranslate"><span class="pre">~/.cache</span></code>) without
-one. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> brings it up to date; otherwise the first simulation builds it while the
-others wait. A simulation reads the table, and looks in the folder again
-only when the table has no file for one of its hours or a file it chose has
-changed. Files of two products or two grids that hold the same time fail
-the run, naming both. A file that holds part of what another file of the
-same product holds, such as a short copy, is passed over for the longer one.</p>
+one; runtraj writes nothing in the met’s folder. A table the archive’s
+maintainer keeps beside its files is a starting point. Each process reads the folder once, opening only the files that are
+new or changed, and a run reads it again when the table has no file for one of its hours.
+On a large archive the first read takes minutes, so run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code>
+before a batch: it builds the table, and every simulation starts from it.
+Two files in the folder that hold the same time fail the run, naming both:
+files of two products or two grids, two copies of one file, or a short copy
+of a file beside it. Move one of them out.</p>
 </section>
 <section id="files-that-fail-a-run">
 <h3>Files that fail a run<a class="headerlink" href="#files-that-fail-a-run" title="Link to this heading">#</a></h3>
