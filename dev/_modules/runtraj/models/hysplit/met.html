@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b0cff3f2"></script>
+    <script src="../../../../_static/documentation_options.js?v=7a25012c"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev10+g3b8f772b2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev11+g650fce609" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -1205,7 +1205,9 @@
 <span class="sd">        cannot be read, is made again. Each crop is written to a temporary</span>
 <span class="sd">        name and then renamed, so a worker never reads a half-written file.</span>
 <span class="sd">        Two workers cropping the same file at once both finish, and the</span>
-<span class="sd">        second rename wins.</span>
+<span class="sd">        first crop is kept: the second worker reads it, since on Windows a</span>
+<span class="sd">        rename onto a crop that a run has open fails. A crop that holds</span>
+<span class="sd">        fewer time steps is replaced, as before.</span>
 <span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">arlmet</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_subset</span>
 
@@ -1223,8 +1225,16 @@
             <span class="n">cache_path</span> <span class="o">=</span> <span class="n">crop_dir</span> <span class="o">/</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">_holds_as</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Subsetting </span><span class="si">%s</span><span class="s2"> → </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">)</span>
-                <span class="k">with</span> <span class="n">atomic_path</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
-                    <span class="n">extract_subset</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># A crop no worker has made yet is written once.</span>
+                    <span class="k">with</span> <span class="n">atomic_path</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">cache_path</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+                        <span class="n">extract_subset</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+                    <span class="c1"># Another worker's crop landed first; it is used unless</span>
+                    <span class="c1"># it holds fewer time steps than the source.</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">_holds_as</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+                        <span class="k">with</span> <span class="n">atomic_path</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+                            <span class="n">extract_subset</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
             <span class="n">subsetted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">subsetted</span>
 

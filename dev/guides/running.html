@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b0cff3f2"></script>
+    <script src="../_static/documentation_options.js?v=7a25012c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev10+g3b8f772b2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev11+g650fce609" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -588,15 +588,19 @@ script runs again in every worker. <code class="docutils literal notranslate"><s
 <p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--cpus</span> <span class="pre">4</span></code> and a <code class="docutils literal notranslate"><span class="pre">cpus</span></code> of 1 need no guard.</p>
 <p>You can stop a run at any time with Ctrl-C (or <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code> from <code class="docutils literal notranslate"><span class="pre">kill</span></code>,
 Slurm or Kubernetes). Releases that finished stay finished, and running
-again starts the ones that were cut off from the beginning.</p>
+again starts the ones that were cut off from the beginning. On Windows, a
+run with <code class="docutils literal notranslate"><span class="pre">cpus</span></code> above 1 stops its HYSPLIT runs too, but it leaves their
+workdirs in the compute root, since Windows ends a worker before it can
+remove them.</p>
 <p>If a worker process is killed outright, most often by the kernel’s
 out-of-memory killer, the run stops with an error
 (<a class="reference internal" href="../reference/_api/runtraj.exceptions.WorkerDied.html#runtraj.exceptions.WorkerDied" title="runtraj.exceptions.WorkerDied"><code class="xref py py-class docutils literal notranslate"><span class="pre">WorkerDied</span></code></a>) and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> exits with 3. The pool
 cannot say which release the worker held, so the error names every release
 that was in progress. Nothing is marked failed and what finished stays
 finished: run it again and only what is missing runs, with a lower <code class="docutils literal notranslate"><span class="pre">cpus</span></code> or
-more memory per task if memory was the cause. The killed worker’s directory in
-the compute root is not removed; clear it by hand.</p>
+more memory per task if memory was the cause. The HYSPLIT run the killed
+worker started is ended too. Its directory in the compute root is not
+removed; clear it by hand.</p>
 </section>
 <section id="save-now-run-later">
 <h2>Save now, run later<a class="headerlink" href="#save-now-run-later" title="Link to this heading">#</a></h2>

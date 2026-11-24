@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b0cff3f2"></script>
+    <script src="../../../_static/documentation_options.js?v=7a25012c"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev10+g3b8f772b2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev11+g650fce609" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -1190,14 +1190,15 @@
     <span class="n">stamp</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">:</span><span class="s2">%Y%m%d_%H%M%S</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
     <span class="n">folder</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">directory</span> <span class="o">/</span> <span class="s2">"_slurm"</span> <span class="o">/</span> <span class="n">stamp</span>
     <span class="n">folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"releases.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pending</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"releases.txt"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pending</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="c1"># The checked rows, in the order the tasks split them (task_share).</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">_rows_of</span><span class="p">(</span><span class="n">pending</span><span class="p">)</span>
     <span class="n">write_parquet</span><span class="p">(</span>
         <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">preserve_index</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">folder</span> <span class="o">/</span> <span class="s2">"releases.parquet"</span>
     <span class="p">)</span>
     <span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"execution.yaml"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-        <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">n_tasks</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">slurm</span><span class="o">.</span><span class="n">n_workers</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">)))</span>
     <span class="n">script</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="s2">"job.sh"</span>
@@ -1209,17 +1210,19 @@
             <span class="n">n_tasks</span><span class="p">,</span>
             <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
             <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">after</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">fetch_id</span><span class="p">,</span> <span class="n">fetch_cluster</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">_to_fetch</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">pending</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">fetch</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="s2">"fetch.sh"</span>
         <span class="n">fetch</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-            <span class="n">fetch_script</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">)</span>
+            <span class="n">fetch_script</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">),</span>
+            <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">fetch_id</span><span class="p">,</span> <span class="n">fetch_cluster</span> <span class="o">=</span> <span class="n">_sbatch</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
-        <span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"fetch.id"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">fetch_id</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"fetch.id"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">fetch_id</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="s2">"Submitted fetch job: </span><span class="si">%s%s</span><span class="s2">; the job array waits for it to end. Log in </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
             <span class="n">fetch_id</span><span class="p">,</span>
@@ -1369,16 +1372,18 @@
 
 <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_usr1_noticed</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">_Notice</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Record SIGUSR1 inside the block (:class:`_Notice`); outside the main thread, where handlers cannot be set, nothing is."""</span>
+<span class="w">    </span><span class="sd">"""Record SIGUSR1 inside the block (:class:`_Notice`); outside the main thread, where handlers cannot be set, or on Windows, which has no SIGUSR1, nothing is."""</span>
     <span class="n">notice</span> <span class="o">=</span> <span class="n">_Notice</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">threading</span><span class="o">.</span><span class="n">main_thread</span><span class="p">():</span>
+    <span class="c1"># Windows has no SIGUSR1, and no Slurm to send it.</span>
+    <span class="n">sigusr1</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="s2">"SIGUSR1"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sigusr1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">threading</span><span class="o">.</span><span class="n">main_thread</span><span class="p">():</span>
         <span class="k">yield</span> <span class="n">notice</span>
         <span class="k">return</span>
-    <span class="n">previous</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGUSR1</span><span class="p">,</span> <span class="n">notice</span><span class="o">.</span><span class="n">handle</span><span class="p">)</span>
+    <span class="n">previous</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">sigusr1</span><span class="p">,</span> <span class="n">notice</span><span class="o">.</span><span class="n">handle</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">notice</span>
     <span class="k">finally</span><span class="p">:</span>
-        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGUSR1</span><span class="p">,</span> <span class="n">previous</span><span class="p">)</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">sigusr1</span><span class="p">,</span> <span class="n">previous</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_run_task</span><span class="p">(</span>

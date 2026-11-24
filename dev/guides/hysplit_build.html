@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b0cff3f2"></script>
+    <script src="../_static/documentation_options.js?v=7a25012c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev10+g3b8f772b2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev11+g650fce609" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -518,6 +518,14 @@ built for all Linux distributions: a download built for a newer system
 stops on an older one with an error that names <code class="docutils literal notranslate"><span class="pre">GLIBC</span></code>. Unpacked on
 Windows and copied over, <code class="docutils literal notranslate"><span class="pre">exec/hycs_std</span></code> loses its permission to run;
 <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">+x</span> <span class="pre">exec/hycs_std</span></code> gives it back.</p>
+<p>On Windows, the folder holds <code class="docutils literal notranslate"><span class="pre">exec/hycs_std.exe</span></code> (and <code class="docutils literal notranslate"><span class="pre">hyts_std.exe</span></code> for
+the trajectory mode), and <code class="docutils literal notranslate"><span class="pre">directory</span></code> is the same setting. A run links
+the program into its workdir. A symbolic link needs an administrator, or
+developer mode, so without one the run makes a hard link, which takes no
+space, or a copy where the HYSPLIT folder is on another drive. The Slurm
+backend is for Linux; on Windows, <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> runs on this machine. You
+can submit to Kubernetes from Windows when <code class="docutils literal notranslate"><span class="pre">execution.kubernetes.inputs</span></code>
+is a bucket: the pods run Linux and cannot open a folder on your machine.</p>
 <p><code class="docutils literal notranslate"><span class="pre">directory</span></code> is a HYSPLIT setting, so a variant can set its own and
 compare two builds on the same releases:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">variants</span><span class="p">:</span>

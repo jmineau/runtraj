@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b0cff3f2"></script>
+    <script src="../../../_static/documentation_options.js?v=7a25012c"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev10+g3b8f772b2" />
+  <meta name="docsearch:version" content="0.1.0a5.dev11+g650fce609" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -875,7 +875,7 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_done</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
                     <span class="k">return</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">:</span>
                         <span class="k">return</span>  <span class="c1"># taken over; the holder warns when it finishes</span>
                     <span class="n">token</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="si">}</span><span class="s2"> refresh </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">"</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">pipe_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
@@ -910,7 +910,7 @@
         <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">held</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">held</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="k">continue</span>  <span class="c1"># released while we looked: try again</span>
         <span class="k">if</span> <span class="n">held</span> <span class="o">!=</span> <span class="n">seen</span><span class="p">:</span>
@@ -934,7 +934,7 @@
 <span class="sd">    over since.</span>
 <span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">!=</span> <span class="n">token</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">fs</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="o">!=</span> <span class="n">token</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">fs</span><span class="o">.</span><span class="n">rm_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
