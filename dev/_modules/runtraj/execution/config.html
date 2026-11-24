@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=bef77295"></script>
+    <script src="../../../_static/documentation_options.js?v=734272f8"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev20+g7b560c8bd" />
+  <meta name="docsearch:version" content="0.1.0a5.dev21+gd17ebb510" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -751,6 +751,150 @@
 
 
 
+<span class="c1">#: A PBS walltime: seconds, ``MM:SS`` or ``HH:MM:SS``.</span>
+<span class="n">_PBS_WALLTIME</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"\d+(:[0-5]?\d){0,2}"</span>
+
+
+<div class="viewcode-block" id="PbsConfig">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.PbsConfig.html#runtraj.PbsConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PbsConfig</span><span class="p">(</span><span class="n">BackendConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The PBS job array a project's releases run as: the ``pbs`` block of ``execution``.</span>
+
+<span class="sd">    As on Slurm, the releases are split among ``n_tasks`` array tasks</span>
+<span class="sd">    (subjobs), at most ``n_workers`` running at once, and each task runs</span>
+<span class="sd">    ``cpus`` of them at once. The settings use PBS's own names where it has</span>
+<span class="sd">    them. Any key that is not a setting below is a PBS resource by its</span>
+<span class="sd">    name, written as ``#PBS -l &lt;key&gt;=&lt;value&gt;``, such as ``place: scatter``;</span>
+<span class="sd">    ``select`` replaces the chunk runtraj asks for</span>
+<span class="sd">    (``1:ncpus=&lt;cpus&gt;:mem=&lt;mem&gt;``), for a resource a chunk must name, such</span>
+<span class="sd">    as ``ngpus``.</span>
+
+<span class="sd">    PBS sends no notice before ``walltime``, and a user cannot put a</span>
+<span class="sd">    subjob back in the queue, so a task that runs out of time stays</span>
+<span class="sd">    stopped: run the project again, and it skips what finished. A task</span>
+<span class="sd">    that PBS preempts is put back by PBS itself (the job is rerunnable,</span>
+<span class="sd">    ``-r y``). There is no fetch job: each task downloads the met files</span>
+<span class="sd">    its releases lack, so get them first with ``runtraj fetch`` when many</span>
+<span class="sd">    tasks share them.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; config = PbsConfig(</span>
+<span class="sd">    ...     n_workers=20, walltime="02:00:00", queue="main", place="scatter"</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; config.n_workers, config.tasks, config.resources</span>
+<span class="sd">    (20, 200, {'place': 'scatter'})</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"allow"</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">n_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Most subjobs running at once (``-J 0-199%20`` for 20)."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">n_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Number of subjobs, which the releases are split evenly among. "</span>
+            <span class="s2">"Unset, ten per worker. Never more than one per release, nor more "</span>
+            <span class="s2">"than the server's ``max_array_size``."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">cpus</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Releases each subjob runs at once, and the CPUs (``ncpus``) it asks for."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">walltime</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Time limit per subjob, as ``HH:MM:SS`` or seconds. Required with "</span>
+            <span class="s2">"``backend: pbs``."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">mem</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Memory per subjob, such as ``8gb``."</span><span class="p">)</span>
+    <span class="n">queue</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"PBS queue (``-q``)."</span><span class="p">)</span>
+    <span class="n">account</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Project or account to charge (``-A``)."</span>
+    <span class="p">)</span>
+    <span class="n">setup</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Shell commands run in each subjob before the worker, such as "</span>
+            <span class="s2">"``module load`` lines."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">fetch</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"PBS runs have no fetch job: each subjob gets the met files it lacks."</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_no_misspelled_setting</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a key that reads as a misspelled setting, which would otherwise go to ``qsub`` as a resource."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">model_fields</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="c1"># 0.9, so PBS's own vmem, pmem, ncpus and min_walltime pass.</span>
+                <span class="n">close</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">get_close_matches</span><span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">model_fields</span><span class="p">),</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.9</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">close</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> is not a setting of execution.pbs. Did you "</span>
+                        <span class="sa">f</span><span class="s2">"mean </span><span class="si">{</span><span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2">?"</span>
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"setup"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_one_command</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Accept one setup command as a string."""</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"walltime"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pbs_walltime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Raise on a walltime PBS would not take."""</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">_PBS_WALLTIME</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Not a PBS walltime: </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">. Use 'HH:MM:SS' or seconds."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The other PBS resources, by name: every key of the block that is not one of its settings."""</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The number of subjobs, ``n_tasks``, or ten per worker when it is unset; fewer when there are fewer releases."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">TASKS_PER_WORKER</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="PbsConfig.check">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.PbsConfig.check.html#runtraj.PbsConfig.check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Raise when the subjobs have no walltime."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">walltime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"execution.pbs.walltime is required with backend: pbs, such as "</span>
+                <span class="s2">"walltime: '02:00:00'. Without it each subjob gets the queue's "</span>
+                <span class="s2">"default time limit."</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
 <span class="c1">#: A Kubernetes memory quantity in its binary units: ``512Mi``, ``8Gi``, ``1.5Ti``.</span>
 <span class="n">_K8S_MEMORY</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"\d+(\.\d+)?(Ki|Mi|Gi|Ti|Pi|Ei)"</span>
 
@@ -1089,6 +1233,7 @@
 <span class="n">BUILT_IN_BLOCKS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">BackendConfig</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"local"</span><span class="p">:</span> <span class="n">LocalConfig</span><span class="p">,</span>
     <span class="s2">"slurm"</span><span class="p">:</span> <span class="n">SlurmConfig</span><span class="p">,</span>
+    <span class="s2">"pbs"</span><span class="p">:</span> <span class="n">PbsConfig</span><span class="p">,</span>
     <span class="s2">"kubernetes"</span><span class="p">:</span> <span class="n">KubernetesConfig</span><span class="p">,</span>
 <span class="p">}</span>
 
@@ -1129,8 +1274,9 @@
 <span class="sd">    block of its name. With ``backend: local`` the releases run on this</span>
 <span class="sd">    machine as one task (:class:`LocalConfig`). With ``backend: slurm``</span>
 <span class="sd">    they are split among the tasks of one Slurm job array</span>
-<span class="sd">    (:class:`SlurmConfig`), and with ``backend: kubernetes`` among the pods</span>
-<span class="sd">    of one indexed Job (:class:`KubernetesConfig`). A backend in another</span>
+<span class="sd">    (:class:`SlurmConfig`), with ``backend: pbs`` among the subjobs of one</span>
+<span class="sd">    PBS job array (:class:`PbsConfig`), and with ``backend: kubernetes``</span>
+<span class="sd">    among the pods of one indexed Job (:class:`KubernetesConfig`). A backend in another</span>
 <span class="sd">    package is named by the import path of its class</span>
 <span class="sd">    (:class:`runtraj.execution.Backend`), and its block is under the</span>
 <span class="sd">    class's ``name``. Only the block ``backend`` names is read, so a config</span>
@@ -1157,7 +1303,8 @@
         <span class="s2">"local"</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Where to run: on this machine (``local``), as a Slurm job array "</span>
-            <span class="s2">"(``slurm``), as a Kubernetes indexed Job (``kubernetes``), or with "</span>
+            <span class="s2">"(``slurm``) or a PBS job array (``pbs``), as a Kubernetes indexed "</span>
+            <span class="s2">"Job (``kubernetes``), or with "</span>
             <span class="s2">"a backend in another package, named by the import path of its "</span>
             <span class="s2">"class, such as ``mypkg.backends.MyBackend``."</span>
         <span class="p">),</span>
@@ -1171,6 +1318,13 @@
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"The job array of a Slurm run (:class:`SlurmConfig`), and any "</span>
             <span class="s2">"other ``sbatch`` option by name. Read with ``backend: slurm``."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">pbs</span><span class="p">:</span> <span class="n">PbsConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">PbsConfig</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The job array of a PBS run (:class:`PbsConfig`), and any other "</span>
+            <span class="s2">"PBS resource by name. Read with ``backend: pbs``."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">kubernetes</span><span class="p">:</span> <span class="n">KubernetesConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1329,6 +1483,7 @@
     <span class="s2">"FetchConfig"</span><span class="p">,</span>
     <span class="s2">"KubernetesConfig"</span><span class="p">,</span>
     <span class="s2">"LocalConfig"</span><span class="p">,</span>
+    <span class="s2">"PbsConfig"</span><span class="p">,</span>
     <span class="s2">"SlurmConfig"</span><span class="p">,</span>
     <span class="s2">"TASKS_PER_WORKER"</span><span class="p">,</span>
     <span class="s2">"Volume"</span><span class="p">,</span>

@@ -1,0 +1,6 @@
+﻿runtraj.execution.runner.write\_submission
+==========================================
+
+.. currentmodule:: runtraj.execution.runner
+
+.. autofunction:: write_submission

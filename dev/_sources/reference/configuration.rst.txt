@@ -162,6 +162,11 @@ that gets the met files before a job array (:ref:`slurm-fetch`).
 
 .. config-model:: runtraj.execution.config.FetchConfig
 
+The keys under ``execution: pbs:``, a PBS job array (:doc:`../guides/pbs`).
+Any other key is a PBS resource by its name.
+
+.. config-model:: runtraj.execution.config.PbsConfig
+
 The keys under ``execution: kubernetes:``, a Kubernetes indexed Job
 (:ref:`kubernetes-submit`), in Kubernetes' own names and units.
 
@@ -202,6 +207,7 @@ can share one.
    execution.BackendConfig
    execution.LocalConfig
    execution.SlurmConfig
+   execution.PbsConfig
    execution.FetchConfig
    execution.KubernetesConfig
    execution.Volume

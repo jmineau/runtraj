@@ -1,0 +1,6 @@
+runtraj.execution.pbs.PbsBackend.waits
+======================================
+
+.. currentmodule:: runtraj.execution.pbs
+
+.. autoattribute:: PbsBackend.waits

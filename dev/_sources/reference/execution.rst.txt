@@ -77,7 +77,8 @@ Backends
 
 Where the releases run is a backend, which ``execution.backend`` names:
 ``local`` runs them in this process, ``slurm`` as one Slurm job array,
-``kubernetes`` as one Kubernetes indexed Job. Each is a
+``pbs`` as one PBS job array, ``kubernetes`` as one Kubernetes indexed Job.
+Each is a
 :class:`~runtraj.execution.Backend`, and its block under ``execution`` is
 its ``config_class``, a :class:`~runtraj.execution.BackendConfig`.
 :func:`~runtraj.execution.run` and :func:`~runtraj.execution.submit` find
@@ -92,7 +93,7 @@ stage is:
 
    execution:
      backend: mypkg.backends.QueueBackend
-     queue:              # the class's name
+     myqueue:            # the class's name
        queue: short
        cpus: 4
 
@@ -116,6 +117,7 @@ what is complete, and exits with a code that says whether to try it again
    runtraj.execution.get_backend
    runtraj.execution.runner.LocalBackend
    runtraj.execution.slurm.SlurmBackend
+   runtraj.execution.pbs.PbsBackend
    runtraj.execution.kubernetes.KubernetesBackend
 
 Slurm job arrays
@@ -133,6 +135,23 @@ near its time limit or preempts; the worker only stops, and exits with 3.
    runtraj.execution.job_script
    runtraj.execution.fetch_script
    runtraj.execution.slurm.submit_array
+
+PBS job arrays
+--------------
+
+The PBS backend is :mod:`runtraj.execution.pbs`: it writes the job array
+script, submits it with ``qsub``, and follows it with ``qstat``.
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.execution.pbs.job_script
+   runtraj.execution.pbs.submit_array
+   runtraj.execution.pbs.wait
+   runtraj.execution.pbs.max_array_size
+   runtraj.execution.runner.write_submission
+   runtraj.execution.runner.array_size
 
 Kubernetes indexed Jobs
 -----------------------

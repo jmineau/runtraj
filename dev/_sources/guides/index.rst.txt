@@ -21,6 +21,7 @@ word in the :doc:`../getting_started/glossary`.
 - :doc:`checking`: find problems before a run, see where each simulation
   stands, and find out why one failed
 - :doc:`slurm`: run thousands of simulations on an HPC cluster
+- :doc:`pbs`: the same on a PBS Pro or OpenPBS cluster
 - :doc:`containers`: run with Kubernetes or another scheduler
 - :doc:`kubernetes_setup`: the image, a cluster and a bucket for Kubernetes,
   on your computer or on Google Cloud
@@ -59,6 +60,7 @@ word in the :doc:`../getting_started/glossary`.
    running
    checking
    slurm
+   pbs
    containers
    kubernetes_setup
 
