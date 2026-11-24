@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 
-from runtraj._paths import absolute, location, write_parquet
+from runtraj._paths import absolute, atomic_path, location, write_parquet
 from runtraj.check import check_project
 from runtraj.config import ProjectConfig, Variant
 from runtraj.execution.config import ExecutionConfig
@@ -418,7 +418,9 @@ class Project:
 
         The file is created if needed, and otherwise only appended to, in its
         own columns (:func:`runtraj.releases.table.append_releases_csv`). Releases
-        it already holds are skipped.
+        it already holds are skipped. The new file replaces the old one in one
+        step, so a program reading it, or a stop part way, never sees half a
+        file.
 
         Parameters
         ----------
@@ -439,11 +441,12 @@ class Project:
             self.directory.mkdir(parents=True, exist_ok=True)
             if self.releases_path.exists():
                 text = self.releases_path.read_text(encoding="utf-8")
-                self.releases_path.write_text(
-                    append_releases_csv(text, new), encoding="utf-8"
-                )
+                text = append_releases_csv(text, new)
             else:
-                self.releases_path.write_text(releases_to_csv(new), encoding="utf-8")
+                text = releases_to_csv(new)
+            # In one step, so a stop part way or a reader never sees half a file.
+            with atomic_path(self.releases_path) as tmp:
+                tmp.write_text(text, encoding="utf-8")
             # These were read from the file that just changed.
             for name in ("_rows", "_positions", "releases", "_simulations"):
                 vars(self).pop(name, None)
