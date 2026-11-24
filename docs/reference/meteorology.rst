@@ -51,7 +51,7 @@ What the files hold is kept in a table per folder by :func:`arlmet.catalog`
 ``subgrid_dir``, or under ``$XDG_CACHE_HOME`` (else ``~/.cache``) without
 one; runtraj writes nothing in the met's folder. A table the archive's
 maintainer keeps beside its files is a starting point. Each process reads the folder once, opening only the files that are
-new or changed, and again when the table has no file for one of its hours.
+new or changed, and a run reads it again when the table has no file for one of its hours.
 On a large archive the first read takes minutes, so run ``runtraj check``
 before a batch: it builds the table, and every simulation starts from it.
 Files of two products or two grids that hold the same time fail the run,

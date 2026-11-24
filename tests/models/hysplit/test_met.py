@@ -830,6 +830,26 @@ def test_a_folder_read_once_is_not_read_again(tmp_path, monkeypatch):
     ]
 
 
+def test_a_new_met_does_not_list_the_folder_again(tmp_path, monkeypatch):
+    """Each run makes a new Met, and the folder is listed once in a process."""
+    import arlmet
+
+    _hrrr_files(tmp_path, ["20230101_00-05_hrrr"])
+    window = run_window(dt.datetime(2023, 1, 1, 3), -2)
+    walks = []
+    real_catalog = arlmet.catalog
+    monkeypatch.setattr(
+        arlmet,
+        "catalog",
+        lambda top, **kwargs: walks.append(top) or real_catalog(top, **kwargs),
+    )
+
+    for _ in range(3):
+        _make_met(tmp_path).files_for(window)
+
+    assert len(walks) == 1
+
+
 def _linked_archive(root: Path) -> Path:
     """
     An archive laid out as the shared HRRR one: files in year/month folders, a link to each at the top.

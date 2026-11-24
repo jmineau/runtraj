@@ -33,6 +33,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+#: arlmet's catalog of each folder read in this process, by the folder and
+#: where its table is kept. A run makes a new :class:`Met`, and listing a
+#: large archive takes seconds, so the catalogs outlive it.
+_CATALOGS: dict[tuple[Path, Path], Catalog | None] = {}
+
 
 class HysplitMetConfig(MetConfig):
     """
@@ -316,7 +321,6 @@ class Met:
             if subgrid_dir is None
             else absolute(subgrid_dir) / "catalogs"
         )
-        self._catalogs: dict[Path, Catalog | None] = {}
         self._refreshed: set[Path] = set()
         self._archive: Archive | None = None
 
@@ -403,14 +407,15 @@ class Met:
         """Return arlmet's catalog of *folder*, read once in this process, or ``None`` when the folder does not exist."""
         from arlmet import catalog
 
-        if folder not in self._catalogs:
+        key = (folder, self._cache_dir)
+        if key not in _CATALOGS:
             try:
-                self._catalogs[folder] = catalog(
+                _CATALOGS[key] = catalog(
                     folder, recursive=True, cache_dir=self._cache_dir
                 )
             except FileNotFoundError:
-                self._catalogs[folder] = None
-        return self._catalogs[folder]
+                _CATALOGS[key] = None
+        return _CATALOGS[key]
 
     @property
     def catalog(self) -> Catalog | None:
@@ -422,13 +427,13 @@ class Met:
         Return the files in *folder* that hold the met steps of a run from *earlier* to *later*.
 
         The catalog read first in this process is trusted until it has a
-        gap; then the folder is read again once, since a crop or a download
-        may have landed since.
+        gap; then the folder is read again, once for this met, since a crop
+        or a download may have landed since.
         """
         cover = _look_up(self._catalog(folder), earlier, later)
         if cover.gaps and folder not in self._refreshed:
             self._refreshed.add(folder)
-            self._catalogs.pop(folder, None)
+            _CATALOGS.pop((folder, self._cache_dir), None)
             cover = _look_up(self._catalog(folder), earlier, later)
         return cover
 
@@ -588,10 +593,10 @@ class Met:
                 found.append(("met_directory", None, problem))
             else:
                 # Read now, and not again for a gap: the check lists each folder once.
-                self._catalogs.clear()
-                self._refreshed.update(
-                    [self.directory, *([self.crop_dir] if self.crops else [])]
-                )
+                folders = [self.directory, *([self.crop_dir] if self.crops else [])]
+                for folder in folders:
+                    _CATALOGS.pop((folder, self._cache_dir), None)
+                self._refreshed.update(folders)
                 found += self._file_problems(releases, n_hours)
         found += self._outside_crop(releases)
         return pd.DataFrame(found, columns=["check", "release", "message"])
@@ -647,7 +652,8 @@ class Met:
             )
             for t in tables
             for path, error in zip(t["path"], t["error"], strict=True)
-            if "truncated" in error
+            # shortcut: matches arlmet's wording for a cut file; read a column of its catalog when it has one.
+            if "is truncated" in error
         ]
         return found + self._outside_domain(releases, starts)
 
@@ -945,7 +951,9 @@ def _look_up(
         return _Cover(gaps=[(earlier, later)])
     try:
         files = catalog.covering(earlier, later, missing_ok=True)
-    except ValueError as error:  # two files hold one time
+    except ValueError as error:
+        if "is in two files" not in str(error):
+            raise
         return _Cover(
             clash=f"{error} Keep each product in its own folder, and give each its own met."
         )
