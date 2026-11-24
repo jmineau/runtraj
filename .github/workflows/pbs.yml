@@ -35,6 +35,9 @@ jobs:
         with:
           version: "0.12.23"
           python-version: "3.13"
+          # uv installs on the runner only when the met is downloaded: with no
+          # cache folder, saving one fails the job when uv.lock has changed.
+          enable-cache: false
 
       - name: Restore the met
         id: met-cache
