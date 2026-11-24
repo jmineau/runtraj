@@ -19,9 +19,14 @@
 runtraj runs particle dispersion models at scale. You describe where and when particles are
 released and the settings to run them under, and it runs the transport model once for each,
 on your machine or as a Slurm job array, and keeps the particles where you can find them again.
-[HYSPLIT](https://www.ready.noaa.gov/HYSPLIT.php) is the model it runs unless you name another, and
-FLEXPART 11 is built in beside it; any other model, and
-what is made from the particles afterwards, plug in by the import path of a class.
+You choose the transport model; two are built in:
+
+| Model | What it is | Docs |
+|---|---|---|
+| `hysplit` | [HYSPLIT](https://www.ready.noaa.gov/HYSPLIT.php), NOAA's model, on ARL met files | [HYSPLIT](https://jmineau.github.io/runtraj/stable/reference/hysplit.html) |
+| `flexpart` | [FLEXPART 11](https://www.flexpart.eu), built from its source, on ERA5 | [FLEXPART](https://jmineau.github.io/runtraj/stable/reference/flexpart.html) |
+
+Any other model, and what is made from the particles afterwards, plug in by the import path of a class.
 
 runtraj is not a model: it runs one, for every release and every set of settings, and
 keeps track of what is done.
@@ -72,7 +77,7 @@ release = runtraj.PointRelease(
 )
 met = "/data/hrrr"             # a folder of ARL files; their headers say what they hold
 
-particles = runtraj.run_trajectories(release, met, n_hours=-24, numpar=100)
+particles = runtraj.run_trajectories(release, met, model="hysplit", n_hours=-24, numpar=100)
 ```
 
 `particles` is a pandas DataFrame, one row per particle per step. A negative `n_hours` follows

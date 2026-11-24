@@ -259,6 +259,10 @@ We recommend two settings that differ from the defaults:
    mets:
      era5: /data/met/era5
 
+   models:
+     hysplit:
+       n_hours: -24
+
    variants:
      era5:
        met: era5

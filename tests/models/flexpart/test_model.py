@@ -336,7 +336,7 @@ def test_run_writes_the_inputs_and_reads_the_particles(checkout, era5, tmp_path)
 
 def test_met_config_refuses_gfs_read_from_the_files(gfs):
     met = FlexpartMetConfig(directory=gfs)
-    with pytest.raises(ValueError, match="does not mix its particles on GFS"):
+    with pytest.raises(ValueError, match="surface heat flux and stress near zero"):
         met.settings()
 
 

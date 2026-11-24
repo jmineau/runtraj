@@ -22,8 +22,8 @@ building, releasing) and [docs/development/architecture.rst](docs/development/ar
 runtraj runs particle dispersion models at scale: projects of releases and
 variants, settings folders, completion by file, `run` and `submit`,
 realizations, the met catalog, and the transport models. It is not a model.
-**HYSPLIT** is the model a variant runs unless it names another, and
-**FLEXPART 11** is built in beside it; any other model, and what is made from the
+**HYSPLIT** and **FLEXPART 11** are built in, and there is no default
+model: `config.yaml` names one in its `models` block; any other model, and what is made from the
 particles after a run (a **stage**), plug in by the import path of a class.
 It is alpha software: **there are no backward-compatibility guarantees
 before v1.0**, so prefer the clean design over a compatibility shim.
@@ -134,7 +134,7 @@ no results and runs nothing. Slurm tasks rebuild the project in another process,
 so anything a worker needs must be in the project or the output directory.
 
 `ProjectConfig` is `config.yaml`'s blocks, and no setting sits outside one: `mets`,
-`models` (`hysplit` unless set), `stages`, `variants`.
+`models` (required: no default model), `stages`, `variants`.
 Each part owns its config class; the base `TransportConfig` gets a parameter only
 when the core reads it. Config classes do no I/O when they validate; `resolve` asks
 each stage to read the files its settings name, and the model its version.

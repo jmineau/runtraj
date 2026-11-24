@@ -18,8 +18,9 @@ the executable you built, and reads the particles it writes.
      era5: /path/to/era5
 
 FLEXPART support is new, and two things about FLEXPART 11 itself limit
-what you can use it for today: it runs on ERA5 only, and a run with
-several threads does not repeat exactly. Read `Meteorology`_ and
+what you can use it for today: it runs on ERA5 only (on GFS it derives
+the surface fluxes near zero), and a run with several threads does not
+repeat exactly. Read `Meteorology`_ and
 `Repeating a run`_ before you rely on a result.
 
 The FLEXPART build
@@ -63,13 +64,14 @@ ERA5 (``centre`` ``ecmf``, class ``ea``)
    which FLEXPART reads only when it was built with ``numpf = 3`` in
    ``src/par_mod.f90``.
 
-GFS (``centre`` ``kwbc``) is refused, because FLEXPART 11 does not mix its particles
-on GFS. NCEP's ``pgrb2`` files hold no surface fluxes, so FLEXPART derives
-the surface heat flux and stress from the 2 m and 10 m values against its
-lowest level, which GFS diagnoses from that same layer. At a mountain site
-at midday they came out near zero (0 W m\ :sup:`-2` where ERA5 has -228),
-and particles released near the ground stayed at a median 8 m in a 1000 m
-mixed layer. GFS comes back once FLEXPART reads GFS's own fluxes. Any
+GFS (``centre`` ``kwbc``) is refused, because on current GFS ``pgrb2``
+files FLEXPART 11 derives the surface heat flux and stress near zero, so
+particles released near the ground stay near it. NCEP's ``pgrb2`` files
+hold no surface fluxes, so FLEXPART derives them from the 2 m and 10 m
+values against its lowest level, which GFS diagnoses from that same layer.
+At a mountain site at midday the heat flux came out at 0 W m\ :sup:`-2`
+where ERA5 has -228, and particles released near the ground stayed at a
+median 8 m in a 1000 m mixed layer. GFS comes back once FLEXPART reads GFS's own fluxes. Any
 other GRIB, such as ECMWF's operational analysis (class ``od``), is refused
 too, naming what its first file says it is.
 
@@ -114,9 +116,12 @@ Repeating a run
 
 FLEXPART has no seed setting, so ``seed`` is refused. It seeds each
 thread's random numbers with a fixed number, which is why ``threads``
-is part of a run's settings. Runs with several threads still
-differ: two runs with the same build, met and 8 threads gave median
-particle heights of 1335 m and 1397 m over the first three hours.
+is part of a run's settings. A run with one thread repeats exactly; a
+run with several repeats only in distribution. Two runs 24 hours back on
+ERA5 with the eta build and 1000 particles were identical at every output
+time with ``threads: 1``. With ``threads: 8`` every particle differed from
+the first output on, and the median heights over the first three hours
+were 1285 m and 1314 m.
 
 The particles
 -------------

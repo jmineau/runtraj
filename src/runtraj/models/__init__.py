@@ -4,7 +4,8 @@ The transport model interface.
 A transport model turns one release and one set of transport settings into
 a result: a particle table, or another type of result
 (:mod:`runtraj.results`). HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)
-is the one built in; a model in another package is named by its import
+and FLEXPART 11 (:class:`runtraj.models.flexpart.FlexpartModel`) are built in
+(:data:`MODELS`); a model in another package is named by its import
 path. The worker reaches
 a model through :func:`get_model` by the name a run's settings record, so
 another model needs no change to the worker.

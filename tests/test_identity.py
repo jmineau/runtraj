@@ -347,6 +347,14 @@ def test_a_float_with_a_fraction_names_its_own_settings_folder():
 
 # -- stored hashes do not move --------------------------------------------------
 
+_STORED_BUILD = ModelInfo(
+    name="hysplit",
+    sha256="0" * 64,
+    data_files={"ASCDATA.CFG": "a" * 64},
+    version="hysplit.v5.1.0",
+)
+_STORED_MET = {"source": "HRRR", "crop": None}
+
 
 @pytest.mark.parametrize(
     ("config", "expected"),
@@ -363,15 +371,23 @@ def test_a_float_with_a_fraction_names_its_own_settings_folder():
 )
 def test_a_particles_folder_keeps_its_hash(config, expected):
     """The hash of HYSPLIT particles as stored since 0.1.0a2: a change that moves it orphans every folder."""
-    info = ModelInfo(
-        name="hysplit",
-        sha256="0" * 64,
-        data_files={"ASCDATA.CFG": "a" * 64},
-        version="hysplit.v5.1.0",
-    )
-    met = {"source": "HRRR", "crop": None}
-    record = run_settings(HysplitConfig(**config), met, info)
+    record = run_settings(HysplitConfig(**config), _STORED_MET, _STORED_BUILD)
     assert settings_hash(record) == expected
+
+
+def test_naming_hysplit_keeps_the_folder_it_ran_in_as_the_default(tmp_path):
+    """A config that left out models: ran HYSPLIT; one that names hysplit: now hashes the same."""
+    config = ProjectConfig(
+        mets={"hrrr": _met(tmp_path)},
+        models={"hysplit": {"n_hours": -24}},
+        variants={"hrrr": {}},
+    )
+    variant = config.resolve()["hrrr"]
+    assert variant.model == "hysplit"
+    record = run_settings(variant.transport, _STORED_MET, _STORED_BUILD)
+    assert settings_hash(record) == (
+        "07bd458bf04f35ec65ee75f559631d8d5bb3ae2ba05c19af11816ee5f55099af"
+    )
 
 
 def test_a_stage_folder_keeps_its_hash():

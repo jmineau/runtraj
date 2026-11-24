@@ -140,7 +140,7 @@ def test_a_models_block_must_name_a_model(tmp_path, toy):
             models={"mine": {"class": "toy"}},
             variants={"hrrr": {}},
         )
-    with pytest.raises(ValueError, match="models: has no block"):
+    with pytest.raises(ValueError, match="names no transport model"):
         ProjectConfig(mets=_mets(tmp_path), models={}, variants={"hrrr": {}})
 
 
@@ -157,11 +157,20 @@ def test_a_model_has_one_block(tmp_path):
         )
 
 
-def test_hysplit_runs_when_no_model_is_named(tmp_path):
-    config = ProjectConfig(mets=_mets(tmp_path), variants={"hrrr": {"n_hours": -24}})
-    assert config.resolve()["hrrr"].model == "hysplit"
-    assert "models:" not in config.to_yaml()  # only what was given is written
+def test_a_config_without_models_is_refused_naming_the_built_in_models(tmp_path):
+    """A config without models: is refused, since there is no default transport model."""
+    with pytest.raises(ValueError, match="names no transport model") as refused:
+        ProjectConfig(mets=_mets(tmp_path), variants={"hrrr": {"n_hours": -24}})
+    assert "flexpart, hysplit" in str(refused.value)
+    assert "class:" in str(refused.value)
+    path = _write(
+        tmp_path, f"mets:\n  hrrr: {tmp_path / 'met'}\nvariants:\n  hrrr: {{}}\n"
+    )
+    with pytest.raises(ValueError, match="names no transport model"):
+        ProjectConfig.from_yaml(path)
 
+
+def test_a_models_block_is_written_back_as_given(tmp_path):
     given = ProjectConfig(
         mets=_mets(tmp_path),
         models={"hysplit": {"n_hours": -24, "numpar": 300, "seed": 4, "krand": 2}},

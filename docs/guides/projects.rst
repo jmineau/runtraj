@@ -49,8 +49,9 @@ The file is made of blocks, and no setting sits outside one:
    Your meteorology, by name (:doc:`meteorology`). ``hrrr`` here is a name
    you choose for the folder of met files.
 ``models``
-   The transport model and its settings. ``hysplit`` is the one built in.
-   It needs at least ``n_hours``; every other setting has a default.
+   The transport model and its settings (`Transport models`_). runtraj has
+   no default model, so the block is required. HYSPLIT needs at least
+   ``n_hours``; every other setting has a default.
 ``variants``
    What runs (`Variants`_).
 ``stages``
@@ -66,6 +67,34 @@ A setting written at the top of the file is refused with a message that
 names the block it belongs in. A key runtraj does not know is an error that
 names the nearest setting, so a typo such as ``numpr`` is caught when the
 file loads, before anything runs.
+
+Transport models
+~~~~~~~~~~~~~~~~
+
+You choose the transport model: a block under ``models`` named for it.
+Two are built in:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 55 30
+
+   * - Block
+     - What it is
+     - Settings
+   * - ``hysplit``
+     - `HYSPLIT <https://www.ready.noaa.gov/HYSPLIT.php>`_, NOAA's
+       Lagrangian model, on ARL met files. Its ``mode`` also makes
+       concentration grids or single trajectories.
+     - :doc:`../reference/hysplit`
+   * - ``flexpart``
+     - `FLEXPART 11 <https://www.flexpart.eu>`_, a Lagrangian particle
+       dispersion model you build yourself, on ERA5 GRIB files.
+     - :doc:`../reference/flexpart`
+
+A model from another package gets a block of any name with ``class:`` and
+the import path of its class, such as ``class: mypkg.models.MyModel``
+(:doc:`../reference/execution`, "Transport model"). A ``config.yaml`` without a
+``models`` block is refused with a message that lists these.
 
 The same project in Python
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -165,6 +194,29 @@ three variants make 300 simulations. A variant may set:
 ``model``
    Which block under ``models`` it runs. You need it only when ``models``
    has more than one entry.
+
+Here one project runs every release twice, under HYSPLIT on HRRR and under
+FLEXPART on ERA5, each variant naming its model and its met:
+
+.. code-block:: yaml
+
+   mets:
+     hrrr: /data/arl/hrrr     # ARL files, for HYSPLIT
+     era5: /data/era5         # GRIB files from flex_extract, for FLEXPART
+
+   models:
+     hysplit:
+       n_hours: -24
+       numpar: 1000
+     flexpart:
+       directory: /path/to/flexpart
+       eta: true
+       n_hours: -24
+       numpar: 1000
+
+   variants:
+     hrrr: {model: hysplit}     # each variant is named after its met
+     era5: {model: flexpart}
 
 ``stages``
    The settings of a stage this variant changes, under the stage's name,

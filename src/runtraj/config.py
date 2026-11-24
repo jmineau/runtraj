@@ -415,14 +415,16 @@ class ProjectConfig(BaseModel):
         ),
     )
     models: dict[str, dict[str, Any] | None] = Field(
-        default_factory=lambda: {"hysplit": {}},
+        default_factory=dict,
         description=(
             "Transport models by name, each a block of its settings: the "
-            "defaults of every variant that runs it. A block named "
-            "``hysplit`` is that built-in model. Any other model class gets a "
+            "defaults of every variant that runs it. At least one is "
+            "required: runtraj has no default model. A block named for a "
+            "built-in model (:data:`runtraj.models.MODELS`: ``hysplit`` or "
+            "``flexpart``) is that model, and ``hysplit: {}`` runs HYSPLIT "
+            "with its own defaults. Any other model class gets a "
             "block of any name that gives its import path as ``class``, such "
-            "as ``class: mypkg.models.MyModel``. A model has "
-            "one block. Left out, the project runs HYSPLIT with its defaults."
+            "as ``class: mypkg.models.MyModel``. A model has one block."
         ),
     )
     stages: dict[str, dict[str, Any]] = Field(
@@ -879,13 +881,16 @@ def _model_blocks(
     Raises
     ------
     ValueError
-        If there is no block, a block names no model, two blocks name one
+        If there is no block (runtraj has no default model), a block names no model, two blocks name one
         model, or a block holds what is no setting of its model.
     """
     if not models:
         raise ValueError(
-            "models: has no block. Leave it out to run HYSPLIT with its "
-            "defaults, or write models: {hysplit: {}}."
+            "The config names no transport model. Add a models: block for the "
+            f"one to run: a built-in model ({', '.join(sorted(MODELS))}), such "
+            "as\n  models:\n    hysplit: {}\nto run it with its own defaults, "
+            "or a block of any name with class: and the import path of a model "
+            "class in another package, such as class: mypkg.models.MyModel."
         )
     blocks: dict[str, tuple[str, dict[str, Any]]] = {}
     block_of: dict[str, str] = {}

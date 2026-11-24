@@ -127,7 +127,8 @@ class FlexpartConfig(TransportConfig):
         description=(
             "OpenMP threads. FLEXPART seeds each thread's random numbers with "
             "a fixed number, so the thread count changes the particles and is "
-            "recorded with the run. Each release runs FLEXPART with this many "
+            "recorded with the run. A run with one thread repeats exactly; "
+            "a run with several repeats only in distribution. Each release runs FLEXPART with this many "
             "threads, whatever ``OMP_NUM_THREADS`` is, so ask for ``threads`` "
             "cores for every release that runs at once (``cpus``)."
         ),
@@ -140,7 +141,7 @@ class FlexpartConfig(TransportConfig):
         if seed is not None:
             raise ValueError(
                 "FLEXPART has no seed: it seeds each OpenMP thread with a fixed "
-                "number, so a run is repeated by its thread count (threads)."
+                "number, so a run with threads: 1 repeats exactly."
             )
         return seed
 
@@ -232,9 +233,10 @@ def flexpart_version(directory: str | Path) -> str:
 #: ERA5's -228 W m-2 and 0.40 N m-2. With no turbulence the particles
 #: stayed at a median 8 m in a 1000 m mixed layer.
 GFS_REFUSED = (
-    "FLEXPART 11 does not mix its particles on GFS: it derives GFS's surface "
-    "heat flux and stress from the 2 m and 10 m values, which come out near "
-    "zero, so the particles stay near the ground. Use ERA5, as flex_extract writes it."
+    "On current GFS pgrb2 files FLEXPART 11 derives the surface heat flux and "
+    "stress near zero (the files hold no surface fluxes, so it derives them from "
+    "the 2 m and 10 m values), so particles released near the ground stay near "
+    "it. Use ERA5, as flex_extract writes it."
 )
 
 
@@ -246,9 +248,10 @@ class FlexpartMetConfig(MetConfig):
     reads the valid time from each file's first message, so the names do
     not matter. Which weather model the files come from is read from the
     first file too (:meth:`source`): ERA5 as flex_extract writes it (``EA*``
-    files on model levels) runs, and GFS is refused, because FLEXPART 11
-    derives GFS's surface heat flux and stress itself, they come out near
-    zero, and its particles do not mix (:doc:`/reference/flexpart`).
+    files on model levels) runs, and GFS is refused, because on current GFS
+    ``pgrb2`` files FLEXPART 11 derives the surface heat flux and stress near
+    zero, so particles released near the ground stay near it
+    (:doc:`/reference/flexpart`).
 
     A string in ``config.yaml`` is the ``directory``: ``era5: /path/to/era5``.
     """
@@ -310,8 +313,8 @@ class FlexpartMetConfig(MetConfig):
         FileNotFoundError
             If ``directory`` holds no GRIB file that matches ``pattern``.
         ValueError
-            If the files are GFS, on which FLEXPART 11 does not mix its
-            particles, or are not ERA5.
+            If the files are GFS (FLEXPART 11 derives its surface fluxes
+            near zero), or are not ERA5.
         """
         if self._source is None:
             from runtraj.models.flexpart.met import grib_source
