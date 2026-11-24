@@ -45,6 +45,11 @@ LOCK_POLL_SECONDS = 2
 #: Seconds between a holder's rewrites of its lock, which keep it from
 #: looking stale while the holder works for longer than :data:`LOCK_STALE_SECONDS`.
 LOCK_REFRESH_SECONDS = 60
+#: Times a holder tries to remove its lock when the system says the file is in use,
+#: and the seconds between tries. Windows refuses to remove a file that a waiting
+#: program has open for a look; the waiter closes it within moments.
+LOCK_REMOVE_TRIES = 10
+LOCK_REMOVE_WAIT_SECONDS = 0.05
 
 
 def hash_inputs(directory: str | Path) -> str:
@@ -463,12 +468,21 @@ def _release(fs: fsspec.AbstractFileSystem, path: str, token: str | bytes) -> bo
     Remove the lock file *path* if it still holds *token*; return whether it did.
 
     Reading first keeps a program from removing a lock another has taken
-    over since.
+    over since. Windows refuses to remove a file while a waiting program has
+    it open to read, so a refusal is tried again a few times
+    (:data:`LOCK_REMOVE_TRIES`) before it is raised.
     """
     try:
         if fs.read_text(path, encoding="utf-8") != token:
             return False
-        fs.rm_file(path)
+        for attempt in range(LOCK_REMOVE_TRIES):
+            try:
+                fs.rm_file(path)
+                break
+            except PermissionError:
+                if attempt == LOCK_REMOVE_TRIES - 1:
+                    raise
+                time.sleep(LOCK_REMOVE_WAIT_SECONDS)
     except FileNotFoundError:
         return False
     return True

@@ -425,6 +425,28 @@ def test_a_lock_taken_over_is_left_to_its_new_holder(bucket, caplog):
     assert "was taken over" in caplog.text
 
 
+def test_a_lock_is_removed_when_a_waiter_has_it_open_for_a_moment(
+    bucket, monkeypatch, caplog
+):
+    """Windows refuses to remove a file another program has open; the holder tries again."""
+    monkeypatch.setattr(inputs, "LOCK_REMOVE_WAIT_SECONDS", 0)
+    fs, root = fsspec.core.url_to_fs(bucket)
+    remove, refusals = fs.rm_file, []
+
+    def busy_twice(path):
+        if len(refusals) < 2:
+            refusals.append(path)
+            raise PermissionError("[WinError 32] in use by another process")
+        remove(path)
+
+    monkeypatch.setattr(fs, "rm_file", busy_twice)
+    with inputs.lock(bucket, "releases.csv"):
+        pass
+    assert len(refusals) == 2
+    assert not fs.exists(f"{root}/.releases.csv.lock")
+    assert "Could not remove" not in caplog.text
+
+
 def test_a_lock_that_cannot_be_made_is_an_os_error(bucket, monkeypatch):
     def refuse(*args):
         raise RuntimeError("the store went away")
