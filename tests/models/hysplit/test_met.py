@@ -1,7 +1,6 @@
 """Tests for HYSPLIT's met config and its files (runtraj.models.hysplit.met)."""
 
 import datetime as dt
-import logging
 import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -550,18 +549,31 @@ def test_readable_returns_local_files_where_they_are(tmp_path):
     assert sorted(p.name for p in tmp_path.iterdir()) == ["met"]
 
 
-def test_readable_keeps_the_first_of_two_files_with_one_name(tmp_path, caplog):
-    first = tmp_path / "met" / "a" / "20230101_12"
-    second = tmp_path / "met" / "b" / "20230101_12"
-
+def test_readable_keeps_files_of_one_name_in_two_folders(tmp_path):
+    """One folder per day, each with a wrfout_d02.arl: two files, both needed."""
+    first = write_arl_file(
+        tmp_path / "met" / "2023-01-01" / "wrf.arl", times=SIX_HOURS[:3]
+    )
+    second = write_arl_file(
+        tmp_path / "met" / "2023-01-02" / "wrf.arl", times=SIX_HOURS[3:]
+    )
     met = _make_met(tmp_path / "met")
-    with caplog.at_level(logging.WARNING):
-        files = met.readable([first, second])
 
-    assert files == [first]
-    assert "duplicate basename" in caplog.text
-    assert str(first) in caplog.text
-    assert str(second) in caplog.text
+    assert met.readable([first, second, first]) == [first, second]
+
+
+def test_files_of_one_name_in_two_folders_get_two_crops(tmp_path):
+    met = _archive_met(tmp_path)
+    days = [tmp_path / "archive" / day / "20230101_12" for day in ("a", "b")]
+    for day, times in zip(days, (SIX_HOURS[:3], SIX_HOURS[3:]), strict=True):
+        write_arl_file(day, times=times)
+
+    with patch("arlmet.extract_subset", side_effect=_fake_extract()):
+        files = met.readable([d.resolve() for d in days])
+
+    assert len(set(files)) == 2
+    assert all(f.parent == met.crop_dir for f in files)
+    assert {f.name.split(".")[0] for f in files} == {"20230101_12"}
 
 
 def test_a_global_met_grid_holds_every_longitude(tmp_path):
