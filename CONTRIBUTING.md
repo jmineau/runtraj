@@ -344,8 +344,8 @@ those two only where the model differs. The model itself subclasses
 other member has a default in the base class, for a model that runs one
 release at a time, reads no files and makes particles; override the ones
 your model does differently. runtraj calls each member directly, so a
-public name spelled almost like one (`release_row` for `release_rows`) is
-refused when the class is defined. `sha256` (the checksum of the
+misspelled one (`release_row` for `release_rows`) is never called;
+`check_model` reports it. `sha256` (the checksum of the
 executable it runs, `None` by default: part of the run's settings),
 `version` (what the build reports, recorded beside them) and `data_files`
 describe the build. `sha256` raises `FileNotFoundError` when
@@ -521,8 +521,8 @@ stages:
   new ones in a folder of its own. A stage that never sets it keeps the
   folders it has.
 
-runtraj calls each member directly, so a public name spelled almost like
-one (`read` for `reads`) is refused when the class is defined.
+runtraj calls each member directly, so a misspelled one (`read` for
+`reads`) is never called; `check_stage` reports it.
 
 `path` is a `pathlib.Path`, or a `upath.UPath` when the output directory
 is on an object store. Write through `path.open()`, which both have, and

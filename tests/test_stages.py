@@ -52,27 +52,28 @@ class _NoSuffix(Stage[CountConfig]):
 
 
 def test_a_stage_that_sets_no_suffix_is_refused():
-    with pytest.raises(ValueError, match="is not a stage: it sets no suffix"):
+    with pytest.raises(ValueError, match="is not a stage: it has no suffix"):
         get_stage("tests.test_stages._NoSuffix")
 
 
-def test_a_stage_without_run_cannot_be_made():
-    class NoRun(Stage[CountConfig]):
-        name = "norun"
-        config_class = CountConfig
-        suffix = ".txt"
-
-    with pytest.raises(TypeError, match="abstract method 'run'|abstract method run"):
-        NoRun()
+class _NoRun(Stage[CountConfig]):
+    name = "norun"
+    config_class = CountConfig
+    suffix = ".txt"
 
 
-def test_a_name_spelled_almost_like_a_hook_is_refused_when_the_class_is_defined():
-    with pytest.raises(
-        TypeError, match="Count.read is spelled almost like the stage hook 'reads'"
-    ):
+def test_a_stage_without_run_is_refused():
+    with pytest.raises(ValueError, match="is not a stage: it has no run"):
+        get_stage("tests.test_stages._NoRun")
 
-        class Count(CountStage):
-            read = ("double",)
+
+def test_check_stage_reports_a_name_spelled_almost_like_a_hook():
+    class Count(CountStage):
+        read = ("double",)
+        counted = True  # a helper of its own, spelled like no hook
+
+    with pytest.raises(AssertionError, match="Count.read is spelled almost like"):
+        check_stage(Count(), CountConfig())
 
 
 def test_a_stage_keeps_the_defaults_it_does_not_override():

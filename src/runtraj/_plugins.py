@@ -54,19 +54,16 @@ def import_class(path: str) -> Any:
         ) from None
 
 
-def refuse_near_misses(cls: type, hooks: Iterable[str], kind: str) -> None:
+def near_miss(cls: type, hooks: Iterable[str]) -> str | None:
     """
-    Refuse a public name of *cls* that is not one of *hooks* but is spelled almost like one.
+    Return what to say of a public name *cls* defines that is spelled almost like one of *hooks*, or ``None``.
 
-    A misspelled hook, such as ``release_row`` for ``release_rows``, would
-    otherwise be a method runtraj never calls, and the base class's default
-    would run in its place. Only the names *cls* itself defines are
-    checked, so a subclass's own helpers with other names are left alone.
-
-    Raises
-    ------
-    TypeError
-        Naming the attribute and the hook it is spelled like.
+    A misspelled hook, such as ``release_row`` for ``release_rows``, is a
+    method runtraj never calls: the base class's default runs in its place.
+    Only the names *cls* itself defines are looked at. A helper can be
+    spelled like a hook on purpose (``check_release`` beside
+    ``check_releases``), so this is for a plug-in's tests to report
+    (``check_model``, ``check_stage``), never a reason to refuse a class.
     """
     hooks = set(hooks)
     for attr in vars(cls):
@@ -74,11 +71,12 @@ def refuse_near_misses(cls: type, hooks: Iterable[str], kind: str) -> None:
             continue
         close = difflib.get_close_matches(attr, hooks, n=1, cutoff=0.85)
         if close:
-            raise TypeError(
-                f"{cls.__qualname__}.{attr} is spelled almost like the {kind} "
-                f"hook {close[0]!r}, which runtraj would call instead. Rename it "
-                f"{close[0]} to override the hook, or give it another name."
+            return (
+                f"{cls.__qualname__}.{attr} is spelled almost like the hook "
+                f"{close[0]!r}, which runtraj calls instead. Rename it {close[0]} "
+                "to override the hook, or give it another name."
             )
+    return None
 
 
-__all__ = ["import_class", "refuse_near_misses"]
+__all__ = ["import_class", "near_miss"]

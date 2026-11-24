@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from runtraj._plugins import import_class, refuse_near_misses
+from runtraj._plugins import import_class, near_miss
 from runtraj.identity import canonical
 from runtraj.results import RESULT_TYPES
 
@@ -80,9 +80,9 @@ class Stage(ABC, Generic[C]):
     A stage sets :attr:`name`, :attr:`config_class` and :attr:`suffix`, and
     implements :meth:`run`; :meth:`resolve`, :meth:`settings`,
     :meth:`check`, :attr:`reads`, :attr:`result` and :attr:`version` have
-    defaults here. runtraj calls each member directly, and a public name
-    spelled almost like one, such as ``read``, is refused when the class is
-    defined. It is generic in its config, ``class MyStage(Stage[MyConfig])``,
+    defaults here. runtraj calls each member directly, so a misspelled one
+    (``read``) is never called; :func:`check_stage` reports it. It is
+    generic in its config, ``class MyStage(Stage[MyConfig])``,
     and is made with no arguments and holds no state: everything a stage
     needs is in its config and the simulation it is handed.
 
@@ -127,11 +127,6 @@ class Stage(ABC, Generic[C]):
     #: instead of counting the old ones complete. Raise it only for such a
     #: fix; a stage that never sets it keeps the folders it has.
     version: str | None = None
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Refuse a public name spelled almost like a hook, as ``read`` is."""
-        super().__init_subclass__(**kwargs)
-        refuse_near_misses(cls, _stage_hooks(), "stage")
 
     def resolve(
         self,
@@ -274,8 +269,9 @@ def get_stage(path: str) -> Stage:
             f"{path} is not a stage: its class must subclass runtraj.stages.Stage."
         )
     missing = [m for m in ("name", "config_class", "suffix") if not hasattr(cls, m)]
+    missing += sorted(cls.__abstractmethods__)
     if missing:
-        raise ValueError(f"{path} is not a stage: it sets no {', '.join(missing)}.")
+        raise ValueError(f"{path} is not a stage: it has no {', '.join(missing)}.")
     stage = cls()
     name = stage.name
     if not isinstance(name, str) or not STAGE_NAME_RE.fullmatch(name):
@@ -357,7 +353,10 @@ def check_stage(stage: Stage, config: Any) -> None:
     stage has. It checks that the record :meth:`Stage.settings` writes is
     plain data, and that :attr:`Stage.config_class` reads it back to a
     config with the same record: a stored settings folder is found that
-    way, so a stage that breaks it finds none of its results.
+    way, so a stage that breaks it finds none of its results. It also
+    checks that no public name of the stage's class is spelled almost like
+    a member of :class:`Stage`, as ``read`` is, which runtraj would never
+    call.
 
     Raises
     ------
@@ -367,6 +366,8 @@ def check_stage(stage: Stage, config: Any) -> None:
     assert isinstance(stage, Stage), (
         f"{type(stage).__name__} must subclass runtraj.stages.Stage"
     )
+    miss = near_miss(type(stage), _stage_hooks())
+    assert miss is None, miss
     assert STAGE_NAME_RE.fullmatch(stage.name), (
         f"name {stage.name!r} must match {STAGE_NAME_RE.pattern}"
     )

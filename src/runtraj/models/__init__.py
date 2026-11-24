@@ -26,7 +26,7 @@ import pandas as pd
 import xarray as xr
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from runtraj._plugins import import_class, refuse_near_misses
+from runtraj._plugins import import_class, near_miss
 from runtraj.exceptions import SimulationError
 from runtraj.meteorology import run_window
 from runtraj.particles import (
@@ -196,9 +196,8 @@ class TransportModel(ABC, Generic[C]):
     a time and makes particles, so a model overrides only what it does
     differently: HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)
     overrides most, a model in Python that reads no files few. runtraj calls
-    each member directly. A public name spelled almost like one of them,
-    such as ``release_row``, is refused when the class is defined, since
-    runtraj would call the default instead.
+    each member directly, so a misspelled one (``release_row``) is never
+    called; :func:`check_model` reports it.
 
     It is generic in its config: ``class MyModel(TransportModel[MyConfig])``
     gives :meth:`run` and the other members a ``MyConfig``. It is made with
@@ -239,11 +238,6 @@ class TransportModel(ABC, Generic[C]):
     #: of a variant that needs particles at once, where it otherwise calls
     #: :meth:`run` for one at a time.
     batched: bool = False
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Refuse a public name spelled almost like a hook, as ``release_row`` is."""
-        super().__init_subclass__(**kwargs)
-        refuse_near_misses(cls, _model_hooks(), "transport model")
 
     @abstractmethod
     def run(
@@ -488,10 +482,9 @@ def get_model(name: str) -> TransportModel:
     Raises
     ------
     ValueError
-        If *name* is not a built-in model and not an import path.
-    TypeError
-        If the class at the import path does not subclass
-        :class:`TransportModel`, or lacks one of its required members.
+        If *name* is not a built-in model and not an import path, or the
+        class at the import path does not subclass :class:`TransportModel`
+        or lacks one of its required members.
     MissingClass
         If *name* is an import path that cannot be imported on this machine
         (an :class:`ImportError`).
@@ -499,7 +492,7 @@ def get_model(name: str) -> TransportModel:
     if "." in name:
         cls = import_class(name)
         if not (isinstance(cls, type) and issubclass(cls, TransportModel)):
-            raise TypeError(
+            raise ValueError(
                 f"{name} is not a transport model: its class must subclass "
                 "runtraj.models.TransportModel."
             )
@@ -507,9 +500,11 @@ def get_model(name: str) -> TransportModel:
             member
             for member in ("name", "config_class", "met_config_class")
             if not hasattr(cls, member)
-        ]
+        ] + sorted(cls.__abstractmethods__)
         if missing:
-            raise TypeError(f"{name} sets no {', '.join(missing)}.")
+            raise ValueError(
+                f"{name} is not a transport model: it has no {', '.join(missing)}."
+            )
         return cls()
     factory = MODELS.get(name)
     if factory is None:
@@ -921,7 +916,9 @@ def check_model(
     Call it from the tests of a transport model of your own, as
     :func:`runtraj.stages.check_stage` is for a stage. It checks that:
 
-    - *model* subclasses :class:`TransportModel` and sets ``name``;
+    - *model* subclasses :class:`TransportModel` and sets ``name``, and no
+      public name of its class is spelled almost like a member of the base
+      class, as ``release_row`` is, which runtraj would never call;
     - ``config_class`` is a :class:`TransportConfig` whose fields use none
       of :data:`RESERVED_SETTINGS`, and ``met_config_class`` a pydantic
       model;
@@ -965,6 +962,8 @@ def check_model(
         f"{name} must subclass runtraj.models.TransportModel"
     )
     assert isinstance(model.name, str) and model.name, f"{name}.name must be a string"
+    miss = near_miss(type(model), _model_hooks())
+    assert miss is None, miss
     assert isinstance(model.config_class, type) and issubclass(
         model.config_class, TransportConfig
     ), f"{name}.config_class must subclass runtraj.models.TransportConfig"

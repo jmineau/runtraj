@@ -330,25 +330,26 @@ def test_a_model_keeps_the_defaults_it_does_not_override():
         model.run_many([], None, None, [])
 
 
-def test_a_model_without_run_cannot_be_made():
-    class NoRun(TransportModel):
-        name = "norun"
-
-    with pytest.raises(TypeError, match="abstract method 'run'|abstract method run"):
-        NoRun()
+class _NoRun(TransportModel):
+    name = "norun"
+    config_class = ToyConfig
+    met_config_class = ToyMet
 
 
-def test_a_name_spelled_almost_like_a_hook_is_refused_when_the_class_is_defined():
-    with pytest.raises(
-        TypeError,
-        match="Typo.release_row is spelled almost like the transport model hook 'release_rows'",
-    ):
+def test_get_model_refuses_a_model_without_run():
+    with pytest.raises(ValueError, match="is not a transport model: it has no run"):
+        models.get_model("tests.models.test_models._NoRun")
 
-        class Typo(_Defaults):
-            def release_row(self, particles, release):
-                return None
+
+def test_check_model_reports_a_name_spelled_almost_like_a_hook():
+    class Typo(ToyModel):
+        def release_row(self, particles, release):
+            return None
+
+    with pytest.raises(AssertionError, match="Typo.release_row is spelled almost"):
+        models.check_model(Typo(), ToyConfig(n_hours=-1))
 
 
 def test_get_model_refuses_a_class_that_is_not_a_transport_model():
-    with pytest.raises(TypeError, match="must subclass runtraj.models.TransportModel"):
+    with pytest.raises(ValueError, match="must subclass runtraj.models.TransportModel"):
         models.get_model("tests.fixtures.models.ToyConfig")
