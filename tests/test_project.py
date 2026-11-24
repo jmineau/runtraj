@@ -513,7 +513,7 @@ def test_run_refuses_a_release_the_project_does_not_have(tmp_path, ran):
 def test_submit_needs_the_slurm_backend(tmp_path):
     project = _project(tmp_path)
 
-    with pytest.raises(ValueError, match="submit sends work to Slurm"):
+    with pytest.raises(ValueError, match="submit sends work to a scheduler"):
         project.submit()
 
 
@@ -536,7 +536,7 @@ def test_run_on_slurm_submits_and_waits(tmp_path, monkeypatch):
 
     monkeypatch.setattr("runtraj.execution.slurm.submit_array", submit)
     monkeypatch.setattr("runtraj.execution.slurm.wait", wait)
-    monkeypatch.setattr("runtraj.execution.runner.time.sleep", slept.append)
+    monkeypatch.setattr("runtraj.execution.slurm.time.sleep", slept.append)
 
     status = project.run(compute_root="/s")
 

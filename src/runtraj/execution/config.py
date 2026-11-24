@@ -68,7 +68,46 @@ class FetchConfig(BaseModel):
         return value
 
 
-class LocalConfig(BaseModel):
+class BackendConfig(BaseModel):
+    """
+    A backend's block under ``execution``: the settings of one place a project runs.
+
+    :class:`LocalConfig`, :class:`SlurmConfig` and :class:`KubernetesConfig`
+    subclass it, and so does the block of a backend in another package
+    (:class:`runtraj.execution.Backend`). Every block has ``cpus``, the
+    releases a task runs at once, and ``fetch``, whether the met files are
+    got once before the releases run. ``tasks`` is how many tasks share the
+    releases, and :meth:`check` refuses a block its backend cannot run with.
+
+    Examples
+    --------
+    >>> BackendConfig(cpus=2).tasks
+    1
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    cpus: int = Field(1, ge=1, description="Releases a task runs at once.")
+    fetch: bool | FetchConfig = Field(
+        False,
+        description="Get the met files a met with ``download`` lacks once, before the releases run.",
+    )
+
+    @property
+    def tasks(self) -> int:
+        """The number of tasks that share the releases (one, unless a subclass says more)."""
+        return 1
+
+    def check(self) -> None:
+        """
+        Raise ``ValueError`` when the block lacks a setting its backend needs.
+
+        :class:`ExecutionConfig` calls it on the block ``backend`` names
+        only, so a block that is not used may leave such a setting out.
+        """
+
+
+class LocalConfig(BackendConfig):
     """
     How a project's releases run on this machine: the ``local`` block of ``execution``.
 
@@ -94,7 +133,7 @@ class LocalConfig(BaseModel):
     )
 
 
-class SlurmConfig(BaseModel):
+class SlurmConfig(BackendConfig):
     """
     The Slurm job array a project's releases run as: the ``slurm`` block of ``execution``.
 
@@ -205,6 +244,20 @@ class SlurmConfig(BaseModel):
         """The other ``sbatch`` options, by name: every key of the block that is not one of its settings."""
         return dict(self.model_extra or {})
 
+    @property
+    def tasks(self) -> int:
+        """The number of array tasks, ``n_workers``."""
+        return self.n_workers
+
+    def check(self) -> None:
+        """Raise when the array has no time limit."""
+        if self.time is None:
+            raise ValueError(
+                "execution.slurm.time is required with backend: slurm, such as "
+                "time: '02:00:00'. Without it each task gets the partition's "
+                "default time limit, which can be days."
+            )
+
 
 #: A Kubernetes memory quantity in its binary units: ``512Mi``, ``8Gi``, ``1.5Ti``.
 _K8S_MEMORY = r"\d+(\.\d+)?(Ki|Mi|Gi|Ti|Pi|Ei)"
@@ -295,7 +348,7 @@ class Volume(BaseModel):
         return value
 
 
-class KubernetesConfig(BaseModel):
+class KubernetesConfig(BackendConfig):
     """
     The Kubernetes indexed Job a project's releases run as: the ``kubernetes`` block of ``execution``.
 
@@ -475,6 +528,20 @@ class KubernetesConfig(BaseModel):
             check_url(value)
         return value
 
+    @property
+    def tasks(self) -> int:
+        """The number of tasks, ``completions``."""
+        return self.completions
+
+    def check(self) -> None:
+        """Raise when the pods have no image."""
+        if self.image is None:
+            raise ValueError(
+                "execution.kubernetes.image is required with backend: kubernetes: "
+                "an image with runtraj, the transport model and the project's "
+                "stages (runtraj publishes none)."
+            )
+
 
 def check_url(location: str) -> None:
     """
@@ -507,6 +574,50 @@ def check_url(location: str) -> None:
     )
 
 
+def _did_you_mean(key: str, blocks: dict[str, type[BackendConfig]]) -> str:
+    """Return `` Did you mean ...?`` naming the setting of ``execution``, or of a block, closest to *key*, or ``""``."""
+    names = {name: "" for name in ExecutionConfig.model_fields}
+    for block, config_class in blocks.items():
+        for name in config_class.model_fields:
+            names.setdefault(name, f", under execution: {block}:")
+    close = difflib.get_close_matches(str(key), list(names), n=1, cutoff=0.8)
+    return f" Did you mean {close[0]!r}{names[close[0]]}?" if close else ""
+
+
+#: The blocks of the backends built in, by the name ``backend`` gives them.
+BUILT_IN_BLOCKS: dict[str, type[BackendConfig]] = {
+    "local": LocalConfig,
+    "slurm": SlurmConfig,
+    "kubernetes": KubernetesConfig,
+}
+
+
+def block_name(backend: str) -> str:
+    """
+    Return the name of the block under ``execution`` that holds *backend*'s settings.
+
+    A built-in backend's block has its name. A backend named by its import
+    path has the block of its class's ``name``, so the class is imported.
+
+    Examples
+    --------
+    >>> block_name("slurm")
+    'slurm'
+
+    Raises
+    ------
+    ValueError
+        If *backend* is not a built-in backend and not an import path.
+    MissingClass
+        If *backend* is an import path that cannot be imported here.
+    """
+    if backend in BUILT_IN_BLOCKS:
+        return backend
+    from runtraj.execution.backends import get_backend
+
+    return get_backend(backend).name
+
+
 class ExecutionConfig(BaseModel):
     """
     Where a project's releases run, and with what resources.
@@ -516,9 +627,11 @@ class ExecutionConfig(BaseModel):
     machine as one task (:class:`LocalConfig`). With ``backend: slurm``
     they are split among the tasks of one Slurm job array
     (:class:`SlurmConfig`), and with ``backend: kubernetes`` among the pods
-    of one indexed Job (:class:`KubernetesConfig`). Only the block
-    ``backend`` names is read, so a config can hold several and be run
-    either way. ``timeout`` and
+    of one indexed Job (:class:`KubernetesConfig`). A backend in another
+    package is named by the import path of its class
+    (:class:`runtraj.execution.Backend`), and its block is under the
+    class's ``name``. Only the block ``backend`` names is read, so a config
+    can hold several and be run either way. ``timeout`` and
     ``keep_workdir`` apply wherever a run happens. None of these settings
     change a result.
 
@@ -533,13 +646,17 @@ class ExecutionConfig(BaseModel):
     4
     """
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    # A backend in another package keeps its block as an extra key, under
+    # its name; any other key is refused (_known_keys).
+    model_config = ConfigDict(extra="allow", frozen=True)
 
-    backend: Literal["local", "slurm", "kubernetes"] = Field(
+    backend: str = Field(
         "local",
         description=(
             "Where to run: on this machine (``local``), as a Slurm job array "
-            "(``slurm``), or as a Kubernetes indexed Job (``kubernetes``)."
+            "(``slurm``), as a Kubernetes indexed Job (``kubernetes``), or with "
+            "a backend in another package, named by the import path of its "
+            "class, such as ``mypkg.backends.MyBackend``."
         ),
     )
     local: LocalConfig = Field(
@@ -581,58 +698,71 @@ class ExecutionConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _no_setting_outside_its_block(cls, data: Any) -> Any:
-        """Refuse a backend's setting written beside ``backend``, naming the block it belongs in."""
-        if isinstance(data, dict):
-            for key in data:
-                if key in cls.model_fields:
-                    continue
-                blocks = [
-                    name
-                    for name, block in (
-                        ("local", LocalConfig),
-                        ("slurm", SlurmConfig),
-                        ("kubernetes", KubernetesConfig),
-                    )
-                    if key in block.model_fields
-                ]
-                if blocks:
-                    names = [f"execution: {name}:" for name in blocks]
-                    where = " or ".join(
-                        [", ".join(names[:-1]), names[-1]] if len(names) > 2 else names
-                    )
-                    raise ValueError(
-                        f"{key!r} is a setting of a backend. Write it under {where}"
-                        + (", for the backend it is for." if len(blocks) > 1 else ".")
-                    )
+    def _known_keys(cls, data: Any) -> Any:
+        """
+        Read a backend in another package's block, and refuse any other key that is not a setting.
+
+        A backend's setting written beside ``backend`` is refused naming the
+        block it belongs in.
+        """
+        if not isinstance(data, dict):
+            return data
+        blocks = dict(BUILT_IN_BLOCKS)
+        backend = data.get("backend", "local")
+        if isinstance(backend, str) and backend not in BUILT_IN_BLOCKS:
+            from runtraj.execution.backends import get_backend
+
+            found = get_backend(backend)
+            if found.name in cls.model_fields:
+                raise ValueError(
+                    f"{backend} names its block {found.name!r}, which is a "
+                    "setting of execution; its name must be another."
+                )
+            blocks[found.name] = found.config_class
+            data = {
+                **data,
+                found.name: found.config_class.model_validate(
+                    data.get(found.name) or {}
+                ),
+            }
+        for key in data:
+            if key in cls.model_fields or key in blocks:
+                continue
+            owners = [
+                name for name, block in blocks.items() if key in block.model_fields
+            ]
+            if owners:
+                names = [f"execution: {name}:" for name in owners]
+                where = " or ".join(
+                    [", ".join(names[:-1]), names[-1]] if len(names) > 2 else names
+                )
+                raise ValueError(
+                    f"{key!r} is a setting of a backend. Write it under {where}"
+                    + (", for the backend it is for." if len(owners) > 1 else ".")
+                )
+            raise ValueError(
+                f"{key!r} is not a setting of execution." + _did_you_mean(key, blocks)
+            )
         return data
 
     @model_validator(mode="after")
-    def _slurm_needs_time(self) -> Self:
-        """Raise when a Slurm run has no time limit."""
-        if self.backend == "slurm" and self.slurm.time is None:
-            raise ValueError(
-                "execution.slurm.time is required with backend: slurm, such as "
-                "time: '02:00:00'. Without it each task gets the partition's "
-                "default time limit, which can be days."
-            )
+    def _block_can_run(self) -> Self:
+        """Raise when the block ``backend`` names lacks a setting its backend needs."""
+        self.block.check()
         return self
 
-    @model_validator(mode="after")
-    def _kubernetes_needs_image(self) -> Self:
-        """Raise when a Kubernetes run names no image."""
-        if self.backend == "kubernetes" and self.kubernetes.image is None:
-            raise ValueError(
-                "execution.kubernetes.image is required with backend: kubernetes: "
-                "an image with runtraj, the transport model and the project's "
-                "stages (runtraj publishes none)."
-            )
-        return self
+    @property
+    def block(self) -> BackendConfig:
+        """The block of the backend ``backend`` names, the one a run reads."""
+        name = block_name(self.backend)
+        if name in BUILT_IN_BLOCKS:
+            return getattr(self, name)
+        return (self.model_extra or {})[name]
 
     @property
     def cpus(self) -> int:
         """Releases a task runs at once: ``cpus`` of the block ``backend`` names."""
-        return getattr(self, self.backend).cpus
+        return self.block.cpus
 
     @property
     def fetch(self) -> bool | FetchConfig:
@@ -642,9 +772,7 @@ class ExecutionConfig(BaseModel):
         On Kubernetes each pod gets them before its share runs, one pod at a
         time (:ref:`fetch-once`).
         """
-        if self.backend == "kubernetes":
-            return self.kubernetes.fetch
-        return self.local.fetch if self.backend == "local" else self.slurm.fetch
+        return self.block.fetch
 
 
 def slurm_minutes(time: str | int) -> int:
@@ -691,12 +819,15 @@ def slurm_minutes(time: str | int) -> int:
 
 
 __all__ = [
+    "BUILT_IN_BLOCKS",
+    "BackendConfig",
     "ExecutionConfig",
     "FetchConfig",
     "KubernetesConfig",
     "LocalConfig",
     "SlurmConfig",
     "Volume",
+    "block_name",
     "check_url",
     "slurm_minutes",
 ]

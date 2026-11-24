@@ -69,9 +69,10 @@ from runtraj._paths import is_url
 from runtraj._transient import is_transient
 from runtraj.exceptions import MissingClass, WorkerDied
 from runtraj.execution import schedule as schedules
+from runtraj.execution.backends import Backend, get_backend
 from runtraj.execution.config import ExecutionConfig, check_url
 from runtraj.execution.inputs import hash_inputs, pull
-from runtraj.execution.kubernetes import project_jobs, schedule_job
+from runtraj.execution.kubernetes import schedule_job
 from runtraj.execution.runner import fetch_shared, pending, resolve_compute_root
 from runtraj.project import STATES, Project
 
@@ -280,7 +281,10 @@ def check(project: str | None = _PROJECT_ARG) -> None:
 _BACKEND = typer.Option(
     None,
     "--backend",
-    help="Where to run: local, slurm or kubernetes. Overrides execution.backend in config.yaml.",
+    help=(
+        "Where to run: local, slurm, kubernetes, or the import path of a "
+        "backend's class. Overrides execution.backend in config.yaml."
+    ),
 )
 _N_WORKERS = typer.Option(
     None,
@@ -449,8 +453,10 @@ def _start(
         except (OSError, yaml.YAMLError) as error:
             _fail(f"cannot read {execution_file}: {error}")
     if task is not None:
-        if backend == "slurm":
-            _fail("--task runs here, as one task of a job array; drop --backend slurm.")
+        if backend not in (None, "local"):
+            _fail(
+                f"--task runs here, as one task of a job array; drop --backend {backend}."
+            )
         backend = "local"
     # Progress is the worker's one line per finished release.
     logging.basicConfig(level=logging.WARNING, format="%(message)s")
@@ -462,13 +468,13 @@ def _start(
     if n_workers is not None:
         settings["slurm"] = {**(settings.get("slurm") or {}), "n_workers": n_workers}
     if cpus is not None:
-        block = settings.get("backend", "local")
+        block = _backend(settings.get("backend", "local")).name
         settings[block] = {**(settings.get(block) or {}), "cpus": cpus}
     try:
         execution = ExecutionConfig.model_validate(settings)
     except ValidationError as error:
         _fail(_settings_problems(error))
-    if execution.backend == "local":
+    if _backend(execution.backend).here:
         # Resolved once, here, so the banner shows the directory the run uses.
         # A Slurm task resolves its own, on its node.
         compute_root = str(resolve_compute_root(opened, compute_root))
@@ -680,6 +686,14 @@ def _run_and_exit(
     raise typer.Exit(code=_exit_code(table))
 
 
+def _backend(name: str) -> Backend:
+    """Return the backend *name* names, or exit with 2 saying why it cannot be found."""
+    try:
+        return get_backend(name)
+    except (MissingClass, TypeError, ValueError) as error:
+        _fail(str(error))
+
+
 def _configured_backend(project: str | None) -> str | None:
     """Return ``execution.backend`` as ``config.yaml`` writes it, or ``None``; the file is checked when the project opens."""
     path = Path(_resolve_project(project)) / "config.yaml"
@@ -720,11 +734,13 @@ def submit(
     Check on them with runtraj status.
     """
     if backend is None:
-        backend = (
-            "kubernetes" if _configured_backend(project) == "kubernetes" else "slurm"
+        configured = _configured_backend(project)
+        backend = "slurm" if configured in (None, "local") else configured
+    if _backend(backend).here:
+        _fail(
+            f"--backend for submit is a scheduler, such as slurm or kubernetes, "
+            f"not {backend!r}."
         )
-    if backend not in ("slurm", "kubernetes"):
-        _fail(f"--backend for submit is slurm or kubernetes, not {backend!r}.")
     release_ids, rows = (None, None) if releases is None else _read_releases(releases)
     opened, options = _start(
         project,
@@ -910,22 +926,20 @@ def status(
 
 def _jobs(project: Project) -> list[dict[str, Any]] | str | None:
     """
-    Return the project's Kubernetes Jobs, why they could not be listed, or ``None`` on another backend.
+    Return the project's jobs, why they could not be listed, or ``None`` on a backend that lists none.
 
     Not reaching the cluster is not an error of ``runtraj status``: the
     counts come from the output directory, so they print either way.
     """
     execution = project.config.execution
-    if execution.backend != "kubernetes":
-        return None
     try:
-        return project_jobs(project, execution)
+        return get_backend(execution.backend).jobs(project, execution)
     except (FileNotFoundError, RuntimeError) as error:
         return str(error)
 
 
 def _print_jobs(jobs: list[dict[str, Any]] | str) -> None:
-    """Print the project's Kubernetes Jobs, one line each, or why they could not be listed."""
+    """Print the project's jobs, one line each, or why they could not be listed."""
     if isinstance(jobs, str):
         typer.echo(f"Jobs: not listed. {jobs}")
         return
@@ -1148,19 +1162,14 @@ def _print_run_start(
     task: tuple[int, int] | None = None,
 ) -> None:
     """Print the settings ``runtraj run`` is about to use."""
-    backend = execution.backend
+    backend = get_backend("local" if task is not None else execution.backend)
     mode = "existing" if skip_existing else "no-skip"
     if task is not None:
         # A task of a job array runs here; "backend=local" would read as if
         # the array had not been used.
         where = f"task {task[0]} of {task[1]}"
     else:
-        tasks = {
-            "local": 1,
-            "slurm": execution.slurm.n_workers,
-            "kubernetes": execution.kubernetes.completions,
-        }[backend]
-        where = f"backend={backend}  tasks={tasks}"
+        where = f"backend={execution.backend}  tasks={execution.block.tasks}"
     typer.echo(
         f"Starting run: project={project.directory}  {where}  "
         f"cpus={execution.cpus}  skip={mode}"
@@ -1177,15 +1186,4 @@ def _print_run_start(
         i, n = task
         typer.echo(f"Releases of this task: {i}, {i + n}, {i + 2 * n}, ...")
     typer.echo(f"Variants: {', '.join(project.variants)}")
-    if task is not None or backend == "local":
-        typer.echo("Running here, one line per release as it finishes")
-    elif waits:
-        typer.echo(
-            "Submitting to Slurm and waiting for the job to finish (squeue shows its tasks)"
-        )
-    elif backend == "kubernetes":
-        typer.echo(
-            "Making a Kubernetes indexed Job and returning (kubectl get jobs shows it)"
-        )
-    else:
-        typer.echo("Submitting to Slurm and returning")
+    typer.echo(backend.describe(waits))

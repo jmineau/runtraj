@@ -1,7 +1,7 @@
 """
 The Slurm backend: a project's unfinished releases as a job array, and a task that Slurm stops.
 
-With ``backend: slurm``, :func:`runtraj.execution.submit` writes a job array
+With ``backend: slurm`` (:class:`SlurmBackend`), :func:`runtraj.execution.submit` writes a job array
 script into ``_slurm/<stamp>/`` in the project and submits it with
 ``sbatch`` (:func:`submit_array`). Each task of the array runs ``runtraj
 run --task``, so a task is a command line that can be read, and run again,
@@ -33,8 +33,10 @@ import pyarrow as pa
 import yaml
 
 from runtraj._paths import write_parquet
-from runtraj.execution.config import ExecutionConfig, FetchConfig
+from runtraj.execution.backends import Backend
+from runtraj.execution.config import ExecutionConfig, FetchConfig, SlurmConfig
 from runtraj.execution.runner import (
+    RELIST_SECONDS,
     _project_slug,
     _status,
     _to_fetch,
@@ -441,6 +443,67 @@ def wait(
     return states
 
 
+class SlurmBackend(Backend):
+    """
+    The ``slurm`` backend: the releases as the tasks of one Slurm job array (:func:`submit_array`).
+
+    ``runtraj run`` waits for the array with ``sacct`` (:func:`wait`), and
+    when some simulations look unfinished after it ends, lists their
+    results once more :data:`runtraj.execution.runner.RELIST_SECONDS`
+    later, since a network filesystem can show this node new files late.
+    """
+
+    name = "slurm"
+    config_class = SlurmConfig
+    waits = True
+
+    def submit(
+        self,
+        project: Project,
+        releases: list[str],
+        execution: ExecutionConfig,
+        *,
+        skip_existing: bool,
+        compute_root: str | Path | None,
+    ) -> str:
+        """Submit the job array, after its fetch job when a met downloads, and return its job id."""
+        job_id, _ = submit_array(
+            project, releases, execution, skip_existing, compute_root
+        )
+        return job_id
+
+    def run(
+        self,
+        project: Project,
+        releases: list[str],
+        execution: ExecutionConfig,
+        *,
+        skip_existing: bool,
+        compute_root: str | Path | None,
+    ) -> pd.DataFrame:
+        """Submit the job array, wait for every task to end, and return the status table of *releases*."""
+        job_id, cluster = submit_array(
+            project, releases, execution, skip_existing, compute_root
+        )
+        wait(job_id, cluster=cluster)
+        table = _status(project, releases)
+        if _unfinished(table):
+            logger.info(
+                "Some simulations look unfinished; listing again in %d s, in "
+                "case this node sees the compute nodes' files late.",
+                RELIST_SECONDS,
+            )
+            time.sleep(RELIST_SECONDS)
+            table = _status(project, releases)
+        return table
+
+    def describe(self, waits: bool) -> str:
+        """Return the line ``runtraj run`` or ``runtraj submit`` prints before it submits."""
+        if waits:
+            return "Submitting to Slurm and waiting for the job to finish (squeue shows its tasks)"
+        return "Submitting to Slurm and returning"
+
+
 # ---------------------------------------------------------------------------
 # A task that is told to stop
 # ---------------------------------------------------------------------------
@@ -561,6 +624,7 @@ def _requeue() -> bool:
 __all__ = [
     "MAX_REQUEUES",
     "NOTICE_SECONDS",
+    "SlurmBackend",
     "fetch_script",
     "job_script",
     "run_task",

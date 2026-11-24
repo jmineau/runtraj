@@ -14,14 +14,14 @@ import logging
 import os
 import re
 import tempfile
-import time
 from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from runtraj._paths import absolute
 from runtraj._transient import is_transient
-from runtraj.execution.config import ExecutionConfig
+from runtraj.execution.backends import Backend, get_backend, not_waited
+from runtraj.execution.config import ExecutionConfig, LocalConfig
 from runtraj.execution.inputs import lock
 from runtraj.fetch import downloads, fetch_project
 
@@ -276,6 +276,8 @@ def run(
     and this waits for it. When some simulations look unfinished after the
     job ends, their results are listed once more :data:`RELIST_SECONDS`
     later, since a network filesystem can show this node new files late.
+    Another backend runs them as its :meth:`~runtraj.execution.Backend.run`
+    does, and one that runtraj does not wait for (``kubernetes``) is refused.
 
     Parameters
     ----------
@@ -312,8 +314,8 @@ def run(
     Raises
     ------
     ValueError
-        If a release id is not in the project, or *task* is not from 0 to
-        ``n - 1``.
+        If a release id is not in the project, *task* is not from 0 to
+        ``n - 1``, or the backend is not waited for.
 
     Notes
     -----
@@ -325,61 +327,114 @@ def run(
     stopped by ``scancel`` is not requeued.
     """
     execution = execution if execution is not None else project.config.execution
-    if execution.backend == "kubernetes" and task is None:
-        raise ValueError(
-            "run() waits for its runs, and a Kubernetes Job is not waited "
-            "for here. Use submit() (runtraj submit), and runtraj status to "
-            "follow it."
-        )
+    backend = get_backend(execution.backend)
+    if task is None and not backend.waits:
+        raise ValueError(not_waited(backend))
     todo = pending(project, releases=releases, task=task, skip_existing=skip_existing)
     if not todo:
         logger.info("run: every simulation is complete; nothing to do")
-    elif execution.backend == "slurm" and task is None:
+        return _status(project, todo)
+    if task is not None:
+        # One task of a job array, in this process, whatever the backend.
         from . import slurm
 
-        job_id, cluster = slurm.submit_array(
-            project, todo, execution, skip_existing, compute_root
+        return slurm.run_task(
+            project,
+            todo,
+            lambda: run_here(project, todo, execution, skip_existing, compute_root),
         )
-        slurm.wait(job_id, cluster=cluster)
-        table = _status(project, todo)
-        if _unfinished(table):
-            logger.info(
-                "Some simulations look unfinished; listing again in %d s, in "
-                "case this node sees the compute nodes' files late.",
-                RELIST_SECONDS,
-            )
-            time.sleep(RELIST_SECONDS)
-            table = _status(project, todo)
-        return table
-    else:
-        logger.info("run(%s): %d releases", ", ".join(project.variants), len(todo))
-        # In this process, so Ctrl-C and SIGTERM stop the workers cleanly
-        # and progress prints as it happens.
-        from .worker import run_releases
+    return backend.run(
+        project,
+        todo,
+        execution,
+        skip_existing=skip_existing,
+        compute_root=compute_root,
+    )
 
-        def work() -> None:
-            run_releases(
-                project,
-                todo,
-                compute_root=resolve_compute_root(project, compute_root),
-                execution=execution,
-                skip_existing=skip_existing,
-            )
 
-        if task is None:
-            unrun = (
-                _to_fetch(project, todo, execution, skip_existing)
-                if execution.cpus > 1
-                else None
-            )
-            if unrun is not None:
-                _fetch_here(project, unrun)
-            work()
-        else:
-            from . import slurm
+def run_here(
+    project: Project,
+    release_ids: list[str],
+    execution: ExecutionConfig,
+    skip_existing: bool,
+    compute_root: str | Path | None,
+) -> None:
+    """Run *release_ids* in this process, ``cpus`` at a time, so Ctrl-C and SIGTERM stop the workers and progress prints as it happens."""
+    from .worker import run_releases
 
-            return slurm.run_task(project, todo, work)
-    return _status(project, todo)
+    logger.info("run(%s): %d releases", ", ".join(project.variants), len(release_ids))
+    run_releases(
+        project,
+        release_ids,
+        compute_root=resolve_compute_root(project, compute_root),
+        execution=execution,
+        skip_existing=skip_existing,
+    )
+
+
+#: Why :func:`submit` refuses the ``local`` backend.
+NOTHING_TO_SUBMIT = (
+    "submit sends work to a scheduler, and this run's backend is 'local'. "
+    "Use run(), or set execution.backend to slurm or kubernetes."
+)
+
+
+class LocalBackend(Backend):
+    """
+    The ``local`` backend: the releases run here, in this process, ``cpus`` at a time.
+
+    With ``cpus`` above 1 and a met that downloads, the met files are got
+    first, unless ``execution.local.fetch`` is ``false``, so the workers do
+    not download the same file at once. There is nothing to submit.
+    """
+
+    name = "local"
+    config_class = LocalConfig
+    waits = True
+    here = True
+
+    def submit(
+        self,
+        project: Project,
+        releases: list[str],
+        execution: ExecutionConfig,
+        *,
+        skip_existing: bool,
+        compute_root: str | Path | None,
+    ) -> str:
+        """
+        Raise: a local run has nothing to submit.
+
+        Raises
+        ------
+        ValueError
+            Always.
+        """
+        raise ValueError(NOTHING_TO_SUBMIT)
+
+    def run(
+        self,
+        project: Project,
+        releases: list[str],
+        execution: ExecutionConfig,
+        *,
+        skip_existing: bool,
+        compute_root: str | Path | None,
+    ) -> pd.DataFrame:
+        """Get the met files first when the workers would download them at once, run *releases* here, and return their status table."""
+        unrun = (
+            _to_fetch(project, releases, execution, skip_existing)
+            if execution.cpus > 1
+            else None
+        )
+        if unrun is not None:
+            _fetch_here(project, unrun)
+        run_here(project, releases, execution, skip_existing, compute_root)
+        return _status(project, releases)
+
+    def describe(self, waits: bool) -> str:
+        """Return the line a local run prints before it starts."""
+        return "Running here, one line per release as it finishes"
 
 
 def submit(
@@ -391,7 +446,7 @@ def submit(
     compute_root: str | Path | None = None,
 ) -> str | None:
     """
-    Submit every simulation of a project that has not finished to Slurm or Kubernetes.
+    Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.
 
     The releases with missing results are split among up to ``n_workers``
     tasks of one job array, and this returns once it is submitted. The
@@ -421,7 +476,9 @@ def submit(
     (:func:`runtraj.execution.kubernetes.submit_job`), and creates it with
     ``kubectl``. Each task runs its share of every release of the project
     and skips the complete ones, so *releases* and ``skip_existing=False``
-    are refused there, and *compute_root* is each pod's own.
+    are refused there, and *compute_root* is each pod's own. Another
+    backend starts its tasks as its :meth:`~runtraj.execution.Backend.submit`
+    does.
 
     Parameters
     ----------
@@ -441,46 +498,41 @@ def submit(
     Raises
     ------
     ValueError
-        If the execution backend is ``local``, or on Kubernetes with
-        *releases* or ``skip_existing=False``.
+        If the execution backend is ``local``, or one that takes no list
+        of releases (Kubernetes) with *releases* or ``skip_existing=False``.
     """
     execution = execution if execution is not None else project.config.execution
-    if execution.backend == "local":
+    backend = get_backend(execution.backend)
+    if backend.here:
+        raise ValueError(NOTHING_TO_SUBMIT)
+    if not backend.takes_releases and (releases is not None or not skip_existing):
         raise ValueError(
-            "submit sends work to Slurm or Kubernetes, and this run's backend "
-            "is 'local'. Use run(), or set execution.backend to slurm or "
-            "kubernetes."
-        )
-    if execution.backend == "kubernetes" and (
-        releases is not None or not skip_existing
-    ):
-        raise ValueError(
-            "A Kubernetes Job runs every unfinished release of the project and "
-            "skips the complete ones, as a retried pod must: it takes no list "
-            "of releases and no --no-skip."
+            f"A {backend.name} job runs every unfinished release of the project "
+            "and skips the complete ones, as a retried task must: it takes no "
+            "list of releases and no --no-skip."
         )
     todo = pending(project, releases=releases, skip_existing=skip_existing)
     if not todo:
         logger.info("submit: every simulation is complete; nothing to do")
         return None
-    if execution.backend == "kubernetes":
-        from .kubernetes import submit_job
-
-        return submit_job(project, todo, execution)
-    from . import slurm
-
-    job_id, _ = slurm.submit_array(
-        project, todo, execution, skip_existing, compute_root
+    return backend.submit(
+        project,
+        todo,
+        execution,
+        skip_existing=skip_existing,
+        compute_root=compute_root,
     )
-    return job_id
 
 
 __all__ = [
     "FETCH_LOCK",
+    "LocalBackend",
+    "NOTHING_TO_SUBMIT",
     "RELIST_SECONDS",
     "fetch_shared",
     "resolve_compute_root",
     "run",
+    "run_here",
     "submit",
     "task_share",
 ]

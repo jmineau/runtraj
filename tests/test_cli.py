@@ -828,7 +828,9 @@ JOB = {
 
 def test_status_lists_the_project_s_jobs_on_kubernetes(tmp_path, monkeypatch):
     project = _on_kubernetes(_project(tmp_path))
-    monkeypatch.setattr("runtraj.cli.project_jobs", lambda project, execution: [JOB])
+    monkeypatch.setattr(
+        "runtraj.execution.kubernetes.project_jobs", lambda project, execution: [JOB]
+    )
 
     result = _invoke("status", project=project)
 
@@ -843,7 +845,9 @@ def test_status_lists_the_project_s_jobs_on_kubernetes(tmp_path, monkeypatch):
 
 def test_status_as_json_has_the_jobs_on_kubernetes(tmp_path, monkeypatch):
     project = _on_kubernetes(_project(tmp_path))
-    monkeypatch.setattr("runtraj.cli.project_jobs", lambda project, execution: [JOB])
+    monkeypatch.setattr(
+        "runtraj.execution.kubernetes.project_jobs", lambda project, execution: [JOB]
+    )
 
     result = _invoke("status", "--json", project=project)
 
@@ -857,7 +861,7 @@ def test_status_still_counts_when_the_jobs_cannot_be_listed(tmp_path, monkeypatc
     def refuse(project, execution):
         raise FileNotFoundError("kubectl is not installed, or not on PATH.")
 
-    monkeypatch.setattr("runtraj.cli.project_jobs", refuse)
+    monkeypatch.setattr("runtraj.execution.kubernetes.project_jobs", refuse)
 
     result = _invoke("status", project=project)
 
@@ -870,7 +874,7 @@ def test_status_lists_no_jobs_on_another_backend(tmp_path, monkeypatch):
     def unexpected(project, execution):
         raise AssertionError("kubectl was asked")
 
-    monkeypatch.setattr("runtraj.cli.project_jobs", unexpected)
+    monkeypatch.setattr("runtraj.execution.kubernetes.project_jobs", unexpected)
 
     result = _invoke("status", "--json", project=_project(tmp_path))
 

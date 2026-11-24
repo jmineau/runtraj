@@ -139,14 +139,14 @@ def test_a_job_on_another_cluster_is_followed_there(
     project = _hourly_project(tmp_path, 2)
     pending.extend(project.releases["release"])
     monkeypatch.setattr(
-        runner, "_status", lambda project, ids: pd.DataFrame({"state": ["complete"]})
+        slurm, "_status", lambda project, ids: pd.DataFrame({"state": ["complete"]})
     )
     commands.answers["sbatch"] = [_out("777;kingspeak\n")]
     commands.answers["sacct"] = [
         _out("777_0|RUNNING|0:0\n"),
         _out("777_0|COMPLETED|0:0\n"),
     ]
-    monkeypatch.setattr(runner.time, "sleep", lambda seconds: None)
+    monkeypatch.setattr(slurm.time, "sleep", lambda seconds: None)
     execution = ExecutionConfig(
         backend="slurm", slurm={"time": "01:00:00", "clusters": "kingspeak"}
     )
@@ -168,11 +168,11 @@ def test_a_run_lists_once_more_when_the_files_look_late(
     pending.extend(project.releases["release"])
     listings = iter([["pending"], ["complete"]])
     monkeypatch.setattr(
-        runner, "_status", lambda project, ids: pd.DataFrame({"state": next(listings)})
+        slurm, "_status", lambda project, ids: pd.DataFrame({"state": next(listings)})
     )
     monkeypatch.setattr(slurm, "wait", lambda job_id, cluster=None: {})
     slept: list[float] = []
-    monkeypatch.setattr(runner.time, "sleep", slept.append)
+    monkeypatch.setattr(slurm.time, "sleep", slept.append)
     commands.answers["sbatch"] = [_out("5\n")]
 
     table = runner.run(

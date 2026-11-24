@@ -104,15 +104,19 @@ src/runtraj/
   trajectories.py   the trajectory table and its Parquet file
   models/         TransportModel/TransportConfig base classes, MODELS (hysplit), get_model, run_model, check_model
     hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
-  execution/      ExecutionConfig (a block per backend), runner (plan, local run), slurm (job array, requeue), worker,
+  execution/      ExecutionConfig (a block per backend), backends (Backend, get_backend: a backend by name or import path),
+                  runner (plan, local run), slurm (job array, requeue), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
   sampling.py     sample_field: a gridded field read at points
   meteorology.py, spatial.py, visualization.py, exceptions.py, _paths.py
 ```
 
-**A run** (`runtraj run`, `Project.run()`, `submit()`) happens in this process
-or as a Slurm job array whose tasks each run `runtraj run --task i/N`. The unit
+**A run** (`runtraj run`, `Project.run()`, `submit()`) happens where its
+backend says (`execution.backend`, a `Backend` found by `get_backend`): in this
+process, or as tasks (a Slurm job array, a Kubernetes indexed Job) that each
+run `runtraj run --task i/N`. A backend only starts tasks and, if it can, waits;
+the branches on its name live in its class, not in `cli.py` or `runner.py`. The unit
 of work is a release: the worker runs the model once per run-settings hash,
 then each missing stage file of the variants that share the particles, a
 stage after the ones it `reads` and again when one of those was remade

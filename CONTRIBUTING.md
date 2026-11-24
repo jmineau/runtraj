@@ -635,9 +635,12 @@ check, a registry, or a manifest. Call these instead.
 ## Changing how work is run
 
 `runtraj.execution.run` (`execution/runner.py`) finds the releases with
-missing results. A local run calls `run_releases` in this process. A Slurm
-run goes through `submit`, which hands the releases to the Slurm backend
-(`execution/slurm.py`, beside `execution/kubernetes.py`); it writes `releases.txt`,
+missing results and hands them to the backend `execution.backend` names
+(`get_backend`, `execution/backends.py`): `LocalBackend` calls
+`run_releases` in this process, `SlurmBackend` (`execution/slurm.py`) and
+`KubernetesBackend` (`execution/kubernetes.py`) start tasks. Anything that
+differs between backends is a method or attribute of their class, never a
+branch on `execution.backend` elsewhere. The Slurm backend writes `releases.txt`,
 `releases.parquet` (the submitted releases' checked rows, which tasks
 read in place of `releases.csv`), `execution.yaml`, and `job.sh`
 (`job_script`) into `_slurm/<stamp>/` and calls `sbatch`. When a met
@@ -647,12 +650,20 @@ waits for it.
 The unit of work is a command line: `runtraj run <project> --releases FILE
 --task I/N`. Any scheduler that can start it with an index can run a
 project; the task requeues itself on `SIGUSR1` inside a Slurm job. Another
-scheduler means another script writer, not another worker.
+scheduler means another `Backend` subclass, not another worker: its
+`submit` starts the tasks, and `run` (with `waits = True`) and `jobs` are
+optional. One in another package is named by its import path in
+`backend:`, and its block, its `config_class` (a `BackendConfig`), is
+under its `name`; `tests/fixtures/backends.py` is a toy one.
 
-A new `execution:` setting goes on its backend's block (`LocalConfig` or
-`SlurmConfig` in `execution/config.py`) with a description; only a setting
-that applies wherever a run happens goes on `ExecutionConfig` itself. A new
-backend gets a block of its own, named as `backend:` names it. Settings that
+A new `execution:` setting goes on its backend's block (`LocalConfig`,
+`SlurmConfig` or `KubernetesConfig` in `execution/config.py`) with a
+description; only a setting that applies wherever a run happens goes on
+`ExecutionConfig` itself. A setting a backend cannot run without is
+checked in its block's `check`, which runs only when that backend is
+used. A new built-in backend gets a block of its own, a field of
+`ExecutionConfig` named as `backend:` names it, and a line in
+`BACKENDS` and `BUILT_IN_BLOCKS`. Settings that
 only `sbatch` understands do not need a field: users write them in the
 `slurm:` block by `sbatch`'s own names.
 

@@ -279,21 +279,28 @@ def test_a_backends_setting_beside_backend_is_refused_naming_its_block(
 
 def test_unknown_execution_setting_is_an_error(tmp_path):
     """A typo, or an sbatch option outside `slurm:`, used to be ignored or passed on."""
-    with pytest.raises(ValueError, match=r"execution\.partion\s+Extra inputs"):
+    with pytest.raises(
+        ValueError,
+        match=r"'partion' is not a setting of execution\. Did you mean 'partition', under execution: slurm:\?",
+    ):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
             mets=_met_config(tmp_path),
             execution={"partion": "compute"},
             variants={"hrrr": {}},
         )
-    with pytest.raises(ValueError, match=r"execution\.requeue\s+Extra inputs"):
+    with pytest.raises(
+        ValueError, match=r"'requeue' is not a setting of execution\. \["
+    ):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
             mets=_met_config(tmp_path),
             execution={"requeue": True},
             variants={"hrrr": {}},
         )
-    with pytest.raises(ValueError, match=r"execution\.cpus_per_task\s+Extra inputs"):
+    with pytest.raises(
+        ValueError, match=r"'cpus_per_task' is not a setting of execution\. \["
+    ):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
             mets=_met_config(tmp_path),

@@ -1,7 +1,7 @@
 """
 Running a project as a Kubernetes indexed Job.
 
-``runtraj submit`` with ``backend: kubernetes`` makes one indexed Job of
+``runtraj submit`` with ``backend: kubernetes`` (:class:`KubernetesBackend`) makes one indexed Job of
 ``completions`` tasks, each a pod that runs ``runtraj run <project> --task
 I/N`` (:func:`job_manifest`), and creates it with ``kubectl``. Kubernetes
 retries a task from its exit code (``podFailurePolicy``):
@@ -41,7 +41,8 @@ from uuid import uuid4
 import yaml
 
 from runtraj._paths import is_url
-from runtraj.execution.config import SCRATCH, ExecutionConfig
+from runtraj.execution.backends import Backend
+from runtraj.execution.config import SCRATCH, ExecutionConfig, KubernetesConfig
 from runtraj.execution.inputs import RELEASES, has_file, hash_inputs, push
 from runtraj.execution.schedule import DELAY_HOURS, read_sites
 from runtraj.fetch import downloads
@@ -712,6 +713,45 @@ def submit_job(project: Project, pending: list[str], execution: ExecutionConfig)
     return name
 
 
+class KubernetesBackend(Backend):
+    """
+    The ``kubernetes`` backend: the releases as the pods of one indexed Job (:func:`submit_job`).
+
+    ``runtraj submit`` makes the Job and returns; ``runtraj status`` lists
+    the project's Jobs (:func:`project_jobs`). A pod that Kubernetes
+    retries runs its share of every release again and skips the complete
+    ones, so a submit takes no list of releases and no ``--no-skip``.
+    """
+
+    name = "kubernetes"
+    config_class = KubernetesConfig
+    takes_releases = False
+
+    def submit(
+        self,
+        project: Project,
+        releases: list[str],
+        execution: ExecutionConfig,
+        *,
+        skip_existing: bool,
+        compute_root: str | Path | None,
+    ) -> str:
+        """Make the indexed Job, and return its name; *compute_root* is each pod's own, so it is not used."""
+        return submit_job(project, releases, execution)
+
+    def jobs(
+        self, project: Project, execution: ExecutionConfig
+    ) -> list[dict[str, Any]] | None:
+        """Return the project's Jobs on the cluster, oldest first (:func:`project_jobs`)."""
+        return project_jobs(project, execution)
+
+    def describe(self, waits: bool) -> str:
+        """Return the line ``runtraj submit`` prints before it makes the Job."""
+        return (
+            "Making a Kubernetes indexed Job and returning (kubectl get jobs shows it)"
+        )
+
+
 def schedule_job(
     project: Project, execution: ExecutionConfig, *, delay: int = DELAY_HOURS
 ) -> str:
@@ -765,6 +805,7 @@ def schedule_job(
 
 __all__ = [
     "FS_GROUP",
+    "KubernetesBackend",
     "KEEP_FINISHED",
     "PROJECT_ANNOTATION",
     "PROJECT_LABEL",

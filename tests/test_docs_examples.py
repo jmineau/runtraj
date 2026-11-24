@@ -18,6 +18,8 @@ from pydantic import ConfigDict
 from runtraj.execution.config import ExecutionConfig
 from runtraj.models import MetConfig, TransportConfig, TransportModel
 
+from .fixtures.backends import QueueBackend
+
 DOCS = Path(__file__).parent.parent / "docs"
 README = DOCS.parent / "README.md"
 
@@ -171,6 +173,17 @@ def mypkg(monkeypatch):
     monkeypatch.setitem(sys.modules, "mypkg.models", models)
 
 
+@pytest.fixture
+def mypkg_backends(monkeypatch):
+    """Make the docs' placeholder backend, ``mypkg.backends.QueueBackend``, importable."""
+    package = types.ModuleType("mypkg")
+    package.__path__ = []
+    backends = types.ModuleType("mypkg.backends")
+    backends.QueueBackend = QueueBackend  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "mypkg", package)
+    monkeypatch.setitem(sys.modules, "mypkg.backends", backends)
+
+
 @pytest.mark.parametrize("block", [b for _, b in PYTHON], ids=[n for n, _ in PYTHON])
 def test_python_examples_in_the_docs_compile(block):
     compile(block, "<docs>", "exec")
@@ -196,5 +209,5 @@ def test_shell_examples_in_the_docs_are_valid_bash(block):
 @pytest.mark.parametrize(
     "execution", [e for _, e in EXECUTION], ids=[n for n, _ in EXECUTION]
 )
-def test_execution_examples_in_the_docs_are_valid(execution):
+def test_execution_examples_in_the_docs_are_valid(execution, mypkg_backends):
     ExecutionConfig.model_validate(execution)
