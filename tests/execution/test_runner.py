@@ -48,7 +48,7 @@ def test_submit_writes_a_submission_and_hands_it_to_sbatch(pending, commands, tm
     execution = ExecutionConfig(
         backend="slurm",
         timeout=600,
-        slurm={"time": "01:00:00", "n_workers": 2, "cpus": 4},
+        slurm={"time": "01:00:00", "n_workers": 2},
     )
     commands.answers["sbatch"] = [_out("777;cluster\n")]
 
