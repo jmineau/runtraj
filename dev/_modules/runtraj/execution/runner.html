@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=3d2ee12e"></script>
+    <script src="../../../_static/documentation_options.js?v=bef77295"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev19+g3127f852c" />
+  <meta name="docsearch:version" content="0.1.0a5.dev20+g7b560c8bd" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -924,8 +924,10 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.</span>
 
-<span class="sd">    The releases with missing results are split among up to ``n_workers``</span>
-<span class="sd">    tasks of one job array, and this returns once it is submitted. The</span>
+<span class="sd">    The releases with missing results are split among the ``n_tasks``</span>
+<span class="sd">    tasks of one job array (:func:`runtraj.execution.slurm.array_size`), at</span>
+<span class="sd">    most ``n_workers`` running at once, and this returns once it is</span>
+<span class="sd">    submitted. The</span>
 <span class="sd">    submission is a folder ``_slurm/&lt;date_time&gt;_&lt;id&gt;/`` in the project:</span>
 <span class="sd">    ``releases.txt`` lists the releases to run, ``releases.parquet``</span>
 <span class="sd">    holds their checked rows from ``releases.csv``, ``execution.yaml``</span>

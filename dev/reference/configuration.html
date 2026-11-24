@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=3d2ee12e"></script>
+    <script src="../_static/documentation_options.js?v=bef77295"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev19+g3127f852c" />
+  <meta name="docsearch:version" content="0.1.0a5.dev20+g7b560c8bd" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1812,31 +1812,31 @@ its name. Only that block is read, so a config can hold several.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">FetchConfig(partition=None,</span> <span class="pre">account=None,</span> <span class="pre">qos=None,</span> <span class="pre">time=None,</span> <span class="pre">mem=None)</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></p></td>
-<td><p>Number of array tasks, which the releases are split evenly among.</p></td>
+<td><p>Most array tasks running at once (<code class="docutils literal notranslate"><span class="pre">--array=0-999%100</span></code> for 100). Each task asks for <code class="docutils literal notranslate"><span class="pre">cpus</span></code> CPUs.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_tasks</span></code></p></td>
+<td><p>Number of array tasks, which the releases are split evenly among. Unset, ten per worker. Never more than one per release, nor more than the cluster’s <code class="docutils literal notranslate"><span class="pre">MaxArraySize</span></code> (<code class="docutils literal notranslate"><span class="pre">scontrol</span> <span class="pre">show</span> <span class="pre">config</span></code>).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
 <td><p>Time limit per task, as <code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code>, <code class="docutils literal notranslate"><span class="pre">D-HH:MM:SS</span></code>, or minutes. Required with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>: without it a task gets the partition’s default, which can be days.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mem</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mem</span></code></p></td>
 <td><p>Memory per task, such as <code class="docutils literal notranslate"><span class="pre">8G</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">partition</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">partition</span></code></p></td>
 <td><p>Slurm partition.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">account</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">account</span></code></p></td>
 <td><p>Slurm account.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qos</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">qos</span></code></p></td>
 <td><p>Slurm quality of service.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">array_parallelism</span></code></p></td>
-<td><p>Most tasks running at once. Unset leaves it to Slurm.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">setup</span></code></p></td>

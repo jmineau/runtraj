@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=3d2ee12e"></script>
+    <script src="../../_static/documentation_options.js?v=bef77295"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev19+g3127f852c" />
+  <meta name="docsearch:version" content="0.1.0a5.dev20+g7b560c8bd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -969,8 +969,10 @@
 <dt class="sig sig-object py" id="runtraj.execution.submit">
 <span class="sig-prename descclassname"><span class="pre">runtraj.execution.</span></span><span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">releases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/execution/runner.html#submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.submit" title="Link to this definition">#</a></dt>
 <dd><p>Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.</p>
-<p>The releases with missing results are split among up to <code class="docutils literal notranslate"><span class="pre">n_workers</span></code>
-tasks of one job array, and this returns once it is submitted. The
+<p>The releases with missing results are split among the <code class="docutils literal notranslate"><span class="pre">n_tasks</span></code>
+tasks of one job array (<code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.execution.slurm.array_size()</span></code>), at
+most <code class="docutils literal notranslate"><span class="pre">n_workers</span></code> running at once, and this returns once it is
+submitted. The
 submission is a folder <code class="docutils literal notranslate"><span class="pre">_slurm/&lt;date_time&gt;_&lt;id&gt;/</span></code> in the project:
 <code class="docutils literal notranslate"><span class="pre">releases.txt</span></code> lists the releases to run, <code class="docutils literal notranslate"><span class="pre">releases.parquet</span></code>
 holds their checked rows from <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">execution.yaml</span></code>
