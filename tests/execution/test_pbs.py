@@ -77,6 +77,7 @@ def test_ten_subjobs_per_worker_unless_told():
 # ---------------------------------------------------------------------------
 
 
+@not_on_windows("PBS and its job scripts are for Linux")
 def test_job_script_asks_for_what_the_execution_settings_say(tmp_path):
     project = _project_at(tmp_path / "My_Project", output=tmp_path / "out")
     folder = tmp_path / "My_Project" / "_pbs" / "stamp"
