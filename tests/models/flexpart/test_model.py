@@ -406,9 +406,9 @@ def test_era5_runs_on_the_meter_build(checkout, era5, tmp_path):
 )
 @not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, era5, tmp_path):
+    """FLEXPART's documentation asks for ``ulimit -s unlimited`` with OpenMP."""
     import resource
 
-    """FLEXPART's documentation asks for ``ulimit -s unlimited`` with OpenMP."""
     soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
     expected = "unlimited" if hard == resource.RLIM_INFINITY else str(hard // 1024)
     # A low soft limit here, as many systems set, which FLEXPART would inherit.
