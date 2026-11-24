@@ -54,10 +54,9 @@ maintainer keeps beside its files is a starting point. Each process reads the fo
 new or changed, and a run reads it again when the table has no file for one of its hours.
 On a large archive the first read takes minutes, so run ``runtraj check``
 before a batch: it builds the table, and every simulation starts from it.
-Files of two products or two grids that hold the same time fail the run,
-naming both, and so do two copies of one file. A file whose every hour a
-longer file of the same product holds, such as a short copy, is passed over
-for the longer one.
+Two files in the folder that hold the same time fail the run, naming both:
+files of two products or two grids, two copies of one file, or a short copy
+of a file beside it. Move one of them out.
 
 Files that fail a run
 ~~~~~~~~~~~~~~~~~~~~~

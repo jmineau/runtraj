@@ -1154,17 +1154,16 @@ def test_two_products_at_different_times_share_a_folder(tmp_path):
     assert [p.name for p in files] == ["old", "new"]
 
 
-def test_a_short_copy_of_one_product_does_not_hide_the_whole_file(tmp_path):
-    """The file that holds the most is used when one holds only part of what another does."""
-    (whole,) = _hrrr_files(tmp_path, ["20210115_00-05_hrrr"])
+def test_a_short_copy_beside_the_whole_file_fails_the_run_naming_both(tmp_path):
+    """Nothing says the two hold the same data, so neither is picked."""
+    _hrrr_files(tmp_path, ["20210115_00-05_hrrr"])
     write_arl_file(
         tmp_path / "short",
         times=pd.date_range("2021-01-15 00:00", periods=2, freq="h"),
     )
 
-    assert _make_met(tmp_path).files_for(("2021-01-15 00:00", "2021-01-15 01:00")) == [
-        whole
-    ]
+    with pytest.raises(MeteorologyError, match="is in two files"):
+        _make_met(tmp_path).files_for(("2021-01-15 00:00", "2021-01-15 01:00"))
 
 
 def test_a_3_hourly_met_beside_an_hourly_file_that_sorts_first(tmp_path):

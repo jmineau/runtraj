@@ -311,4 +311,4 @@ cache-keys = [
 
 # arlmet.catalog is not released yet: arl-met#250's branch until it is.
 [tool.uv.sources]
-arlmet = { git = "https://github.com/jmineau/arl-met", rev = "899f0502" }
+arlmet = { git = "https://github.com/jmineau/arl-met", rev = "bffc9f69" }

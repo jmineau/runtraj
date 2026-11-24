@@ -459,7 +459,7 @@ class Met:
             **_spans_of(self._catalog(self.crop_dir)),
         }
         # A file wholly inside another is dropped, the longer kept and a crop
-        # before an archive file, as arlmet.catalog does within one folder.
+        # before an archive file: a short crop and the archive's whole file.
         found = dict.fromkeys([*crops.files, *(p for f in fills for p in f.files)])
         kept: list[Path] = []
         for path in sorted(
@@ -955,7 +955,7 @@ def _look_up(
         if "is in two files" not in str(error):
             raise
         return _Cover(
-            clash=f"{error} Keep each product in its own folder, and give each its own met."
+            clash=f"{error} If they are two products, keep each in its own folder, with its own met."
         )
     stretches: list[tuple[pd.Timestamp, pd.Timestamp]] = []
     step = catalog.step
