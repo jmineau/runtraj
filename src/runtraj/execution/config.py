@@ -226,7 +226,8 @@ class SlurmConfig(BackendConfig):
                     "running at once; n_tasks is the number of tasks."
                 )
             for key in data:
-                if key in cls.model_fields:
+                # ntasks is sbatch's own option, spelled almost like n_tasks.
+                if key in cls.model_fields or key == "ntasks":
                     continue
                 close = difflib.get_close_matches(
                     str(key), list(cls.model_fields), n=1, cutoff=0.8
@@ -265,7 +266,7 @@ class SlurmConfig(BackendConfig):
 
     @property
     def tasks(self) -> int:
-        """The number of array tasks, ``n_tasks``, or ten per worker when it is unset; fewer when there are fewer releases."""
+        """The most array tasks: ``n_tasks``, or ten per worker when it is unset. An array has fewer when there are fewer releases (:func:`runtraj.execution.slurm.array_size`)."""
         return (
             self.n_tasks
             if self.n_tasks is not None

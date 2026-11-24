@@ -340,7 +340,7 @@ def test_a_misspelled_slurm_setting_is_not_sent_to_sbatch(tmp_path):
             match=f"'{typo}' is not a setting of execution.slurm. Did you mean '{setting}'",
         ):
             SlurmConfig.model_validate({typo: 1})
-    options = {"exclude": "node1", "constraint": "skl", "cpus-per-task": 8}
+    options = {"exclude": "node1", "constraint": "skl", "cpus-per-task": 8, "ntasks": 1}
     assert SlurmConfig.model_validate(options).options == options
 
 

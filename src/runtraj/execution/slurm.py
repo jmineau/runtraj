@@ -16,6 +16,7 @@ SIGTERM as it does on every backend.
 from __future__ import annotations
 
 import logging
+import math
 import re
 import shlex
 import subprocess
@@ -438,13 +439,18 @@ def array_size(slurm: SlurmConfig, n_releases: int, limit: int) -> int:
     Return the number of tasks of a job array for *n_releases*: ``n_tasks``, or ten per worker.
 
     Never more than one task per release, nor more than *limit*, the
-    cluster's ``MaxArraySize``.
+    cluster's ``MaxArraySize``. A task runs ``cpus`` releases at once, so
+    with ``n_tasks`` unset a task's share is whole rounds of ``cpus``
+    releases: a share of 10 on 8 CPUs would leave 6 of them idle for its
+    last 2 releases.
 
     Examples
     --------
     >>> from runtraj.execution import SlurmConfig
     >>> array_size(SlurmConfig(n_workers=50), 10_000, limit=1000)
     500
+    >>> array_size(SlurmConfig(n_workers=50, cpus=8), 10_000, limit=1000)
+    417
     >>> array_size(SlurmConfig(n_workers=200), 10_000, limit=1000)
     1000
     >>> array_size(SlurmConfig(n_workers=50), 120, limit=1000)
@@ -461,7 +467,11 @@ def array_size(slurm: SlurmConfig, n_releases: int, limit: int) -> int:
             f"arrays have at most {limit} tasks (MaxArraySize). Set n_tasks to "
             f"{limit} or fewer, or leave it unset."
         )
-    return max(1, min(slurm.tasks, n_releases, limit))
+    tasks = max(1, min(slurm.tasks, n_releases, limit))
+    if slurm.n_tasks is None and slurm.cpus > 1:
+        share = math.ceil(n_releases / tasks / slurm.cpus) * slurm.cpus
+        tasks = max(1, math.ceil(n_releases / share))
+    return tasks
 
 
 def _task_states(

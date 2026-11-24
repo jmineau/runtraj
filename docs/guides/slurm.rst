@@ -65,6 +65,9 @@ The keys of the ``slurm`` block:
    time has less left to do when it starts again. Each task first loads
    Python and the project, which took about 3 s for a 10,000-release
    project, small beside a transport model run of a minute or more.
+   With ``cpus`` above 1 a task's share is whole rounds of ``cpus``
+   releases, so no CPU waits while the last few of a share run: with
+   ``cpus: 8`` the same project gets 625 tasks of 16.
 
    Each release runs once per variant, so set ``time`` long enough for one
    task's share. There is never more than one task per release, nor more

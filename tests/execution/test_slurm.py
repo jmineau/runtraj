@@ -226,6 +226,9 @@ def test_job_script_is_valid_bash(tmp_path):
         pytest.param({"n_workers": 200}, 10_000, 1000, id="capped-at-the-limit"),
         pytest.param({"n_workers": 50}, 120, 120, id="one-per-release"),
         pytest.param({"n_workers": 4, "n_tasks": 6}, 100, 6, id="n_tasks"),
+        pytest.param({"n_workers": 100, "cpus": 8}, 10_000, 625, id="whole-rounds"),
+        pytest.param({"n_workers": 2, "cpus": 4}, 12, 3, id="no-one-release-tasks"),
+        pytest.param({"n_tasks": 6, "cpus": 4}, 100, 6, id="n_tasks-as-given"),
         pytest.param({}, 0, 1, id="at-least-one"),
     ],
 )
