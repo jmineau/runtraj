@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../../_static/documentation_options.js?v=275db078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -651,6 +651,7 @@
     <span class="n">result_hash</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">reads</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">result</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"particles"</span><span class="p">,</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the hash of the results of the stage *name* with *settings*.</span>
@@ -661,7 +662,10 @@
 <span class="sd">    (*reads*, by the stage's name), and the stage's own settings record</span>
 <span class="sd">    (:meth:`runtraj.stages.Stage.settings`). So results made from other</span>
 <span class="sd">    particles, or from another stage's results under other settings, never</span>
-<span class="sd">    share a folder.</span>
+<span class="sd">    share a folder. A stage that sets a *version*</span>
+<span class="sd">    (:attr:`runtraj.stages.Stage.version`) has it hashed too, under the key</span>
+<span class="sd">    ``&lt;name&gt;.version``; without one the hash is as it was before stages had</span>
+<span class="sd">    versions.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -670,7 +674,10 @@
 <span class="sd">    ... )</span>
 <span class="sd">    True</span>
 <span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">settings_hash</span><span class="p">({</span><span class="n">result</span><span class="p">:</span> <span class="n">result_hash</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">reads</span> <span class="ow">or</span> <span class="p">{}),</span> <span class="n">name</span><span class="p">:</span> <span class="n">settings</span><span class="p">})</span></div>
+    <span class="n">record</span> <span class="o">=</span> <span class="p">{</span><span class="n">result</span><span class="p">:</span> <span class="n">result_hash</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">reads</span> <span class="ow">or</span> <span class="p">{}),</span> <span class="n">name</span><span class="p">:</span> <span class="n">settings</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">record</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">version</span>
+    <span class="k">return</span> <span class="n">settings_hash</span><span class="p">(</span><span class="n">record</span><span class="p">)</span></div>
 
 
 

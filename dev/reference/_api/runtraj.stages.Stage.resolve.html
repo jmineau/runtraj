@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../../_static/documentation_options.js?v=275db078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -702,16 +702,24 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.needs_workdir.html">runtraj.models.TransportModel.needs_workdir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.check_met.html">runtraj.models.TransportModel.check_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.check_releases.html">runtraj.models.TransportModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.data_files.html">runtraj.models.TransportModel.data_files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.downloads_met.html">runtraj.models.TransportModel.downloads_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.fetch_met.html">runtraj.models.TransportModel.fetch_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.open_met.html">runtraj.models.TransportModel.open_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.release_rows.html">runtraj.models.TransportModel.release_rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.run_many.html">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.BatchedTransportModel.html">runtraj.models.BatchedTransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.BatchedTransportModel.run_many.html">runtraj.models.BatchedTransportModel.run_many</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.TransportConfig.html">runtraj.models.TransportConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -727,8 +735,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.open_met.html">runtraj.models.open_met</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.check_model.html">runtraj.models.check_model</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.batched.html">runtraj.models.hysplit.HysplitModel.batched</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.needs_workdir.html">runtraj.models.hysplit.HysplitModel.needs_workdir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.name.html">runtraj.models.hysplit.HysplitModel.name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_met.html">runtraj.models.hysplit.HysplitModel.check_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.data_files.html">runtraj.models.hysplit.HysplitModel.data_files</a></li>
@@ -743,6 +750,12 @@
 </ul>
 </details></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.stages.Stage.html">runtraj.stages.Stage</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.config_class.html">runtraj.stages.Stage.config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.name.html">runtraj.stages.Stage.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.reads.html">runtraj.stages.Stage.reads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.result.html">runtraj.stages.Stage.result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.suffix.html">runtraj.stages.Stage.suffix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.version.html">runtraj.stages.Stage.version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.check.html">runtraj.stages.Stage.check</a></li>
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.stages.Stage.resolve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.run.html">runtraj.stages.Stage.run</a></li>
@@ -900,18 +913,21 @@ refuses a transport model whose particles it cannot use.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – The variant’s settings of this stage, checked.</p></li>
+<li><p><strong>config</strong> (<span class="sphinx_autodoc_typehints-type"><code class="docutils literal notranslate"><span class="pre">C</span></code></span>) – The variant’s settings of this stage, checked.</p></li>
 <li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The variant’s transport model, as its <code class="docutils literal notranslate"><span class="pre">models</span></code> block names it.</p></li>
 <li><p><strong>model_settings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]</span>) – The model’s settings as a run records them.</p></li>
 <li><p><strong>directory</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The project directory, where a relative file name starts.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the settings do not fit the model, or name a file that
-    cannot be used.</p>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the settings do not fit the model, or name a file that
+    cannot be used.</p></li>
+<li><p><strong>Here config is returned as it is.</strong> – </p></li>
+</ul>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="docutils literal notranslate"><span class="pre">C</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

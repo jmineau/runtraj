@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtraj.models.hysplit.HysplitModel.needs_workdir &#8212; runtraj dev</title>
+    <title>runtraj.models.TransportModel.run_many &#8212; runtraj dev</title>
   
   
   
@@ -42,13 +42,13 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../../_static/documentation_options.js?v=275db078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.models.hysplit.HysplitModel.needs_workdir';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.models.TransportModel.run_many';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
@@ -60,13 +60,13 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="runtraj.models.hysplit.HysplitModel.check_met" href="runtraj.models.hysplit.HysplitModel.check_met.html" />
-    <link rel="prev" title="runtraj.models.hysplit.HysplitModel.batched" href="runtraj.models.hysplit.HysplitModel.batched.html" />
+    <link rel="next" title="runtraj.models.TransportModel.sha256" href="runtraj.models.TransportModel.sha256.html" />
+    <link rel="prev" title="runtraj.models.TransportModel.run" href="runtraj.models.TransportModel.run.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -75,7 +75,7 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="runtraj">
-  <meta property="og:title" content="runtraj.models.hysplit.HysplitModel.needs_workdir">
+  <meta property="og:title" content="runtraj.models.TransportModel.run_many">
   <meta property="og:description" content="Run particle dispersion models at scale.">
   <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -701,17 +701,25 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.lock.html">runtraj.execution.inputs.lock</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.needs_workdir.html">runtraj.models.TransportModel.needs_workdir</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.check_met.html">runtraj.models.TransportModel.check_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.check_releases.html">runtraj.models.TransportModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.data_files.html">runtraj.models.TransportModel.data_files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.downloads_met.html">runtraj.models.TransportModel.downloads_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.fetch_met.html">runtraj.models.TransportModel.fetch_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.open_met.html">runtraj.models.TransportModel.open_met</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.release_rows.html">runtraj.models.TransportModel.release_rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
+<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.BatchedTransportModel.html">runtraj.models.BatchedTransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.BatchedTransportModel.run_many.html">runtraj.models.BatchedTransportModel.run_many</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.TransportConfig.html">runtraj.models.TransportConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -726,9 +734,8 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.open_met.html">runtraj.models.open_met</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.check_model.html">runtraj.models.check_model</a></li>
-<li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.batched.html">runtraj.models.hysplit.HysplitModel.batched</a></li>
-<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.models.hysplit.HysplitModel.needs_workdir</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.name.html">runtraj.models.hysplit.HysplitModel.name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_met.html">runtraj.models.hysplit.HysplitModel.check_met</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.data_files.html">runtraj.models.hysplit.HysplitModel.data_files</a></li>
@@ -743,6 +750,12 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.stages.Stage.html">runtraj.stages.Stage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.config_class.html">runtraj.stages.Stage.config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.name.html">runtraj.stages.Stage.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.reads.html">runtraj.stages.Stage.reads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.result.html">runtraj.stages.Stage.result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.suffix.html">runtraj.stages.Stage.suffix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.version.html">runtraj.stages.Stage.version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.check.html">runtraj.stages.Stage.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.resolve.html">runtraj.stages.Stage.resolve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.run.html">runtraj.stages.Stage.run</a></li>
@@ -869,9 +882,9 @@
     <li class="breadcrumb-item"><a href="../execution.html" class="nav-link">Execution</a></li>
     
     
-    <li class="breadcrumb-item"><a href="runtraj.models.hysplit.HysplitModel.html" class="nav-link">runtraj.models.hysplit.HysplitModel</a></li>
+    <li class="breadcrumb-item"><a href="runtraj.models.TransportModel.html" class="nav-link">runtraj.models.TransportModel</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.hysplit.HysplitModel.needs_workdir</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.TransportModel.run_many</span></li>
   </ul>
 </nav>
 </div>
@@ -888,12 +901,37 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="runtraj-models-hysplit-hysplitmodel-needs-workdir">
-<h1>runtraj.models.hysplit.HysplitModel.needs_workdir<a class="headerlink" href="#runtraj-models-hysplit-hysplitmodel-needs-workdir" title="Link to this heading">#</a></h1>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="runtraj.models.hysplit.HysplitModel.needs_workdir">
-<span class="sig-prename descclassname"><span class="pre">HysplitModel.</span></span><span class="sig-name descname"><span class="pre">needs_workdir</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#runtraj.models.hysplit.HysplitModel.needs_workdir" title="Link to this definition">#</a></dt>
-<dd><p>HYSPLIT writes its inputs and outputs as files in a directory.</p>
+  <section id="runtraj-models-transportmodel-run-many">
+<h1>runtraj.models.TransportModel.run_many<a class="headerlink" href="#runtraj-models-transportmodel-run-many" title="Link to this heading">#</a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="runtraj.models.TransportModel.run_many">
+<span class="sig-prename descclassname"><span class="pre">TransportModel.</span></span><span class="sig-name descname"><span class="pre">run_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">releases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models.html#TransportModel.run_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.TransportModel.run_many" title="Link to this definition">#</a></dt>
+<dd><p>Run many releases with one config, and return their particles as one table, for a model with <a class="reference internal" href="runtraj.models.TransportModel.batched.html#runtraj.models.TransportModel.batched" title="runtraj.models.TransportModel.batched"><code class="xref py py-attr docutils literal notranslate"><span class="pre">batched</span></code></a> set.</p>
+<p>The table has a <code class="docutils literal notranslate"><span class="pre">release</span></code> column holding each row’s release id,
+beside the particle columns <a class="reference internal" href="runtraj.models.TransportModel.run.html#runtraj.models.TransportModel.run" title="runtraj.models.TransportModel.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> returns. <code class="docutils literal notranslate"><span class="pre">windows[i]</span></code> is
+the time <code class="docutils literal notranslate"><span class="pre">releases[i]</span></code> covers. A release with no rows failed;
+the others are written. The log and met files are shared by all.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="runtraj.exceptions.SimulationError.html#runtraj.exceptions.SimulationError" title="runtraj.exceptions.SimulationError"><strong>SimulationError</strong></a> – When the whole call fails, with the model’s log in <code class="docutils literal notranslate"><span class="pre">log</span></code>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#NotImplementedError" title="(in Python v3.15)"><strong>NotImplementedError</strong></a> – Here, for a model that is not batched.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="runtraj.models.ModelRun.html#runtraj.models.ModelRun" title="runtraj.models.ModelRun"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelRun</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>releases</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><em>TypeAliasForwardRef</em><em>(</em><em>'runtraj.releases.Release'</em><em>)</em><em>]</em>)</p></li>
+<li><p><strong>config</strong> (<em>C</em>)</p></li>
+<li><p><strong>met</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><em>Any</em></a>)</p></li>
+<li><p><strong>windows</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><em>datetime</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><em>datetime</em></a><em>]</em><em>]</em>)</p></li>
+<li><p><strong>workdir</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>Path</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>timeout</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -909,20 +947,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="runtraj.models.hysplit.HysplitModel.batched.html"
+       href="runtraj.models.TransportModel.run.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">runtraj.models.hysplit.HysplitModel.batched</p>
+        <p class="prev-next-title">runtraj.models.TransportModel.run</p>
       </div>
     </a>
     <a class="right-next"
-       href="runtraj.models.hysplit.HysplitModel.check_met.html"
+       href="runtraj.models.TransportModel.sha256.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">runtraj.models.hysplit.HysplitModel.check_met</p>
+        <p class="prev-next-title">runtraj.models.TransportModel.sha256</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -945,14 +983,14 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.models.hysplit.HysplitModel.needs_workdir"><code class="docutils literal notranslate"><span class="pre">HysplitModel.needs_workdir</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.models.TransportModel.run_many"><code class="docutils literal notranslate"><span class="pre">TransportModel.run_many()</span></code></a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/reference/_api/runtraj.models.hysplit.HysplitModel.needs_workdir.rst.txt">
+    <a href="../../_sources/reference/_api/runtraj.models.TransportModel.run_many.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

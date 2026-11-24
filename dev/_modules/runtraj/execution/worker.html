@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../../../_static/documentation_options.js?v=275db078"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -494,7 +494,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span><span class="p">,</span> <span class="n">run_model</span><span class="p">,</span> <span class="n">run_model_many</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">reads</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">upath</span><span class="w"> </span><span class="kn">import</span> <span class="n">UPath</span>
@@ -676,7 +675,7 @@
 <span class="sd">    """</span>
     <span class="n">output</span><span class="p">,</span> <span class="n">rid</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
-    <span class="n">needs_workdir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">"needs_workdir"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">needs_workdir</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">needs_workdir</span>
     <span class="k">if</span> <span class="n">needs_workdir</span><span class="p">:</span>
         <span class="c1"># The model runs in an empty directory. The runner gives each run a</span>
         <span class="c1"># new one, but a caller can hand over a directory that a stopped run</span>
@@ -723,8 +722,7 @@
             <span class="k">if</span> <span class="p">(</span><span class="n">keep_workdir</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">succeeded</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">workdir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
                 <span class="c1"># A failed run's particle files can be large, and the</span>
                 <span class="c1"># model's inputs and logs say why it failed.</span>
-                <span class="n">files</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">"result_files"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">leave_out</span> <span class="o">=</span> <span class="n">files</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">transport</span><span class="p">)</span> <span class="k">if</span> <span class="n">files</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">keep_workdir</span> <span class="k">else</span> <span class="p">()</span>
+                <span class="n">leave_out</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">keep_workdir</span> <span class="k">else</span> <span class="n">model</span><span class="o">.</span><span class="n">result_files</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">transport</span><span class="p">)</span>
                 <span class="n">output</span><span class="o">.</span><span class="n">keep_workdir</span><span class="p">(</span>
                     <span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span> <span class="n">rid</span><span class="p">,</span> <span class="n">workdir</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">,</span> <span class="n">leave_out</span><span class="o">=</span><span class="n">leave_out</span>
                 <span class="p">)</span>
@@ -942,7 +940,7 @@
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-            <span class="n">read</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage_hashes</span><span class="p">[</span><span class="n">r</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reads</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">name</span><span class="p">))]</span>
+            <span class="n">read</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage_hashes</span><span class="p">[</span><span class="n">r</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">reads</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">r</span> <span class="ow">in</span> <span class="n">failed</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">read</span><span class="p">):</span>
                 <span class="n">failed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># nothing to read; the failure above is recorded</span>
                 <span class="k">continue</span>
@@ -1056,7 +1054,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_batched</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">variant</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Whether a variant's transport model runs many releases in one call."""</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">variant</span><span class="p">]</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">"batched"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">batched</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_run_batched</span><span class="p">(</span>

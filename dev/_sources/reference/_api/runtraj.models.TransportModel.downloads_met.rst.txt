@@ -1,0 +1,5 @@
+runtraj.models.TransportModel.downloads\_met
+============================================
+
+.. currentmodule:: runtraj.models
+.. automethod:: TransportModel.downloads_met

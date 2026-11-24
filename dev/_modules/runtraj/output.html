@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../../_static/documentation_options.js?v=275db078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -544,7 +544,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">OLD_FILE</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">Release</span><span class="p">,</span> <span class="n">parse_release_id</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">RESULT_TYPES</span><span class="p">,</span> <span class="n">result_type</span><span class="p">,</span> <span class="n">write_result</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_stage</span><span class="p">,</span> <span class="n">reads</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_stage</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">upath</span><span class="w"> </span><span class="kn">import</span> <span class="n">UPath</span>
@@ -1076,7 +1076,15 @@
                 <span class="n">hashes</span><span class="p">[</span><span class="n">what</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder_hash</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="n">folder</span><span class="p">[</span><span class="s2">"folder"</span><span class="p">])</span>
             <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
                 <span class="n">hashes</span><span class="p">[</span><span class="n">what</span><span class="p">]</span> <span class="o">=</span> <span class="n">folder</span><span class="p">[</span><span class="s2">"hash"</span><span class="p">]</span>  <span class="c1"># its folder is gone: as recorded</span>
-        <span class="k">return</span> <span class="n">stage_hash</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">hashes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">made</span><span class="p">),</span> <span class="n">hashes</span><span class="p">,</span> <span class="n">made</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stage_version"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stage_hash</span><span class="p">(</span>
+            <span class="n">kind</span><span class="p">,</span>
+            <span class="n">settings</span><span class="p">,</span>
+            <span class="n">hashes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">made</span><span class="p">),</span>
+            <span class="n">hashes</span><span class="p">,</span>
+            <span class="n">made</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_variant_hash</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="n">Kind</span><span class="p">,</span> <span class="n">variant</span><span class="p">:</span> <span class="n">Variant</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -1192,7 +1200,8 @@
 <span class="sd">        A stage's record names the stage and its class, the folder and hash</span>
 <span class="sd">        of each thing its files are made from (the particles, then each</span>
 <span class="sd">        stage it reads), the versions of runtraj and of the stage's package,</span>
-<span class="sd">        and the stage's settings.</span>
+<span class="sd">        the stage's settings, and the stage's own ``version`` as</span>
+<span class="sd">        ``stage_version`` when it sets one.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -1222,10 +1231,7 @@
             <span class="n">digest</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage_hashes</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span>
             <span class="n">made_from</span> <span class="o">=</span> <span class="p">{</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">:</span> <span class="n">variant</span><span class="o">.</span><span class="n">result_hash</span><span class="p">}</span>
             <span class="n">made_from</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="n">read</span><span class="p">:</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage_hashes</span><span class="p">[</span><span class="n">read</span><span class="p">]</span>
-                    <span class="k">for</span> <span class="n">read</span> <span class="ow">in</span> <span class="n">reads</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">))</span>
-                <span class="p">}</span>
+                <span class="p">{</span><span class="n">read</span><span class="p">:</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage_hashes</span><span class="p">[</span><span class="n">read</span><span class="p">]</span> <span class="k">for</span> <span class="n">read</span> <span class="ow">in</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span><span class="o">.</span><span class="n">reads</span><span class="p">}</span>
             <span class="p">)</span>
             <span class="n">record</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">"name"</span><span class="p">:</span> <span class="n">variant</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -1239,6 +1245,9 @@
                 <span class="s2">"versions"</span><span class="p">:</span> <span class="n">_versions</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">stage_classes</span><span class="p">[</span><span class="n">kind</span><span class="p">]),</span>
                 <span class="s2">"settings"</span><span class="p">:</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage_settings</span><span class="p">[</span><span class="n">kind</span><span class="p">],</span>
             <span class="p">}</span>
+            <span class="n">stage_version</span> <span class="o">=</span> <span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span><span class="o">.</span><span class="n">version</span>
+            <span class="k">if</span> <span class="n">stage_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">record</span><span class="p">[</span><span class="s2">"stage_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">stage_version</span>
         <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">variant</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">digest</span><span class="p">[:</span><span class="n">HASH_CHARS</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
         <span class="n">_write_settings</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dir</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">/</span> <span class="n">SETTINGS_FILE</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hashes</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="p">{})[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">digest</span>

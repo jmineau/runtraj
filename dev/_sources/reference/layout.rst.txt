@@ -170,11 +170,16 @@ were made from:
 ``versions``
    In a stage's folder only: the runtraj version that wrote the folder,
    and the version of the stage's own package when it is another one.
+``stage_version``
+   In a stage's folder only, and only when the stage sets one
+   (:attr:`runtraj.stages.Stage.version`): the version of what the stage
+   makes, which a stage raises for a fix that changes its files.
 
 A particles folder's hash covers its ``settings`` block. A stage folder's
 hash covers its ``settings`` block together with the hash of each thing
 under ``reads``, so the same footprint settings on other particles give
-another folder. The versions are not part of a hash. Every particle and
+another folder, and so does a stage's ``stage_version`` when it has one.
+The ``versions`` are not part of a hash. Every particle and
 footprint file records its folder's full hash as ``runtraj:hash``.
 
 Particle files

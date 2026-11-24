@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../_static/documentation_options.js?v=275db078"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -498,9 +498,11 @@ DataFrames, and a selection of rows goes back to the project’s methods
 <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> names a model in another package, and each stage, by the
 import path of its class, so the config, the settings records, the output
 directory and the worker reach them without importing them by name. A
-model provides <a class="reference internal" href="../reference/_api/runtraj.models.TransportModel.html#runtraj.models.TransportModel" title="runtraj.models.TransportModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.TransportModel</span></code></a>; a stage, which
-makes one file per release after the model runs, provides
-<a class="reference internal" href="../reference/_api/runtraj.stages.Stage.html#runtraj.stages.Stage" title="runtraj.stages.Stage"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.stages.Stage</span></code></a>. HYSPLIT is the model built in, and its
+model subclasses <a class="reference internal" href="../reference/_api/runtraj.models.TransportModel.html#runtraj.models.TransportModel" title="runtraj.models.TransportModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.TransportModel</span></code></a>; a stage, which
+makes one file per release after the model runs, subclasses
+<a class="reference internal" href="../reference/_api/runtraj.stages.Stage.html#runtraj.stages.Stage" title="runtraj.stages.Stage"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.stages.Stage</span></code></a>. Each base class implements every optional
+member with its default, so runtraj calls them directly and a plug-in
+overrides only what it does differently. HYSPLIT is the model built in, and its
 package (<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models.hysplit</span></code>) is the only code that knows
 HYSPLIT’s files.</p>
 </section>
@@ -515,10 +517,10 @@ HYSPLIT’s files.</p>
   simulation.py   Simulation: a frozen (release, variant, output) value
   config.py       ProjectConfig and Variant
   identity.py     settings records and hashes
-  stages.py       the Stage protocol, get_stage, check_stage
+  stages.py       the Stage base class, get_stage, check_stage
   releases/       release classes, releases.csv, shared validation
   particles/      the particle table and files, release heights, particles.runtraj
-  models/         the TransportModel and TransportConfig protocols, MODELS, get_model, check_model
+  models/         the TransportModel and TransportConfig base classes, MODELS, get_model, check_model
     hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
   execution/      ExecutionConfig, the runner (plan, local run), slurm (the job array, requeue), the worker,
                   kubernetes (the indexed Job, the hourly CronJob), inputs (copies to a bucket, the lock), schedule

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../../_static/documentation_options.js?v=275db078"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -499,7 +499,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">RESULT_TYPES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">reads</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.trajectories</span><span class="w"> </span><span class="kn">import</span> <span class="n">trajectories_from_table</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -1305,7 +1304,7 @@
                 <span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="p">()</span>
                     <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">RESULT_TYPES</span>
-                    <span class="k">else</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">reads</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)))</span>
+                    <span class="k">else</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span><span class="o">.</span><span class="n">reads</span><span class="p">)</span>
                 <span class="p">)</span>
                 <span class="n">ready</span> <span class="o">=</span> <span class="n">releases</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">have</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">))</span>
                 <span class="n">missing</span> <span class="o">=</span> <span class="n">ready</span> <span class="o">-</span> <span class="n">have</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span>

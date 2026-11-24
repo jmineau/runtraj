@@ -22,8 +22,7 @@ Attributes
    :toctree:
    :nosignatures:
 
-   ~HysplitModel.batched
-   ~HysplitModel.needs_workdir
+   ~HysplitModel.name
 
 
 
@@ -45,5 +44,13 @@ Methods
    ~HysplitModel.sha256
    ~HysplitModel.version
 
+
+
+
+Inherited
+---------
+
+
+From :class:`~.TransportModel`: :py:obj:`~.TransportModel.batched`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.open_met`, :py:obj:`~.TransportModel.run_many`
 
 

@@ -1,0 +1,5 @@
+runtraj.models.TransportModel.check\_met
+========================================
+
+.. currentmodule:: runtraj.models
+.. automethod:: TransportModel.check_met

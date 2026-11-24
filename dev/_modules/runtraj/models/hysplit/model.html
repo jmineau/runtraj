@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="../../../../_static/documentation_options.js?v=275db078"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -469,7 +469,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.concentration</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_netcdf4</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationError</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelRun</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelRun</span><span class="p">,</span> <span class="n">TransportModel</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.cdump</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cdump</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConcentrationGrid</span><span class="p">,</span> <span class="n">HysplitConfig</span>
@@ -581,7 +581,7 @@
 
 <div class="viewcode-block" id="HysplitModel">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitModel.html#runtraj.models.hysplit.HysplitModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">HysplitModel</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HysplitModel</span><span class="p">(</span><span class="n">TransportModel</span><span class="p">[</span><span class="n">HysplitConfig</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    HYSPLIT as a transport model, the object ``get_model("hysplit")`` returns.</span>
 
@@ -601,10 +601,6 @@
     <span class="n">config_class</span> <span class="o">=</span> <span class="n">HysplitConfig</span>
     <span class="c1">#: HYSPLIT reads ARL files, found, downloaded, or cropped as a met says.</span>
     <span class="n">met_config_class</span> <span class="o">=</span> <span class="n">MetConfig</span>
-    <span class="c1">#: HYSPLIT writes its inputs and outputs as files in a directory.</span>
-    <span class="n">needs_workdir</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="c1">#: One hycs_std (or hyts_std) process per release.</span>
-    <span class="n">batched</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="HysplitModel.result">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitModel.result.html#runtraj.models.hysplit.HysplitModel.result">[docs]</a>

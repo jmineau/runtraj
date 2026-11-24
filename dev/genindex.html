@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=c7e4f973"></script>
+    <script src="_static/documentation_options.js?v=275db078"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
+  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -503,12 +503,10 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="getting_started/glossary.html#term-backend"><strong>backend</strong></a>
 </li>
-      <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.batched.html#runtraj.models.hysplit.HysplitModel.batched">batched (runtraj.models.hysplit.HysplitModel attribute)</a>
+      <li><a href="reference/_api/runtraj.models.TransportModel.batched.html#runtraj.models.TransportModel.batched">batched (runtraj.models.TransportModel attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/_api/runtraj.models.BatchedTransportModel.html#runtraj.models.BatchedTransportModel">BatchedTransportModel (class in runtraj.models)</a>
-</li>
       <li><a href="reference/_api/runtraj.Bounds.html#runtraj.Bounds">Bounds (class in runtraj)</a>
 </li>
       <li><a href="reference/_api/runtraj.config.Variant.build.html#runtraj.config.Variant.build">build (runtraj.config.Variant property)</a>
@@ -536,7 +534,11 @@
       <li><a href="reference/_api/runtraj.concentration.check_concentration.html#runtraj.concentration.check_concentration">check_concentration() (in module runtraj.concentration)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.check_met.html#runtraj.models.hysplit.HysplitModel.check_met">check_met() (runtraj.models.hysplit.HysplitModel method)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.models.TransportModel.check_met.html#runtraj.models.TransportModel.check_met">(runtraj.models.TransportModel method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/_api/runtraj.models.check_model.html#runtraj.models.check_model">check_model() (in module runtraj.models)</a>
 </li>
       <li><a href="reference/_api/runtraj.execution.schedule.check_now.html#runtraj.execution.schedule.check_now">check_now() (in module runtraj.execution.schedule)</a>
@@ -550,6 +552,8 @@
 </li>
         <li><a href="reference/_api/runtraj.models.hysplit.Met.check_releases.html#runtraj.models.hysplit.Met.check_releases">(runtraj.models.hysplit.Met method)</a>
 </li>
+        <li><a href="reference/_api/runtraj.models.TransportModel.check_releases.html#runtraj.models.TransportModel.check_releases">(runtraj.models.TransportModel method)</a>
+</li>
       </ul></li>
       <li><a href="reference/_api/runtraj.stages.check_stage.html#runtraj.stages.check_stage">check_stage() (in module runtraj.stages)</a>
 </li>
@@ -561,10 +565,10 @@
 </li>
       <li><a href="reference/_api/runtraj.output.Output.complete.html#runtraj.output.Output.complete">complete() (runtraj.output.Output method)</a>
 </li>
-      <li><a href="reference/_api/runtraj.output.completed.html#runtraj.output.completed">completed() (in module runtraj.output)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/_api/runtraj.output.completed.html#runtraj.output.completed">completed() (in module runtraj.output)</a>
+</li>
       <li><a href="getting_started/glossary.html#term-compute-root"><strong>compute root</strong></a>
 </li>
       <li><a href="reference/_api/runtraj.Simulation.concentration.html#runtraj.Simulation.concentration">concentration (runtraj.Simulation property)</a>
@@ -577,8 +581,12 @@
 </li>
       <li><a href="reference/_api/runtraj.Project.config.html#runtraj.Project.config">config (runtraj.Project property)</a>
 </li>
-      <li><a href="reference/_api/runtraj.models.TransportModel.config_class.html#runtraj.models.TransportModel.config_class">config_class (runtraj.models.TransportModel property)</a>
+      <li><a href="reference/_api/runtraj.models.TransportModel.config_class.html#runtraj.models.TransportModel.config_class">config_class (runtraj.models.TransportModel attribute)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.stages.Stage.config_class.html#runtraj.stages.Stage.config_class">(runtraj.stages.Stage attribute)</a>
 </li>
+      </ul></li>
       <li><a href="reference/_api/runtraj.Project.config_path.html#runtraj.Project.config_path">config_path (runtraj.Project property)</a>
 </li>
       <li><a href="reference/_api/runtraj.Bounds.contains.html#runtraj.Bounds.contains">contains() (runtraj.Bounds method)</a>
@@ -625,12 +633,16 @@
 </li>
       <li><a href="reference/_api/runtraj.concentration.describe_grid.html#runtraj.concentration.describe_grid">describe_grid() (in module runtraj.concentration)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.models.hysplit.MetConfig.download_options.html#runtraj.models.hysplit.MetConfig.download_options">download_options (runtraj.models.hysplit.MetConfig property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.downloads_met.html#runtraj.models.hysplit.HysplitModel.downloads_met">downloads_met() (runtraj.models.hysplit.HysplitModel method)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.models.TransportModel.downloads_met.html#runtraj.models.TransportModel.downloads_met">(runtraj.models.TransportModel method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/_api/runtraj.transforms.dry_deposition_survival.html#runtraj.transforms.dry_deposition_survival">dry_deposition_survival() (in module runtraj.transforms)</a>
 </li>
       <li><a href="reference/_api/runtraj.transforms.DryDeposition.html#runtraj.transforms.DryDeposition">DryDeposition (class in runtraj.transforms)</a>
@@ -676,7 +688,11 @@
 </li>
       </ul></li>
       <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.fetch_met.html#runtraj.models.hysplit.HysplitModel.fetch_met">fetch_met() (runtraj.models.hysplit.HysplitModel method)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.models.TransportModel.fetch_met.html#runtraj.models.TransportModel.fetch_met">(runtraj.models.TransportModel method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/_api/runtraj.execution.fetch_script.html#runtraj.execution.fetch_script">fetch_script() (in module runtraj.execution)</a>
 </li>
       <li><a href="reference/_api/runtraj.execution.runner.fetch_shared.html#runtraj.execution.runner.fetch_shared">fetch_shared() (in module runtraj.execution.runner)</a>
@@ -685,10 +701,10 @@
 </li>
       <li><a href="reference/_api/runtraj.transforms.Oxidation.field.html#runtraj.transforms.Oxidation.field">field() (runtraj.transforms.Oxidation method)</a>
 </li>
-      <li><a href="reference/_api/runtraj.identity.file_stamp.html#runtraj.identity.file_stamp">file_stamp() (in module runtraj.identity)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/_api/runtraj.identity.file_stamp.html#runtraj.identity.file_stamp">file_stamp() (in module runtraj.identity)</a>
+</li>
       <li><a href="reference/_api/runtraj.models.hysplit.Met.files_for.html#runtraj.models.hysplit.Met.files_for">files_for() (runtraj.models.hysplit.Met method)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.hysplit.find_hycs_std.html#runtraj.models.hysplit.find_hycs_std">find_hycs_std() (in module runtraj.models.hysplit)</a>
@@ -873,7 +889,7 @@
 </li>
       <li><a href="reference/_api/runtraj.ProjectConfig.met_config.html#runtraj.ProjectConfig.met_config">met_config() (runtraj.ProjectConfig method)</a>
 </li>
-      <li><a href="reference/_api/runtraj.models.TransportModel.met_config_class.html#runtraj.models.TransportModel.met_config_class">met_config_class (runtraj.models.TransportModel property)</a>
+      <li><a href="reference/_api/runtraj.models.TransportModel.met_config_class.html#runtraj.models.TransportModel.met_config_class">met_config_class (runtraj.models.TransportModel attribute)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.hysplit.FailureReason.html#runtraj.models.hysplit.FailureReason.MET_COVERAGE">MET_COVERAGE (runtraj.models.hysplit.FailureReason attribute)</a>
 </li>
@@ -917,14 +933,22 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="getting_started/glossary.html#term-n_hours"><strong>n_hours</strong></a>
 </li>
-      <li><a href="reference/_api/runtraj.Project.name.html#runtraj.Project.name">name (runtraj.Project property)</a>
+      <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.name.html#runtraj.models.hysplit.HysplitModel.name">name (runtraj.models.hysplit.HysplitModel attribute)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.models.TransportModel.name.html#runtraj.models.TransportModel.name">(runtraj.models.TransportModel attribute)</a>
 </li>
-      <li><a href="reference/_api/runtraj.sampling.nearest_cell.html#runtraj.sampling.nearest_cell">nearest_cell() (in module runtraj.sampling)</a>
+        <li><a href="reference/_api/runtraj.Project.name.html#runtraj.Project.name">(runtraj.Project property)</a>
 </li>
-      <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.needs_workdir.html#runtraj.models.hysplit.HysplitModel.needs_workdir">needs_workdir (runtraj.models.hysplit.HysplitModel attribute)</a>
+        <li><a href="reference/_api/runtraj.stages.Stage.name.html#runtraj.stages.Stage.name">(runtraj.stages.Stage attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/_api/runtraj.sampling.nearest_cell.html#runtraj.sampling.nearest_cell">nearest_cell() (in module runtraj.sampling)</a>
+</li>
+      <li><a href="reference/_api/runtraj.models.TransportModel.needs_workdir.html#runtraj.models.TransportModel.needs_workdir">needs_workdir (runtraj.models.TransportModel attribute)</a>
+</li>
       <li><a href="reference/_api/runtraj.models.hysplit.FailureReason.html#runtraj.models.hysplit.FailureReason.NO_CONCENTRATION_DATA">NO_CONCENTRATION_DATA (runtraj.models.hysplit.FailureReason attribute)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.hysplit.FailureReason.html#runtraj.models.hysplit.FailureReason.NO_PARTICLE_DATA">NO_PARTICLE_DATA (runtraj.models.hysplit.FailureReason attribute)</a>
@@ -940,7 +964,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.models.open_met.html#runtraj.models.open_met">open_met() (in module runtraj.models)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.models.TransportModel.open_met.html#runtraj.models.TransportModel.open_met">(runtraj.models.TransportModel method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/_api/runtraj.execution.SlurmConfig.options.html#runtraj.execution.SlurmConfig.options">options (runtraj.execution.SlurmConfig property)</a>
 </li>
       <li><a href="reference/_api/runtraj.stages.ordered.html#runtraj.stages.ordered">ordered() (in module runtraj.stages)</a>
@@ -1067,6 +1095,8 @@
 </li>
       <li><a href="reference/_api/runtraj.config.Variant.readable_run_settings.html#runtraj.config.Variant.readable_run_settings">readable_run_settings (runtraj.config.Variant property)</a>
 </li>
+      <li><a href="reference/_api/runtraj.stages.Stage.reads.html#runtraj.stages.Stage.reads">reads (runtraj.stages.Stage attribute)</a>
+</li>
       <li><a href="reference/_api/runtraj.transforms.PressureWeighting.reads_zsfc.html#runtraj.transforms.PressureWeighting.reads_zsfc">reads_zsfc (runtraj.transforms.PressureWeighting attribute)</a>
 </li>
       <li><a href="getting_started/glossary.html#term-realization"><strong>realization</strong></a>
@@ -1100,6 +1130,8 @@
       <ul>
         <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.release_rows.html#runtraj.models.hysplit.HysplitModel.release_rows">(runtraj.models.hysplit.HysplitModel method)</a>
 </li>
+        <li><a href="reference/_api/runtraj.models.TransportModel.release_rows.html#runtraj.models.TransportModel.release_rows">(runtraj.models.TransportModel method)</a>
+</li>
       </ul></li>
       <li><a href="reference/_api/runtraj.Project.releases.html#runtraj.Project.releases">releases (runtraj.Project property)</a>
 </li>
@@ -1107,10 +1139,10 @@
 </li>
       <li><a href="reference/_api/runtraj.Project.releases_path.html#runtraj.Project.releases_path">releases_path (runtraj.Project property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.releases.releases_to_frame.html#runtraj.releases.releases_to_frame">releases_to_frame() (in module runtraj.releases)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.concentration.require_netcdf4.html#runtraj.concentration.require_netcdf4">require_netcdf4() (in module runtraj.concentration)</a>
 </li>
       <li><a href="reference/_api/runtraj.ProjectConfig.resolve.html#runtraj.ProjectConfig.resolve">resolve() (runtraj.ProjectConfig method)</a>
@@ -1126,11 +1158,21 @@
       <ul>
         <li><a href="reference/_api/runtraj.Simulation.result.html#runtraj.Simulation.result">(runtraj.Simulation property)</a>
 </li>
+        <li><a href="reference/_api/runtraj.stages.Stage.result.html#runtraj.stages.Stage.result">(runtraj.stages.Stage attribute)</a>
+</li>
       </ul></li>
       <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.result.html#runtraj.models.hysplit.HysplitModel.result">result() (runtraj.models.hysplit.HysplitModel method)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.models.TransportModel.result.html#runtraj.models.TransportModel.result">(runtraj.models.TransportModel method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.result_files.html#runtraj.models.hysplit.HysplitModel.result_files">result_files() (runtraj.models.hysplit.HysplitModel method)</a>
+
+      <ul>
+        <li><a href="reference/_api/runtraj.models.TransportModel.result_files.html#runtraj.models.TransportModel.result_files">(runtraj.models.TransportModel method)</a>
 </li>
+      </ul></li>
       <li><a href="reference/_api/runtraj.config.Variant.result_hash.html#runtraj.config.Variant.result_hash">result_hash (runtraj.config.Variant property)</a>
 </li>
       <li><a href="reference/_api/runtraj.Simulation.result_path.html#runtraj.Simulation.result_path">result_path (runtraj.Simulation property)</a>
@@ -1155,7 +1197,7 @@
       </ul></li>
       <li><a href="reference/_api/runtraj.models.hysplit.run_hycs_std.html#runtraj.models.hysplit.run_hycs_std">run_hycs_std() (in module runtraj.models.hysplit)</a>
 </li>
-      <li><a href="reference/_api/runtraj.models.BatchedTransportModel.run_many.html#runtraj.models.BatchedTransportModel.run_many">run_many() (runtraj.models.BatchedTransportModel method)</a>
+      <li><a href="reference/_api/runtraj.models.TransportModel.run_many.html#runtraj.models.TransportModel.run_many">run_many() (runtraj.models.TransportModel method)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.run_model.html#runtraj.models.run_model">run_model() (in module runtraj.models)</a>
 </li>
@@ -1267,6 +1309,8 @@
 </li>
       <li><a href="reference/_api/runtraj.execution.kubernetes.submit_job.html#runtraj.execution.kubernetes.submit_job">submit_job() (in module runtraj.execution.kubernetes)</a>
 </li>
+      <li><a href="reference/_api/runtraj.stages.Stage.suffix.html#runtraj.stages.Stage.suffix">suffix (runtraj.stages.Stage attribute)</a>
+</li>
       <li><a href="reference/_api/runtraj.transforms.survival.html#runtraj.transforms.survival">survival() (in module runtraj.transforms)</a>
 </li>
   </ul></td>
@@ -1349,11 +1393,13 @@
 </li>
       <li><a href="reference/_api/runtraj.meteorology.VariogramFit.html#runtraj.meteorology.VariogramFit">VariogramFit (class in runtraj.meteorology)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="getting_started/glossary.html#term-varsiwant"><strong>varsiwant</strong></a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/_api/runtraj.models.hysplit.FailureReason.html#runtraj.models.hysplit.FailureReason.VARYING_MET_INTERVAL">VARYING_MET_INTERVAL (runtraj.models.hysplit.FailureReason attribute)</a>
+</li>
+      <li><a href="reference/_api/runtraj.stages.Stage.version.html#runtraj.stages.Stage.version">version (runtraj.stages.Stage attribute)</a>
 </li>
       <li><a href="reference/_api/runtraj.models.hysplit.HysplitModel.version.html#runtraj.models.hysplit.HysplitModel.version">version() (runtraj.models.hysplit.HysplitModel method)</a>
 
