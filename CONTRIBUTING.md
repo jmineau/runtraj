@@ -558,7 +558,8 @@ check, a registry, or a manifest. Call these instead.
 
 `runtraj.execution.run` (`execution/runner.py`) finds the releases with
 missing results. A local run calls `run_releases` in this process. A Slurm
-run goes through `submit`, which writes `releases.txt`,
+run goes through `submit`, which hands the releases to the Slurm backend
+(`execution/slurm.py`, beside `execution/kubernetes.py`); it writes `releases.txt`,
 `releases.parquet` (the submitted releases' checked rows, which tasks
 read in place of `releases.csv`), `execution.yaml`, and `job.sh`
 (`job_script`) into `_slurm/<stamp>/` and calls `sbatch`. When a met

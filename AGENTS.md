@@ -104,7 +104,7 @@ src/runtraj/
   trajectories.py   the trajectory table and its Parquet file
   models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model, check_model
     hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
-  execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker,
+  execution/      ExecutionConfig (a block per backend), runner (plan, local run), slurm (job array, requeue), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
   sampling.py     sample_field: a gridded field read at points

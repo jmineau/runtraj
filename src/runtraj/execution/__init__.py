@@ -5,7 +5,9 @@ Running simulations: the runner that starts the work and the workers that do it.
 submits it to Slurm or Kubernetes and returns, and :func:`wait` waits for a job array.
 :func:`pending` is the releases either would run. :func:`task_share` is which releases one task of a
 job array runs, and :func:`job_script` the script such a job array runs, for
-a scheduler runtraj does not drive itself. The workers are in
+a scheduler runtraj does not drive itself. The Slurm backend is
+:mod:`runtraj.execution.slurm` and the Kubernetes one
+:mod:`runtraj.execution.kubernetes`; the workers are in
 :mod:`runtraj.execution.worker`.
 """
 
@@ -17,7 +19,8 @@ from .config import (
     SlurmConfig,
     Volume,
 )
-from .runner import fetch_script, job_script, pending, run, submit, task_share, wait
+from .runner import pending, run, submit, task_share
+from .slurm import fetch_script, job_script, wait
 
 __all__ = [
     "ExecutionConfig",

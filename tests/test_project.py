@@ -534,8 +534,8 @@ def test_run_on_slurm_submits_and_waits(tmp_path, monkeypatch):
     def wait(job_id, *, cluster=None):
         waited.append((job_id, cluster))
 
-    monkeypatch.setattr("runtraj.execution.runner._submit", submit)
-    monkeypatch.setattr("runtraj.execution.runner.wait", wait)
+    monkeypatch.setattr("runtraj.execution.slurm.submit_array", submit)
+    monkeypatch.setattr("runtraj.execution.slurm.wait", wait)
     monkeypatch.setattr("runtraj.execution.runner.time.sleep", slept.append)
 
     status = project.run(compute_root="/s")

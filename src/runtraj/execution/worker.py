@@ -704,7 +704,7 @@ def _share_threads(workers: int) -> None:
 
     The transport model and the programs it starts read it, so *workers*
     processes on as many CPUs do not each start a thread per CPU. A Slurm
-    task's script sets it (:func:`~runtraj.execution.runner.job_script`), and
+    task's script sets it (:func:`~runtraj.execution.slurm.job_script`), and
     a value set before the run is kept.
     """
     if "OMP_NUM_THREADS" not in os.environ:

@@ -75,12 +75,18 @@ Internal: importable from their modules, and free to change.
 Slurm job arrays
 ----------------
 
+The Slurm backend is :mod:`runtraj.execution.slurm`: it writes the job
+array and fetch scripts, submits them with ``sbatch``, follows the tasks
+with ``sacct``, and requeues a task that Slurm stops.
+
 .. autosummary::
    :toctree: _api
    :nosignatures:
 
    runtraj.execution.job_script
    runtraj.execution.fetch_script
+   runtraj.execution.slurm.submit_array
+   runtraj.execution.slurm.run_task
 
 Kubernetes indexed Jobs
 -----------------------
