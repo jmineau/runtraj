@@ -179,3 +179,10 @@ HYSPLIT run included, is a failure record and exit 1. When both happen in
 one run it exits 3, and the retry, which runs only what did not finish,
 ends with 1 if the failure remains. A bucket that stays down keeps every
 try at 3, so the program that drives the retries sets how many to make.
+
+The built-in backends do not retry the same things. A Slurm task is put
+back in the queue only after the notice before its time limit or a
+preemption, at most ten times; a Kubernetes pod is started again on every
+exit 3; PBS puts back only a preempted subjob. A scheduler you drive
+yourself retries what you tell it to: ``-Q "3"`` in the LSF example above
+puts back every task that exits with 3, a connection error included.
