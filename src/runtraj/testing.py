@@ -128,8 +128,9 @@ def run_stage(
     The project, in *directory* (an empty folder, such as pytest's
     ``tmp_path``), has one release, one variant, and :class:`ReplayModel`
     as its transport model, which hands back *particles* as the release's
-    run. It is run as ``runtraj run`` runs it, in this process. Then this
-    checks that:
+    run. It is run as ``runtraj run`` runs it, in this process. It is for a
+    stage that reads particles (:attr:`runtraj.stages.Stage.result`). Then
+    this checks that:
 
     - every simulation is complete: the particles, and the file of each stage;
     - the stage's file is at :meth:`runtraj.Simulation.path`, where
@@ -208,10 +209,4 @@ def run_stage(
     return sim
 
 
-__all__ = [
-    "REPLAY_MODEL",
-    "ReplayConfig",
-    "ReplayMet",
-    "ReplayModel",
-    "run_stage",
-]
+__all__ = ["ReplayModel", "run_stage"]
