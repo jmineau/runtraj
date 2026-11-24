@@ -96,7 +96,7 @@ def due_hours(
     normally :data:`WINDOW_HOURS` - 1 hours before it.
 
     *since*, when given, is the newest hour the project already has (in
-    ``releases.csv``). If the normal window would leave a gap after it, the
+    ``releases.csv``), down to the hour. If the normal window would leave a gap after it, the
     window reaches back to close the gap instead, at most
     :data:`MAX_BACKFILL_HOURS` before its normal start: an outage longer
     than that is closed a week at a time, by the ticks that follow.
@@ -113,6 +113,9 @@ def due_hours(
     """
     newest = (now - timedelta(hours=delay)).replace(minute=0, second=0, microsecond=0)
     oldest = newest - timedelta(hours=WINDOW_HOURS - 1)
+    if since is not None:
+        # A release off the hour, such as one added by hand, still ends its hour.
+        since = since.replace(minute=0, second=0, microsecond=0)
     if since is not None and since < oldest - timedelta(hours=1):
         oldest = max(
             since + timedelta(hours=1), oldest - timedelta(hours=MAX_BACKFILL_HOURS)
