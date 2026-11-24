@@ -1,5 +1,0 @@
-runtraj.models.TransportModel.open\_met
-=======================================
-
-.. currentmodule:: runtraj.models
-.. automethod:: TransportModel.open_met

@@ -36,12 +36,8 @@ Methods
 .. autosummary::
    :toctree:
 
-   ~TransportModel.check_met
    ~TransportModel.check_releases
    ~TransportModel.data_files
-   ~TransportModel.downloads_met
-   ~TransportModel.fetch_met
-   ~TransportModel.open_met
    ~TransportModel.release_rows
    ~TransportModel.result
    ~TransportModel.result_files

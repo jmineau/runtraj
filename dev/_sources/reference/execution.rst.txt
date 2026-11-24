@@ -144,7 +144,7 @@ the tests of a model of your own.
    runtraj.models.get_model
    runtraj.models.run_model
    runtraj.models.run_model_many
-   runtraj.models.open_met
+   runtraj.models.MetConfig
    runtraj.models.check_model
    runtraj.models.hysplit.HysplitModel
 

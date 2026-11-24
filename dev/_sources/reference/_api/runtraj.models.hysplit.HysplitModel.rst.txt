@@ -32,11 +32,8 @@ Methods
 .. autosummary::
    :toctree:
 
-   ~HysplitModel.check_met
    ~HysplitModel.check_releases
    ~HysplitModel.data_files
-   ~HysplitModel.downloads_met
-   ~HysplitModel.fetch_met
    ~HysplitModel.release_rows
    ~HysplitModel.result
    ~HysplitModel.result_files
@@ -51,6 +48,6 @@ Inherited
 ---------
 
 
-From :class:`~.TransportModel`: :py:obj:`~.TransportModel.batched`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.open_met`, :py:obj:`~.TransportModel.run_many`
+From :class:`~.TransportModel`: :py:obj:`~.TransportModel.batched`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.run_many`
 
 

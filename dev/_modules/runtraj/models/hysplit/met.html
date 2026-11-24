@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=275db078"></script>
+    <script src="../../../../_static/documentation_options.js?v=d062ad4f"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev13+gae11cd5e5" />
+  <meta name="docsearch:version" content="0.1.0a5.dev14+g0d18422a4" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -452,11 +452,12 @@
                   
   <h1>Source code for runtraj.models.hysplit.met</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""</span>
-<span class="sd">HYSPLIT's meteorology: the met config (:class:`MetConfig`), and finding, downloading, and cropping ARL files (:class:`Met`).</span>
+<span class="sd">HYSPLIT's meteorology: the met config (:class:`HysplitMetConfig`), and finding, downloading, and cropping ARL files (:class:`Met`).</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -468,13 +469,14 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">model_validator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">model_validator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute</span><span class="p">,</span> <span class="n">atomic_path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._transient</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_transient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeteorologyError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.identity</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings_hash</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.meteorology</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_window</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.catalog</span><span class="w"> </span><span class="kn">import</span> <span class="n">Catalog</span><span class="p">,</span> <span class="n">Cover</span><span class="p">,</span> <span class="n">catalog_path</span><span class="p">,</span> <span class="n">is_stray</span>
@@ -485,9 +487,9 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="MetConfig">
-<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.MetConfig.html#runtraj.models.hysplit.MetConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MetConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<div class="viewcode-block" id="HysplitMetConfig">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitMetConfig.html#runtraj.models.hysplit.HysplitMetConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HysplitMetConfig</span><span class="p">(</span><span class="n">MetConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    HYSPLIT's config for one met, as written under ``mets:`` in ``config.yaml``.</span>
 
@@ -596,8 +598,8 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-<div class="viewcode-block" id="MetConfig.settings">
-<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.MetConfig.settings.html#runtraj.models.hysplit.MetConfig.settings">[docs]</a>
+<div class="viewcode-block" id="HysplitMetConfig.settings">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitMetConfig.settings.html#runtraj.models.hysplit.HysplitMetConfig.settings">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return what a run records of this met: its weather product and its crop.</span>
@@ -616,8 +618,8 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">(),</span> <span class="s2">"crop"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop</span><span class="p">()}</span></div>
 
 
-<div class="viewcode-block" id="MetConfig.source">
-<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.MetConfig.source.html#runtraj.models.hysplit.MetConfig.source">[docs]</a>
+<div class="viewcode-block" id="HysplitMetConfig.source">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitMetConfig.source.html#runtraj.models.hysplit.HysplitMetConfig.source">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the source id of this met's files, such as ``HRRR``, as their headers carry it.</span>
@@ -633,8 +635,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span></div>
 
 
-<div class="viewcode-block" id="MetConfig.crop">
-<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.MetConfig.crop.html#runtraj.models.hysplit.MetConfig.crop">[docs]</a>
+<div class="viewcode-block" id="HysplitMetConfig.crop">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitMetConfig.crop.html#runtraj.models.hysplit.HysplitMetConfig.crop">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">crop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the crop as ``{"bbox": [west, south, east, north], "levels": n}``, or ``None`` without one.</span>
@@ -651,7 +653,73 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">download_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Extra fields, passed as keyword arguments to the arlmet archive."""</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span> <span class="k">else</span> <span class="p">{}</span></div>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span> <span class="k">else</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="HysplitMetConfig.check">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitMetConfig.check.html#runtraj.models.hysplit.HysplitMetConfig.check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">n_hours</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return what would stop HYSPLIT from running *releases* on this met, found before any run.</span>
+
+<span class="sd">        The checks of :meth:`Met.check_releases`: the met's directory</span>
+<span class="sd">        holds ARL files, every file a run needs is there, and the releases</span>
+<span class="sd">        are inside the crop. Nothing is run or downloaded, and files are read</span>
+<span class="sd">        no further than their headers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        releases : pandas.DataFrame</span>
+<span class="sd">            One row per release point, with ``release``, ``time``,</span>
+<span class="sd">            ``longitude``, and ``latitude`` columns.</span>
+<span class="sd">        n_hours : int</span>
+<span class="sd">            The length of the runs, which sets the files each needs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            ``check``, ``release`` (``NA`` for a problem of the met</span>
+<span class="sd">            itself), and ``message`` columns, one row for each problem.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">Met</span><span class="p">(</span><span class="s2">"met"</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">check_releases</span><span class="p">(</span><span class="n">releases</span><span class="p">,</span> <span class="n">n_hours</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HysplitMetConfig.fetch">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitMetConfig.fetch.html#runtraj.models.hysplit.HysplitMetConfig.fetch">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Get the met files that cover *windows*, downloading the ones a download lacks.</span>
+
+<span class="sd">        The files a run would ask for, one request to the archive for</span>
+<span class="sd">        windows that overlap (:meth:`Met.fetch`). A met without ``download``</span>
+<span class="sd">        is only checked for missing files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        windows : iterable of tuple of datetime</span>
+<span class="sd">            The time each run covers (:func:`runtraj.meteorology.run_window`).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            ``file`` and ``message`` columns: a row for each file, then a</span>
+<span class="sd">            row for each window whose files could not be had.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">Met</span><span class="p">(</span><span class="s2">"met"</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HysplitMetConfig.downloads">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitMetConfig.downloads.html#runtraj.models.hysplit.HysplitMetConfig.downloads">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">downloads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Whether this met downloads its files from an ARL archive (``download`` is set).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; HysplitMetConfig(directory="/data/hrrr", download="hrrr").downloads()</span>
+<span class="sd">        True</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">download</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+</div>
 
 
 
@@ -698,11 +766,11 @@
 <span class="sd">    ----------</span>
 <span class="sd">    name : str</span>
 <span class="sd">        Name of the met in the config.</span>
-<span class="sd">    config : MetConfig</span>
+<span class="sd">    config : HysplitMetConfig</span>
 <span class="sd">        Its settings.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">MetConfig</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitMetConfig</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
         <span class="c1">#: ``config.directory``, made absolute. A relative path starts from</span>
@@ -1478,7 +1546,7 @@
     <span class="p">)</span>
 
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Met"</span><span class="p">,</span> <span class="s2">"MetConfig"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Met"</span><span class="p">,</span> <span class="s2">"HysplitMetConfig"</span><span class="p">]</span>
 </pre></div>
 
                 </article>
