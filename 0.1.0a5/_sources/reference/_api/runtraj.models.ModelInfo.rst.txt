@@ -1,0 +1,21 @@
+﻿runtraj.models.ModelInfo
+========================
+
+.. currentmodule:: runtraj.models
+
+
+
+
+
+
+.. class-signature:: runtraj.models.ModelInfo
+
+
+.. class-parameters:: runtraj.models.ModelInfo
+
+
+
+
+
+
+

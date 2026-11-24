@@ -18,7 +18,24 @@ Parameters
 
 
 
+Attributes
+----------
 
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~KubernetesConfig.tasks
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~KubernetesConfig.check
 
 
 

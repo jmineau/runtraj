@@ -1,0 +1,6 @@
+﻿runtraj.execution.kubernetes.schedule\_job
+==========================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autofunction:: schedule_job

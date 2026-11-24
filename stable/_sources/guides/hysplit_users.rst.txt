@@ -48,7 +48,7 @@ One run
 -------
 
 :func:`runtraj.run_trajectories` runs HYSPLIT once and returns the particles.
-Here 1,000 particles leave Salt Lake City at 500 m above ground during one
+Here 200 particles leave Salt Lake City at 500 m above ground during one
 hour and are followed 6 hours forward:
 
 .. ipython:: python
@@ -59,7 +59,7 @@ hour and are followed 6 hours forward:
        time="2021-07-15 01:00", longitude=-111.85, latitude=40.77, altitude=500
    )
    cloud = runtraj.run_trajectories(
-       start, met_dir, n_hours=6, numpar=1000, emisshrs=1.0,
+       start, met_dir, n_hours=6, numpar=200, emisshrs=1.0,
        krand=2, seed=42,
    )
    cloud[["time", "particle", "lon", "lat", "zagl"]].tail()
@@ -91,9 +91,10 @@ particle with turbulence off follows the same path, so ``numpar=1`` and
    )
    path[["time", "lon", "lat", "zagl"]].iloc[[0, 59, 179, 359]]
 
-We compared this run with ``hyts_std`` on the same met. After 6 hours the two
-are 0.001 degrees apart. The mean position of 1,000 particles with
-turbulence on ended about 21 km away and 400 m lower:
+We compared this run with ``hyts_std`` (NOAA's public 5.4.2) on the same
+met. After 6 hours the two are 0.001 degrees apart in longitude and 0.008 in
+latitude. The mean position of 200 particles with turbulence on ended about
+41 km away and 340 m lower:
 
 .. list-table::
    :header-rows: 1
@@ -104,17 +105,17 @@ turbulence on ended about 21 km away and 400 m lower:
      - Latitude
      - Height (m)
    * - ``hyts_std``
-     - -110.717
-     - 40.534
-     - 1585
+     - -110.709
+     - 40.544
+     - 1354
    * - One particle, turbulence off
-     - -110.718
-     - 40.533
-     - 1644
-   * - Mean of 1,000 particles
-     - -110.961
-     - 40.583
-     - 1244
+     - -110.707
+     - 40.536
+     - 1428
+   * - Mean of 200 particles
+     - -111.111
+     - 40.735
+     - 1087
 
 So the mean of many particles is the center of a cloud that spreads as it
 goes, which is a different thing from a trajectory. For a trajectory, run one

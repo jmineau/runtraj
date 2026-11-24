@@ -1,0 +1,5 @@
+runtraj.execution.pbs.PbsBackend.describe
+=========================================
+
+.. currentmodule:: runtraj.execution.pbs
+.. automethod:: PbsBackend.describe

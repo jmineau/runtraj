@@ -10,7 +10,7 @@ what HYSPLIT chooses for you when you set nothing.
 
 The examples on this page that run use a small sample project: four
 releases an hour apart on the morning of 15 January 2021 at one site in Salt
-Lake City, 24-hour backward runs with 200 particles, and one variant,
+Lake City, 24-hour backward runs with 100 particles, and one variant,
 ``hrrr``.
 
 .. This page runs when the docs are built, on the sample project of
@@ -69,7 +69,7 @@ How many particles
 
 More particles sample the turbulence better. The far end of a run, where
 the particles have spread out and few are in any one place, converges last.
-200 particles show where the air went. For results we use 1000, below the
+100 particles show where the air went. For results we use 1000, below the
 default of 2500, because it is enough for a tower and a project of
 thousands of releases runs in less than half the time. To check a value for
 your site, run a few releases with three times as many particles as a

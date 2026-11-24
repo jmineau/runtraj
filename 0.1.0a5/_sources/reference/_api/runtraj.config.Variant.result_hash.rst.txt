@@ -1,0 +1,6 @@
+runtraj.config.Variant.result\_hash
+===================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.result_hash

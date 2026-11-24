@@ -1,0 +1,6 @@
+runtraj.execution.runner.LocalBackend.name
+==========================================
+
+.. currentmodule:: runtraj.execution.runner
+
+.. autoattribute:: LocalBackend.name

@@ -1,0 +1,5 @@
+runtraj.execution.PbsConfig.check
+=================================
+
+.. currentmodule:: runtraj.execution
+.. automethod:: PbsConfig.check

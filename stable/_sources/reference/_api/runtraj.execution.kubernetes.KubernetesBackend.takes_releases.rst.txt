@@ -1,0 +1,6 @@
+runtraj.execution.kubernetes.KubernetesBackend.takes\_releases
+==============================================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autoattribute:: KubernetesBackend.takes_releases

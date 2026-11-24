@@ -1,0 +1,6 @@
+﻿runtraj.particles.release\_metadata
+===================================
+
+.. currentmodule:: runtraj.particles
+
+.. autofunction:: release_metadata

@@ -1,0 +1,49 @@
+﻿runtraj.execution.pbs.PbsBackend
+================================
+
+.. currentmodule:: runtraj.execution.pbs
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.pbs.PbsBackend
+
+
+.. class-parameters:: runtraj.execution.pbs.PbsBackend
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~PbsBackend.name
+   ~PbsBackend.waits
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~PbsBackend.describe
+   ~PbsBackend.run
+   ~PbsBackend.submit
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.Backend`: :py:obj:`~.Backend.here`, :py:obj:`~.Backend.jobs`, :py:obj:`~.Backend.takes_releases`
+
+

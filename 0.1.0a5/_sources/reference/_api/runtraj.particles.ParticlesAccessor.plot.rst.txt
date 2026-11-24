@@ -1,0 +1,6 @@
+runtraj.particles.ParticlesAccessor.plot
+========================================
+
+.. currentmodule:: runtraj.particles
+
+.. autoproperty:: ParticlesAccessor.plot

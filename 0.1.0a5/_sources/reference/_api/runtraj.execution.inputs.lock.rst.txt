@@ -1,0 +1,6 @@
+﻿runtraj.execution.inputs.lock
+=============================
+
+.. currentmodule:: runtraj.execution.inputs
+
+.. autofunction:: lock

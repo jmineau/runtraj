@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>runtraj.execution.pbs &#8212; runtraj 0.1.0a5</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=a2d71c7f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/runtraj/execution/pbs';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.0a5" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="runtraj">
+  <meta property="og:title" content="runtraj.execution.pbs">
+  <meta property="og:description" content="Run particle dispersion models at scale.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">runtraj is in alpha: names and options may change between releases.</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.svg" class="logo__image only-light" alt="runtraj"/>
+    <img src="../../../_static/logo_dark.svg" class="logo__image only-dark pst-js-only" alt="runtraj"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.execution.pbs</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for runtraj.execution.pbs</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">The PBS backend: a project's unfinished releases as a PBS job array (PBS Pro, OpenPBS).</span>
+
+<span class="sd">With ``backend: pbs`` (:class:`PbsBackend`), :func:`runtraj.execution.submit`</span>
+<span class="sd">writes a job array script into ``_pbs/&lt;stamp&gt;/`` in the project and</span>
+<span class="sd">submits it with ``qsub`` (:func:`submit_array`). Each subjob runs</span>
+<span class="sd">``runtraj run --task``, as a Slurm array task does, so a subjob is a</span>
+<span class="sd">command line that can be read, and run again, by hand. :func:`wait`</span>
+<span class="sd">follows the array with ``qstat`` until it has finished.</span>
+
+<span class="sd">PBS sends no notice before a subjob's ``walltime``, and a user cannot put</span>
+<span class="sd">a subjob back in the queue, so a subjob that runs out of time stays</span>
+<span class="sd">stopped; running the project again skips what finished. A preempted</span>
+<span class="sd">subjob is put back by PBS itself, since the job is rerunnable (``-r y``).</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">PbsConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_project_slug</span><span class="p">,</span>
+    <span class="n">array_size</span><span class="p">,</span>
+    <span class="n">resolve_compute_root</span><span class="p">,</span>
+    <span class="n">status_after_job</span><span class="p">,</span>
+    <span class="n">write_submission</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1">#: PBS's own ``max_array_size``, for a server that does not say.</span>
+<span class="n">PBS_MAX_ARRAY_SIZE</span> <span class="o">=</span> <span class="mi">10000</span>
+
+
+<div class="viewcode-block" id="job_script">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.job_script.html#runtraj.execution.pbs.job_script">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">job_script</span><span class="p">(</span>
+    <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+    <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+    <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">n_tasks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the ``qsub`` script of a job array whose subjobs each run a share of the releases.</span>
+
+<span class="sd">    Subjob ``i`` runs ``runtraj run &lt;project&gt; --releases</span>
+<span class="sd">    &lt;folder&gt;/releases.parquet --task i/n_tasks --execution</span>
+<span class="sd">    &lt;folder&gt;/execution.yaml --cpus &lt;cpus&gt;`` with the Python that called</span>
+<span class="sd">    this, and writes its log to ``&lt;folder&gt;/&lt;i&gt;.log``. The ``#PBS`` lines</span>
+<span class="sd">    come from *execution*'s ``pbs`` block: ``-J 0-&lt;n_tasks - 1&gt;%&lt;n_workers&gt;``</span>
+<span class="sd">    (no ``-J`` for one task), a chunk of ``ncpus=&lt;cpus&gt;`` and ``mem``,</span>
+<span class="sd">    ``walltime``, ``queue``, ``account``, ``-V`` (the submitting shell's</span>
+<span class="sd">    environment, as Slurm passes it), ``-r y``, and every other PBS</span>
+<span class="sd">    resource of the block. Its ``setup`` commands run before the subjob,</span>
+<span class="sd">    after the script exports ``OMP_NUM_THREADS=1``. With</span>
+<span class="sd">    ``skip_existing=False`` only a subjob's first start runs again what</span>
+<span class="sd">    exists; a subjob PBS starts again after a preemption skips it.</span>
+<span class="sd">    """</span>
+    <span class="n">pbs</span> <span class="o">=</span> <span class="n">execution</span><span class="o">.</span><span class="n">pbs</span>
+    <span class="n">chunk</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"1:ncpus=</span><span class="si">{</span><span class="n">pbs</span><span class="o">.</span><span class="n">cpus</span><span class="si">}</span><span class="s2">"</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">":mem=</span><span class="si">{</span><span class="n">pbs</span><span class="o">.</span><span class="n">mem</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">pbs</span><span class="o">.</span><span class="n">mem</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">resources</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"select"</span><span class="p">:</span> <span class="n">chunk</span><span class="p">,</span> <span class="s2">"walltime"</span><span class="p">:</span> <span class="n">pbs</span><span class="o">.</span><span class="n">walltime</span><span class="p">,</span> <span class="o">**</span><span class="n">pbs</span><span class="o">.</span><span class="n">resources</span><span class="p">}</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">n_tasks</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># At most n_workers subjobs at once; PBS starts the next as one ends.</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"0-</span><span class="si">{</span><span class="n">n_tasks</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"%</span><span class="si">{</span><span class="n">pbs</span><span class="o">.</span><span class="n">n_workers</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">pbs</span><span class="o">.</span><span class="n">n_workers</span> <span class="o">&lt;</span> <span class="n">n_tasks</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"#!/bin/bash"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"#PBS -N runtraj-</span><span class="si">{</span><span class="n">_project_slug</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">([</span><span class="sa">f</span><span class="s2">"#PBS -J </span><span class="si">{</span><span class="n">array</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="k">if</span> <span class="n">array</span> <span class="k">else</span> <span class="p">[]),</span>
+        <span class="o">*</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"#PBS -l </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">resources</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">),</span>
+        <span class="o">*</span><span class="p">([</span><span class="sa">f</span><span class="s2">"#PBS -q </span><span class="si">{</span><span class="n">pbs</span><span class="o">.</span><span class="n">queue</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="k">if</span> <span class="n">pbs</span><span class="o">.</span><span class="n">queue</span> <span class="k">else</span> <span class="p">[]),</span>
+        <span class="o">*</span><span class="p">([</span><span class="sa">f</span><span class="s2">"#PBS -A </span><span class="si">{</span><span class="n">pbs</span><span class="o">.</span><span class="n">account</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="k">if</span> <span class="n">pbs</span><span class="o">.</span><span class="n">account</span> <span class="k">else</span> <span class="p">[]),</span>
+        <span class="s2">"#PBS -V"</span><span class="p">,</span>  <span class="c1"># the submitting shell's environment, as Slurm passes it</span>
+        <span class="s2">"#PBS -r y"</span><span class="p">,</span>  <span class="c1"># rerunnable, so PBS puts a preempted subjob back</span>
+        <span class="s2">"#PBS -j oe"</span><span class="p">,</span>
+        <span class="c1"># PBS's own output files, from before the script writes its log.</span>
+        <span class="sa">f</span><span class="s2">"#PBS -o </span><span class="si">{</span><span class="n">folder</span><span class="si">}</span><span class="s2">/"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">command</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+        <span class="s2">"-m"</span><span class="p">,</span>
+        <span class="s2">"runtraj"</span><span class="p">,</span>
+        <span class="s2">"run"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
+        <span class="s2">"--releases"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"releases.parquet"</span><span class="p">),</span>
+        <span class="s2">"--task"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"$index/</span><span class="si">{</span><span class="n">n_tasks</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"--execution"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"execution.yaml"</span><span class="p">),</span>
+        <span class="s2">"--cpus"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">pbs</span><span class="o">.</span><span class="n">cpus</span><span class="p">),</span>
+        <span class="s2">"--output"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">compute_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--compute-root"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resolve_compute_root</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">))]</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1">"'</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"$"</span><span class="p">)</span> <span class="k">else</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">command</span><span class="p">]</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">folder</span><span class="p">))</span> <span class="o">+</span> <span class="s1">'/"$index.log"'</span>
+    <span class="n">started</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">folder</span><span class="p">))</span> <span class="o">+</span> <span class="s1">'/"$index.started"'</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">""</span><span class="p">,</span>
+        <span class="c1"># One job, not an array, when there is one task: its index is 0.</span>
+        <span class="s1">'index="$</span><span class="si">{PBS_ARRAY_INDEX:-0}</span><span class="s1">"'</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"exec &gt;&gt; </span><span class="si">{</span><span class="n">log</span><span class="si">}</span><span class="s2"> 2&gt;&amp;1"</span><span class="p">,</span>
+        <span class="s1">'echo "$(date -u +</span><span class="si">%F</span><span class="s1">T%TZ) $(hostname) job $</span><span class="si">{PBS_JOBID}</span><span class="s1">"'</span><span class="p">,</span>
+        <span class="s2">"export OMP_NUM_THREADS=1"</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">pbs</span><span class="o">.</span><span class="n">setup</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_existing</span><span class="p">:</span>
+        <span class="c1"># A subjob PBS starts again keeps what it finished before.</span>
+        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="s1">'skip="--no-skip"'</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s1">'[ -e </span><span class="si">{</span><span class="n">started</span><span class="si">}</span><span class="s1"> ] &amp;&amp; skip=""'</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"touch </span><span class="si">{</span><span class="n">started</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"$skip"</span><span class="p">)</span>
+    <span class="c1"># exec, so this process is the one PBS signals.</span>
+    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"exec "</span> <span class="o">+</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_qsub</span><span class="p">(</span><span class="n">script</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Submit *script* with ``qsub`` and return its job id, such as ``12[].server``."""</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"qsub"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">script</span><span class="p">)],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">"qsub refused the job array: "</span>
+            <span class="o">+</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"exit </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="max_array_size">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.max_array_size.html#runtraj.execution.pbs.max_array_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">max_array_size</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the most subjobs a job array may have: the server's ``max_array_size``, from ``qstat -Bf``.</span>
+
+<span class="sd">    PBS's default, :data:`PBS_MAX_ARRAY_SIZE`, when ``qstat`` cannot be run</span>
+<span class="sd">    or does not say.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"qstat"</span><span class="p">,</span> <span class="s2">"-Bf"</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PBS_MAX_ARRAY_SIZE</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s*max_array_size\s*=\s*(\d+)"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="n">PBS_MAX_ARRAY_SIZE</span></div>
+
+
+
+<div class="viewcode-block" id="submit_array">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.submit_array.html#runtraj.execution.pbs.submit_array">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">submit_array</span><span class="p">(</span>
+    <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+    <span class="n">pending</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Write a submission folder for *pending* releases, submit its job array, and return its job id.</span>
+
+<span class="sd">    The folder is ``_pbs/&lt;date_time&gt;_&lt;id&gt;/`` in the project</span>
+<span class="sd">    (:func:`runtraj.execution.runner.write_submission`), with ``job.sh``,</span>
+<span class="sd">    the script given to ``qsub``, and ``job.id``, the job's id.</span>
+<span class="sd">    """</span>
+    <span class="n">n_tasks</span> <span class="o">=</span> <span class="n">array_size</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">pbs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span> <span class="n">max_array_size</span><span class="p">())</span>
+    <span class="n">folder</span> <span class="o">=</span> <span class="n">write_submission</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">pending</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="s2">"pbs"</span><span class="p">)</span>
+    <span class="n">script</span> <span class="o">=</span> <span class="n">folder</span> <span class="o">/</span> <span class="s2">"job.sh"</span>
+    <span class="n">script</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+        <span class="n">job_script</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">execution</span><span class="p">,</span>
+            <span class="n">folder</span><span class="p">,</span>
+            <span class="n">n_tasks</span><span class="p">,</span>
+            <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+            <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">job_id</span> <span class="o">=</span> <span class="n">_qsub</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"job.id"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">job_id</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Submitted job: </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2"> tasks); logs in </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">n_tasks</span><span class="p">,</span> <span class="n">folder</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">job_id</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_job_state</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the PBS state of a job (``Q``, ``R``, ``B`` for an array that began, ``F`` when finished), or ``None`` when ``qstat`` could not say.</span>
+
+<span class="sd">    A finished job that the server keeps no history of is unknown to</span>
+<span class="sd">    ``qstat``, which is read as finished.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"qstat"</span><span class="p">,</span> <span class="s2">"-x"</span><span class="p">,</span> <span class="s2">"-f"</span><span class="p">,</span> <span class="s2">"-F"</span><span class="p">,</span> <span class="s2">"json"</span><span class="p">,</span> <span class="n">job_id</span><span class="p">],</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"Unknown Job Id"</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">or</span> <span class="s2">"has finished"</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"F"</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)[</span><span class="s2">"Jobs"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">jobs</span><span class="o">.</span><span class="n">values</span><span class="p">()))[</span><span class="s2">"job_state"</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">StopIteration</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="wait">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.wait.html#runtraj.execution.pbs.wait">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">wait</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">poll</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Wait until a PBS job array has finished, polling ``qstat`` every *poll* seconds."""</span>
+    <span class="k">while</span> <span class="n">_job_state</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"F"</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">poll</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="PbsBackend">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.PbsBackend.html#runtraj.execution.pbs.PbsBackend">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PbsBackend</span><span class="p">(</span><span class="n">Backend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The ``pbs`` backend: the releases as the subjobs of one PBS job array (:func:`submit_array`).</span>
+
+<span class="sd">    ``runtraj run`` waits for the array with ``qstat`` (:func:`wait`) and</span>
+<span class="sd">    then lists the results, once more a minute later when some look</span>
+<span class="sd">    unfinished (:func:`runtraj.execution.runner.status_after_job`).</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">"pbs"</span>
+    <span class="n">config_class</span> <span class="o">=</span> <span class="n">PbsConfig</span>
+    <span class="n">waits</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="PbsBackend.submit">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.PbsBackend.submit.html#runtraj.execution.pbs.PbsBackend.submit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Submit the job array, and return its job id."""</span>
+        <span class="k">return</span> <span class="n">submit_array</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PbsBackend.run">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.PbsBackend.run.html#runtraj.execution.pbs.PbsBackend.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Submit the job array, wait for it to finish, and return the status table of *releases*."""</span>
+        <span class="n">job_id</span> <span class="o">=</span> <span class="n">submit_array</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">)</span>
+        <span class="n">wait</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">status_after_job</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PbsBackend.describe">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.pbs.PbsBackend.describe.html#runtraj.execution.pbs.PbsBackend.describe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waits</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the line ``runtraj run`` or ``runtraj submit`` prints before it submits."""</span>
+        <span class="k">if</span> <span class="n">waits</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"Submitting to PBS and waiting for the job to finish (qstat -t shows its subjobs)"</span>
+        <span class="k">return</span> <span class="s2">"Submitting to PBS and returning"</span></div>
+</div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"PBS_MAX_ARRAY_SIZE"</span><span class="p">,</span>
+    <span class="s2">"PbsBackend"</span><span class="p">,</span>
+    <span class="s2">"job_script"</span><span class="p">,</span>
+    <span class="s2">"max_array_size"</span><span class="p">,</span>
+    <span class="s2">"submit_array"</span><span class="p">,</span>
+    <span class="s2">"wait"</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

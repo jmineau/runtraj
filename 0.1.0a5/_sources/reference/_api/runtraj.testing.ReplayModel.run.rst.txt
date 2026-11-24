@@ -1,0 +1,5 @@
+runtraj.testing.ReplayModel.run
+===============================
+
+.. currentmodule:: runtraj.testing
+.. automethod:: ReplayModel.run

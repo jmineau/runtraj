@@ -30,7 +30,7 @@ deep, as hourly averages:
 
    import runtraj
    from runtraj.models import run_model
-   from runtraj.models.hysplit import HysplitConfig, MetConfig
+   from runtraj.models.hysplit import HysplitConfig, HysplitMetConfig
 
    start = runtraj.PointRelease(
        time="2021-07-15 01:00", longitude=-111.85, latitude=40.77, altitude=10
@@ -44,7 +44,7 @@ deep, as hourly averages:
        krand=2,
        seed=42,
    )
-   tree = run_model("hysplit", start, config, MetConfig.model_validate(met_dir)).result
+   tree = run_model("hysplit", start, config, HysplitMetConfig.model_validate(met_dir)).result
    slc = tree["slc"].to_dataset()
    slc
 

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.schedule &#8212; runtraj 0.1.0a4</title>
+    <title>runtraj.execution.schedule &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -505,6 +505,9 @@
 <span class="c1">#: longer outage is closed over the ticks that follow, each adding another</span>
 <span class="c1">#: week (:func:`due_hours`).</span>
 <span class="n">MAX_BACKFILL_HOURS</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">7</span>
+<span class="c1">#: The most ``--delay`` may be: a week. A longer delay is a typo (``100000`` is</span>
+<span class="c1">#: 11 years), and every hour it covers would be run against met that is not there yet.</span>
+<span class="n">MAX_DELAY_HOURS</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">7</span>
 <span class="c1">#: The columns ``sites.csv`` needs; ``altitude_ref`` (``agl`` or ``msl``) is optional.</span>
 <span class="n">SITE_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"longitude"</span><span class="p">,</span> <span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"altitude"</span><span class="p">)</span>
 
@@ -589,9 +592,15 @@
 <span class="sd">    FileNotFoundError</span>
 <span class="sd">        If the project has no ``sites.csv``.</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If a column is missing, a value is empty or not a number, a site</span>
-<span class="sd">        would not make a valid release (a latitude beyond 90, say), or</span>
-<span class="sd">        there are no rows. The message names the line.</span>
+<span class="sd">        If a column is missing (the message names the columns the file</span>
+<span class="sd">        has), a value is empty or not a number, a site would not make a</span>
+<span class="sd">        valid release (a latitude beyond 90, say), or there are no rows.</span>
+<span class="sd">        The message names the line.</span>
+
+<span class="sd">    Warns</span>
+<span class="sd">    -----</span>
+<span class="sd">    A site that repeats an earlier line is kept once, and logged: its</span>
+<span class="sd">    releases would be the same ones.</span>
 <span class="sd">    """</span>
     <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span> <span class="o">/</span> <span class="n">SITES</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
@@ -600,11 +609,18 @@
             <span class="s2">"to add a release at each hour (longitude, latitude, altitude)."</span>
         <span class="p">)</span>
     <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">newline</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8-sig"</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
-    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">SITE_COLUMNS</span> <span class="k">if</span> <span class="n">rows</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span> <span class="ow">or</span> <span class="p">[]</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">SITE_COLUMNS</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">header</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span> <span class="ow">or</span> <span class="n">missing</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SITES</span><span class="si">}</span><span class="s2"> needs rows with columns </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SITE_COLUMNS</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="n">header</span><span class="p">))</span> <span class="k">if</span> <span class="n">header</span> <span class="k">else</span> <span class="s2">"none"</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SITES</span><span class="si">}</span><span class="s2"> needs rows with columns </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SITE_COLUMNS</span><span class="p">)</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="sa">f</span><span class="s2">"its columns are </span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2"> and it has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows."</span>
+        <span class="p">)</span>
     <span class="n">sites</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lines</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">line</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
         <span class="c1"># A short row has None for what it lacks.</span>
         <span class="n">empty</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">SITE_COLUMNS</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
@@ -628,6 +644,16 @@
                 <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="s2">"msg"</span><span class="p">])</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"Value error, "</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">error</span><span class="o">.</span><span class="n">errors</span><span class="p">()</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SITES</span><span class="si">}</span><span class="s2"> line </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">reasons</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">site</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">SITE_COLUMNS</span><span class="p">,</span> <span class="s2">"altitude_ref"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2"> line </span><span class="si">%d</span><span class="s2"> repeats line </span><span class="si">%d</span><span class="s2">: the site is used once."</span><span class="p">,</span>
+                <span class="n">SITES</span><span class="p">,</span>
+                <span class="n">line</span><span class="p">,</span>
+                <span class="n">lines</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">lines</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span>
         <span class="n">sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">site</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">sites</span></div>
 
@@ -735,6 +761,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"DELAY_HOURS"</span><span class="p">,</span>
     <span class="s2">"MAX_BACKFILL_HOURS"</span><span class="p">,</span>
+    <span class="s2">"MAX_DELAY_HOURS"</span><span class="p">,</span>
     <span class="s2">"SITE_COLUMNS"</span><span class="p">,</span>
     <span class="s2">"WINDOW_HOURS"</span><span class="p">,</span>
     <span class="s2">"add_due_releases"</span><span class="p">,</span>

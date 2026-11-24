@@ -1,0 +1,6 @@
+runtraj.execution.Backend.config\_class
+=======================================
+
+.. currentmodule:: runtraj.execution
+
+.. autoattribute:: Backend.config_class

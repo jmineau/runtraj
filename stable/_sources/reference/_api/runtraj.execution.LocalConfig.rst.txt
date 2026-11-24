@@ -22,3 +22,11 @@ Parameters
 
 
 
+
+Inherited
+---------
+
+
+From :class:`~.BackendConfig`: :py:obj:`~.BackendConfig.check`, :py:obj:`~.BackendConfig.tasks`
+
+

@@ -1,0 +1,5 @@
+runtraj.execution.slurm.SlurmBackend.describe
+=============================================
+
+.. currentmodule:: runtraj.execution.slurm
+.. automethod:: SlurmBackend.describe

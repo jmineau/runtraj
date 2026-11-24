@@ -1,0 +1,5 @@
+runtraj.Project.trajectories
+============================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.trajectories

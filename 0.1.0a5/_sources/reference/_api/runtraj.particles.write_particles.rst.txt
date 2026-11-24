@@ -1,0 +1,6 @@
+﻿runtraj.particles.write\_particles
+==================================
+
+.. currentmodule:: runtraj.particles
+
+.. autofunction:: write_particles

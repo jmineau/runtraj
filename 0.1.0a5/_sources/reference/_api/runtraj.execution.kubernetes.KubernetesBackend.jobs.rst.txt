@@ -1,0 +1,5 @@
+runtraj.execution.kubernetes.KubernetesBackend.jobs
+===================================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+.. automethod:: KubernetesBackend.jobs

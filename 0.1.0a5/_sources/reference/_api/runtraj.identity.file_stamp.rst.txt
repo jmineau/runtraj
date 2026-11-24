@@ -1,0 +1,6 @@
+﻿runtraj.identity.file\_stamp
+============================
+
+.. currentmodule:: runtraj.identity
+
+.. autofunction:: file_stamp

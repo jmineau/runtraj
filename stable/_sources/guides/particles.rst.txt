@@ -10,7 +10,7 @@ analysis.
 
 The examples on this page that run use a small sample project: four
 releases an hour apart on the morning of 15 January 2021 at one site in Salt
-Lake City, 24-hour backward runs with 200 particles, and one variant,
+Lake City, 24-hour backward runs with 100 particles, and one variant,
 ``hrrr``.
 
 .. This page runs when the docs are built, on a small sample project: four

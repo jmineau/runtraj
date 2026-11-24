@@ -1,0 +1,5 @@
+runtraj.execution.KubernetesConfig.check
+========================================
+
+.. currentmodule:: runtraj.execution
+.. automethod:: KubernetesConfig.check

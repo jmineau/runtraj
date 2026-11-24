@@ -1,0 +1,6 @@
+﻿runtraj.execution.kubernetes.job\_manifest
+==========================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autofunction:: job_manifest

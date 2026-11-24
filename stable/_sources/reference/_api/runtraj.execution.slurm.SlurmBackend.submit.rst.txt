@@ -1,0 +1,5 @@
+runtraj.execution.slurm.SlurmBackend.submit
+===========================================
+
+.. currentmodule:: runtraj.execution.slurm
+.. automethod:: SlurmBackend.submit

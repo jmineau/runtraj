@@ -1,0 +1,6 @@
+runtraj.execution.slurm.SlurmBackend.waits
+==========================================
+
+.. currentmodule:: runtraj.execution.slurm
+
+.. autoattribute:: SlurmBackend.waits

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>On An HPC Cluster (Slurm) &#8212; runtraj 0.1.0a4</title>
+    <title>On An HPC Cluster (Slurm) &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="In Containers (Kubernetes)" href="containers.html" />
+    <link rel="next" title="On A PBS Cluster" href="pbs.html" />
     <link rel="prev" title="Checking A Run" href="checking.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -422,7 +422,9 @@
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">On An HPC Cluster (Slurm)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pbs.html">On A PBS Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="any_scheduler.html">On Any Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
@@ -512,7 +514,7 @@ name, here <code class="docutils literal notranslate"><span class="pre">slurm</s
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">execution</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">slurm</span>
 <span class="w">  </span><span class="nt">slurm</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">n_workers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span><span class="w">              </span><span class="c1"># number of array tasks</span>
+<span class="w">    </span><span class="nt">n_workers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span><span class="w">              </span><span class="c1"># array tasks running at once</span>
 <span class="w">    </span><span class="nt">account</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-account</span>
 <span class="w">    </span><span class="nt">partition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-partition</span>
 <span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="s">"02:00:00"</span><span class="w">            </span><span class="c1"># time limit per array task</span>
@@ -539,13 +541,26 @@ to activate inside the job.</p>
 <h2>Options<a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
 <p>The keys of the <code class="docutils literal notranslate"><span class="pre">slurm</span></code> block:</p>
 <dl>
-<dt><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></dt><dd><p>How many array tasks to split the releases into. With 10,000 releases
-and <code class="docutils literal notranslate"><span class="pre">n_workers:</span> <span class="pre">200</span></code>, each task runs 50 releases one after another.
-Each release runs once per variant, so set <code class="docutils literal notranslate"><span class="pre">time</span></code> long enough for one
-task’s share. If fewer releases are left than <code class="docutils literal notranslate"><span class="pre">n_workers</span></code>, runtraj
-submits one task per release. We size the tasks to run an hour or two,
-because each task first loads Python and the project, and a shorter
-task spends more of its time on that.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></dt><dd><p>The most array tasks running at once: how many workers the project
+gets, each with <code class="docutils literal notranslate"><span class="pre">cpus</span></code> CPUs. When one task ends, Slurm starts the
+next. <code class="docutils literal notranslate"><span class="pre">n_workers:</span> <span class="pre">100</span></code> with 1000 tasks becomes <code class="docutils literal notranslate"><span class="pre">--array=0-999%100</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">n_tasks</span></code></dt><dd><p>How many array tasks to split the releases into. Unset, it is ten per
+worker, so with 10,000 releases and <code class="docutils literal notranslate"><span class="pre">n_workers:</span> <span class="pre">100</span></code> the array has
+1000 tasks of 10 releases each, 100 running at once. We recommend
+leaving it unset: a worker whose tasks run fast takes on more of them,
+so one slow share does not hold up the run, and a task that runs out of
+time has less left to do when it starts again. Each task first loads
+Python and the project, which took about 3 s for a 10,000-release
+project, small beside a transport model run of a minute or more.
+With <code class="docutils literal notranslate"><span class="pre">cpus</span></code> above 1 a task’s share is whole rounds of <code class="docutils literal notranslate"><span class="pre">cpus</span></code>
+releases, so no CPU waits while the last few of a share run: with
+<code class="docutils literal notranslate"><span class="pre">cpus:</span> <span class="pre">8</span></code> the same project gets 625 tasks of 16.</p>
+<p>Each release runs once per variant, so set <code class="docutils literal notranslate"><span class="pre">time</span></code> long enough for one
+task’s share. There is never more than one task per release, nor more
+than the cluster’s <code class="docutils literal notranslate"><span class="pre">MaxArraySize</span></code> (<code class="docutils literal notranslate"><span class="pre">scontrol</span> <span class="pre">show</span> <span class="pre">config</span></code>; 1001
+unless the site changed it): unset, <code class="docutils literal notranslate"><span class="pre">n_tasks</span></code> stops there, and an
+<code class="docutils literal notranslate"><span class="pre">n_tasks</span></code> above it is refused.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">cpus</span></code></dt><dd><p>CPUs per array task (default 1). With more than one, each task runs that
 many releases at the same time. A local run has its own <code class="docutils literal notranslate"><span class="pre">cpus</span></code>, in
@@ -566,10 +581,6 @@ the releases per task and the variants, and add a margin. A task that
 runs out of time loses nothing (below).</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">mem</span></code>, <code class="docutils literal notranslate"><span class="pre">partition</span></code>, <code class="docutils literal notranslate"><span class="pre">account</span></code>, <code class="docutils literal notranslate"><span class="pre">qos</span></code></dt><dd><p>The <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> options of the same names.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">array_parallelism</span></code></dt><dd><p>The most tasks allowed to run at once, to stay within your group’s
-limits. <code class="docutils literal notranslate"><span class="pre">array_parallelism:</span> <span class="pre">50</span></code> becomes <code class="docutils literal notranslate"><span class="pre">--array=0-199%50</span></code>. Unset,
-Slurm’s own limits apply.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">setup</span></code></dt><dd><p>Shell commands to run at the start of each task, before runtraj. Use it
 to load modules or set environment variables. They run after the script
@@ -608,7 +619,7 @@ share a day would download the same files at the same time. The fetch job
 is one task that runs <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code> over the releases the array runs, so
 each file is downloaded once. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> prints both job IDs:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Submitted fetch job: 7712; the job array waits for it to end. Log in /path/my_project/_slurm/20261115_103000_ab12cd/fetch.log
-Submitted job: 7713 (200 tasks); logs in /path/my_project/_slurm/20261115_103000_ab12cd
+Submitted job: 7713 (1000 tasks); logs in /path/my_project/_slurm/20261115_103000_ab12cd
 Submitted job: 7713
 </pre></div>
 </div>
@@ -652,10 +663,11 @@ else fills the met directory.</p>
 queue and picks up where it stopped. Releases it already finished are
 skipped. Slurm warns each task two minutes before its time limit with the
 signal <code class="docutils literal notranslate"><span class="pre">USR1</span></code>, and stops a preempted task with <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code>. Either way
-the task stops its runs and requeues itself with <code class="docutils literal notranslate"><span class="pre">scontrol</span> <span class="pre">requeue</span></code>. The
-cluster may hold a requeued task in the queue for some minutes before it
-starts again. A task requeues itself at most 10 times, so give <code class="docutils literal notranslate"><span class="pre">time</span></code>
-some room. <code class="docutils literal notranslate"><span class="pre">scancel</span></code> stops a task without requeuing it.</p>
+the task stops its runs and exits with 3, and its job script
+(<code class="docutils literal notranslate"><span class="pre">job.sh</span></code> in the submission folder) puts it back with <code class="docutils literal notranslate"><span class="pre">scontrol</span>
+<span class="pre">requeue</span></code>. The cluster may hold a requeued task in the queue for some
+minutes before it starts again. A task is requeued at most 10 times, so
+give <code class="docutils literal notranslate"><span class="pre">time</span></code> some room. <code class="docutils literal notranslate"><span class="pre">scancel</span></code> stops a task without requeuing it.</p>
 </section>
 <section id="watch-progress-and-rerun">
 <h2>Watch progress and rerun<a class="headerlink" href="#watch-progress-and-rerun" title="Link to this heading">#</a></h2>
@@ -740,11 +752,11 @@ queue.</p>
       </div>
     </a>
     <a class="right-next"
-       href="containers.html"
+       href="pbs.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">In Containers (Kubernetes)</p>
+        <p class="prev-next-title">On A PBS Cluster</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

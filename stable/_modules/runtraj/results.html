@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.results &#8212; runtraj 0.1.0a4</title>
+    <title>runtraj.results &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -587,16 +587,14 @@
 <a class="viewcode-back" href="../../reference/_api/runtraj.results.model_result.html#runtraj.results.model_result">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">model_result</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the type of result *model* makes with *config*: its ``result(config)``, or ``particles``.</span>
+<span class="sd">    Return the type of result *model* makes with *config*, its ``result(config)``, checked.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If the model names a type that does not exist.</span>
 <span class="sd">    """</span>
-    <span class="n">says</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="s2">"particles"</span> <span class="k">if</span> <span class="n">says</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">says</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">result_type</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span></div>
+    <span class="k">return</span> <span class="n">result_type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">result</span><span class="p">(</span><span class="n">config</span><span class="p">))</span><span class="o">.</span><span class="n">name</span></div>
 
 
 

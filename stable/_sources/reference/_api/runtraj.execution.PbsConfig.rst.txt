@@ -1,0 +1,42 @@
+﻿runtraj.execution.PbsConfig
+===========================
+
+.. currentmodule:: runtraj.execution
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.PbsConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.execution.PbsConfig
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~PbsConfig.resources
+   ~PbsConfig.tasks
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~PbsConfig.check
+
+
+

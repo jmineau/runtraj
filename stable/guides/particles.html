@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Reading And Plotting Particles &#8212; runtraj 0.1.0a4</title>
+    <title>Reading And Plotting Particles &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -422,7 +422,9 @@
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pbs.html">On A PBS Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="any_scheduler.html">On Any Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
@@ -506,7 +508,7 @@ glance whether the air went where you expect, and only then load many for
 analysis.</p>
 <p>The examples on this page that run use a small sample project: four
 releases an hour apart on the morning of 15 January 2021 at one site in Salt
-Lake City, 24-hour backward runs with 200 particles, and one variant,
+Lake City, 24-hour backward runs with 100 particles, and one variant,
 <code class="docutils literal notranslate"><span class="pre">hrrr</span></code>.</p>
 <section id="one-simulation">
 <h2>One simulation<a class="headerlink" href="#one-simulation" title="Link to this heading">#</a></h2>
@@ -526,10 +528,10 @@ its particles:</p>
 <span class="gp">In [6]: </span><span class="n">particles</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 <span class="gh">Out[6]: </span>
 <span class="go">   age  particle       lon  ...   mlht    pres                time</span>
-<span class="go">0 -1.0       1.0 -111.8473  ...  150.0  858.87 2021-01-15 07:59:00</span>
-<span class="go">1 -1.0       2.0 -111.8473  ...  150.0  859.06 2021-01-15 07:59:00</span>
-<span class="go">2 -1.0       3.0 -111.8473  ...  150.0  859.38 2021-01-15 07:59:00</span>
-<span class="go">3 -1.0       4.0 -111.8473  ...  150.0  858.86 2021-01-15 07:59:00</span>
+<span class="go">0 -1.0       1.0 -111.8473  ...  150.0  859.37 2021-01-15 07:59:00</span>
+<span class="go">1 -1.0       2.0 -111.8473  ...  150.0  859.12 2021-01-15 07:59:00</span>
+<span class="go">2 -1.0       3.0 -111.8474  ...  150.0  859.34 2021-01-15 07:59:00</span>
+<span class="go">3 -1.0       4.0 -111.8473  ...  150.0  858.78 2021-01-15 07:59:00</span>
 <span class="go">4 -1.0       5.0 -111.8473  ...  150.0  859.09 2021-01-15 07:59:00</span>
 
 <span class="go">[5 rows x 21 columns]</span>
@@ -617,15 +619,15 @@ run long enough for the particles to leave the region of its sources
 
 <span class="gp">In [10]: </span><span class="n">ends</span><span class="p">[[</span><span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"age"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"zagl"</span><span class="p">]]</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
 <span class="gh">Out[10]: </span>
-<span class="go">         particle         age         lon         lat         zagl</span>
-<span class="go">count  200.000000  200.000000  200.000000  200.000000   200.000000</span>
-<span class="go">mean   100.500000 -495.660000 -112.593013   42.139432   822.804502</span>
-<span class="go">std     57.879185  140.044122    0.142354    0.017901   320.816933</span>
-<span class="go">min      1.000000 -961.000000 -112.997800   42.088000    29.708400</span>
-<span class="go">25%     50.750000 -590.250000 -112.690000   42.126875   634.063225</span>
-<span class="go">50%    100.500000 -454.000000 -112.587850   42.140450   845.349050</span>
-<span class="go">75%    150.250000 -392.750000 -112.477450   42.153225  1015.182850</span>
-<span class="go">max    200.000000 -297.000000 -112.183800   42.189100  1833.050700</span>
+<span class="go">         particle          age         lon         lat         zagl</span>
+<span class="go">count  100.000000   100.000000  100.000000  100.000000   100.000000</span>
+<span class="go">mean    50.500000  -518.620000 -112.606935   42.137872   797.238494</span>
+<span class="go">std     29.011492   150.853048    0.163699    0.020341   319.659445</span>
+<span class="go">min      1.000000 -1031.000000 -113.000100   42.090200   157.438400</span>
+<span class="go">25%     25.750000  -615.000000 -112.700625   42.126475   583.699200</span>
+<span class="go">50%     50.500000  -477.500000 -112.608650   42.138350   795.512700</span>
+<span class="go">75%     75.250000  -407.250000 -112.512775   42.150375   971.123800</span>
+<span class="go">max    100.000000  -304.000000 -111.931800   42.218100  1775.547900</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">particles.runtraj.grid_exits(bounds)</span></code> gives where each particle first left
@@ -645,7 +647,7 @@ of a tracer with a 24-hour lifetime that survives to the release.</p>
 <span class="gp">In [13]: </span><span class="n">weighted</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">weighted</span><span class="o">.</span><span class="n">age</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)[</span><span class="s2">"weight"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 <span class="gh">Out[13]: </span>
 <span class="go">age</span>
-<span class="go">-5.0    0.828805</span>
+<span class="go">-5.0    0.828801</span>
 <span class="go">-4.0    0.864064</span>
 <span class="go">-3.0    0.900827</span>
 <span class="go">-2.0    0.939155</span>
@@ -692,8 +694,8 @@ project:</p>
 <span class="gp">In [18]: </span><span class="n">both</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"release"</span><span class="p">)[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
 <span class="gh">Out[18]: </span>
 <span class="go">release</span>
-<span class="go">202101150600_-111.848_40.766_10    200</span>
-<span class="go">202101150700_-111.848_40.766_10    200</span>
+<span class="go">202101150600_-111.848_40.766_10    100</span>
+<span class="go">202101150700_-111.848_40.766_10    100</span>
 <span class="go">Name: particle, dtype: int64</span>
 
 <span class="gp">In [19]: </span><span class="n">both</span><span class="o">.</span><span class="n">runtraj</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">color_by</span><span class="o">=</span><span class="s2">"zagl"</span><span class="p">);</span>   <span class="c1"># every position of both</span>
@@ -714,8 +716,8 @@ it that way: each simulation is handled as if it were alone.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">both</span><span class="o">.</span><span class="n">runtraj</span><span class="o">.</span><span class="n">endpoints</span><span class="p">()</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"release"</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
 <span class="gh">Out[20]: </span>
 <span class="go">release</span>
-<span class="go">202101150600_-111.848_40.766_10    200</span>
-<span class="go">202101150700_-111.848_40.766_10    200</span>
+<span class="go">202101150600_-111.848_40.766_10    100</span>
+<span class="go">202101150700_-111.848_40.766_10    100</span>
 <span class="go">dtype: int64</span>
 </pre></div>
 </div>
@@ -730,8 +732,8 @@ a <code class="docutils literal notranslate"><span class="pre">site</span></code
 <span class="gp">   ....: </span>    <span class="n">sim</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulation</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">))</span>
 <span class="gp">   ....: </span>
-<span class="go">202101150600_-111.848_40.766_10/hrrr 87985</span>
-<span class="go">202101150700_-111.848_40.766_10/hrrr 90842</span>
+<span class="go">202101150600_-111.848_40.766_10/hrrr 41370</span>
+<span class="go">202101150700_-111.848_40.766_10/hrrr 43853</span>
 </pre></div>
 </div>
 <p>A run of 1000 particles over 24 hours is about 1.4 million rows, some 250 MB

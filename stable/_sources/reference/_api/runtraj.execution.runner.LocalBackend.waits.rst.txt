@@ -1,0 +1,6 @@
+runtraj.execution.runner.LocalBackend.waits
+===========================================
+
+.. currentmodule:: runtraj.execution.runner
+
+.. autoattribute:: LocalBackend.waits

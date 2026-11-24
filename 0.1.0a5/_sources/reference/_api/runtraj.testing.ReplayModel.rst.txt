@@ -1,0 +1,47 @@
+﻿runtraj.testing.ReplayModel
+===========================
+
+.. currentmodule:: runtraj.testing
+
+
+
+
+
+
+.. class-signature:: runtraj.testing.ReplayModel
+
+
+.. class-parameters:: runtraj.testing.ReplayModel
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~ReplayModel.name
+   ~ReplayModel.needs_workdir
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~ReplayModel.run
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.TransportModel`: :py:obj:`~.TransportModel.batched`, :py:obj:`~.TransportModel.check_releases`, :py:obj:`~.TransportModel.data_files`, :py:obj:`~.TransportModel.release_rows`, :py:obj:`~.TransportModel.result`, :py:obj:`~.TransportModel.result_files`, :py:obj:`~.TransportModel.run_many`, :py:obj:`~.TransportModel.sha256`, :py:obj:`~.TransportModel.version`
+
+

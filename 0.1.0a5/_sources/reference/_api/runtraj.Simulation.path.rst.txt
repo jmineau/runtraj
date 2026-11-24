@@ -1,0 +1,5 @@
+runtraj.Simulation.path
+=======================
+
+.. currentmodule:: runtraj
+.. automethod:: Simulation.path

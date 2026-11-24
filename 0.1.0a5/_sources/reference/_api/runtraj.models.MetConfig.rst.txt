@@ -1,0 +1,36 @@
+﻿runtraj.models.MetConfig
+========================
+
+.. currentmodule:: runtraj.models
+
+
+
+
+
+
+.. class-signature:: runtraj.models.MetConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.models.MetConfig
+
+
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~MetConfig.check
+   ~MetConfig.downloads
+   ~MetConfig.fetch
+   ~MetConfig.open
+   ~MetConfig.settings
+
+
+

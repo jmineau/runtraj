@@ -1,0 +1,6 @@
+runtraj.execution.pbs.PbsBackend.name
+=====================================
+
+.. currentmodule:: runtraj.execution.pbs
+
+.. autoattribute:: PbsBackend.name

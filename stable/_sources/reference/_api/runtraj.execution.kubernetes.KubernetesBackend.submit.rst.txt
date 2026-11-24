@@ -1,0 +1,5 @@
+runtraj.execution.kubernetes.KubernetesBackend.submit
+=====================================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+.. automethod:: KubernetesBackend.submit

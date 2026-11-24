@@ -1,0 +1,6 @@
+﻿runtraj.execution.pbs.submit\_array
+===================================
+
+.. currentmodule:: runtraj.execution.pbs
+
+.. autofunction:: submit_array

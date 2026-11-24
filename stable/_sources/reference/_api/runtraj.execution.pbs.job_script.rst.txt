@@ -1,0 +1,6 @@
+﻿runtraj.execution.pbs.job\_script
+=================================
+
+.. currentmodule:: runtraj.execution.pbs
+
+.. autofunction:: job_script

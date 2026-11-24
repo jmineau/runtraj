@@ -1,0 +1,5 @@
+runtraj.execution.runner.LocalBackend.describe
+==============================================
+
+.. currentmodule:: runtraj.execution.runner
+.. automethod:: LocalBackend.describe

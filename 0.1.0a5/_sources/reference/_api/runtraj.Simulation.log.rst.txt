@@ -1,0 +1,6 @@
+runtraj.Simulation.log
+======================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.log

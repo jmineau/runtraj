@@ -1,0 +1,5 @@
+runtraj.models.MetConfig.downloads
+==================================
+
+.. currentmodule:: runtraj.models
+.. automethod:: MetConfig.downloads

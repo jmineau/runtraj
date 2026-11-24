@@ -1,0 +1,49 @@
+﻿runtraj.execution.slurm.SlurmBackend
+====================================
+
+.. currentmodule:: runtraj.execution.slurm
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.slurm.SlurmBackend
+
+
+.. class-parameters:: runtraj.execution.slurm.SlurmBackend
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~SlurmBackend.name
+   ~SlurmBackend.waits
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~SlurmBackend.describe
+   ~SlurmBackend.run
+   ~SlurmBackend.submit
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.Backend`: :py:obj:`~.Backend.here`, :py:obj:`~.Backend.jobs`, :py:obj:`~.Backend.takes_releases`
+
+

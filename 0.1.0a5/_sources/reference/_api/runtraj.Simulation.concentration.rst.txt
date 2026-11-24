@@ -1,0 +1,6 @@
+runtraj.Simulation.concentration
+================================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.concentration

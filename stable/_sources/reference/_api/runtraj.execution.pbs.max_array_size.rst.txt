@@ -1,0 +1,6 @@
+﻿runtraj.execution.pbs.max\_array\_size
+======================================
+
+.. currentmodule:: runtraj.execution.pbs
+
+.. autofunction:: max_array_size

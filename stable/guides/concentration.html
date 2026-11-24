@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Concentration Grids &#8212; runtraj 0.1.0a4</title>
+    <title>Concentration Grids &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -422,7 +422,9 @@
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pbs.html">On A PBS Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="any_scheduler.html">On Any Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
@@ -517,7 +519,7 @@ deep, as hourly averages:</p>
 
 <span class="gp">In [2]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_model</span>
 
-<span class="gp">In [3]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit</span><span class="w"> </span><span class="kn">import</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">MetConfig</span>
+<span class="gp">In [3]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit</span><span class="w"> </span><span class="kn">import</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">HysplitMetConfig</span>
 
 <span class="gp">In [4]: </span><span class="n">start</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">PointRelease</span><span class="p">(</span>
 <span class="gp">   ...: </span>    <span class="n">time</span><span class="o">=</span><span class="s2">"2021-07-15 01:00"</span><span class="p">,</span> <span class="n">longitude</span><span class="o">=-</span><span class="mf">111.85</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="mf">40.77</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="mi">10</span>
@@ -535,7 +537,7 @@ deep, as hourly averages:</p>
 <span class="gp">   ...: </span><span class="p">)</span>
 <span class="gp">   ...: </span>
 
-<span class="gp">In [6]: </span><span class="n">tree</span> <span class="o">=</span> <span class="n">run_model</span><span class="p">(</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">MetConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">met_dir</span><span class="p">))</span><span class="o">.</span><span class="n">result</span>
+<span class="gp">In [6]: </span><span class="n">tree</span> <span class="o">=</span> <span class="n">run_model</span><span class="p">(</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">HysplitMetConfig</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">met_dir</span><span class="p">))</span><span class="o">.</span><span class="n">result</span>
 
 <span class="gp">In [7]: </span><span class="n">slc</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="s2">"slc"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">()</span>
 

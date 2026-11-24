@@ -1,0 +1,6 @@
+runtraj.execution.BackendConfig.tasks
+=====================================
+
+.. currentmodule:: runtraj.execution
+
+.. autoproperty:: BackendConfig.tasks

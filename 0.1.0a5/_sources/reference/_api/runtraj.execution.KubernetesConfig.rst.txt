@@ -1,0 +1,41 @@
+﻿runtraj.execution.KubernetesConfig
+==================================
+
+.. currentmodule:: runtraj.execution
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.KubernetesConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.execution.KubernetesConfig
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~KubernetesConfig.tasks
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~KubernetesConfig.check
+
+
+

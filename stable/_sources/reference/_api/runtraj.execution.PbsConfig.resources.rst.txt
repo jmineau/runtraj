@@ -1,0 +1,6 @@
+runtraj.execution.PbsConfig.resources
+=====================================
+
+.. currentmodule:: runtraj.execution
+
+.. autoproperty:: PbsConfig.resources

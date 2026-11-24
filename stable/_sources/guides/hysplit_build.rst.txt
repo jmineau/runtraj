@@ -26,6 +26,15 @@ stops on an older one with an error that names ``GLIBC``. Unpacked on
 Windows and copied over, ``exec/hycs_std`` loses its permission to run;
 ``chmod +x exec/hycs_std`` gives it back.
 
+On Windows, the folder holds ``exec/hycs_std.exe`` (and ``hyts_std.exe`` for
+the trajectory mode), and ``directory`` is the same setting. A run links
+the program into its workdir. A symbolic link needs an administrator, or
+developer mode, so without one the run makes a hard link, which takes no
+space, or a copy where the HYSPLIT folder is on another drive. The Slurm
+backend is for Linux; on Windows, ``runtraj run`` runs on this machine. You
+can submit to Kubernetes from Windows when ``execution.kubernetes.inputs``
+is a bucket: the pods run Linux and cannot open a folder on your machine.
+
 ``directory`` is a HYSPLIT setting, so a variant can set its own and
 compare two builds on the same releases:
 

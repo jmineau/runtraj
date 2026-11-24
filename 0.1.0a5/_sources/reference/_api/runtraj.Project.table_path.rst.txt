@@ -1,0 +1,5 @@
+runtraj.Project.table\_path
+===========================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.table_path

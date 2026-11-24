@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.project &#8212; runtraj 0.1.0a4</title>
+    <title>runtraj.project &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -499,7 +499,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">RESULT_TYPES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.stages</span><span class="w"> </span><span class="kn">import</span> <span class="n">reads</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.trajectories</span><span class="w"> </span><span class="kn">import</span> <span class="n">trajectories_from_table</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -911,10 +910,12 @@
         <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">append_releases_csv</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">new</span><span class="p">))</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+                    <span class="n">append_releases_csv</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">new</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">releases_to_csv</span><span class="p">(</span><span class="n">new</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">releases_to_csv</span><span class="p">(</span><span class="n">new</span><span class="p">),</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
             <span class="c1"># These were read from the file that just changed.</span>
             <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"_rows"</span><span class="p">,</span> <span class="s2">"_positions"</span><span class="p">,</span> <span class="s2">"releases"</span><span class="p">,</span> <span class="s2">"_simulations"</span><span class="p">):</span>
                 <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -1303,7 +1304,7 @@
                 <span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="p">()</span>
                     <span class="k">if</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">RESULT_TYPES</span>
-                    <span class="k">else</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">reads</span><span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)))</span>
+                    <span class="k">else</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">variant</span><span class="o">.</span><span class="n">stage</span><span class="p">(</span><span class="n">kind</span><span class="p">)</span><span class="o">.</span><span class="n">reads</span><span class="p">)</span>
                 <span class="p">)</span>
                 <span class="n">ready</span> <span class="o">=</span> <span class="n">releases</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">have</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">))</span>
                 <span class="n">missing</span> <span class="o">=</span> <span class="n">ready</span> <span class="o">-</span> <span class="n">have</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span>

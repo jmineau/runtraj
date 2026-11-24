@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Checking A Run &#8212; runtraj 0.1.0a4</title>
+    <title>Checking A Run &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -422,7 +422,9 @@
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pbs.html">On A PBS Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="any_scheduler.html">On Any Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
@@ -505,7 +507,7 @@ says which simulations need another look and why. When a run finishes but
 its particles look wrong, the last section lists what to check, in order.</p>
 <p>The examples on this page that run use a small sample project: four
 releases an hour apart on the morning of 15 January 2021 at one site in Salt
-Lake City, 24-hour backward runs with 200 particles, and one variant,
+Lake City, 24-hour backward runs with 100 particles, and one variant,
 <code class="docutils literal notranslate"><span class="pre">hrrr</span></code>. It was made as in <a class="reference internal" href="projects.html"><span class="doc">Projects And Variants</span></a>, “The same project in Python”.</p>
 <section id="before-a-run">
 <h2>Before a run<a class="headerlink" href="#before-a-run" title="Link to this heading">#</a></h2>
@@ -688,8 +690,8 @@ its variant has.</p></td>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interrupted</span></code></p></td>
 <td><p>The run started and was stopped before it finished: a time limit,
 preemption, Ctrl-C, or a lost connection.</p></td>
-<td><p>Run again. A Slurm task that gets its two-minute warning requeues
-itself.</p></td>
+<td><p>Run again. A Slurm task that gets its two-minute warning is
+requeued by its job script.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pending</span></code></p></td>
 <td><p>It has not run yet, or its particles exist and a stage file does
@@ -701,7 +703,7 @@ not.</p></td>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> exits with 0 when all its simulations are complete, 1 when
 some failed and 3 when some were interrupted, so a script or a scheduler can
-rerun on 3 and stop to look on 1 (<a class="reference internal" href="containers.html#exit-codes"><span class="std std-ref">Exit codes</span></a> lists every code).</p>
+rerun on 3 and stop to look on 1 (<a class="reference internal" href="any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a> lists every code).</p>
 </section>
 <section id="why-a-simulation-failed">
 <h2>Why a simulation failed<a class="headerlink" href="#why-a-simulation-failed" title="Link to this heading">#</a></h2>

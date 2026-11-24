@@ -1,0 +1,6 @@
+runtraj.execution.slurm.SlurmBackend.name
+=========================================
+
+.. currentmodule:: runtraj.execution.slurm
+
+.. autoattribute:: SlurmBackend.name

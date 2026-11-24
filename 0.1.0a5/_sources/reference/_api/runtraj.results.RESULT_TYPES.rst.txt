@@ -1,0 +1,6 @@
+﻿runtraj.results.RESULT\_TYPES
+=============================
+
+.. currentmodule:: runtraj.results
+
+.. autodata:: RESULT_TYPES

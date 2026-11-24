@@ -21,9 +21,15 @@ minutes there, and move it to Slurm once the results look right.
      - You have thousands of simulations and access to an HPC cluster that
        uses Slurm.
      - An ``execution`` section with your account and partition
+   * - :doc:`pbs`
+     - Your HPC cluster uses PBS Pro or OpenPBS.
+     - An ``execution`` section with your queue and account
    * - :doc:`containers`
      - You run many containers at once, such as a Kubernetes Job.
      - A volume the containers share, and ``runtraj run --task``
+   * - :doc:`any_scheduler`
+     - Another scheduler starts the tasks: LSF, HTCondor, GNU parallel.
+     - Files every machine sees, and ``runtraj run --task``
 
 Run a project
 -------------
@@ -95,7 +101,10 @@ script runs again in every worker. ``Project.init`` there stops with a
 
 You can stop a run at any time with Ctrl-C (or ``SIGTERM`` from ``kill``,
 Slurm or Kubernetes). Releases that finished stay finished, and running
-again starts the ones that were cut off from the beginning.
+again starts the ones that were cut off from the beginning. On Windows, a
+run with ``cpus`` above 1 stops its HYSPLIT runs too, but it leaves their
+workdirs in the compute root, since Windows ends a worker before it can
+remove them.
 
 If a worker process is killed outright, most often by the kernel's
 out-of-memory killer, the run stops with an error
@@ -103,8 +112,9 @@ out-of-memory killer, the run stops with an error
 cannot say which release the worker held, so the error names every release
 that was in progress. Nothing is marked failed and what finished stays
 finished: run it again and only what is missing runs, with a lower ``cpus`` or
-more memory per task if memory was the cause. The killed worker's directory in
-the compute root is not removed; clear it by hand.
+more memory per task if memory was the cause. The HYSPLIT run the killed
+worker started is ended too. Its directory in the compute root is not
+removed; clear it by hand.
 
 Save now, run later
 -------------------
@@ -152,7 +162,7 @@ Commands
    workers start when ``cpus`` is above 1. Run ``runtraj fetch`` yourself to
    see whether the archive has every file before you submit, or before you
    start tasks with ``runtraj run --task`` from another scheduler, which does
-   not fetch first (:doc:`containers`).
+   not fetch first (:doc:`any_scheduler`).
 
 ``runtraj run <project>``
    Run every unfinished simulation and wait until they are done, here or
@@ -170,7 +180,7 @@ Commands
      workdir in ``DIR``, removed after it succeeds. Projects can share
      one.
    - ``--task I/N`` runs task ``I`` of ``N`` here, as one task of a job
-     array (:doc:`containers`).
+     array (:doc:`any_scheduler`).
 
 ``runtraj submit <project>``
    Submit the unfinished simulations to Slurm as a job array, and return as

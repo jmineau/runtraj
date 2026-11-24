@@ -1,0 +1,6 @@
+﻿runtraj.execution.kubernetes.submit\_job
+========================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autofunction:: submit_job

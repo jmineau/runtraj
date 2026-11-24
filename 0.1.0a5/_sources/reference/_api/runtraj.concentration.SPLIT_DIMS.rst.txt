@@ -1,0 +1,6 @@
+﻿runtraj.concentration.SPLIT\_DIMS
+=================================
+
+.. currentmodule:: runtraj.concentration
+
+.. autodata:: SPLIT_DIMS

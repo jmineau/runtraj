@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>In Containers (Kubernetes) &#8212; runtraj 0.1.0a4</title>
+    <title>In Containers (Kubernetes) &#8212; runtraj 0.1.0a5</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=11bc7906"></script>
+    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a4';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Setting Up Kubernetes" href="kubernetes_setup.html" />
-    <link rel="prev" title="On An HPC Cluster (Slurm)" href="slurm.html" />
+    <link rel="next" title="On Any Scheduler" href="any_scheduler.html" />
+    <link rel="prev" title="On A PBS Cluster" href="pbs.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a4" />
+  <meta name="docsearch:version" content="0.1.0a5" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -422,7 +422,9 @@
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="checking.html">Checking A Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pbs.html">On A PBS Cluster</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="any_scheduler.html">On Any Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
@@ -503,17 +505,9 @@ Kubernetes Job, without Slurm. <code class="docutils literal notranslate"><span 
 (<a class="reference internal" href="#kubernetes-submit"><span class="std std-ref">Submitting to Kubernetes</span></a>); the rest of this page is what each pod does,
 for a Job you write yourself or another scheduler. <a class="reference internal" href="kubernetes_setup.html"><span class="doc">Setting Up Kubernetes</span></a>
 makes the image, the cluster and the bucket.</p>
-<p>Each container runs one share of the releases:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>run<span class="w"> </span>/project<span class="w"> </span>--task<span class="w"> </span><span class="m">3</span>/20
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">--task</span> <span class="pre">I/N</span></code> runs task <code class="docutils literal notranslate"><span class="pre">I</span></code> of <code class="docutils literal notranslate"><span class="pre">N</span></code> in this process: every <code class="docutils literal notranslate"><span class="pre">N</span></code>-th
-release of the project, starting at <code class="docutils literal notranslate"><span class="pre">I</span></code> (0 to <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">-</span> <span class="pre">1</span></code>). Every task
-splits the releases the same way, whenever it starts. Releases whose
-results exist are skipped, so running a task again only fills in what is
-missing.</p>
-<p><code class="docutils literal notranslate"><span class="pre">--releases</span> <span class="pre">ids.txt</span></code> runs only the releases listed in a file, one id per
-line. With <code class="docutils literal notranslate"><span class="pre">--task</span></code> too, the task takes its share of that list.</p>
+<p>Each container runs one share of the releases, <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">/project</span>
+<span class="pre">--task</span> <span class="pre">3/20</span></code>, as a task on any scheduler does (<a class="reference internal" href="any_scheduler.html"><span class="doc">On Any Scheduler</span></a>:
+how the releases are shared, what a task relies on, and its exit codes).</p>
 <section id="what-every-container-needs">
 <h2>What every container needs<a class="headerlink" href="#what-every-container-needs" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -569,14 +563,25 @@ volume for the project. The output directory must then be on a bucket too,
 or each pod would write its results to its own disk; <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>
 refuses that. Without <code class="docutils literal notranslate"><span class="pre">inputs</span></code> the pods open the project folder at the
 path it has where you submit, so it must be on a volume they mount at that
-path.</p>
+path. Copying never deletes: a <code class="docutils literal notranslate"><span class="pre">sites.csv</span></code> or a table you removed from the
+project stays on the bucket, where the pods still read it, so <code class="docutils literal notranslate"><span class="pre">submit</span></code> and
+<code class="docutils literal notranslate"><span class="pre">schedule</span></code> log a warning naming the files the bucket has that the project
+does not. Delete them there (<code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span> <span class="pre">rm</span></code>, for one).</p>
 <p><code class="docutils literal notranslate"><span class="pre">image</span></code> is required. runtraj publishes no image: an image needs runtraj,
 HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> (downloaded from NOAA ARL; <a class="reference internal" href="../getting_started/installation.html"><span class="doc">Installation</span></a>)
 and the packages of the stages the project names. Every pod must have the
 same <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, since its checksum is part of each run’s settings.</p>
+<p>The block is checked when the project opens, so a setting Kubernetes would
+refuse stops <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> before anything reaches the cluster:
+<code class="docutils literal notranslate"><span class="pre">image</span></code> is not empty and has no space; <code class="docutils literal notranslate"><span class="pre">namespace</span></code> (one label),
+<code class="docutils literal notranslate"><span class="pre">service_account</span></code>, each of <code class="docutils literal notranslate"><span class="pre">secrets</span></code> and each volume’s <code class="docutils literal notranslate"><span class="pre">claim_name</span></code>
+are Kubernetes names (lowercase letters, digits and <code class="docutils literal notranslate"><span class="pre">-</span></code>, starting and
+ending with a letter or digit); and each volume’s <code class="docutils literal notranslate"><span class="pre">mount_path</span></code> has no
+<code class="docutils literal notranslate"><span class="pre">:</span></code> (set <code class="docutils literal notranslate"><span class="pre">read_only</span></code> rather than writing <code class="docutils literal notranslate"><span class="pre">/met:ro</span></code>), is not <code class="docutils literal notranslate"><span class="pre">/</span></code> or
+<code class="docutils literal notranslate"><span class="pre">/scratch</span></code>, and is not another volume’s.</p>
 <p>Each pod gets an <code class="docutils literal notranslate"><span class="pre">emptyDir</span></code> at <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> as its <code class="docutils literal notranslate"><span class="pre">TMPDIR</span></code>, where its
 copy of the inputs and its workdirs go, and one thread per worker. The Job
-retries a pod from its exit code (<a class="reference internal" href="#exit-codes"><span class="std std-ref">Exit codes</span></a>): 3 is retried up to
+retries a pod from its exit code (<a class="reference internal" href="any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a>): 3 is retried up to
 three times per task, 1 and 4 fail that task only, 2 fails the whole Job,
 and a pod evicted or preempted is retried without counting. Each pod is
 given the hash of <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> and <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> as they were
@@ -601,7 +606,10 @@ failed simulations each have a <code class="docutils literal notranslate"><span 
 project’s name and kept when they were made for this project’s inputs, so
 another project of the same name is left out. When <code class="docutils literal notranslate"><span class="pre">kubectl</span></code> cannot list
 them, the line says why and the counts still print. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span>
-<span class="pre">--json</span></code> adds them as <code class="docutils literal notranslate"><span class="pre">jobs</span></code>.</p>
+<span class="pre">--json</span></code> adds them as <code class="docutils literal notranslate"><span class="pre">jobs</span></code>. When the output directory does not exist
+(a typo in <code class="docutils literal notranslate"><span class="pre">--output</span></code>, or nothing has run yet), <code class="docutils literal notranslate"><span class="pre">status</span></code> says so under
+<code class="docutils literal notranslate"><span class="pre">Output:</span></code> instead of only counting every simulation as pending, and
+<code class="docutils literal notranslate"><span class="pre">--json</span></code> has <code class="docutils literal notranslate"><span class="pre">output_exists</span></code>.</p>
 </section>
 <section id="running-every-hour">
 <span id="kubernetes-schedule"></span><h2>Running every hour<a class="headerlink" href="#running-every-hour" title="Link to this heading">#</a></h2>
@@ -615,7 +623,10 @@ valley,-112.1155,40.5385,5,
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">longitude</span></code>, <code class="docutils literal notranslate"><span class="pre">latitude</span></code> and <code class="docutils literal notranslate"><span class="pre">altitude</span></code> are required; <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>
 (<code class="docutils literal notranslate"><span class="pre">agl</span></code>, the default, or <code class="docutils literal notranslate"><span class="pre">msl</span></code>) is optional, and other columns, such as a
-name, are ignored. The project needs no <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> to start. Then,
+name, are ignored. A site that repeats an earlier line is used once, with a
+warning that names both lines; a header without the required columns is
+refused with the columns the file has. The project needs no
+<code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> to start. Then,
 with the same <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block as for <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>schedule<span class="w"> </span>/project
 </pre></div>
@@ -625,7 +636,8 @@ At 15 minutes past each hour (UTC) the CronJob starts one pod, which runs
 <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span></code>. A tick</p>
 <ol class="arabic simple">
 <li><p>adds a release at each site for each hour of the last day that is at
-least <code class="docutils literal notranslate"><span class="pre">--delay</span></code> hours old (8 by default), and reaches back up to a week
+least <code class="docutils literal notranslate"><span class="pre">--delay</span></code> hours old (8 by default, at most a week, 168), and
+reaches back up to a week
 further to close a gap after the newest hour <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> holds, as
 after an outage;</p></li>
 <li><p>writes <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> back, to the bucket when the inputs are on one;</p></li>
@@ -710,7 +722,7 @@ runs that need them</p></li>
 <li><p>3 when it was stopped (Ctrl-C, or the SIGTERM that Kubernetes and Slurm
 send), or the archive was busy or could not be reached, which a retry may
 get past</p></li>
-<li><p>4 for any other unexpected error (<a class="reference internal" href="#exit-codes"><span class="std std-ref">Exit codes</span></a>)</p></li>
+<li><p>4 for any other unexpected error (<a class="reference internal" href="any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a>)</p></li>
 </ul>
 <p>Run it again to get the missing files or to finish after a stop: the files
 it got are kept. A stop removes the file being downloaded. A process killed
@@ -774,82 +786,10 @@ the signal and so inside Kubernetes’ default 30 s grace period. That holds
 for <code class="docutils literal notranslate"><span class="pre">--cpus</span></code> above 1 too: the pod’s workers and HYSPLIT runs stop with it.</p>
 </section>
 <section id="exit-codes">
-<span id="id1"></span><h2>Exit codes<a class="headerlink" href="#exit-codes" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> exits with:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<colgroup>
-<col style="width: 10.0%" />
-<col style="width: 90.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Code</p></th>
-<th class="head"><p>Meaning</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>0</p></td>
-<td><p>Every simulation it ran is complete.</p></td>
-</tr>
-<tr class="row-odd"><td><p>1</p></td>
-<td><p>Some simulations failed. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> counts them by reason. A
-retry runs them again, which helps only when the cause is fixed.</p></td>
-</tr>
-<tr class="row-even"><td><p>2</p></td>
-<td><p>The command line was wrong: an unknown option, a bad value, or a
-directory that is not a project. Or the project’s files are invalid:
-<code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> is not valid YAML or has a misspelled setting, or a
-row of <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> is bad. Or a met directory does not exist
-or holds no ARL file (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> lists it; <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code> exits
-with 2 for it only when the output may hold results). Nothing ran. Do
-not retry.</p></td>
-</tr>
-<tr class="row-odd"><td><p>3</p></td>
-<td><p>Retry it. Some simulations did not finish, because the run was
-stopped (Ctrl-C, or a stop signal from Kubernetes or Slurm), a worker
-process was killed (<code class="docutils literal notranslate"><span class="pre">--cpus</span></code> above 1; the error names the releases
-that were in progress, and it is usually the out-of-memory killer, so a
-retry may need fewer <code class="docutils literal notranslate"><span class="pre">--cpus</span></code>), or a connection or I/O error, such as
-an output bucket that could not be reached, stopped an unfinished
-simulation or ended the run. A retry continues where it stopped.</p></td>
-</tr>
-<tr class="row-even"><td><p>4</p></td>
-<td><p>A bug: any other error the command did not expect. Its traceback is
-printed. Do not retry; a retry meets the same error.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>An unexpected error ends with 3, not 4, when a retry may get past it:</p>
-<ul class="simple">
-<li><p>a refused, reset or timed-out connection, or a name that did not resolve,
-including the cloud libraries’ own errors for these (botocore’s
-<code class="docutils literal notranslate"><span class="pre">EndpointConnectionError</span></code> and <code class="docutils literal notranslate"><span class="pre">ReadTimeoutError</span></code>)</p></li>
-<li><p>a busy or briefly unavailable service: HTTP 408, 429, 500, 502, 503 or
-504, an FTP 4xx reply such as “421 too many users”, or an FTP server that
-closed the connection</p></li>
-<li><p>input/output trouble that goes away: <code class="docutils literal notranslate"><span class="pre">EIO</span></code>, a stale NFS handle, a busy
-or interrupted call</p></li>
-</ul>
-<p>Anything else is 4: another HTTP status (a bucket in another region, a
-403, a 404), an FTP 5xx reply, a file that is not there or may not be used,
-or a full disk. runtraj decides from the error and what caused it, not from
-its type, because s3fs and fsspec’s HTTP filesystem report many permanent
-answers as a plain <code class="docutils literal notranslate"><span class="pre">OSError</span></code> or <code class="docutils literal notranslate"><span class="pre">FileNotFoundError</span></code>. Every <code class="docutils literal notranslate"><span class="pre">runtraj</span></code>
-command follows this table, except that a closed standard output
-(<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span> <span class="pre">|</span> <span class="pre">head</span></code>) ends quietly with 1, and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code> gives 1
-for a file the archive does not have.</p>
-<p>The same rule applies to an error inside one simulation, such as a worker
-that cannot write its result to the output bucket. An error a retry may get
-past is not a failure of the simulation: no failure record is written (an
-earlier attempt’s is removed), the simulation stays <code class="docutils literal notranslate"><span class="pre">pending</span></code>, or
-<code class="docutils literal notranslate"><span class="pre">interrupted</span></code> once its run had started, the other simulations go on, and
-the run ends with 3. Any other error, a <code class="docutils literal notranslate"><span class="pre">SimulationError</span></code> such as a failed
-HYSPLIT run included, is a failure record and exit 1. When both happen in
-one run it exits 3, and the retry, which runs only what did not finish,
-ends with 1 if the failure remains. A bucket that stays down keeps every
-try at 3, so the program that drives the retries sets how many to make.</p>
-<p>For a Kubernetes indexed Job, a <code class="docutils literal notranslate"><span class="pre">podFailurePolicy</span></code> that retries on 3 and
-fails the task on 1 and 4 follows from this table.</p>
+<h2>Exit codes<a class="headerlink" href="#exit-codes" title="Link to this heading">#</a></h2>
+<p>Each pod’s exit code says whether to retry it (<a class="reference internal" href="any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a>). For a
+Kubernetes indexed Job, a <code class="docutils literal notranslate"><span class="pre">podFailurePolicy</span></code> that retries on 3 and fails
+the task on 1 and 4 follows from that table.</p>
 <p>When the Job is done, <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span> <span class="pre">/project</span></code> counts the finished and
 failed simulations of the whole project. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span> <span class="pre">/project</span> <span class="pre">--json</span></code>
 gives the same counts, per state and variant, as JSON for the program
@@ -868,20 +808,20 @@ that drives the Job.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="slurm.html"
+       href="pbs.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">On An HPC Cluster (Slurm)</p>
+        <p class="prev-next-title">On A PBS Cluster</p>
       </div>
     </a>
     <a class="right-next"
-       href="kubernetes_setup.html"
+       href="any_scheduler.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Setting Up Kubernetes</p>
+        <p class="prev-next-title">On Any Scheduler</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
