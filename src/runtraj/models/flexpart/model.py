@@ -6,9 +6,9 @@ import contextlib
 import datetime as dt
 import hashlib
 import os
-import resource
 import signal
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -195,6 +195,10 @@ def run_flexpart(
         ``EXIT_STATUS`` when it ended without its closing line, with the
         last lines of its output.
     """
+    if sys.platform == "win32":
+        raise SimulationError(
+            "FLEXPART runs on Linux and macOS: runtraj does not run it on Windows."
+        )
     log_path = workdir / LOG_FILE
     env = {**os.environ, "OMP_NUM_THREADS": str(config.threads)}
     with (
@@ -236,6 +240,8 @@ def _raise_stack_limit() -> None:
     Where the system refuses, FLEXPART runs with the limit it has: macOS
     reports no hard limit and still refuses a stack above 64 MB.
     """
+    import resource  # POSIX only; FLEXPART does not run on Windows
+
     _, hard = resource.getrlimit(resource.RLIMIT_STACK)
     with contextlib.suppress(ValueError, OSError):
         resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))

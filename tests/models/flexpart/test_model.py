@@ -1,7 +1,6 @@
 """Tests for FLEXPART's config, met, input files, and model, with a stand-in for its executable."""
 
 import datetime as dt
-import resource
 import shutil
 import stat
 import sys
@@ -24,6 +23,7 @@ from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
 pytest.importorskip("eccodes")
 
 from ...fixtures.grib import write_gfs
+from ...fixtures.platform import not_on_windows
 
 SAMPLE = Path(__file__).parent / "data" / "partoutput_20230601180000_init.nc"
 RELEASE = PointRelease(
@@ -280,6 +280,7 @@ def test_release_rows_of_a_multipoint_follow_the_releases_split():
     assert rows["lon"].tolist() == [-111.8] * 4 + [-111.9] * 3 + [-112.0] * 3
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_trajectories_of_a_column_gives_release_heights(checkout, era5, tmp_path):
     column = ColumnRelease(
         time="2023-06-01 18:00", longitude=-111.848, latitude=40.766, bottom=0, top=50
@@ -308,6 +309,7 @@ def test_partoptions_turn_on_the_met_at_each_particle():
 # -- the model -----------------------------------------------------------------
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_writes_the_inputs_and_reads_the_particles(checkout, era5, tmp_path):
     workdir = tmp_path / "work"
     workdir.mkdir()
@@ -359,6 +361,7 @@ def test_met_config_has_no_source_setting(era5):
         FlexpartMetConfig(directory=era5, source="era5")
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_trajectories_returns_flexpart_s_particles(checkout, era5, tmp_path):
     particles = runtraj.run_trajectories(
         RELEASE,
@@ -390,6 +393,7 @@ def test_eta_runs_the_eta_build(checkout):
         FlexpartModel().sha256(config(checkout, eta=True))
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_era5_runs_on_the_meter_build(checkout, era5, tmp_path):
     """FLEXPART's meter build reads ECMWF data too (seen on a real ERA5 run)."""
     met = FlexpartMetConfig(directory=era5)
@@ -400,7 +404,10 @@ def test_era5_runs_on_the_meter_build(checkout, era5, tmp_path):
 @pytest.mark.skipif(
     sys.platform == "darwin", reason="macOS refuses a stack above 64 MB"
 )
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, era5, tmp_path):
+    import resource
+
     """FLEXPART's documentation asks for ``ulimit -s unlimited`` with OpenMP."""
     soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
     expected = "unlimited" if hard == resource.RLIM_INFINITY else str(hard // 1024)
@@ -419,10 +426,12 @@ def test_run_raises_the_stack_limit_to_the_hard_limit(checkout, era5, tmp_path):
     assert (tmp_path / "stack_limit").read_text().strip() == expected
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_goes_on_where_the_stack_limit_cannot_be_raised(
     checkout, era5, tmp_path, monkeypatch
 ):
     """MacOS reports no hard limit and refuses the raise; FLEXPART still runs."""
+    import resource
 
     def refuse(*args):
         raise ValueError("current limit exceeds maximum limit")
@@ -438,6 +447,7 @@ def test_version_is_none_without_file_or_git(tmp_path):
     assert FlexpartModel().version(config(tmp_path)) is None
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_fails_with_flexpart_s_output(checkout, era5, tmp_path):
     exe = checkout / "src" / "FLEXPART"
     exe.write_text("#!/bin/bash\necho ' #### FLEXPART MODEL ERROR! bad'\nexit 1\n")
@@ -456,6 +466,7 @@ def test_run_fails_with_flexpart_s_output(checkout, era5, tmp_path):
     assert "MODEL ERROR" in caught.value.log
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_without_particle_output(checkout, era5, tmp_path):
     exe = checkout / "src" / "FLEXPART"
     exe.write_text("#!/bin/bash\necho ' CONGRATULATIONS'\n")
@@ -473,6 +484,7 @@ def test_run_without_particle_output(checkout, era5, tmp_path):
     assert caught.value.reason == "NO_PARTICLE_DATA"
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_run_timeout(checkout, era5, tmp_path):
     exe = checkout / "src" / "FLEXPART"
     exe.write_text("#!/bin/bash\nsleep 30\n")
@@ -508,6 +520,7 @@ def test_run_refuses_missing_met_before_running(checkout, era5, tmp_path):
     assert not np.any([p.name == "options" for p in workdir.iterdir()])
 
 
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
 def test_a_project_runs_flexpart(checkout, era5, tmp_path):
     from runtraj import Project
 
@@ -527,3 +540,15 @@ def test_a_project_runs_flexpart(checkout, era5, tmp_path):
     particles = Project(tmp_path / "proj").particles()
     assert len(particles) == 5 * 24
     assert "mlht" in particles.columns
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="the refusal is Windows' own")
+def test_run_on_windows_says_flexpart_does_not_run_there(checkout, era5, tmp_path):
+    with pytest.raises(SimulationError, match="Linux and macOS"):
+        FlexpartModel().run(
+            RELEASE,
+            config(checkout),
+            FlexpartMetConfig(directory=era5),
+            WINDOW,
+            tmp_path,
+        )
