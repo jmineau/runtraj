@@ -21,9 +21,15 @@ minutes there, and move it to Slurm once the results look right.
      - You have thousands of simulations and access to an HPC cluster that
        uses Slurm.
      - An ``execution`` section with your account and partition
+   * - :doc:`pbs`
+     - Your HPC cluster uses PBS Pro or OpenPBS.
+     - An ``execution`` section with your queue and account
    * - :doc:`containers`
      - You run many containers at once, such as a Kubernetes Job.
      - A volume the containers share, and ``runtraj run --task``
+   * - :doc:`any_scheduler`
+     - Another scheduler starts the tasks: LSF, HTCondor, GNU parallel.
+     - Files every machine sees, and ``runtraj run --task``
 
 Run a project
 -------------
@@ -156,7 +162,7 @@ Commands
    workers start when ``cpus`` is above 1. Run ``runtraj fetch`` yourself to
    see whether the archive has every file before you submit, or before you
    start tasks with ``runtraj run --task`` from another scheduler, which does
-   not fetch first (:doc:`containers`).
+   not fetch first (:doc:`any_scheduler`).
 
 ``runtraj run <project>``
    Run every unfinished simulation and wait until they are done, here or
@@ -174,7 +180,7 @@ Commands
      workdir in ``DIR``, removed after it succeeds. Projects can share
      one.
    - ``--task I/N`` runs task ``I`` of ``N`` here, as one task of a job
-     array (:doc:`containers`).
+     array (:doc:`any_scheduler`).
 
 ``runtraj submit <project>``
    Submit the unfinished simulations to Slurm as a job array, and return as

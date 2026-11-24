@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=734272f8"></script>
+    <script src="../_static/documentation_options.js?v=b2094cf7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev21+gd17ebb510" />
+  <meta name="docsearch:version" content="0.1.0a5.dev22+g3c148aeff" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1020,9 +1020,9 @@ process or in a process pool.</p></li>
 (<a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">task_share()</span></code></a>) with <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code>. A local
 run happens in this process. A program that starts the tasks itself, on
 another scheduler, writes <a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-func docutils literal notranslate"><span class="pre">pending()</span></code></a> to the
-<code class="docutils literal notranslate"><span class="pre">releases.txt</span></code> each task reads (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--releases</span></code>);
-<a class="reference internal" href="_api/runtraj.execution.wait.html#runtraj.execution.wait" title="runtraj.execution.wait"><code class="xref py py-func docutils literal notranslate"><span class="pre">wait()</span></code></a> waits for a
-Slurm job array by its id.</p>
+<code class="docutils literal notranslate"><span class="pre">releases.txt</span></code> each task reads (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--releases</span></code>;
+<a class="reference internal" href="../guides/any_scheduler.html"><span class="doc">On Any Scheduler</span></a>); <a class="reference internal" href="_api/runtraj.execution.wait.html#runtraj.execution.wait" title="runtraj.execution.wait"><code class="xref py py-func docutils literal notranslate"><span class="pre">wait()</span></code></a> waits
+for a Slurm job array by its id.</p>
 <section id="running">
 <h2>Running<a class="headerlink" href="#running" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
@@ -1074,7 +1074,7 @@ Slurm job array by its id.</p>
 </div>
 </section>
 <section id="backends">
-<h2>Backends<a class="headerlink" href="#backends" title="Link to this heading">#</a></h2>
+<span id="execution-backends"></span><h2>Backends<a class="headerlink" href="#backends" title="Link to this heading">#</a></h2>
 <p>Where the releases run is a backend, which <code class="docutils literal notranslate"><span class="pre">execution.backend</span></code> names:
 <code class="docutils literal notranslate"><span class="pre">local</span></code> runs them in this process, <code class="docutils literal notranslate"><span class="pre">slurm</span></code> as one Slurm job array,
 <code class="docutils literal notranslate"><span class="pre">pbs</span></code> as one PBS job array, <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> as one Kubernetes indexed Job.
@@ -1103,7 +1103,7 @@ can use it; one that writes <a class="reference internal" href="_api/runtraj.exe
 them in <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code>. The tasks need nothing else: every task splits
 the releases the same way (<a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">task_share()</span></code></a>), skips
 what is complete, and exits with a code that says whether to try it again
-(<a class="reference internal" href="../guides/containers.html#exit-codes"><span class="std std-ref">Exit codes</span></a>).</p>
+(<a class="reference internal" href="../guides/any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a>).</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.Backend.html#runtraj.execution.Backend" title="runtraj.execution.Backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.Backend</span></code></a></p></td>

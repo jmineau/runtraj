@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=734272f8"></script>
+    <script src="../_static/documentation_options.js?v=b2094cf7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev21+gd17ebb510" />
+  <meta name="docsearch:version" content="0.1.0a5.dev22+g3c148aeff" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -424,6 +424,7 @@
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">On An HPC Cluster (Slurm)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pbs.html">On A PBS Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers.html">In Containers (Kubernetes)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="any_scheduler.html">On Any Scheduler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kubernetes_setup.html">Setting Up Kubernetes</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Results</span></p>
@@ -526,9 +527,17 @@ simulations. This is the default.</p></td>
 uses Slurm.</p></td>
 <td><p>An <code class="docutils literal notranslate"><span class="pre">execution</span></code> section with your account and partition</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="containers.html"><span class="doc">In Containers (Kubernetes)</span></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="pbs.html"><span class="doc">On A PBS Cluster</span></a></p></td>
+<td><p>Your HPC cluster uses PBS Pro or OpenPBS.</p></td>
+<td><p>An <code class="docutils literal notranslate"><span class="pre">execution</span></code> section with your queue and account</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="containers.html"><span class="doc">In Containers (Kubernetes)</span></a></p></td>
 <td><p>You run many containers at once, such as a Kubernetes Job.</p></td>
 <td><p>A volume the containers share, and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="any_scheduler.html"><span class="doc">On Any Scheduler</span></a></p></td>
+<td><p>Another scheduler starts the tasks: LSF, HTCondor, GNU parallel.</p></td>
+<td><p>Files every machine sees, and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -641,7 +650,7 @@ in turn with <code class="docutils literal notranslate"><span class="pre">fetch:
 workers start when <code class="docutils literal notranslate"><span class="pre">cpus</span></code> is above 1. Run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code> yourself to
 see whether the archive has every file before you submit, or before you
 start tasks with <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code> from another scheduler, which does
-not fetch first (<a class="reference internal" href="containers.html"><span class="doc">In Containers (Kubernetes)</span></a>).</p>
+not fetch first (<a class="reference internal" href="any_scheduler.html"><span class="doc">On Any Scheduler</span></a>).</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Run every unfinished simulation and wait until they are done, here or
 as a Slurm job array. Its options:</p>
@@ -658,7 +667,7 @@ names.</p></li>
 workdir in <code class="docutils literal notranslate"><span class="pre">DIR</span></code>, removed after it succeeds. Projects can share
 one.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--task</span> <span class="pre">I/N</span></code> runs task <code class="docutils literal notranslate"><span class="pre">I</span></code> of <code class="docutils literal notranslate"><span class="pre">N</span></code> here, as one task of a job
-array (<a class="reference internal" href="containers.html"><span class="doc">In Containers (Kubernetes)</span></a>).</p></li>
+array (<a class="reference internal" href="any_scheduler.html"><span class="doc">On Any Scheduler</span></a>).</p></li>
 </ul>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Submit the unfinished simulations to Slurm as a job array, and return as
@@ -677,7 +686,7 @@ With <code class="docutils literal notranslate"><span class="pre">backend:</span
 </dl>
 <p>Every command exits with 0 when all went well, 1 when some simulations
 failed or <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> found something, and 3 when a run was stopped
-before it finished, so a script can rerun on 3 (<a class="reference internal" href="containers.html#exit-codes"><span class="std std-ref">Exit codes</span></a> lists
+before it finished, so a script can rerun on 3 (<a class="reference internal" href="any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a> lists
 every code).</p>
 </section>
 <section id="when-a-simulation-fails">

@@ -22,7 +22,9 @@ word in the :doc:`../getting_started/glossary`.
   stands, and find out why one failed
 - :doc:`slurm`: run thousands of simulations on an HPC cluster
 - :doc:`pbs`: the same on a PBS Pro or OpenPBS cluster
-- :doc:`containers`: run with Kubernetes or another scheduler
+- :doc:`containers`: run with Kubernetes
+- :doc:`any_scheduler`: run on any other scheduler (LSF, HTCondor, GNU
+  parallel), and what each task's exit code means
 - :doc:`kubernetes_setup`: the image, a cluster and a bucket for Kubernetes,
   on your computer or on Google Cloud
 
@@ -62,6 +64,7 @@ word in the :doc:`../getting_started/glossary`.
    slurm
    pbs
    containers
+   any_scheduler
    kubernetes_setup
 
 .. toctree::
