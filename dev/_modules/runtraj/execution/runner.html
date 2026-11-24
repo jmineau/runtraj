@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=98e7dbe6"></script>
+    <script src="../../../_static/documentation_options.js?v=3d2ee12e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev18+g217e4a30a" />
+  <meta name="docsearch:version" content="0.1.0a5.dev19+g3127f852c" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -783,12 +783,12 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    In a Slurm job, a task (``task`` given) that stops with work left</span>
-<span class="sd">    requeues itself with ``scontrol requeue`` when it was preempted (Slurm</span>
-<span class="sd">    set the job's ``PreemptTime``) or got SIGUSR1, which the job array</span>
-<span class="sd">    script asks Slurm to send :data:`runtraj.execution.slurm.NOTICE_SECONDS` before the time</span>
-<span class="sd">    limit. It starts again later and skips what it finished. A task</span>
-<span class="sd">    stopped by ``scancel`` is not requeued.</span>
+<span class="sd">    A task (``task`` given) stopped with SIGTERM or Ctrl-C raises</span>
+<span class="sd">    ``KeyboardInterrupt``, and ``runtraj run`` exits with 3. Whoever</span>
+<span class="sd">    started the task decides whether it runs again: the Slurm job array</span>
+<span class="sd">    script requeues it after the time-limit notice or a preemption</span>
+<span class="sd">    (:func:`runtraj.execution.job_script`), and a Kubernetes Job retries it</span>
+<span class="sd">    (:mod:`runtraj.execution.kubernetes`). It then skips what it finished.</span>
 <span class="sd">    """</span>
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
     <span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
@@ -799,14 +799,11 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"run: every simulation is complete; nothing to do"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># One task of a job array, in this process, whatever the backend.</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">slurm</span>
-
-        <span class="k">return</span> <span class="n">slurm</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span>
-            <span class="n">project</span><span class="p">,</span>
-            <span class="n">todo</span><span class="p">,</span>
-            <span class="k">lambda</span><span class="p">:</span> <span class="n">run_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="c1"># One task of a job array, in this process, whatever the backend. A</span>
+        <span class="c1"># task stopped with work left exits with 3, and its scheduler starts</span>
+        <span class="c1"># it again (the Slurm job script, a Kubernetes pod failure policy).</span>
+        <span class="n">run_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
         <span class="n">project</span><span class="p">,</span>
         <span class="n">todo</span><span class="p">,</span>

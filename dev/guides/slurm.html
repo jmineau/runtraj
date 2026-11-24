@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=98e7dbe6"></script>
+    <script src="../_static/documentation_options.js?v=3d2ee12e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev18+g217e4a30a" />
+  <meta name="docsearch:version" content="0.1.0a5.dev19+g3127f852c" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -652,10 +652,11 @@ else fills the met directory.</p>
 queue and picks up where it stopped. Releases it already finished are
 skipped. Slurm warns each task two minutes before its time limit with the
 signal <code class="docutils literal notranslate"><span class="pre">USR1</span></code>, and stops a preempted task with <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code>. Either way
-the task stops its runs and requeues itself with <code class="docutils literal notranslate"><span class="pre">scontrol</span> <span class="pre">requeue</span></code>. The
-cluster may hold a requeued task in the queue for some minutes before it
-starts again. A task requeues itself at most 10 times, so give <code class="docutils literal notranslate"><span class="pre">time</span></code>
-some room. <code class="docutils literal notranslate"><span class="pre">scancel</span></code> stops a task without requeuing it.</p>
+the task stops its runs and exits with 3, and its job script
+(<code class="docutils literal notranslate"><span class="pre">job.sh</span></code> in the submission folder) puts it back with <code class="docutils literal notranslate"><span class="pre">scontrol</span>
+<span class="pre">requeue</span></code>. The cluster may hold a requeued task in the queue for some
+minutes before it starts again. A task is requeued at most 10 times, so
+give <code class="docutils literal notranslate"><span class="pre">time</span></code> some room. <code class="docutils literal notranslate"><span class="pre">scancel</span></code> stops a task without requeuing it.</p>
 </section>
 <section id="watch-progress-and-rerun">
 <h2>Watch progress and rerun<a class="headerlink" href="#watch-progress-and-rerun" title="Link to this heading">#</a></h2>

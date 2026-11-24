@@ -182,10 +182,11 @@ A task that is preempted, or reaches its time limit, is put back in the
 queue and picks up where it stopped. Releases it already finished are
 skipped. Slurm warns each task two minutes before its time limit with the
 signal ``USR1``, and stops a preempted task with ``SIGTERM``. Either way
-the task stops its runs and requeues itself with ``scontrol requeue``. The
-cluster may hold a requeued task in the queue for some minutes before it
-starts again. A task requeues itself at most 10 times, so give ``time``
-some room. ``scancel`` stops a task without requeuing it.
+the task stops its runs and exits with 3, and its job script
+(``job.sh`` in the submission folder) puts it back with ``scontrol
+requeue``. The cluster may hold a requeued task in the queue for some
+minutes before it starts again. A task is requeued at most 10 times, so
+give ``time`` some room. ``scancel`` stops a task without requeuing it.
 
 Watch progress and rerun
 ------------------------

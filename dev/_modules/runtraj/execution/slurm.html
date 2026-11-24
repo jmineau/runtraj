@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=98e7dbe6"></script>
+    <script src="../../../_static/documentation_options.js?v=3d2ee12e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev18+g217e4a30a" />
+  <meta name="docsearch:version" content="0.1.0a5.dev19+g3127f852c" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -457,23 +457,19 @@
 <span class="sd">run --task``, so a task is a command line that can be read, and run again,</span>
 <span class="sd">by hand. When a met downloads, a job that runs ``runtraj fetch`` goes first</span>
 <span class="sd">and the array waits for it. :func:`wait` follows the tasks with ``sacct``</span>
-<span class="sd">until they end, and a task that Slurm stops near its time limit or</span>
-<span class="sd">preempts requeues itself (:func:`run_task`).</span>
+<span class="sd">until they end. A task that Slurm stops near its time limit, or preempts,</span>
+<span class="sd">is requeued by its job script, which runs ``runtraj run`` as a child: the</span>
+<span class="sd">worker itself knows nothing of Slurm, and stops with exit code 3 on</span>
+<span class="sd">SIGTERM as it does on every backend.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
@@ -502,8 +498,8 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="c1">#: Seconds before a Slurm task's time limit that Slurm sends it SIGUSR1,</span>
-<span class="c1">#: which stops the task and requeues it (``--signal=B:USR1@120``).</span>
+<span class="c1">#: Seconds before a Slurm task's time limit that Slurm sends its job script</span>
+<span class="c1">#: SIGUSR1, which stops the task and requeues it (``--signal=B:USR1@120``).</span>
 <span class="n">NOTICE_SECONDS</span> <span class="o">=</span> <span class="mi">120</span>
 
 <span class="c1">#: Times a Slurm task requeues itself before it stops for good.</span>
@@ -572,13 +568,22 @@
 <span class="sd">    --task i/n_tasks --execution &lt;folder&gt;/execution.yaml --cpus &lt;cpus&gt;`` with</span>
 <span class="sd">    the Python that called this: a task runs its share here, ``cpus``</span>
 <span class="sd">    releases at once. The ``#SBATCH`` lines come from *execution*'s</span>
-<span class="sd">    ``slurm`` block: its resources, ``--requeue``, ``--signal=B:USR1@120``</span>
-<span class="sd">    (see :func:`run`), and its other ``sbatch`` options, which can replace</span>
-<span class="sd">    any of them. Its ``setup`` commands run before the task, after the</span>
+<span class="sd">    ``slurm`` block: its resources, ``--requeue``, ``--signal=B:USR1@120``,</span>
+<span class="sd">    and its other ``sbatch`` options, which can replace any of them. Its</span>
+<span class="sd">    ``setup`` commands run before the task, after the</span>
 <span class="sd">    script exports ``OMP_NUM_THREADS`` as the task's CPUs divided by the</span>
 <span class="sd">    workers it runs at once (``cpus``), which a ``setup`` line can export</span>
 <span class="sd">    again. NumPy's BLAS follows it, so a worker does not start a thread pool</span>
 <span class="sd">    the size of the node.</span>
+
+<span class="sd">    The script runs the task as a child and waits for it, so that it can</span>
+<span class="sd">    put the task back in the queue (``scontrol requeue``) when the task</span>
+<span class="sd">    exits with 3, stopped with work left, after Slurm's notice of the time</span>
+<span class="sd">    limit (SIGUSR1, :data:`NOTICE_SECONDS` before it, which the script</span>
+<span class="sd">    passes on as SIGTERM) or a preemption (``scontrol show job`` gives a</span>
+<span class="sd">    ``PreemptTime``). A task stopped with ``scancel`` is not requeued, nor</span>
+<span class="sd">    one requeued :data:`MAX_REQUEUES` times already. A requeued task starts</span>
+<span class="sd">    again and skips what it finished.</span>
 <span class="sd">    """</span>
     <span class="n">slurm</span> <span class="o">=</span> <span class="n">execution</span><span class="o">.</span><span class="n">slurm</span>
     <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -648,8 +653,38 @@
             <span class="s1">'[ "$</span><span class="si">{SLURM_RESTART_COUNT:-0}</span><span class="s1">" -gt 0 ] &amp;&amp; skip=""'</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"$skip"</span><span class="p">)</span>
-    <span class="c1"># exec, so this process is the one Slurm signals.</span>
-    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"exec "</span> <span class="o">+</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">))</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="s2">"# The task runs as a child, so this script can requeue it. Slurm sends"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"# this script USR1 </span><span class="si">{</span><span class="n">NOTICE_SECONDS</span><span class="si">}</span><span class="s2"> s before the time limit, which it passes"</span><span class="p">,</span>
+        <span class="s2">"# on as TERM; the task stops on TERM and exits with 3."</span><span class="p">,</span>
+        <span class="s2">"notice=0"</span><span class="p">,</span>
+        <span class="s2">"on_cluster=${SLURM_CLUSTER_NAME:+-M $SLURM_CLUSTER_NAME}"</span><span class="p">,</span>
+        <span class="s2">"trap 'notice=1; trapped=1; kill -TERM </span><span class="se">\"</span><span class="s2">$pid</span><span class="se">\"</span><span class="s2"> 2&gt;/dev/null' USR1"</span><span class="p">,</span>
+        <span class="s2">"trap 'trapped=1; kill -TERM </span><span class="se">\"</span><span class="s2">$pid</span><span class="se">\"</span><span class="s2"> 2&gt;/dev/null' TERM INT"</span><span class="p">,</span>
+        <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" &amp;"</span><span class="p">,</span>
+        <span class="s2">"pid=$!"</span><span class="p">,</span>
+        <span class="s2">"# wait returns early when a trapped signal arrives; wait again then."</span><span class="p">,</span>
+        <span class="s2">"while :; do"</span><span class="p">,</span>
+        <span class="s2">"    trapped=0"</span><span class="p">,</span>
+        <span class="s1">'    wait "$pid"'</span><span class="p">,</span>
+        <span class="s2">"    code=$?"</span><span class="p">,</span>
+        <span class="s1">'    [ "$trapped" = 1 ] || break'</span><span class="p">,</span>
+        <span class="s2">"done"</span><span class="p">,</span>
+        <span class="s2">"# 3 is a task stopped with work left: requeue it after the notice or a"</span><span class="p">,</span>
+        <span class="s2">"# preemption (scontrol shows a PreemptTime), not after scancel."</span><span class="p">,</span>
+        <span class="s1">'if [ "$code" = 3 ]; then'</span><span class="p">,</span>
+        <span class="s1">'    if [ "$notice" = 0 ] &amp;&amp; ! scontrol $on_cluster show job "$SLURM_JOB_ID" </span><span class="se">\\</span><span class="s1">'</span><span class="p">,</span>
+        <span class="s2">"        | grep -Eq 'PreemptTime=[0-9]'; then"</span><span class="p">,</span>
+        <span class="s1">'        echo "Stopped, not by the time limit or a preemption; not requeued."'</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s1">'    elif [ "$</span><span class="se">{{</span><span class="s1">SLURM_RESTART_COUNT:-0</span><span class="se">}}</span><span class="s1">" -ge </span><span class="si">{</span><span class="n">MAX_REQUEUES</span><span class="si">}</span><span class="s1"> ]; then'</span><span class="p">,</span>
+        <span class="s1">'        echo "Requeued $</span><span class="si">{SLURM_RESTART_COUNT}</span><span class="s1"> times; not again. Run the project'</span>
+        <span class="s1">' again, or raise execution.slurm.time."'</span><span class="p">,</span>
+        <span class="s1">'    elif scontrol $on_cluster requeue "$SLURM_JOB_ID"; then'</span><span class="p">,</span>
+        <span class="s1">'        echo "Requeued $SLURM_JOB_ID; it starts again and skips what finished."'</span><span class="p">,</span>
+        <span class="s2">"    fi"</span><span class="p">,</span>
+        <span class="s2">"fi"</span><span class="p">,</span>
+        <span class="s1">'exit "$code"'</span><span class="p">,</span>
+    <span class="p">]</span>
     <span class="k">return</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span></div>
 
 
@@ -978,133 +1013,12 @@
 
 
 
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># A task that is told to stop</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">_Notice</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Whether SIGUSR1 has arrived.</span>
-
-<span class="sd">    While ``armed``, its first arrival raises ``KeyboardInterrupt`` to stop</span>
-<span class="sd">    the work. Later ones, and any after the work, are only recorded, so</span>
-<span class="sd">    they cannot cut a cleanup short or end the process.</span>
-<span class="sd">    """</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">received</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">armed</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">received</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signum</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">first</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">received</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">received</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">if</span> <span class="n">first</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">armed</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyboardInterrupt</span>
-
-
-<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_usr1_noticed</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">_Notice</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Record SIGUSR1 inside the block (:class:`_Notice`); outside the main thread, where handlers cannot be set, or on Windows, which has no SIGUSR1, nothing is."""</span>
-    <span class="n">notice</span> <span class="o">=</span> <span class="n">_Notice</span><span class="p">()</span>
-    <span class="c1"># Windows has no SIGUSR1, and no Slurm to send it.</span>
-    <span class="n">sigusr1</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="s2">"SIGUSR1"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">sigusr1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">threading</span><span class="o">.</span><span class="n">main_thread</span><span class="p">():</span>
-        <span class="k">yield</span> <span class="n">notice</span>
-        <span class="k">return</span>
-    <span class="n">previous</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">sigusr1</span><span class="p">,</span> <span class="n">notice</span><span class="o">.</span><span class="n">handle</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">yield</span> <span class="n">notice</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">sigusr1</span><span class="p">,</span> <span class="n">previous</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="run_task">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.run_task.html#runtraj.execution.run_task">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_task</span><span class="p">(</span>
-    <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">pending</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">work</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="kc">None</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Run a task's releases and return their status table; requeue the task when Slurm stopped it.</span>
-
-<span class="sd">    A task that stops with simulations left is requeued when it got</span>
-<span class="sd">    SIGUSR1 (the time limit is near) or was preempted.</span>
-<span class="sd">    """</span>
-    <span class="k">with</span> <span class="n">_usr1_noticed</span><span class="p">()</span> <span class="k">as</span> <span class="n">notice</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">work</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">notice</span><span class="p">:</span>
-                <span class="k">raise</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="n">notice</span><span class="o">.</span><span class="n">armed</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">table</span> <span class="o">=</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">pending</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_unfinished</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">notice</span> <span class="ow">or</span> <span class="n">_preempted</span><span class="p">()):</span>
-            <span class="n">_requeue</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">table</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_this_cluster</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return the words that send a Slurm command to the cluster this task runs on."""</span>
-    <span class="k">return</span> <span class="n">_on_cluster</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SLURM_CLUSTER_NAME"</span><span class="p">))</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_preempted</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Whether Slurm has selected this job for preemption (``scontrol show job`` gives a ``PreemptTime``)."""</span>
-    <span class="n">job_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SLURM_JOB_ID"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">job_id</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">"scontrol"</span><span class="p">,</span> <span class="o">*</span><span class="n">_this_cluster</span><span class="p">(),</span> <span class="s2">"show"</span><span class="p">,</span> <span class="s2">"job"</span><span class="p">,</span> <span class="n">job_id</span><span class="p">],</span>
-        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"PreemptTime=(\S+)"</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"None"</span><span class="p">,</span> <span class="s2">"Unknown"</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_requeue</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Put this Slurm task back in the queue with ``scontrol requeue``; return whether it was."""</span>
-    <span class="n">job_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SLURM_JOB_ID"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">job_id</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Told to stop outside a Slurm job; not requeued."</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="n">restarts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SLURM_RESTART_COUNT"</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">restarts</span> <span class="o">&gt;=</span> <span class="n">MAX_REQUEUES</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s2">"Slurm task </span><span class="si">%s</span><span class="s2"> has been requeued </span><span class="si">%d</span><span class="s2"> times; not again. Run the "</span>
-            <span class="s2">"project again, or raise execution.slurm.time."</span><span class="p">,</span>
-            <span class="n">job_id</span><span class="p">,</span>
-            <span class="n">restarts</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">"scontrol"</span><span class="p">,</span> <span class="o">*</span><span class="n">_this_cluster</span><span class="p">(),</span> <span class="s2">"requeue"</span><span class="p">,</span> <span class="n">job_id</span><span class="p">],</span>
-        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"scontrol requeue </span><span class="si">%s</span><span class="s2"> failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-        <span class="k">return</span> <span class="kc">False</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="s2">"Requeued Slurm task </span><span class="si">%s</span><span class="s2">; it starts again and skips what finished."</span><span class="p">,</span> <span class="n">job_id</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="kc">True</span>
-
-
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"MAX_REQUEUES"</span><span class="p">,</span>
     <span class="s2">"NOTICE_SECONDS"</span><span class="p">,</span>
     <span class="s2">"SlurmBackend"</span><span class="p">,</span>
     <span class="s2">"fetch_script"</span><span class="p">,</span>
     <span class="s2">"job_script"</span><span class="p">,</span>
-    <span class="s2">"run_task"</span><span class="p">,</span>
     <span class="s2">"submit_array"</span><span class="p">,</span>
     <span class="s2">"wait"</span><span class="p">,</span>
 <span class="p">]</span>
