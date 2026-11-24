@@ -429,7 +429,7 @@ def test_a_lock_is_removed_when_a_waiter_has_it_open_for_a_moment(
     bucket, monkeypatch, caplog
 ):
     """Windows refuses to remove a file another program has open; the holder tries again."""
-    monkeypatch.setattr(inputs, "LOCK_REMOVE_WAIT_SECONDS", 0)
+    monkeypatch.setattr(inputs, "LOCK_BUSY_WAIT_SECONDS", 0)
     fs, root = fsspec.core.url_to_fs(bucket)
     remove, refusals = fs.rm_file, []
 
@@ -445,6 +445,47 @@ def test_a_lock_is_removed_when_a_waiter_has_it_open_for_a_moment(
     assert len(refusals) == 2
     assert not fs.exists(f"{root}/.releases.csv.lock")
     assert "Could not remove" not in caplog.text
+
+
+def test_a_waiter_tries_again_when_the_lock_file_is_refused_for_a_moment(
+    bucket, monkeypatch
+):
+    """Windows refuses to open a file that is being removed; the waiter looks again."""
+    monkeypatch.setattr(inputs, "LOCK_POLL_SECONDS", 0.01)
+    monkeypatch.setattr(inputs, "LOCK_BUSY_WAIT_SECONDS", 0)
+    fs, root = fsspec.core.url_to_fs(bucket)
+    fs.pipe_file(f"{root}/.releases.csv.lock", b"a holder")
+    read, refusals = fs.read_text, []
+
+    def busy_twice(path, **kwargs):
+        if len(refusals) < 2:
+            refusals.append(path)
+            raise PermissionError(13, "Permission denied")
+        fs.rm_file(path)  # the holder lets go; the read finds no file
+        return read(path, **kwargs)
+
+    monkeypatch.setattr(fs, "read_text", busy_twice)
+    with inputs.lock(bucket, "releases.csv"):
+        pass
+    assert len(refusals) == 2
+    assert not fs.exists(f"{root}/.releases.csv.lock")
+
+
+def test_a_refusal_that_lasts_is_raised(bucket, monkeypatch):
+    """A lock file that stays refused (a read-only folder) fails, not waits."""
+    monkeypatch.setattr(inputs, "LOCK_BUSY_WAIT_SECONDS", 0)
+    fs, root = fsspec.core.url_to_fs(bucket)
+    fs.pipe_file(f"{root}/.releases.csv.lock", b"a holder")
+
+    def refuse(path, **kwargs):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(fs, "read_text", refuse)
+    with (
+        pytest.raises(OSError, match=r"cannot lock releases.csv.*Permission denied"),
+        inputs.lock(bucket, "releases.csv"),
+    ):
+        pass
 
 
 def test_a_lock_that_cannot_be_made_is_an_os_error(bucket, monkeypatch):

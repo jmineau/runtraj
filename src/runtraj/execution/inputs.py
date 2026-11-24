@@ -45,11 +45,11 @@ LOCK_POLL_SECONDS = 2
 #: Seconds between a holder's rewrites of its lock, which keep it from
 #: looking stale while the holder works for longer than :data:`LOCK_STALE_SECONDS`.
 LOCK_REFRESH_SECONDS = 60
-#: Times a holder tries to remove its lock when the system says the file is in use,
-#: and the seconds between tries. Windows refuses to remove a file that a waiting
-#: program has open for a look; the waiter closes it within moments.
-LOCK_REMOVE_TRIES = 10
-LOCK_REMOVE_WAIT_SECONDS = 0.05
+#: Times in a row a program tries again when the system refuses it the lock file,
+#: and the seconds between tries. Windows refuses to remove a file another program
+#: has open, and to open one that is being removed; both pass within moments.
+LOCK_BUSY_TRIES = 10
+LOCK_BUSY_WAIT_SECONDS = 0.05
 
 
 def hash_inputs(directory: str | Path) -> str:
@@ -435,21 +435,33 @@ def _acquire(fs: fsspec.AbstractFileSystem, path: str, token: str) -> None:
 
     A lock is stale when it reads the same for :data:`LOCK_STALE_SECONDS` on
     this program's own clock (``time.monotonic``), so no two clocks have to
-    agree; a stale lock is removed and made again.
+    agree; a stale lock is removed and made again. A ``PermissionError`` is
+    tried again up to :data:`LOCK_BUSY_TRIES` times in a row, because Windows
+    raises it for a lock file that is being removed.
     """
     fs.makedirs(path.rpartition("/")[0], exist_ok=True)
-    seen, since = None, 0.0
+    seen, since, refused = None, 0.0, 0
     while True:
         try:
-            with fs.open(path, "x") as file:
-                file.write(token)
-            return
-        except FileExistsError:
-            pass
-        try:
-            held = fs.read_text(path, encoding="utf-8")
-        except FileNotFoundError:
-            continue  # released while we looked: try again
+            try:
+                with fs.open(path, "x") as file:
+                    file.write(token)
+                return
+            except FileExistsError:
+                pass
+            try:
+                held = fs.read_text(path, encoding="utf-8")
+            except FileNotFoundError:
+                continue  # released while we looked: try again
+        except PermissionError:
+            # Windows refuses a file that is being removed; a few tries in a
+            # row pass, and a refusal that lasts is a real one.
+            refused += 1
+            if refused >= LOCK_BUSY_TRIES:
+                raise
+            time.sleep(LOCK_BUSY_WAIT_SECONDS)
+            continue
+        refused = 0
         if held != seen:
             logger.info("Waiting for %s, held by %s", path, held)
             seen, since = held, time.monotonic()
@@ -470,19 +482,19 @@ def _release(fs: fsspec.AbstractFileSystem, path: str, token: str | bytes) -> bo
     Reading first keeps a program from removing a lock another has taken
     over since. Windows refuses to remove a file while a waiting program has
     it open to read, so a refusal is tried again a few times
-    (:data:`LOCK_REMOVE_TRIES`) before it is raised.
+    (:data:`LOCK_BUSY_TRIES`) before it is raised.
     """
     try:
         if fs.read_text(path, encoding="utf-8") != token:
             return False
-        for attempt in range(LOCK_REMOVE_TRIES):
+        for attempt in range(LOCK_BUSY_TRIES):
             try:
                 fs.rm_file(path)
                 break
             except PermissionError:
-                if attempt == LOCK_REMOVE_TRIES - 1:
+                if attempt == LOCK_BUSY_TRIES - 1:
                     raise
-                time.sleep(LOCK_REMOVE_WAIT_SECONDS)
+                time.sleep(LOCK_BUSY_WAIT_SECONDS)
     except FileNotFoundError:
         return False
     return True
