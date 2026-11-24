@@ -206,6 +206,14 @@ def _read_yaml(path: Path | UPath) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def _read_record(path: Path | UPath) -> dict[str, Any] | None:
+    """Return a failure record, or ``None`` when there is none: a worker removes it when the result is written, also while it is being listed."""
+    try:
+        return _read_yaml(path)
+    except FileNotFoundError:
+        return None
+
+
 def _write_yaml(
     path: Path | UPath, record: dict[str, Any], *, replace: bool = True
 ) -> None:
@@ -1066,8 +1074,7 @@ class Output:
         logs = self._found(kind, "logs", variant, realization)
         if logs is None:
             return None
-        path = _release_file(logs, release_id, FAILURE_SUFFIX)
-        return _read_yaml(path) if path.exists() else None
+        return _read_record(_release_file(logs, release_id, FAILURE_SUFFIX))
 
     def failures(
         self,
@@ -1080,15 +1087,20 @@ class Output:
         Return ``{release_id: record}`` for the releases with a failure record of *kind*.
 
         With *release_ids*, only their date folders are listed. The records
-        found are read in a few threads.
+        found are read in a few threads; one a worker removed meanwhile, as it
+        does when the release's result is written, is left out.
         """
         logs = self._found(kind, "logs", variant, realization)
         if logs is None:
             return {}
         paths = _list_release_files(logs, FAILURE_SUFFIX, release_ids)
         with ThreadPoolExecutor(max_workers=16) as pool:
-            records = list(pool.map(_read_yaml, paths.values()))
-        return dict(zip(paths, records, strict=True))
+            records = list(pool.map(_read_record, paths.values()))
+        return {
+            rid: record
+            for rid, record in zip(paths, records, strict=True)
+            if record is not None
+        }
 
     def record_failure(
         self,
