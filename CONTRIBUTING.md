@@ -328,78 +328,139 @@ driver; a test fails if it would land in `SETUP.CFG` unknown to HYSPLIT.
 
 ## Adding a transport model
 
-A transport model owns its config: a subclass of
-`runtraj.models.TransportConfig` with the model's own parameters. The base
-gives the parameters runtraj's own code reads whatever the model
-(`n_hours`, `seed`); a parameter goes there only when the core reads it,
-so another model is never handed a setting it would ignore. It also gives
-an `UNRECORDED` set of the fields that change no particle (empty unless the
-subclass names some), `settings()` (what a run
-records), and `realizations(n)` (realization `k` with `seed + k`); override
-those two only where the model differs. The model itself subclasses
-`runtraj.models.TransportModel`, typed by that config
-(`class MyModel(TransportModel[MyConfig])`), names the config as
-`config_class` and its met config as `met_config_class`, and implements
-`run(release, config, met, window, workdir=None, timeout=None)`. Every
-other member has a default in the base class, for a model that runs one
-release at a time, reads no files and makes particles; override the ones
-your model does differently. runtraj calls each member directly, so a
-misspelled one (`release_row` for `release_rows`) is never called;
-`check_model` reports it. `sha256` (the checksum of the
-executable it runs, `None` by default: part of the run's settings),
-`version` (what the build reports, recorded beside them) and `data_files`
-describe the build. `sha256` raises `FileNotFoundError` when
-the executable cannot be found; the project still opens, and its status
-compares stored folders without the build. The met config subclasses
-`runtraj.models.MetConfig`, a pydantic model that checks one entry under
-`mets:` and owns what is done with its files. It implements `settings()`,
-what a run records of the met (which weather it is, and anything else that
-changes the particles, never where its files are kept), and overrides
-what its files need of `check(releases, n_hours)` (what `runtraj check`
-lists before any run), `fetch(windows)` (what `runtraj fetch` gets),
-`downloads()` (whether `runtraj submit` gets the files once before the
-runs) and `open(files, bounds)` (the files as `runtraj.sampling` reads
-them: ARL file paths by default, or one Dataset in arlmet's layout).
-HYSPLIT's is `runtraj.models.hysplit.HysplitMetConfig`, whose settings are
-the source id in the ARL headers and the crop. A met that names no files
-keeps every default but `settings()`. `met` is that config, its `directory` and
-`subgrid_dir` absolute when it has them, and `window` the `(start, end)`
-the run covers; the model finds its own met from them. `run` returns a
-`ModelRun` whose `result` is of the type the model makes: a model that
-makes another type than particles gives `result(config)`, the type's name
-in `runtraj.results.RESULT_TYPES` (`concentration`: a `DataTree` of grids,
-`docs/reference/concentration.rst`; `trajectories`: the trajectory table,
-`docs/reference/trajectories.rst`), and `check_model` holds it to that
-type. For particles, `result` is the particle table (the
-columns of `runtraj.particles.PARTICLE_SCHEMA`, `foot` if the model computes
-one, and what a stage reads, with a release row at `age = 0` when the
-model can write one; see `docs/reference/particles.rst`), its log as text,
-and the met files it read. A model that writes no row at `age = 0` gives
-`release_rows(particles, release)`, where each particle of a column or
-multipoint release started, or such a release fails. A model that cannot
-run every release lists the ones it cannot with `check_releases(releases,
-config)`, as HYSPLIT does for a multipoint release whose points share a
-location: `runtraj check` shows them, and `run_model` and `run_model_many`
-fail them as `RELEASE_REFUSED` before `run` or `run_many` is called, so a
-batched model never has to refuse one release of a call. A failed run raises `SimulationError` with its
-log. runtraj adds the release heights itself (`runtraj.models.run_model`).
-A model that writes no files sets
-`needs_workdir = False` and is handed `workdir=None`. A model that runs
-many releases in one call, such as an emulator on a GPU, sets
-`batched = True` and gives `run_many(releases, config, met, windows,
-workdir=None, timeout=None)`, returning one table with a `release` column:
-the worker then hands it every
-release of a variant that needs particles at once, and a release it
-returns no rows for fails alone. A model in a package of its own needs no
-registration: its block under `models:` in `config.yaml` names it by import
-path (`class: mypkg.models.MyModel`), and every
-process that opens the project imports it from there. The run settings
-record the `class:` string as written, so the same class named by two
-paths (`mypkg.models.MyModel` and a re-export, `mypkg.MyModel`) gets two
-settings folders. Pick one path and keep it. A model built into
-runtraj goes in `runtraj.models.MODELS` under a short name instead. Keep
-its package out of the core: the import contracts in `pyproject.toml` say
-how.
+A transport model is three classes: its config, its met config and the
+model. Each subclasses a runtraj base class that has a default for all but
+one or two members, so you write only what your model does differently.
+This one leaves every particle where it was released:
+
+```python
+import numpy as np
+import pandas as pd
+
+from runtraj.models import MetConfig, ModelRun, TransportConfig, TransportModel
+
+
+class StillConfig(TransportConfig):  # n_hours and seed come with the base
+    n_particles: int = 10
+
+
+class StillMet(MetConfig):  # one entry under mets:
+    def settings(self):
+        return {}  # no weather changes these particles
+
+
+class StillModel(TransportModel[StillConfig]):
+    name = "still"
+    config_class = StillConfig
+    met_config_class = StillMet
+    needs_workdir = False  # it writes no files
+
+    def run(self, release, config, met, window, workdir=None, timeout=None):
+        hours = np.arange(abs(config.n_hours) + 1) * np.sign(config.n_hours)
+        particles = pd.DataFrame(
+            {
+                "particle": np.tile(np.arange(1, config.n_particles + 1), len(hours)),
+                "age": np.repeat(hours * 60, config.n_particles),  # minutes
+                "lon": release.longitude,
+                "lat": release.latitude,
+                "zagl": release.altitude,
+            }
+        )
+        return ModelRun(result=particles)
+```
+
+```yaml
+models:
+  still: {class: mypkg.models.StillModel, n_hours: -24}
+```
+
+A model in a package of its own needs no registration: its block under
+`models:` names it by import path, and every process that opens the
+project imports it from there. The run settings record the `class:`
+string as written, so the same class named by two paths
+(`mypkg.models.StillModel` and a re-export, `mypkg.StillModel`) gets two
+settings folders. Pick one path and keep it. A model built into runtraj
+goes in `runtraj.models.MODELS` under a short name instead. Keep its
+package out of the core: the import contracts in `pyproject.toml` say how.
+
+**The config** subclasses `runtraj.models.TransportConfig`, with the
+model's own parameters.
+
+- The base gives the parameters runtraj's own code reads whatever the
+  model (`n_hours`, `seed`). A parameter goes there only when the core
+  reads it, so another model is never handed a setting it would ignore.
+- **`UNRECORDED`** is the set of fields that change no particle, empty
+  unless the subclass names some.
+- **`settings()`** is what a run records, and **`realizations(n)`** gives
+  realization `k` with `seed + k`. Override them only where the model
+  differs.
+
+**The met config** subclasses `runtraj.models.MetConfig`, a pydantic model
+that checks one entry under `mets:` and owns what is done with its files.
+HYSPLIT's is `runtraj.models.hysplit.HysplitMetConfig`. A met that names no
+files keeps every default but `settings()`.
+
+- **`settings()`** is what a run records of the met: which weather it is,
+  and anything else that changes the particles, never where its files are
+  kept. HYSPLIT's are the source id in the ARL headers and the crop.
+- **`check(releases, n_hours)`** returns what `runtraj check` lists before
+  any run.
+- **`fetch(windows)`** gets what `runtraj fetch` gets, and
+  **`downloads()`** says whether `runtraj submit` gets the files once
+  before the runs.
+- **`open(files, bounds)`** returns the files as `runtraj.sampling` reads
+  them: ARL file paths by default, or one Dataset in arlmet's layout.
+
+**The model** subclasses `runtraj.models.TransportModel`, typed by its
+config (`TransportModel[StillConfig]`). It sets `name`, `config_class` and
+`met_config_class` and implements `run`. Every other member has a default
+for a model that runs one release at a time, reads no files and makes
+particles. runtraj calls each member directly, so a misspelled one
+(`release_row` for `release_rows`) is never called; `check_model` reports
+it.
+
+- **`run(release, config, met, window, workdir=None, timeout=None)`**
+  runs one release. `met` is the met config, with a field named
+  `directory` or `subgrid_dir` made absolute from the project directory,
+  and `window` the `(start, end)` the run covers; the model finds its own
+  met from them. It returns a `ModelRun`: the result, the log as text, and
+  the met files it read. A failed run raises `SimulationError` with its
+  log. runtraj adds the release heights itself
+  (`runtraj.models.run_model`).
+- **The particle table** has the columns of
+  `runtraj.particles.PARTICLE_SCHEMA`, `foot` if the model computes one,
+  what a stage reads, and a release row at `age = 0` when the model can
+  write one (`docs/reference/particles.rst`).
+- **`release_rows(particles, release)`** is for a model that writes no
+  row at `age = 0`: where each particle of a column or multipoint release
+  started. Without either, such a release fails.
+- **`result(config)`** is for a model that makes another type than
+  particles: the type's name in `runtraj.results.RESULT_TYPES`
+  (`concentration`, a `DataTree` of grids,
+  `docs/reference/concentration.rst`; `trajectories`, the trajectory
+  table, `docs/reference/trajectories.rst`). `check_model` holds the
+  result to that type.
+- **`check_releases(releases, config)`** lists the releases the model
+  cannot run, as HYSPLIT does for a multipoint release whose points share
+  a location. `runtraj check` shows them, and `run_model` and
+  `run_model_many` fail them as `RELEASE_REFUSED` before `run` or
+  `run_many` is called, so a batched model never has to refuse one release
+  of a call.
+- **`sha256(config)`**, **`version(config)`** and
+  **`data_files(config)`** describe the build: the checksum of the
+  executable it runs (`None` by default; part of the run's settings), what
+  the build reports (recorded beside them), and the checksums of the data
+  files a run reads. `sha256` raises `FileNotFoundError` when the
+  executable cannot be found; the project still opens, and its status
+  compares stored folders without the build.
+- **`needs_workdir = False`** is for a model that writes no files; it is
+  handed `workdir=None`.
+- **`batched = True`** is for a model that runs many releases in one
+  call, such as an emulator on a GPU. It gives `run_many(releases, config,
+  met, windows, workdir=None, timeout=None)`, returning one table with a
+  `release` column. The worker then hands it every release of a variant
+  that needs particles at once, and a release it returns no rows for fails
+  alone.
 
 The toy transport model in `tests/fixtures/models.py` stands for a model in
 another package, and is made unlike HYSPLIT: it runs no program, needs no
