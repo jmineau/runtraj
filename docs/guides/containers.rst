@@ -7,20 +7,9 @@ Kubernetes Job, without Slurm. ``runtraj submit`` makes that Job for you
 for a Job you write yourself or another scheduler. :doc:`kubernetes_setup`
 makes the image, the cluster and the bucket.
 
-Each container runs one share of the releases:
-
-.. code-block:: bash
-
-   runtraj run /project --task 3/20
-
-``--task I/N`` runs task ``I`` of ``N`` in this process: every ``N``-th
-release of the project, starting at ``I`` (0 to ``N - 1``). Every task
-splits the releases the same way, whenever it starts. Releases whose
-results exist are skipped, so running a task again only fills in what is
-missing.
-
-``--releases ids.txt`` runs only the releases listed in a file, one id per
-line. With ``--task`` too, the task takes its share of that list.
+Each container runs one share of the releases, ``runtraj run /project
+--task 3/20``, as a task on any scheduler does (:doc:`any_scheduler`:
+how the releases are shared, what a task relies on, and its exit codes).
 
 What every container needs
 --------------------------
@@ -337,77 +326,12 @@ pod stops its runs cleanly and exits with code 3, within a few seconds of
 the signal and so inside Kubernetes' default 30 s grace period. That holds
 for ``--cpus`` above 1 too: the pod's workers and HYSPLIT runs stop with it.
 
-.. _exit-codes:
-
 Exit codes
 ----------
 
-``runtraj run`` exits with:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 10 90
-
-   * - Code
-     - Meaning
-   * - 0
-     - Every simulation it ran is complete.
-   * - 1
-     - Some simulations failed. ``runtraj status`` counts them by reason. A
-       retry runs them again, which helps only when the cause is fixed.
-   * - 2
-     - The command line was wrong: an unknown option, a bad value, or a
-       directory that is not a project. Or the project's files are invalid:
-       ``config.yaml`` is not valid YAML or has a misspelled setting, or a
-       row of ``releases.csv`` is bad. Or a met directory does not exist
-       or holds no ARL file (``runtraj check`` lists it; ``runtraj status`` exits
-       with 2 for it only when the output may hold results). Nothing ran. Do
-       not retry.
-   * - 3
-     - Retry it. Some simulations did not finish, because the run was
-       stopped (Ctrl-C, or a stop signal from Kubernetes or Slurm), a worker
-       process was killed (``--cpus`` above 1; the error names the releases
-       that were in progress, and it is usually the out-of-memory killer, so a
-       retry may need fewer ``--cpus``), or a connection or I/O error, such as
-       an output bucket that could not be reached, stopped an unfinished
-       simulation or ended the run. A retry continues where it stopped.
-   * - 4
-     - A bug: any other error the command did not expect. Its traceback is
-       printed. Do not retry; a retry meets the same error.
-
-An unexpected error ends with 3, not 4, when a retry may get past it:
-
-- a refused, reset or timed-out connection, or a name that did not resolve,
-  including the cloud libraries' own errors for these (botocore's
-  ``EndpointConnectionError`` and ``ReadTimeoutError``)
-- a busy or briefly unavailable service: HTTP 408, 429, 500, 502, 503 or
-  504, an FTP 4xx reply such as "421 too many users", or an FTP server that
-  closed the connection
-- input/output trouble that goes away: ``EIO``, a stale NFS handle, a busy
-  or interrupted call
-
-Anything else is 4: another HTTP status (a bucket in another region, a
-403, a 404), an FTP 5xx reply, a file that is not there or may not be used,
-or a full disk. runtraj decides from the error and what caused it, not from
-its type, because s3fs and fsspec's HTTP filesystem report many permanent
-answers as a plain ``OSError`` or ``FileNotFoundError``. Every ``runtraj``
-command follows this table, except that a closed standard output
-(``runtraj status | head``) ends quietly with 1, and ``runtraj fetch`` gives 1
-for a file the archive does not have.
-
-The same rule applies to an error inside one simulation, such as a worker
-that cannot write its result to the output bucket. An error a retry may get
-past is not a failure of the simulation: no failure record is written (an
-earlier attempt's is removed), the simulation stays ``pending``, or
-``interrupted`` once its run had started, the other simulations go on, and
-the run ends with 3. Any other error, a ``SimulationError`` such as a failed
-HYSPLIT run included, is a failure record and exit 1. When both happen in
-one run it exits 3, and the retry, which runs only what did not finish,
-ends with 1 if the failure remains. A bucket that stays down keeps every
-try at 3, so the program that drives the retries sets how many to make.
-
-For a Kubernetes indexed Job, a ``podFailurePolicy`` that retries on 3 and
-fails the task on 1 and 4 follows from this table.
+Each pod's exit code says whether to retry it (:ref:`exit-codes`). For a
+Kubernetes indexed Job, a ``podFailurePolicy`` that retries on 3 and fails
+the task on 1 and 4 follows from that table.
 
 When the Job is done, ``runtraj status /project`` counts the finished and
 failed simulations of the whole project. ``runtraj status /project --json``

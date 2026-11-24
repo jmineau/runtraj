@@ -39,9 +39,9 @@ On Slurm each task of the job array runs one share of the releases
 (:func:`~runtraj.execution.task_share`) with ``runtraj run --task``. A local
 run happens in this process. A program that starts the tasks itself, on
 another scheduler, writes :func:`~runtraj.execution.pending` to the
-``releases.txt`` each task reads (``runtraj run --releases``);
-:func:`~runtraj.execution.wait` waits for a
-Slurm job array by its id.
+``releases.txt`` each task reads (``runtraj run --releases``;
+:doc:`../guides/any_scheduler`); :func:`~runtraj.execution.wait` waits
+for a Slurm job array by its id.
 
 Running
 -------
@@ -71,6 +71,8 @@ Internal: importable from their modules, and free to change.
    runtraj.execution.worker.run_stages
    runtraj.execution.worker.run_release
    runtraj.execution.worker.run_releases
+
+.. _execution-backends:
 
 Backends
 --------
