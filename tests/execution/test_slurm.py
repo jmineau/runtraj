@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import os
+import shlex
 import signal
 import subprocess
+import sys
+import time
+from pathlib import Path
 
 import pytest
 
@@ -14,7 +18,6 @@ from runtraj.execution.slurm import job_script
 from tests.fixtures.platform import not_on_windows
 
 from ..fixtures.slurm import hourly_project as _hourly_project
-from ..fixtures.slurm import out as _out
 from ..fixtures.slurm import project_at as _project_at
 from ..fixtures.slurm import sbatch_options as _sbatch
 
@@ -71,8 +74,8 @@ def test_job_script_asks_for_what_the_execution_settings_say(tmp_path):
     # The script's own OMP_NUM_THREADS comes before setup, so a setup line has the last word.
     assert lines.index("export OMP_NUM_THREADS=1") < lines.index("module load gcc")
     assert lines.index("module load gcc") < lines.index("export OMP_NUM_THREADS=2")
-    last = lines[-1]
-    assert last.startswith("exec ")
+    last = _task_line(script)
+    assert last.endswith(" &")  # a child, so the script can requeue it
     assert f"-m runtraj run {project.directory} " in last
     assert f"--releases {folder / 'releases.parquet'}" in last
     assert '--task "$SLURM_ARRAY_TASK_ID/7"' in last
@@ -112,16 +115,21 @@ def test_job_script_runs_again_only_on_the_first_start_and_names_a_compute_root(
         compute_root=tmp_path / "scratch",
     )
     assert '[ "${SLURM_RESTART_COUNT:-0}" -gt 0 ] && skip=""' in script
-    assert script.splitlines()[-1].endswith(
-        f"--compute-root {(tmp_path / 'scratch').resolve()} $skip"
+    assert _task_line(script).endswith(
+        f"--compute-root {(tmp_path / 'scratch').resolve()} $skip &"
     )
 
 
+def _task_line(script: str) -> str:
+    """The line of the job script that starts the task."""
+    return next(line for line in script.splitlines() if " -m runtraj run " in line)
+
+
 def _omp_threads_after_setup(script: str) -> str:
-    """What OMP_NUM_THREADS is when the script reaches its last line, run in bash."""
-    before_exec = script.rstrip("\n").rpartition("\n")[0]
+    """What OMP_NUM_THREADS is when the script starts the task, run in bash."""
+    before_task = script.partition("\nnotice=0\n")[0]
     done = subprocess.run(
-        ["bash", "-c", before_exec + '\necho "${OMP_NUM_THREADS-unset}"'],
+        ["bash", "-c", before_task + '\necho "${OMP_NUM_THREADS-unset}"'],
         capture_output=True,
         text=True,
         check=True,
@@ -207,134 +215,165 @@ def test_job_script_is_valid_bash(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# A task that is told to stop
+# A task that is told to stop: the job script requeues it
 # ---------------------------------------------------------------------------
 
+#: A stand-in for ``runtraj run --task``: it says it started, then works
+#: until SIGTERM, on which it exits with 3 as runtraj does.
+_STOPPABLE_TASK = """\
+trap 'exit 3' TERM
+touch "$(dirname "$0")/started"
+while :; do sleep 0.05; done
+"""
 
-@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
-def test_a_task_told_to_stop_requeues_itself(tmp_path, monkeypatch, commands):
+#: A stand-in for ``scontrol``: it logs its arguments, and ``show job``
+#: gives ``PreemptTime=$PREEMPT_TIME``.
+_SCONTROL = """\
+#!/bin/bash
+echo "$*" >> "$(dirname "$0")/scontrol.log"
+case " $* " in *" show "*) echo "JobId=$SLURM_JOB_ID PreemptTime=$PREEMPT_TIME" ;; esac
+"""
+
+
+def _stand_in_job(tmp_path, task: str) -> tuple[Path, Path]:
+    """Write a job script whose task is *task* (bash) and a fake ``scontrol``; return the script and the bin folder."""
+    script = job_script(
+        _project_at(tmp_path / "p", output=tmp_path / "out"),
+        ExecutionConfig(backend="slurm", slurm={"time": "01:00:00"}),
+        tmp_path,
+        1,
+    )
+    fake = tmp_path / "task.sh"
+    fake.write_text("#!/bin/bash\n" + task)
+    fake.chmod(0o755)
+    path = tmp_path / "job.sh"
+    path.write_text(script.replace(shlex.quote(sys.executable), str(fake), 1))
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "scontrol").write_text(_SCONTROL)
+    (bin_dir / "scontrol").chmod(0o755)
+    return path, bin_dir
+
+
+def _run_job(
+    tmp_path,
+    task: str,
+    *,
+    send: signal.Signals | None = None,
+    preempt_time: str = "None",
+    **env: str,
+) -> tuple[int, list[str], str]:
+    """Run a stand-in job script as Slurm would, sending *send* once its task started; return its exit code, the scontrol calls, and its output."""
+    script, bin_dir = _stand_in_job(tmp_path, task)
+    environ = {
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        "SLURM_JOB_ID": "4321",
+        "SLURM_ARRAY_TASK_ID": "0",
+        "PREEMPT_TIME": preempt_time,
+        **env,
+    }
+    job = subprocess.Popen(
+        ["bash", str(script)],
+        env=environ,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if send is not None:
+        deadline = time.monotonic() + 20
+        while not (tmp_path / "started").exists():
+            assert time.monotonic() < deadline, "the task never started"
+            time.sleep(0.02)
+        job.send_signal(send)
+    output, _ = job.communicate(timeout=30)
+    log = tmp_path / "bin" / "scontrol.log"
+    calls = log.read_text().splitlines() if log.exists() else []
+    return job.returncode, calls, output
+
+
+@not_on_windows("Slurm and its job scripts are for Linux")
+def test_a_task_told_its_time_is_near_is_stopped_and_requeued(tmp_path):
+    code, calls, output = _run_job(tmp_path, _STOPPABLE_TASK, send=signal.SIGUSR1)
+
+    assert code == 3
+    assert calls == ["requeue 4321"]
+    assert "Requeued 4321; it starts again" in output
+
+
+@not_on_windows("Slurm and its job scripts are for Linux")
+def test_a_preempted_task_is_requeued_and_a_cancelled_one_is_not(tmp_path):
+    """A preempted task gets SIGTERM, and maybe no SIGUSR1 before its grace time ends."""
+    preempted = tmp_path / "preempted"
+    preempted.mkdir()
+    code, calls, _ = _run_job(
+        preempted,
+        _STOPPABLE_TASK,
+        send=signal.SIGTERM,
+        preempt_time="2026-10-06T12:00:00",
+    )
+    assert code == 3
+    assert calls == ["show job 4321", "requeue 4321"]
+
+    cancelled = tmp_path / "cancelled"
+    cancelled.mkdir()
+    code, calls, output = _run_job(cancelled, _STOPPABLE_TASK, send=signal.SIGTERM)
+    assert code == 3
+    assert calls == ["show job 4321"]
+    assert "not requeued" in output
+
+
+@not_on_windows("Slurm and its job scripts are for Linux")
+def test_a_task_is_requeued_only_so_many_times(tmp_path):
+    code, calls, output = _run_job(
+        tmp_path,
+        _STOPPABLE_TASK,
+        send=signal.SIGUSR1,
+        SLURM_RESTART_COUNT=str(slurm.MAX_REQUEUES),
+    )
+    assert code == 3
+    assert calls == []
+    assert f"Requeued {slurm.MAX_REQUEUES} times; not again" in output
+
+
+@not_on_windows("Slurm and its job scripts are for Linux")
+def test_a_task_on_another_cluster_is_asked_about_and_requeued_there(tmp_path):
+    code, calls, _ = _run_job(
+        tmp_path,
+        _STOPPABLE_TASK,
+        send=signal.SIGTERM,
+        preempt_time="2026-10-06T12:00:00",
+        SLURM_CLUSTER_NAME="kingspeak",
+    )
+    assert code == 3
+    assert calls == ["-M kingspeak show job 4321", "-M kingspeak requeue 4321"]
+
+
+@not_on_windows("Slurm and its job scripts are for Linux")
+@pytest.mark.parametrize("exit_code", [0, 1, 2, 4])
+def test_a_task_that_ends_by_itself_is_not_requeued(tmp_path, exit_code):
+    code, calls, _ = _run_job(tmp_path, f"exit {exit_code}\n")
+    assert (code, calls) == (exit_code, [])
+
+
+@not_on_windows("Slurm and its job scripts are for Linux")
+def test_a_task_that_finished_before_the_notice_is_not_requeued(tmp_path):
+    finishes_on_term = _STOPPABLE_TASK.replace("exit 3", "exit 0")
+    code, calls, _ = _run_job(tmp_path, finishes_on_term, send=signal.SIGUSR1)
+    assert (code, calls) == (0, [])
+
+
+def test_a_stopped_task_raises_and_runs_no_slurm_command(
+    tmp_path, monkeypatch, commands
+):
+    """The worker knows no scheduler: it stops, and runtraj run exits with 3."""
     from runtraj.execution import worker
 
-    project = _hourly_project(tmp_path, 1)
     monkeypatch.setenv("SLURM_JOB_ID", "4321")
-    monkeypatch.delenv("SLURM_RESTART_COUNT", raising=False)
 
     def stopped(*args, **kwargs):
-        signal.raise_signal(signal.SIGUSR1)
+        raise KeyboardInterrupt  # what the worker raises on SIGTERM
 
-    def told_twice(*args, **kwargs):
-        try:
-            stopped()
-        finally:
-            signal.raise_signal(signal.SIGUSR1)  # a second one only adds to the record
-
-    monkeypatch.setattr(worker, "run_releases", told_twice)
-    table = runner.run(project, task=(0, 1))
-
-    assert commands.ran == [["scontrol", "requeue", "4321"]]
-    assert set(table["state"]) == {"pending"}
-    assert signal.getsignal(signal.SIGUSR1) is signal.SIG_DFL
-
-
-@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
-def test_a_task_requeues_itself_only_so_many_times(tmp_path, monkeypatch, commands):
-    from runtraj.execution import worker
-
-    project = _hourly_project(tmp_path, 1)
-    monkeypatch.setenv("SLURM_JOB_ID", "4321")
-    monkeypatch.setenv("SLURM_RESTART_COUNT", str(slurm.MAX_REQUEUES))
-    monkeypatch.setattr(
-        worker, "run_releases", lambda *a, **k: signal.raise_signal(signal.SIGUSR1)
-    )
-    runner.run(project, task=(0, 1))
-    assert commands.ran == []
-
-
-@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
-def test_a_preempted_task_requeues_itself_and_a_cancelled_one_does_not(
-    tmp_path, monkeypatch, commands
-):
-    """A preempted task gets SIGTERM, and maybe no SIGUSR1 before its grace time ends."""
-    from runtraj.execution import worker
-
-    project = _hourly_project(tmp_path, 1)
-    monkeypatch.setenv("SLURM_JOB_ID", "4321")
-    monkeypatch.delenv("SLURM_RESTART_COUNT", raising=False)
-    # run_releases stops on SIGTERM and returns with the release unfinished.
-    monkeypatch.setattr(worker, "run_releases", lambda *a, **k: None)
-
-    commands.answers["scontrol"] = [
-        _out("JobId=4321 PreemptTime=2026-10-06T12:00:00 Requeue=1")
-    ]
-    runner.run(project, task=(0, 1))
-    assert commands.ran == [
-        ["scontrol", "show", "job", "4321"],
-        ["scontrol", "requeue", "4321"],
-    ]
-
-    commands.ran.clear()
-    commands.answers["scontrol"] = [_out("JobId=4321 PreemptTime=None Requeue=1")]
-    runner.run(project, task=(0, 1))  # scancel: not preempted
-    assert commands.ran == [["scontrol", "show", "job", "4321"]]
-
-
-@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
-def test_a_task_on_another_cluster_asks_and_requeues_there(
-    tmp_path, monkeypatch, commands
-):
-    from runtraj.execution import worker
-
-    project = _hourly_project(tmp_path, 1)
-    monkeypatch.setenv("SLURM_JOB_ID", "4321")
-    monkeypatch.setenv("SLURM_CLUSTER_NAME", "kingspeak")
-    monkeypatch.delenv("SLURM_RESTART_COUNT", raising=False)
-    monkeypatch.setattr(worker, "run_releases", lambda *a, **k: None)
-    commands.answers["scontrol"] = [
-        _out("JobId=4321 PreemptTime=2026-10-06T12:00:00 Requeue=1")
-    ]
-
-    runner.run(project, task=(0, 1))
-
-    assert commands.ran == [
-        ["scontrol", "-M", "kingspeak", "show", "job", "4321"],
-        ["scontrol", "-M", "kingspeak", "requeue", "4321"],
-    ]
-
-
-@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
-def test_a_task_that_finished_is_not_requeued(tmp_path, monkeypatch, commands):
-    import pandas as pd
-
-    from runtraj.execution import worker
-
-    monkeypatch.setenv("SLURM_JOB_ID", "4321")
-    monkeypatch.setattr(
-        worker, "run_releases", lambda *a, **k: signal.raise_signal(signal.SIGUSR1)
-    )
-    monkeypatch.setattr(
-        slurm, "_status", lambda project, ids: pd.DataFrame({"state": ["complete"]})
-    )
-    runner.run(_hourly_project(tmp_path, 1), task=(0, 1))
-    assert commands.ran == []
-
-
-@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
-def test_an_interrupt_that_is_not_the_notice_is_not_swallowed(
-    tmp_path, monkeypatch, commands
-):
-    from runtraj.execution import worker
-
-    def interrupted(*args, **kwargs):
-        raise KeyboardInterrupt
-
-    monkeypatch.setattr(worker, "run_releases", interrupted)
+    monkeypatch.setattr(worker, "run_releases", stopped)
     with pytest.raises(KeyboardInterrupt):
         runner.run(_hourly_project(tmp_path, 1), task=(0, 1))
     assert commands.ran == []
-
-
-def test_a_task_on_a_system_without_sigusr1_notices_nothing(monkeypatch):
-    """Windows has no SIGUSR1 and no Slurm to send it: the block runs and records nothing."""
-    monkeypatch.delattr(slurm.signal, "SIGUSR1", raising=False)
-    with slurm._usr1_noticed() as notice:
-        assert not notice

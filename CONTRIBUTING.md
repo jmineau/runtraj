@@ -676,7 +676,10 @@ waits for it.
 
 The unit of work is a command line: `runtraj run <project> --releases FILE
 --task I/N`. Any scheduler that can start it with an index can run a
-project; the task requeues itself on `SIGUSR1` inside a Slurm job. Another
+project. The task knows no scheduler: stopped with SIGTERM, it exits with
+3, and whoever started it decides whether it runs again (the Slurm job
+script requeues it after the time-limit notice or a preemption; a
+Kubernetes Job's pod failure policy retries it). Another
 scheduler means another `Backend` subclass, not another worker: its
 `submit` starts the tasks, and `run` (with `waits = True`) and `jobs` are
 optional. One in another package is named by its import path in

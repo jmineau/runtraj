@@ -319,12 +319,12 @@ def run(
 
     Notes
     -----
-    In a Slurm job, a task (``task`` given) that stops with work left
-    requeues itself with ``scontrol requeue`` when it was preempted (Slurm
-    set the job's ``PreemptTime``) or got SIGUSR1, which the job array
-    script asks Slurm to send :data:`runtraj.execution.slurm.NOTICE_SECONDS` before the time
-    limit. It starts again later and skips what it finished. A task
-    stopped by ``scancel`` is not requeued.
+    A task (``task`` given) stopped with SIGTERM or Ctrl-C raises
+    ``KeyboardInterrupt``, and ``runtraj run`` exits with 3. Whoever
+    started the task decides whether it runs again: the Slurm job array
+    script requeues it after the time-limit notice or a preemption
+    (:func:`runtraj.execution.job_script`), and a Kubernetes Job retries it
+    (:mod:`runtraj.execution.kubernetes`). It then skips what it finished.
     """
     execution = execution if execution is not None else project.config.execution
     backend = get_backend(execution.backend)
@@ -335,14 +335,11 @@ def run(
         logger.info("run: every simulation is complete; nothing to do")
         return _status(project, todo)
     if task is not None:
-        # One task of a job array, in this process, whatever the backend.
-        from . import slurm
-
-        return slurm.run_task(
-            project,
-            todo,
-            lambda: run_here(project, todo, execution, skip_existing, compute_root),
-        )
+        # One task of a job array, in this process, whatever the backend. A
+        # task stopped with work left exits with 3, and its scheduler starts
+        # it again (the Slurm job script, a Kubernetes pod failure policy).
+        run_here(project, todo, execution, skip_existing, compute_root)
+        return _status(project, todo)
     return backend.run(
         project,
         todo,

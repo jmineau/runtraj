@@ -302,7 +302,6 @@ def test_a_release_list_limits_the_run_and_keeps_its_order(tmp_path, monkeypatch
         runner.pending(project, releases=["nope", every[0]])
 
 
-@not_on_windows("Slurm tells a task to stop with SIGUSR1, which Windows lacks")
 def test_a_task_runs_here_whatever_the_backend(tmp_path, monkeypatch, commands):
     from runtraj.execution import worker
 

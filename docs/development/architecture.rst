@@ -58,7 +58,7 @@ Module map
      particles/      the particle table and files, release heights, particles.runtraj
      models/         the TransportModel and TransportConfig base classes, MODELS, get_model, check_model
        hysplit/      config, met, driver, CONTROL and SETUP.CFG writers, failures
-     execution/      ExecutionConfig, the runner (plan, local run), slurm (the job array, requeue), the worker,
+     execution/      ExecutionConfig, the runner (plan, local run), slurm (the job array, whose script requeues a stopped task), the worker,
                      kubernetes (the indexed Job, the hourly CronJob), inputs (copies to a bucket, the lock), schedule
      transforms/     particle transforms, each multiplying the weight column
      sampling.py     sample_field, sample_met, calc_pbl_height: fields and met read at points

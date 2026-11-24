@@ -7,23 +7,19 @@ script into ``_slurm/<stamp>/`` in the project and submits it with
 run --task``, so a task is a command line that can be read, and run again,
 by hand. When a met downloads, a job that runs ``runtraj fetch`` goes first
 and the array waits for it. :func:`wait` follows the tasks with ``sacct``
-until they end, and a task that Slurm stops near its time limit or
-preempts requeues itself (:func:`run_task`).
+until they end. A task that Slurm stops near its time limit, or preempts,
+is requeued by its job script, which runs ``runtraj run`` as a child: the
+worker itself knows nothing of Slurm, and stops with exit code 3 on
+SIGTERM as it does on every backend.
 """
 
 from __future__ import annotations
 
-import contextlib
 import logging
-import os
-import re
 import shlex
-import signal
 import subprocess
 import sys
-import threading
 import time
-from collections.abc import Callable, Iterator
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -52,8 +48,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-#: Seconds before a Slurm task's time limit that Slurm sends it SIGUSR1,
-#: which stops the task and requeues it (``--signal=B:USR1@120``).
+#: Seconds before a Slurm task's time limit that Slurm sends its job script
+#: SIGUSR1, which stops the task and requeues it (``--signal=B:USR1@120``).
 NOTICE_SECONDS = 120
 
 #: Times a Slurm task requeues itself before it stops for good.
@@ -120,13 +116,22 @@ def job_script(
     --task i/n_tasks --execution <folder>/execution.yaml --cpus <cpus>`` with
     the Python that called this: a task runs its share here, ``cpus``
     releases at once. The ``#SBATCH`` lines come from *execution*'s
-    ``slurm`` block: its resources, ``--requeue``, ``--signal=B:USR1@120``
-    (see :func:`run`), and its other ``sbatch`` options, which can replace
-    any of them. Its ``setup`` commands run before the task, after the
+    ``slurm`` block: its resources, ``--requeue``, ``--signal=B:USR1@120``,
+    and its other ``sbatch`` options, which can replace any of them. Its
+    ``setup`` commands run before the task, after the
     script exports ``OMP_NUM_THREADS`` as the task's CPUs divided by the
     workers it runs at once (``cpus``), which a ``setup`` line can export
     again. NumPy's BLAS follows it, so a worker does not start a thread pool
     the size of the node.
+
+    The script runs the task as a child and waits for it, so that it can
+    put the task back in the queue (``scontrol requeue``) when the task
+    exits with 3, stopped with work left, after Slurm's notice of the time
+    limit (SIGUSR1, :data:`NOTICE_SECONDS` before it, which the script
+    passes on as SIGTERM) or a preemption (``scontrol show job`` gives a
+    ``PreemptTime``). A task stopped with ``scancel`` is not requeued, nor
+    one requeued :data:`MAX_REQUEUES` times already. A requeued task starts
+    again and skips what it finished.
     """
     slurm = execution.slurm
     options: dict[str, Any] = {
@@ -196,8 +201,38 @@ def job_script(
             '[ "${SLURM_RESTART_COUNT:-0}" -gt 0 ] && skip=""',
         ]
         words.append("$skip")
-    # exec, so this process is the one Slurm signals.
-    lines.append("exec " + " ".join(words))
+    lines += [
+        "# The task runs as a child, so this script can requeue it. Slurm sends",
+        f"# this script USR1 {NOTICE_SECONDS} s before the time limit, which it passes",
+        "# on as TERM; the task stops on TERM and exits with 3.",
+        "notice=0",
+        "on_cluster=${SLURM_CLUSTER_NAME:+-M $SLURM_CLUSTER_NAME}",
+        "trap 'notice=1; trapped=1; kill -TERM \"$pid\" 2>/dev/null' USR1",
+        "trap 'trapped=1; kill -TERM \"$pid\" 2>/dev/null' TERM INT",
+        " ".join(words) + " &",
+        "pid=$!",
+        "# wait returns early when a trapped signal arrives; wait again then.",
+        "while :; do",
+        "    trapped=0",
+        '    wait "$pid"',
+        "    code=$?",
+        '    [ "$trapped" = 1 ] || break',
+        "done",
+        "# 3 is a task stopped with work left: requeue it after the notice or a",
+        "# preemption (scontrol shows a PreemptTime), not after scancel.",
+        'if [ "$code" = 3 ]; then',
+        '    if [ "$notice" = 0 ] && ! scontrol $on_cluster show job "$SLURM_JOB_ID" \\',
+        "        | grep -Eq 'PreemptTime=[0-9]'; then",
+        '        echo "Stopped, not by the time limit or a preemption; not requeued."',
+        f'    elif [ "${{SLURM_RESTART_COUNT:-0}}" -ge {MAX_REQUEUES} ]; then',
+        '        echo "Requeued ${SLURM_RESTART_COUNT} times; not again. Run the project'
+        ' again, or raise execution.slurm.time."',
+        '    elif scontrol $on_cluster requeue "$SLURM_JOB_ID"; then',
+        '        echo "Requeued $SLURM_JOB_ID; it starts again and skips what finished."',
+        "    fi",
+        "fi",
+        'exit "$code"',
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -504,130 +539,12 @@ class SlurmBackend(Backend):
         return "Submitting to Slurm and returning"
 
 
-# ---------------------------------------------------------------------------
-# A task that is told to stop
-# ---------------------------------------------------------------------------
-
-
-class _Notice:
-    """
-    Whether SIGUSR1 has arrived.
-
-    While ``armed``, its first arrival raises ``KeyboardInterrupt`` to stop
-    the work. Later ones, and any after the work, are only recorded, so
-    they cannot cut a cleanup short or end the process.
-    """
-
-    def __init__(self) -> None:
-        self.received = False
-        self.armed = True
-
-    def __bool__(self) -> bool:
-        return self.received
-
-    def handle(self, signum: int, frame: object) -> None:
-        first = not self.received
-        self.received = True
-        if first and self.armed:
-            raise KeyboardInterrupt
-
-
-@contextlib.contextmanager
-def _usr1_noticed() -> Iterator[_Notice]:
-    """Record SIGUSR1 inside the block (:class:`_Notice`); outside the main thread, where handlers cannot be set, or on Windows, which has no SIGUSR1, nothing is."""
-    notice = _Notice()
-    # Windows has no SIGUSR1, and no Slurm to send it.
-    sigusr1 = getattr(signal, "SIGUSR1", None)
-    if sigusr1 is None or threading.current_thread() is not threading.main_thread():
-        yield notice
-        return
-    previous = signal.signal(sigusr1, notice.handle)
-    try:
-        yield notice
-    finally:
-        signal.signal(sigusr1, previous)
-
-
-def run_task(
-    project: Project, pending: list[str], work: Callable[[], None]
-) -> pd.DataFrame:
-    """
-    Run a task's releases and return their status table; requeue the task when Slurm stopped it.
-
-    A task that stops with simulations left is requeued when it got
-    SIGUSR1 (the time limit is near) or was preempted.
-    """
-    with _usr1_noticed() as notice:
-        try:
-            work()
-        except KeyboardInterrupt:
-            if not notice:
-                raise
-        finally:
-            notice.armed = False
-        table = _status(project, pending)
-        if _unfinished(table) and (notice or _preempted()):
-            _requeue()
-    return table
-
-
-def _this_cluster() -> list[str]:
-    """Return the words that send a Slurm command to the cluster this task runs on."""
-    return _on_cluster(os.environ.get("SLURM_CLUSTER_NAME"))
-
-
-def _preempted() -> bool:
-    """Whether Slurm has selected this job for preemption (``scontrol show job`` gives a ``PreemptTime``)."""
-    job_id = os.environ.get("SLURM_JOB_ID")
-    if not job_id:
-        return False
-    result = subprocess.run(
-        ["scontrol", *_this_cluster(), "show", "job", job_id],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    match = re.search(r"PreemptTime=(\S+)", result.stdout)
-    return match is not None and match.group(1) not in ("None", "Unknown")
-
-
-def _requeue() -> bool:
-    """Put this Slurm task back in the queue with ``scontrol requeue``; return whether it was."""
-    job_id = os.environ.get("SLURM_JOB_ID")
-    if not job_id:
-        logger.warning("Told to stop outside a Slurm job; not requeued.")
-        return False
-    restarts = int(os.environ.get("SLURM_RESTART_COUNT") or 0)
-    if restarts >= MAX_REQUEUES:
-        logger.warning(
-            "Slurm task %s has been requeued %d times; not again. Run the "
-            "project again, or raise execution.slurm.time.",
-            job_id,
-            restarts,
-        )
-        return False
-    result = subprocess.run(
-        ["scontrol", *_this_cluster(), "requeue", job_id],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        logger.warning("scontrol requeue %s failed: %s", job_id, result.stderr.strip())
-        return False
-    logger.info(
-        "Requeued Slurm task %s; it starts again and skips what finished.", job_id
-    )
-    return True
-
-
 __all__ = [
     "MAX_REQUEUES",
     "NOTICE_SECONDS",
     "SlurmBackend",
     "fetch_script",
     "job_script",
-    "run_task",
     "submit_array",
     "wait",
 ]

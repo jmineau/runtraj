@@ -173,8 +173,8 @@ so it is the same whoever asks:
    * - ``interrupted``
      - The run started and was stopped before it finished: a time limit,
        preemption, Ctrl-C, or a lost connection.
-     - Run again. A Slurm task that gets its two-minute warning requeues
-       itself.
+     - Run again. A Slurm task that gets its two-minute warning is
+       requeued by its job script.
    * - ``pending``
      - It has not run yet, or its particles exist and a stage file does
        not.
