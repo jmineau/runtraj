@@ -249,17 +249,20 @@ def test_each_backends_settings_are_in_its_own_block():
     [
         (
             {"cpus": 4},
-            "execution: local:, execution: slurm: or execution: kubernetes:, "
-            "for the backend it is for.",
+            "execution: local:, execution: slurm:, execution: pbs: or "
+            "execution: kubernetes:, for the backend it is for.",
         ),
         ({"completions": 4}, "execution: kubernetes:."),
-        ({"n_workers": 8}, "execution: slurm:."),
+        (
+            {"n_workers": 8},
+            "execution: slurm: or execution: pbs:, for the backend it is for.",
+        ),
         ({"time": "02:00:00"}, "execution: slurm:."),
         ({"partition": "compute"}, "execution: slurm:."),
         (
             {"fetch": False},
-            "execution: local:, execution: slurm: or execution: kubernetes:, "
-            "for the backend it is for.",
+            "execution: local:, execution: slurm:, execution: pbs: or "
+            "execution: kubernetes:, for the backend it is for.",
         ),
     ],
 )
@@ -289,9 +292,7 @@ def test_unknown_execution_setting_is_an_error(tmp_path):
             execution={"partion": "compute"},
             variants={"hrrr": {}},
         )
-    with pytest.raises(
-        ValueError, match=r"'requeue' is not a setting of execution\. \["
-    ):
+    with pytest.raises(ValueError, match=r"'requeue' is not a setting of execution\."):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
             mets=_met_config(tmp_path),

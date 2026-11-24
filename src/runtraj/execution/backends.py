@@ -3,7 +3,8 @@ Where a project's releases run: one class per backend, found by the name ``execu
 
 A backend takes the releases whose results are missing and runs them: in
 this process (``local``, :class:`runtraj.execution.runner.LocalBackend`),
-as a Slurm job array (``slurm``, :class:`runtraj.execution.slurm.SlurmBackend`)
+as a Slurm job array (``slurm``, :class:`runtraj.execution.slurm.SlurmBackend`),
+as a PBS job array (``pbs``, :class:`runtraj.execution.pbs.PbsBackend`)
 or as a Kubernetes indexed Job (``kubernetes``,
 :class:`runtraj.execution.kubernetes.KubernetesBackend`). A backend in
 another package subclasses :class:`Backend`, and ``execution.backend``
@@ -14,7 +15,7 @@ model or a stage:
 
    execution:
      backend: mypkg.backends.QueueBackend
-     queue:           # the class's name
+     myqueue:         # the class's name
        queue: short   # a setting of its config_class
        cpus: 4
 
@@ -56,7 +57,7 @@ class Backend(ABC):
     >>> class QueueConfig(BackendConfig):
     ...     queue: str = "short"
     >>> class QueueBackend(Backend):
-    ...     name = "queue"
+    ...     name = "myqueue"
     ...     config_class = QueueConfig
     ...
     ...     def submit(
@@ -158,6 +159,7 @@ def not_waited(backend: Backend) -> str:
 BACKENDS: dict[str, str] = {
     "local": "runtraj.execution.runner.LocalBackend",
     "slurm": "runtraj.execution.slurm.SlurmBackend",
+    "pbs": "runtraj.execution.pbs.PbsBackend",
     "kubernetes": "runtraj.execution.kubernetes.KubernetesBackend",
 }
 

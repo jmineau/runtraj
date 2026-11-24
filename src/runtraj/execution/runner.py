@@ -11,23 +11,28 @@ Slurm job array to :mod:`runtraj.execution.slurm` and a Kubernetes Job to
 from __future__ import annotations
 
 import logging
+import math
 import os
 import re
 import tempfile
+import time
 from collections.abc import Iterable
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
 from runtraj._paths import absolute
 from runtraj._transient import is_transient
 from runtraj.execution.backends import Backend, get_backend, not_waited
-from runtraj.execution.config import ExecutionConfig, LocalConfig
+from runtraj.execution.config import ExecutionConfig, LocalConfig, PbsConfig
 from runtraj.execution.inputs import lock
 from runtraj.fetch import downloads, fetch_project
 
 if TYPE_CHECKING:
     import pandas as pd
 
+    from runtraj.execution.config import SlurmConfig
     from runtraj.project import Project
 
 logger = logging.getLogger(__name__)
@@ -251,6 +256,105 @@ def _status(project: Project, release_ids: list[str]) -> pd.DataFrame:
 def _unfinished(table: pd.DataFrame) -> bool:
     """Whether a status table has simulations that did not finish (pending or interrupted)."""
     return bool(table["state"].isin(["pending", "interrupted"]).any())
+
+
+# ---------------------------------------------------------------------------
+# What a scheduler's job array needs: its folder, its size, the listing after
+# ---------------------------------------------------------------------------
+
+
+def write_submission(
+    project: Project, pending: list[str], execution: ExecutionConfig, scheduler: str
+) -> Path:
+    """
+    Make a submission folder, ``_<scheduler>/<date_time>_<id>/`` in the project, and return it.
+
+    It holds ``releases.txt``, the ids of *pending*; ``releases.parquet``,
+    their checked rows in the order the tasks split them
+    (:func:`task_share`), which each task reads in place of
+    ``releases.csv``; and ``execution.yaml``, the execution settings. One
+    folder per submission, so a later one never overwrites these.
+    """
+    import pyarrow as pa
+    import yaml
+
+    from runtraj._paths import write_parquet
+
+    stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
+    folder = Path(project.directory) / f"_{scheduler}" / stamp
+    folder.mkdir(parents=True)
+    (folder / "releases.txt").write_text("\n".join(pending) + "\n", encoding="utf-8")
+    rows = project._rows_of(pending)
+    write_parquet(
+        pa.Table.from_pandas(rows, preserve_index=False), folder / "releases.parquet"
+    )
+    (folder / "execution.yaml").write_text(
+        yaml.safe_dump(execution.model_dump(exclude_unset=True), sort_keys=False),
+        encoding="utf-8",
+    )
+    return folder
+
+
+def array_size(block: SlurmConfig | PbsConfig, n_releases: int, limit: int) -> int:
+    """
+    Return the number of tasks of a job array for *n_releases*: ``n_tasks``, or ten per worker.
+
+    *block* is the ``slurm`` or ``pbs`` block. Never more than one task
+    per release, nor more than *limit*, the most tasks the cluster allows
+    in one array (Slurm's ``MaxArraySize``, PBS's ``max_array_size``). A
+    task runs ``cpus`` releases at once, so with ``n_tasks`` unset a task's
+    share is whole rounds of ``cpus`` releases: a share of 10 on 8 CPUs
+    would leave 6 of them idle for its last 2 releases.
+
+    Examples
+    --------
+    >>> from runtraj.execution import SlurmConfig
+    >>> array_size(SlurmConfig(n_workers=50), 10_000, limit=1000)
+    500
+    >>> array_size(SlurmConfig(n_workers=50, cpus=8), 10_000, limit=1000)
+    417
+    >>> array_size(SlurmConfig(n_workers=200), 10_000, limit=1000)
+    1000
+    >>> array_size(SlurmConfig(n_workers=50), 120, limit=1000)
+    120
+
+    Raises
+    ------
+    ValueError
+        If ``n_tasks`` is more than *limit*.
+    """
+    if block.n_tasks is not None and block.n_tasks > limit:
+        name = "pbs" if isinstance(block, PbsConfig) else "slurm"
+        raise ValueError(
+            f"execution.{name}.n_tasks is {block.n_tasks}, and this cluster's job "
+            f"arrays have at most {limit} tasks. Set n_tasks to {limit} or "
+            "fewer, or leave it unset."
+        )
+    tasks = max(1, min(block.tasks, n_releases, limit))
+    if block.n_tasks is None and block.cpus > 1:
+        share = math.ceil(n_releases / tasks / block.cpus) * block.cpus
+        tasks = max(1, math.ceil(n_releases / share))
+    return tasks
+
+
+def status_after_job(project: Project, release_ids: list[str]) -> pd.DataFrame:
+    """
+    Return the status table of *release_ids* after a job array ended.
+
+    When some simulations look unfinished, their results are listed once
+    more :data:`RELIST_SECONDS` later, since a network filesystem can show
+    the submitting node a compute node's new files late.
+    """
+    table = _status(project, release_ids)
+    if _unfinished(table):
+        logger.info(
+            "Some simulations look unfinished; listing again in %d s, in "
+            "case this node sees the compute nodes' files late.",
+            RELIST_SECONDS,
+        )
+        time.sleep(RELIST_SECONDS)
+        table = _status(project, release_ids)
+    return table
 
 
 def run(
@@ -526,12 +630,15 @@ def submit(
 __all__ = [
     "FETCH_LOCK",
     "LocalBackend",
+    "array_size",
     "NOTHING_TO_SUBMIT",
     "RELIST_SECONDS",
     "fetch_shared",
     "resolve_compute_root",
     "run",
     "run_here",
+    "status_after_job",
     "submit",
     "task_share",
+    "write_submission",
 ]

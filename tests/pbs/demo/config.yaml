@@ -1,0 +1,19 @@
+# A two-release project for the end-to-end test on a one-node PBS cluster
+# (.github/workflows/pbs.yml): the kind test's demo (tests/kubernetes/demo),
+# whose two HYSPLIT runs are recorded, with its met at /met and its output
+# beside it, run as a PBS job array of two subjobs, one at a time.
+mets:
+  hrrr: /met
+models:
+  hysplit:
+    directory: /opt/hysplit
+    n_hours: -3
+    numpar: 100
+variants:
+  hrrr: {}
+output: output
+execution:
+  backend: pbs
+  pbs:
+    n_workers: 1
+    walltime: "00:10:00"

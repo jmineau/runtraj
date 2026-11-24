@@ -106,7 +106,7 @@ src/runtraj/
   models/         TransportModel/TransportConfig base classes, MODELS (hysplit), get_model, run_model, check_model
     hysplit/      config (and its mode), met, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
   execution/      ExecutionConfig (a block per backend), backends (Backend, get_backend: a backend by name or import path),
-                  runner (plan, local run), slurm (job array; its script requeues a stopped task), worker,
+                  runner (plan, local run), slurm (job array; its script requeues a stopped task), pbs (job array), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
   sampling.py     sample_field: a gridded field read at points

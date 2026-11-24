@@ -14,7 +14,8 @@ import pytest
 
 from runtraj.execution import runner, slurm
 from runtraj.execution.config import ExecutionConfig, SlurmConfig
-from runtraj.execution.slurm import array_size, job_script, max_array_size
+from runtraj.execution.runner import array_size
+from runtraj.execution.slurm import job_script, max_array_size
 from tests.fixtures.platform import not_on_windows
 
 from ..fixtures.slurm import hourly_project as _hourly_project

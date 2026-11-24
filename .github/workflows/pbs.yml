@@ -1,0 +1,120 @@
+name: PBS
+
+# Runs a real project as a PBS job array on a one-node OpenPBS cluster in a
+# container: runtraj run submits it with qsub and waits for it with qstat,
+# then runtraj status counts the results. HYSPLIT's programs replay the runs
+# recorded for the kind test (tests/recorded/kubernetes/): none is
+# downloaded. tests/pbs/README.md says what each part is.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pbs:
+    name: OpenPBS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # setuptools-scm reads the version from tags
+
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.12.23"
+          python-version: "3.13"
+
+      - name: Restore the met
+        id: met-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: met
+          key: met-hrrr-20210115-00
+
+      - name: Download the met
+        # One 6-hour HRRR file from NOAA's bucket, cropped to Utah (about 30 MB),
+        # the kind test's.
+        if: steps.met-cache.outputs.cache-hit != 'true'
+        run: |
+          uv sync --locked --extra download
+          uv run python -c '
+          from arlmet.archives import HRRRArchive
+          HRRRArchive().fetch("2021-01-15 00:00", "2021-01-15 05:59", dest_dir="met",
+                              bbox=(-114.0, 39.0, -110.0, 42.0))
+          '
+
+      - name: Save the met
+        if: steps.met-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: met
+          key: ${{ steps.met-cache.outputs.cache-primary-key }}
+
+      - name: Start the PBS cluster
+        run: |
+          docker build -t runtraj-pbs tests/pbs
+          docker run -d --name pbs --hostname pbs \
+            -e RUNNER_UID="$(id -u)" \
+            -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" \
+            -v "$GITHUB_WORKSPACE/met:/met:ro" \
+            -v "$(dirname "$(command -v uv)"):/opt/uv:ro" \
+            runtraj-pbs
+          for _ in $(seq 60); do
+            docker exec pbs test -e /tmp/pbs-ready && break
+            sleep 2
+          done
+          for _ in $(seq 30); do
+            docker exec pbs pbsnodes -a | grep -q "state = free" && break
+            sleep 2
+          done
+          docker exec pbs pbsnodes -a
+
+      - name: Install runtraj and the HYSPLIT folder in the cluster
+        # As the test's user, in a venv of its own, so the subjobs run the
+        # Python that submitted them; then /opt/hysplit, whose hycs_std
+        # replays the kind test's recorded runs.
+        run: |
+          docker exec -u runner -w "$GITHUB_WORKSPACE" \
+            -e UV_PROJECT_ENVIRONMENT=/home/runner/venv pbs \
+            /opt/uv/uv sync --locked --python 3.13
+          docker exec -w "$GITHUB_WORKSPACE" pbs \
+            /home/runner/venv/bin/python tests/fixtures/replay.py folder /opt/hysplit \
+            --cases tests/recorded/kubernetes/5.1.0 --python /home/runner/venv/bin/python
+
+      - name: Run the demo project as a job array, and count its results
+        run: |
+          docker exec -u runner -w "$GITHUB_WORKSPACE" pbs \
+            /home/runner/venv/bin/runtraj run tests/pbs/demo
+          docker exec -u runner -w "$GITHUB_WORKSPACE" pbs \
+            /home/runner/venv/bin/runtraj status tests/pbs/demo --json > status.json
+          python3 - <<'CHECK'
+          import json, pathlib
+          status = json.load(open("status.json"))
+          assert status["simulations"]["complete"] == 2, status["simulations"]
+          [folder] = pathlib.Path("tests/pbs/demo/_pbs").iterdir()
+          script = (folder / "job.sh").read_text()
+          assert "#PBS -J 0-1%1" in script, script
+          for task in (0, 1):
+              log = (folder / f"{task}.log").read_text()
+              assert f"task {task} of 2" in log, log
+          print("job", (folder / "job.id").read_text().strip(), "ran both subjobs")
+          CHECK
+
+      - name: Show the cluster
+        if: ${{ !cancelled() }}
+        run: |
+          docker exec pbs qstat -x -t || true
+          tail -n 40 tests/pbs/demo/_pbs/*/*.log || true
+          docker exec pbs bash -c 'tail -n 40 /var/spool/pbs/server_logs/* /var/spool/pbs/mom_logs/*' || true

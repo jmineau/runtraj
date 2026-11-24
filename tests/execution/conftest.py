@@ -28,6 +28,9 @@ def commands(monkeypatch):
     monkeypatch.setattr(
         slurm, "max_array_size", lambda cluster=None: slurm.SLURM_MAX_ARRAY_SIZE
     )
+    from runtraj.execution import pbs
+
+    monkeypatch.setattr(pbs, "max_array_size", lambda: pbs.PBS_MAX_ARRAY_SIZE)
     # Run inside a Slurm job, the tests would see that job's cluster.
     monkeypatch.delenv("SLURM_CLUSTER_NAME", raising=False)
     return SimpleNamespace(ran=ran, answers=answers)

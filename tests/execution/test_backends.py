@@ -35,8 +35,8 @@ def test_a_built_in_backend_reads_the_block_of_its_name(name):
 
 
 def test_an_unknown_backend_name_says_how_to_name_one():
-    with pytest.raises(ValueError, match=r"Unknown backend 'pbs'.*import path"):
-        get_backend("pbs")
+    with pytest.raises(ValueError, match=r"Unknown backend 'lsf'.*import path"):
+        get_backend("lsf")
 
 
 def test_a_class_that_is_not_a_backend_is_refused():
@@ -50,35 +50,35 @@ def test_a_backend_that_is_not_installed_names_its_package():
 
 
 def test_a_backend_by_import_path_reads_the_block_of_its_name():
-    config = ExecutionConfig(backend=QUEUE, queue={"queue": "long", "cpus": 3})
+    config = ExecutionConfig(backend=QUEUE, myqueue={"queue": "long", "cpus": 3})
 
     assert config.block.queue == "long"
     assert (config.cpus, config.block.tasks) == (3, 4)
 
 
 def test_its_block_is_kept_when_the_settings_are_written_and_read_again():
-    config = ExecutionConfig(backend=QUEUE, queue={"queue": "long", "cpus": 3})
+    config = ExecutionConfig(backend=QUEUE, myqueue={"queue": "long", "cpus": 3})
 
     dumped = config.model_dump(exclude_unset=True)
-    assert dumped["queue"]["queue"] == "long"
+    assert dumped["myqueue"]["queue"] == "long"
     assert ExecutionConfig.model_validate(dumped) == config
 
 
 def test_its_block_is_checked_by_its_own_rules():
-    with pytest.raises(ValueError, match="queue.queue is required"):
+    with pytest.raises(ValueError, match="myqueue.queue is required"):
         ExecutionConfig(backend=QUEUE)
     with pytest.raises(ValueError, match=r"cpuss\s+Extra inputs"):
-        ExecutionConfig(backend=QUEUE, queue={"queue": "q", "cpuss": 2})
+        ExecutionConfig(backend=QUEUE, myqueue={"queue": "q", "cpuss": 2})
 
 
 def test_a_setting_of_its_block_outside_it_names_the_block():
-    with pytest.raises(ValueError, match=r"Write it under execution: queue:"):
-        ExecutionConfig(backend=QUEUE, queue={"queue": "q"}, pods=2)
+    with pytest.raises(ValueError, match=r"Write it under execution: myqueue:"):
+        ExecutionConfig(backend=QUEUE, myqueue={"queue": "q"}, pods=2)
 
 
 def test_its_block_is_refused_when_another_backend_is_named():
-    with pytest.raises(ValueError, match="'queue' is not a setting of execution"):
-        ExecutionConfig(queue={"queue": "q"})
+    with pytest.raises(ValueError, match="'myqueue' is not a setting of execution"):
+        ExecutionConfig(myqueue={"queue": "q"})
 
 
 def test_a_block_named_as_a_setting_of_execution_is_refused():
@@ -88,7 +88,7 @@ def test_a_block_named_as_a_setting_of_execution_is_refused():
 
 def test_submit_hands_the_unfinished_releases_to_the_backend(tmp_path):
     project = hourly_project(tmp_path, 3)
-    execution = ExecutionConfig(backend=QUEUE, queue={"queue": "q"})
+    execution = ExecutionConfig(backend=QUEUE, myqueue={"queue": "q"})
 
     assert submit(project, execution=execution) == "queue-7"
 
@@ -101,9 +101,9 @@ def test_run_refuses_a_backend_it_cannot_wait_for(tmp_path):
     project = hourly_project(tmp_path, 1)
 
     with pytest.raises(
-        ValueError, match="does not wait for the tasks of backend 'queue'"
+        ValueError, match="does not wait for the tasks of backend 'myqueue'"
     ):
-        run(project, execution=ExecutionConfig(backend=QUEUE, queue={"queue": "q"}))
+        run(project, execution=ExecutionConfig(backend=QUEUE, myqueue={"queue": "q"}))
     assert toy.CALLS == []
 
 
@@ -111,7 +111,7 @@ def test_run_returns_what_a_waiting_backend_returns(tmp_path):
     project = hourly_project(tmp_path, 2)
 
     table = run(
-        project, execution=ExecutionConfig(backend=WAITING, queue={"queue": "q"})
+        project, execution=ExecutionConfig(backend=WAITING, myqueue={"queue": "q"})
     )
 
     assert [method for method, *_ in toy.CALLS] == ["run"]
@@ -124,7 +124,7 @@ def _on_queue(project: Project) -> Project:
 
     path = project.directory / "config.yaml"
     settings = yaml.safe_load(path.read_text(encoding="utf-8"))
-    settings["execution"] = {"backend": QUEUE, "queue": {"queue": "q"}}
+    settings["execution"] = {"backend": QUEUE, "myqueue": {"queue": "q"}}
     path.write_text(yaml.safe_dump(settings), encoding="utf-8")
     return Project(project.directory)
 
@@ -136,7 +136,7 @@ def test_runtraj_submit_uses_the_backend_config_yaml_names(tmp_path):
 
     assert result.exit_code == 0, result.output
     assert f"backend={QUEUE}  tasks=4  cpus=2" in result.output
-    assert "Submitting to queue and returning" in result.output
+    assert "Submitting to myqueue and returning" in result.output
     assert "Submitted job: queue-7" in result.output
     [(_, _, execution)] = toy.CALLS
     assert execution.block.cpus == 2
@@ -166,8 +166,8 @@ def test_runtraj_run_names_a_backend_it_cannot_find(tmp_path):
     project = hourly_project(tmp_path, 1)
 
     result = CliRunner().invoke(
-        app, ["run", str(project.directory), "--backend", "pbs", "--cpus", "2"]
+        app, ["run", str(project.directory), "--backend", "lsf", "--cpus", "2"]
     )
 
     assert result.exit_code == 2
-    assert "Unknown backend 'pbs'" in result.output
+    assert "Unknown backend 'lsf'" in result.output

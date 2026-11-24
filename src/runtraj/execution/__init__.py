@@ -20,6 +20,7 @@ from .config import (
     FetchConfig,
     KubernetesConfig,
     LocalConfig,
+    PbsConfig,
     SlurmConfig,
     Volume,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "FetchConfig",
     "KubernetesConfig",
     "LocalConfig",
+    "PbsConfig",
     "SlurmConfig",
     "Volume",
     "fetch_script",

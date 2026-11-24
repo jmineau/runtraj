@@ -283,6 +283,143 @@ class SlurmConfig(BackendConfig):
             )
 
 
+#: A PBS walltime: seconds, ``MM:SS`` or ``HH:MM:SS``.
+_PBS_WALLTIME = r"\d+(:[0-5]?\d){0,2}"
+
+
+class PbsConfig(BackendConfig):
+    """
+    The PBS job array a project's releases run as: the ``pbs`` block of ``execution``.
+
+    As on Slurm, the releases are split among ``n_tasks`` array tasks
+    (subjobs), at most ``n_workers`` running at once, and each task runs
+    ``cpus`` of them at once. The settings use PBS's own names where it has
+    them. Any key that is not a setting below is a PBS resource by its
+    name, written as ``#PBS -l <key>=<value>``, such as ``place: scatter``;
+    ``select`` replaces the chunk runtraj asks for
+    (``1:ncpus=<cpus>:mem=<mem>``), for a resource a chunk must name, such
+    as ``ngpus``.
+
+    PBS sends no notice before ``walltime``, and a user cannot put a
+    subjob back in the queue, so a task that runs out of time stays
+    stopped: run the project again, and it skips what finished. A task
+    that PBS preempts is put back by PBS itself (the job is rerunnable,
+    ``-r y``). There is no fetch job: each task downloads the met files
+    its releases lack, so get them first with ``runtraj fetch`` when many
+    tasks share them.
+
+    Examples
+    --------
+    >>> config = PbsConfig(
+    ...     n_workers=20, walltime="02:00:00", queue="main", place="scatter"
+    ... )
+    >>> config.n_workers, config.tasks, config.resources
+    (20, 200, {'place': 'scatter'})
+    """
+
+    model_config = ConfigDict(extra="allow", frozen=True)
+
+    n_workers: int = Field(
+        1,
+        ge=1,
+        description="Most subjobs running at once (``-J 0-199%20`` for 20).",
+    )
+    n_tasks: int | None = Field(
+        None,
+        ge=1,
+        description=(
+            "Number of subjobs, which the releases are split evenly among. "
+            "Unset, ten per worker. Never more than one per release, nor more "
+            "than the server's ``max_array_size``."
+        ),
+    )
+    cpus: int = Field(
+        1,
+        ge=1,
+        description="Releases each subjob runs at once, and the CPUs (``ncpus``) it asks for.",
+    )
+    walltime: str | int | None = Field(
+        None,
+        description=(
+            "Time limit per subjob, as ``HH:MM:SS`` or seconds. Required with "
+            "``backend: pbs``."
+        ),
+    )
+    mem: str | None = Field(None, description="Memory per subjob, such as ``8gb``.")
+    queue: str | None = Field(None, description="PBS queue (``-q``).")
+    account: str | None = Field(
+        None, description="Project or account to charge (``-A``)."
+    )
+    setup: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Shell commands run in each subjob before the worker, such as "
+            "``module load`` lines."
+        ),
+    )
+    fetch: Literal[False] = Field(
+        False,
+        description="PBS runs have no fetch job: each subjob gets the met files it lacks.",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _no_misspelled_setting(cls, data: Any) -> Any:
+        """Refuse a key that reads as a misspelled setting, which would otherwise go to ``qsub`` as a resource."""
+        if isinstance(data, dict):
+            for key in data:
+                if key in cls.model_fields:
+                    continue
+                close = difflib.get_close_matches(
+                    str(key), list(cls.model_fields), n=1, cutoff=0.8
+                )
+                if close:
+                    raise ValueError(
+                        f"{key!r} is not a setting of execution.pbs. Did you "
+                        f"mean {close[0]!r}?"
+                    )
+        return data
+
+    @field_validator("setup", mode="before")
+    @classmethod
+    def _one_command(cls, value: Any) -> Any:
+        """Accept one setup command as a string."""
+        return [value] if isinstance(value, str) else value
+
+    @field_validator("walltime")
+    @classmethod
+    def _pbs_walltime(cls, value: str | int | None) -> str | int | None:
+        """Raise on a walltime PBS would not take."""
+        if value is not None and not re.fullmatch(_PBS_WALLTIME, str(value).strip()):
+            raise ValueError(
+                f"Not a PBS walltime: {value!r}. Use 'HH:MM:SS' or seconds."
+            )
+        return value
+
+    @property
+    def resources(self) -> dict[str, Any]:
+        """The other PBS resources, by name: every key of the block that is not one of its settings."""
+        return dict(self.model_extra or {})
+
+    @property
+    def tasks(self) -> int:
+        """The number of subjobs, ``n_tasks``, or ten per worker when it is unset; fewer when there are fewer releases."""
+        return (
+            self.n_tasks
+            if self.n_tasks is not None
+            else TASKS_PER_WORKER * self.n_workers
+        )
+
+    def check(self) -> None:
+        """Raise when the subjobs have no walltime."""
+        if self.walltime is None:
+            raise ValueError(
+                "execution.pbs.walltime is required with backend: pbs, such as "
+                "walltime: '02:00:00'. Without it each subjob gets the queue's "
+                "default time limit."
+            )
+
+
 #: A Kubernetes memory quantity in its binary units: ``512Mi``, ``8Gi``, ``1.5Ti``.
 _K8S_MEMORY = r"\d+(\.\d+)?(Ki|Mi|Gi|Ti|Pi|Ei)"
 
@@ -612,6 +749,7 @@ def _did_you_mean(key: str, blocks: dict[str, type[BackendConfig]]) -> str:
 BUILT_IN_BLOCKS: dict[str, type[BackendConfig]] = {
     "local": LocalConfig,
     "slurm": SlurmConfig,
+    "pbs": PbsConfig,
     "kubernetes": KubernetesConfig,
 }
 
@@ -650,8 +788,9 @@ class ExecutionConfig(BaseModel):
     block of its name. With ``backend: local`` the releases run on this
     machine as one task (:class:`LocalConfig`). With ``backend: slurm``
     they are split among the tasks of one Slurm job array
-    (:class:`SlurmConfig`), and with ``backend: kubernetes`` among the pods
-    of one indexed Job (:class:`KubernetesConfig`). A backend in another
+    (:class:`SlurmConfig`), with ``backend: pbs`` among the subjobs of one
+    PBS job array (:class:`PbsConfig`), and with ``backend: kubernetes``
+    among the pods of one indexed Job (:class:`KubernetesConfig`). A backend in another
     package is named by the import path of its class
     (:class:`runtraj.execution.Backend`), and its block is under the
     class's ``name``. Only the block ``backend`` names is read, so a config
@@ -678,7 +817,8 @@ class ExecutionConfig(BaseModel):
         "local",
         description=(
             "Where to run: on this machine (``local``), as a Slurm job array "
-            "(``slurm``), as a Kubernetes indexed Job (``kubernetes``), or with "
+            "(``slurm``) or a PBS job array (``pbs``), as a Kubernetes indexed "
+            "Job (``kubernetes``), or with "
             "a backend in another package, named by the import path of its "
             "class, such as ``mypkg.backends.MyBackend``."
         ),
@@ -692,6 +832,13 @@ class ExecutionConfig(BaseModel):
         description=(
             "The job array of a Slurm run (:class:`SlurmConfig`), and any "
             "other ``sbatch`` option by name. Read with ``backend: slurm``."
+        ),
+    )
+    pbs: PbsConfig = Field(
+        default_factory=PbsConfig,
+        description=(
+            "The job array of a PBS run (:class:`PbsConfig`), and any other "
+            "PBS resource by name. Read with ``backend: pbs``."
         ),
     )
     kubernetes: KubernetesConfig = Field(
@@ -849,6 +996,7 @@ __all__ = [
     "FetchConfig",
     "KubernetesConfig",
     "LocalConfig",
+    "PbsConfig",
     "SlurmConfig",
     "TASKS_PER_WORKER",
     "Volume",

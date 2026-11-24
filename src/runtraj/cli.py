@@ -282,7 +282,7 @@ _BACKEND = typer.Option(
     None,
     "--backend",
     help=(
-        "Where to run: local, slurm, kubernetes, or the import path of a "
+        "Where to run: local, slurm, pbs, kubernetes, or the import path of a "
         "backend's class. Overrides execution.backend in config.yaml."
     ),
 )
@@ -290,8 +290,8 @@ _N_WORKERS = typer.Option(
     None,
     "--n-workers",
     help=(
-        "Most Slurm array tasks running at once. Overrides "
-        "execution.slurm.n_workers in config.yaml."
+        "Most array tasks running at once, on Slurm or PBS. Overrides "
+        "n_workers in the backend's block of execution in config.yaml."
     ),
 )
 _CPUS = typer.Option(
@@ -469,7 +469,12 @@ def _start(
     if backend is not None:
         settings["backend"] = backend
     if n_workers is not None:
-        settings["slurm"] = {**(settings.get("slurm") or {}), "n_workers": n_workers}
+        # The block of a backend that has workers (slurm, pbs); else slurm's.
+        found = _backend(settings.get("backend", "local"))
+        block = (
+            found.name if "n_workers" in found.config_class.model_fields else "slurm"
+        )
+        settings[block] = {**(settings.get(block) or {}), "n_workers": n_workers}
     if cpus is not None:
         block = _backend(settings.get("backend", "local")).name
         settings[block] = {**(settings.get(block) or {}), "cpus": cpus}
@@ -711,8 +716,9 @@ _SUBMIT_BACKEND = typer.Option(
     None,
     "--backend",
     help=(
-        "Where to submit: slurm or kubernetes. Defaults to execution.backend "
-        "in config.yaml when it is one of them, else slurm."
+        "Where to submit: slurm, pbs, kubernetes, or a backend's import path. "
+        "Defaults to execution.backend in config.yaml unless it is local, "
+        "else slurm."
     ),
 )
 
@@ -729,10 +735,11 @@ def submit(
     output: str | None = _OUTPUT,
 ) -> None:
     """
-    Submit every unfinished simulation in a project to Slurm or Kubernetes, and return.
+    Submit every unfinished simulation in a project to Slurm, PBS or Kubernetes, and return.
 
-    The releases are split among a Slurm job array's tasks, or a Kubernetes
-    indexed Job's pods, with the resources under execution in config.yaml.
+    The releases are split among a Slurm or PBS job array's tasks, or a
+    Kubernetes indexed Job's pods, with the resources under execution in
+    config.yaml.
     --releases limits a Slurm job array to the releases listed in a file.
     Check on them with runtraj status.
     """

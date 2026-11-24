@@ -27,7 +27,7 @@ JOB = {
 
 
 class QueueConfig(BackendConfig):
-    """The block of :class:`QueueBackend`, ``queue``: a queue name and a number of tasks."""
+    """The block of :class:`QueueBackend`, ``myqueue``: a queue name and a number of tasks."""
 
     queue: str | None = Field(None, description="The queue to submit to. Required.")
     pods: int = Field(4, ge=1, description="Number of tasks.")
@@ -40,13 +40,13 @@ class QueueConfig(BackendConfig):
     def check(self) -> None:
         """Raise when no queue is named."""
         if self.queue is None:
-            raise ValueError("execution.queue.queue is required with this backend.")
+            raise ValueError("execution.myqueue.queue is required with this backend.")
 
 
 class QueueBackend(Backend):
     """A scheduler that is not waited for: submit records and returns a job name."""
 
-    name = "queue"
+    name = "myqueue"
     config_class = QueueConfig
 
     def submit(self, project, releases, execution, *, skip_existing, compute_root):

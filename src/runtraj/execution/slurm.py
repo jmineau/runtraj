@@ -16,30 +16,23 @@ SIGTERM as it does on every backend.
 from __future__ import annotations
 
 import logging
-import math
 import re
 import shlex
 import subprocess
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from uuid import uuid4
 
-import pyarrow as pa
-import yaml
-
-from runtraj._paths import write_parquet
 from runtraj.execution.backends import Backend
 from runtraj.execution.config import ExecutionConfig, FetchConfig, SlurmConfig
 from runtraj.execution.runner import (
-    RELIST_SECONDS,
     _project_slug,
-    _status,
     _to_fetch,
-    _unfinished,
+    array_size,
     resolve_compute_root,
+    status_after_job,
+    write_submission,
 )
 
 if TYPE_CHECKING:
@@ -328,20 +321,7 @@ def submit_array(
     submitted before the array, which waits for it, and cancelled if
     ``sbatch`` refuses the array.
     """
-    # One folder per submission, so a later array never overwrites these.
-    stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
-    folder = project.directory / "_slurm" / stamp
-    folder.mkdir(parents=True)
-    (folder / "releases.txt").write_text("\n".join(pending) + "\n", encoding="utf-8")
-    # The checked rows, in the order the tasks split them (task_share).
-    rows = project._rows_of(pending)
-    write_parquet(
-        pa.Table.from_pandas(rows, preserve_index=False), folder / "releases.parquet"
-    )
-    (folder / "execution.yaml").write_text(
-        yaml.safe_dump(execution.model_dump(exclude_unset=True), sort_keys=False),
-        encoding="utf-8",
-    )
+    folder = write_submission(project, pending, execution, "slurm")
     n_tasks = array_size(
         execution.slurm,
         len(pending),
@@ -432,46 +412,6 @@ def max_array_size(cluster: str | None = None) -> int:
         return SLURM_MAX_ARRAY_SIZE
     match = re.search(r"^MaxArraySize\s*=\s*(\d+)", result.stdout, re.M)
     return int(match.group(1)) if match else SLURM_MAX_ARRAY_SIZE
-
-
-def array_size(slurm: SlurmConfig, n_releases: int, limit: int) -> int:
-    """
-    Return the number of tasks of a job array for *n_releases*: ``n_tasks``, or ten per worker.
-
-    Never more than one task per release, nor more than *limit*, the
-    cluster's ``MaxArraySize``. A task runs ``cpus`` releases at once, so
-    with ``n_tasks`` unset a task's share is whole rounds of ``cpus``
-    releases: a share of 10 on 8 CPUs would leave 6 of them idle for its
-    last 2 releases.
-
-    Examples
-    --------
-    >>> from runtraj.execution import SlurmConfig
-    >>> array_size(SlurmConfig(n_workers=50), 10_000, limit=1000)
-    500
-    >>> array_size(SlurmConfig(n_workers=50, cpus=8), 10_000, limit=1000)
-    417
-    >>> array_size(SlurmConfig(n_workers=200), 10_000, limit=1000)
-    1000
-    >>> array_size(SlurmConfig(n_workers=50), 120, limit=1000)
-    120
-
-    Raises
-    ------
-    ValueError
-        If ``n_tasks`` is more than *limit*.
-    """
-    if slurm.n_tasks is not None and slurm.n_tasks > limit:
-        raise ValueError(
-            f"execution.slurm.n_tasks is {slurm.n_tasks}, and this cluster's job "
-            f"arrays have at most {limit} tasks (MaxArraySize). Set n_tasks to "
-            f"{limit} or fewer, or leave it unset."
-        )
-    tasks = max(1, min(slurm.tasks, n_releases, limit))
-    if slurm.n_tasks is None and slurm.cpus > 1:
-        share = math.ceil(n_releases / tasks / slurm.cpus) * slurm.cpus
-        tasks = max(1, math.ceil(n_releases / share))
-    return tasks
 
 
 def _task_states(
@@ -592,16 +532,7 @@ class SlurmBackend(Backend):
             project, releases, execution, skip_existing, compute_root
         )
         wait(job_id, cluster=cluster)
-        table = _status(project, releases)
-        if _unfinished(table):
-            logger.info(
-                "Some simulations look unfinished; listing again in %d s, in "
-                "case this node sees the compute nodes' files late.",
-                RELIST_SECONDS,
-            )
-            time.sleep(RELIST_SECONDS)
-            table = _status(project, releases)
-        return table
+        return status_after_job(project, releases)
 
     def describe(self, waits: bool) -> str:
         """Return the line ``runtraj run`` or ``runtraj submit`` prints before it submits."""
@@ -615,7 +546,6 @@ __all__ = [
     "NOTICE_SECONDS",
     "SLURM_MAX_ARRAY_SIZE",
     "SlurmBackend",
-    "array_size",
     "fetch_script",
     "job_script",
     "max_array_size",
