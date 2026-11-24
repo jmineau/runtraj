@@ -22,6 +22,7 @@ from runtraj import Project
 from runtraj._transient import is_transient
 from runtraj.cli import _resolve_project, app
 from runtraj.exceptions import WorkerDied
+from runtraj.execution.runner import _scattered
 from tests.fixtures.platform import not_on_windows
 
 from .fixtures.factories import (
@@ -534,9 +535,10 @@ def test_run_one_task_of_a_job_array(tmp_path, transport_runs):
     result = _run(project, "--task", "1/2", "--backend", "local")
 
     assert result.exit_code == 0, result.output
-    assert transport_runs.ran == [_release(13).id]
+    every = sorted((_release(h).id for h in (12, 13, 14)), key=_scattered)
+    assert transport_runs.ran == every[1::2]
     assert "task 1 of 2  cpus=1" in result.output
-    assert "Releases of this task: 1, 3, 5, ..." in result.output
+    assert "Releases of this task: share 1 of 2" in result.output
 
 
 @pytest.mark.parametrize(

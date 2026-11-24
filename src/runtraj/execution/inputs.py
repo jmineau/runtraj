@@ -241,6 +241,21 @@ def has_file(url: str, name: str) -> bool:
     return _exists(fs, f"{root.rstrip('/')}/{name}")
 
 
+def read_text(url: str, name: str) -> str | None:
+    """Return the text of the file *name* at *url*, or ``None`` when there is none."""
+    fs, root = fsspec.core.url_to_fs(url)
+    try:
+        return fs.cat_file(f"{root.rstrip('/')}/{name}").decode("utf-8")
+    except FileNotFoundError:
+        return None
+
+
+def write_text(url: str, name: str, text: str) -> None:
+    """Write *text* to the file *name* at *url*, in one request."""
+    fs, root = fsspec.core.url_to_fs(url)
+    fs.pipe_file(f"{root.rstrip('/')}/{name}", text.encode("utf-8"))
+
+
 def _atomic_put_file(fs: fsspec.AbstractFileSystem, lpath: str, rpath: str) -> None:
     """
     Copy *lpath* to *rpath* on *fs*, atomically when *fs* is local.

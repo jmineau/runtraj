@@ -639,8 +639,11 @@ def test_tasks_that_share_the_inputs_fetch_one_at_a_time(
     for task in tasks:
         task.join(10)
 
-    assert fetches.calls == [3, 3, 3, 3]  # each finds the 3 unfinished releases
+    assert fetches.calls == [3]  # the others find the first's note, and list nothing
     assert fetches.most == 1
+    assert (project.directory / runner.FETCH_DONE).read_text() == hash_inputs(
+        project.directory
+    )
     assert not (project.directory / ".fetch.lock").exists()
 
 

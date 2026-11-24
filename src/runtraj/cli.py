@@ -1194,6 +1194,8 @@ def _print_run_start(
         typer.echo(f"Releases listed: {len(release_ids)}")
     if task is not None:
         i, n = task
-        typer.echo(f"Releases of this task: {i}, {i + n}, {i + 2 * n}, ...")
+        typer.echo(
+            f"Releases of this task: share {i} of {n}, in the order of a hash of their ids"
+        )
     typer.echo(f"Variants: {', '.join(project.variants)}")
     typer.echo(backend.describe(waits))

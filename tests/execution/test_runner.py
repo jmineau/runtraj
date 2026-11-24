@@ -268,7 +268,7 @@ def test_tasks_split_the_releases_the_same_way_whenever_each_starts(
     releases.
     """
     project = _hourly_project(tmp_path, 7)
-    every = list(dict.fromkeys(project.simulations["release"]))
+    every = sorted(set(project.simulations["release"]), key=runner._scattered)
     done: set[str] = set()
     monkeypatch.setattr(
         Project, "incomplete", lambda self, sel=None: sel[~sel["release"].isin(done)]
@@ -281,6 +281,23 @@ def test_tasks_split_the_releases_the_same_way_whenever_each_starts(
     shares = [every[i::3] for i in range(3)]
     assert first == shares[0]
     assert later == [[r for r in shares[i] if r not in done] for i in (1, 2)]
+
+
+def test_releases_left_at_one_stride_of_the_project_spread_over_the_tasks(
+    tmp_path, monkeypatch
+):
+    """One site's hours among many: in project order every one fell to the same task."""
+    project = _hourly_project(tmp_path, 24)
+    every = list(dict.fromkeys(project.simulations["release"]))
+    left = set(every[::4])  # 6 releases, one every 4th
+    monkeypatch.setattr(
+        Project, "incomplete", lambda self, sel=None: sel[sel["release"].isin(left)]
+    )
+
+    shares = [runner.pending(project, task=(i, 4)) for i in range(4)]
+
+    assert sorted(r for share in shares for r in share) == sorted(left)
+    assert max(len(share) for share in shares) < len(left)
 
 
 def test_a_release_list_limits_the_run_and_keeps_its_order(tmp_path, monkeypatch):
@@ -309,7 +326,7 @@ def test_a_task_runs_here_whatever_the_backend(tmp_path, monkeypatch, commands):
     monkeypatch.delenv("SLURM_JOB_ID", raising=False)
 
     project = _hourly_project(tmp_path, 4)
-    every = list(dict.fromkeys(project.simulations["release"]))
+    every = sorted(set(project.simulations["release"]), key=runner._scattered)
     ran: list[list[str]] = []
     monkeypatch.setattr(
         worker, "run_releases", lambda project, ids, **kw: ran.append(ids)
@@ -323,7 +340,7 @@ def test_a_task_runs_here_whatever_the_backend(tmp_path, monkeypatch, commands):
 
     assert commands.ran == []  # no sbatch
     assert ran == [[every[1], every[3]]]
-    assert list(table["release"]) == [every[1], every[3]]
+    assert sorted(table["release"]) == sorted([every[1], every[3]])
     assert set(table["state"]) == {"pending"}  # nothing was written
 
 
