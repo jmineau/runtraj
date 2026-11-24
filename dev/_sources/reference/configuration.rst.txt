@@ -111,6 +111,21 @@ class's import path as ``class``, then that model's own settings:
 With two or more models, each variant names its own with ``model``. A model
 has one block: a second set of settings for it is a second variant.
 
+FLEXPART
+~~~~~~~~
+
+The keys of the ``flexpart`` block, for a FLEXPART 11 checkout you built.
+They keep FLEXPART's own names from its ``COMMAND`` file; runtraj writes the
+rest of that file, and FLEXPART's other input files, for each release.
+
+.. config-model:: runtraj.models.flexpart.FlexpartConfig
+
+FLEXPART reads GRIB files, not ARL: a met for it is a directory of ERA5
+files from flex_extract, found by their valid times. :doc:`flexpart` says how to build
+FLEXPART, which met to use, and what its particles hold.
+
+.. config-model:: runtraj.models.flexpart.FlexpartMetConfig
+
 A stage
 ~~~~~~~
 

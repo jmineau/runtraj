@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=5d1bf331"></script>
+    <script src="../_static/documentation_options.js?v=1275376d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev1+g4f733af01" />
+  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -502,9 +502,10 @@ model subclasses <a class="reference internal" href="../reference/_api/runtraj.m
 makes one file per release after the model runs, subclasses
 <a class="reference internal" href="../reference/_api/runtraj.stages.Stage.html#runtraj.stages.Stage" title="runtraj.stages.Stage"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.stages.Stage</span></code></a>. Each base class implements every optional
 member with its default, so runtraj calls them directly and a plug-in
-overrides only what it does differently. HYSPLIT is the model built in, and its
-package (<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models.hysplit</span></code>) is the only code that knows
-HYSPLIT’s files.</p>
+overrides only what it does differently. HYSPLIT and FLEXPART are the
+models built in, and each one’s package (<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models.hysplit</span></code>,
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models.flexpart</span></code>) is the only code that knows that model’s
+files.</p>
 </section>
 <section id="module-map">
 <h2>Module map<a class="headerlink" href="#module-map" title="Link to this heading">#</a></h2>

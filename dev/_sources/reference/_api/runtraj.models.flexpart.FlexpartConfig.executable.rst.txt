@@ -1,0 +1,6 @@
+runtraj.models.flexpart.FlexpartConfig.executable
+=================================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+.. autoproperty:: FlexpartConfig.executable

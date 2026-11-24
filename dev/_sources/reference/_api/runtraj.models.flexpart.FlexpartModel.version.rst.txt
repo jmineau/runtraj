@@ -1,0 +1,5 @@
+runtraj.models.flexpart.FlexpartModel.version
+=============================================
+
+.. currentmodule:: runtraj.models.flexpart
+.. automethod:: FlexpartModel.version

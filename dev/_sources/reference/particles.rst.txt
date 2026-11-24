@@ -54,6 +54,9 @@ release. Its ``release_rows`` matches each particle to a release point from
 its first position, and takes a column's particles to be released bottom to
 top in ``particle`` order. A HYSPLIT build that writes the release rows
 (``directory``) makes the matching exact.
+FLEXPART writes no release row either: its first row is one output step
+after release. Its ``release_rows`` reads where each particle started from
+its number, in the order FLEXPART released them (:doc:`flexpart`).
 
 Columns the model adds
 ----------------------
@@ -102,6 +105,10 @@ Some of them:
      - Vertical displacement by convective flux along the trajectory,
        summed over the steps (the Grell scheme, ``capemin: -2``). HYSPLIT
        reads this name only: ``zfx1`` stops it, and the config refuses it.
+
+FLEXPART writes ``mlht``, ``dens``, ``pres``, ``temp``, ``sphu`` and
+``zsfc`` at each particle, and no other column of this table.
+:doc:`flexpart` lists them and where they differ from HYSPLIT's.
 
 Columns runtraj adds
 --------------------

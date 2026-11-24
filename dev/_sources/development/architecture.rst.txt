@@ -34,9 +34,10 @@ model subclasses :class:`runtraj.models.TransportModel`; a stage, which
 makes one file per release after the model runs, subclasses
 :class:`runtraj.stages.Stage`. Each base class implements every optional
 member with its default, so runtraj calls them directly and a plug-in
-overrides only what it does differently. HYSPLIT is the model built in, and its
-package (:mod:`runtraj.models.hysplit`) is the only code that knows
-HYSPLIT's files.
+overrides only what it does differently. HYSPLIT and FLEXPART are the
+models built in, and each one's package (:mod:`runtraj.models.hysplit`,
+:mod:`runtraj.models.flexpart`) is the only code that knows that model's
+files.
 
 Module map
 ----------

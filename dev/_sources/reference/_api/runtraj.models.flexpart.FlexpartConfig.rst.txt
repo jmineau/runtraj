@@ -1,0 +1,43 @@
+﻿runtraj.models.flexpart.FlexpartConfig
+======================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+
+
+
+
+
+.. class-signature:: runtraj.models.flexpart.FlexpartConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.models.flexpart.FlexpartConfig
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~FlexpartConfig.checkout
+   ~FlexpartConfig.executable
+   ~FlexpartConfig.UNRECORDED
+
+
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.TransportConfig`: :py:obj:`~.TransportConfig.realizations`, :py:obj:`~.TransportConfig.settings`
+
+
