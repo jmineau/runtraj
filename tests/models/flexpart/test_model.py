@@ -16,7 +16,13 @@ from runtraj.exceptions import MeteorologyError, SimulationError
 from runtraj.models import get_model
 from runtraj.models.flexpart import FlexpartConfig, FlexpartMetConfig, FlexpartModel
 from runtraj.models.flexpart.config import flexpart_version
-from runtraj.models.flexpart.inputs import available, command, partoptions, releases
+from runtraj.models.flexpart.inputs import (
+    available,
+    command,
+    outgrid,
+    partoptions,
+    releases,
+)
 from runtraj.models.flexpart.met import catalog, files_for
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
 
@@ -221,6 +227,16 @@ def test_releases_of_a_point(checkout):
     assert text.count("&RELEASE\n") == 1
     assert " PARTS=1000,\n" in text and " ZKIND=1,\n" in text
     assert " Z1=25.0,\n" in text and " Z2=25.0,\n" in text
+
+
+def test_outgrid_is_a_cell_at_the_release():
+    """FLEXPART stops when the grid is outside the met, so it must be where the release is."""
+    release = PointRelease(
+        time="2023-06-01 18:00", longitude=-111.85, latitude=40.77, altitude=5
+    )
+    text = outgrid(release)
+    assert " OUTLON0=-112.35,\n" in text
+    assert " OUTLAT0=40.27,\n" in text
 
 
 def test_releases_of_a_column_stack_one_particle_per_slab():

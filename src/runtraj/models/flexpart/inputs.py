@@ -277,7 +277,7 @@ def outgrid(release: Release) -> str:
     FLEXPART reads the file even with gridded output off (``IOUT`` 0), and
     the grid must lie inside the met's domain.
     """
-    lat, lon, _ = release.coords()[0]
+    lon, lat, _ = release.coords()[0]
     return namelist(
         "OUTGRID",
         {
