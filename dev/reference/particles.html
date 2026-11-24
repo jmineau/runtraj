@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7a25012c"></script>
+    <script src="../_static/documentation_options.js?v=c7e4f973"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev11+g650fce609" />
+  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -680,6 +680,8 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.run_task.html">runtraj.execution.slurm.run_task</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html">runtraj.execution.kubernetes.job_manifest</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.submit_job.html">runtraj.execution.kubernetes.submit_job</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.project_jobs.html">runtraj.execution.kubernetes.project_jobs</a></li>
@@ -1107,10 +1109,10 @@ way the run did; give it the run’s <code class="docutils literal notranslate">
 </pre></div>
 </div>
 <p>Met files that are not ARL files, such as GRIB, are read as one Dataset in
-<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, the way a converter in
+<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, the way a converter in
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">arlmet.converters</span></code> writes it. Both functions take that Dataset in
 place of the files, and sample it as they would sample the ARL file
-<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.write_dataset.html#arlmet.write_dataset" title="(in arl-met v0.1.0b13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.write_dataset()</span></code></a> would write from it. A transport model that
+<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.write_dataset.html#arlmet.write_dataset" title="(in arl-met v0.1.0b14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.write_dataset()</span></code></a> would write from it. A transport model that
 reads such files opens them for you: <a class="reference internal" href="_api/runtraj.models.open_met.html#runtraj.models.open_met" title="runtraj.models.open_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.models.open_met()</span></code></a> returns
 the Dataset, cropped to where the particles are, or the paths of ARL files
 as they are.</p>

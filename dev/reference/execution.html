@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7a25012c"></script>
+    <script src="../_static/documentation_options.js?v=c7e4f973"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev11+g650fce609" />
+  <meta name="docsearch:version" content="0.1.0a5.dev12+g39b91f501" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -680,6 +680,8 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.run_task.html">runtraj.execution.slurm.run_task</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html">runtraj.execution.kubernetes.job_manifest</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.submit_job.html">runtraj.execution.kubernetes.submit_job</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.kubernetes.project_jobs.html">runtraj.execution.kubernetes.project_jobs</a></li>
@@ -975,6 +977,9 @@ Slurm job array by its id.</p>
 </section>
 <section id="slurm-job-arrays">
 <h2>Slurm job arrays<a class="headerlink" href="#slurm-job-arrays" title="Link to this heading">#</a></h2>
+<p>The Slurm backend is <code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.execution.slurm</span></code>: it writes the job
+array and fetch scripts, submits them with <code class="docutils literal notranslate"><span class="pre">sbatch</span></code>, follows the tasks
+with <code class="docutils literal notranslate"><span class="pre">sacct</span></code>, and requeues a task that Slurm stops.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.job_script.html#runtraj.execution.job_script" title="runtraj.execution.job_script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.job_script</span></code></a></p></td>
@@ -982,6 +987,12 @@ Slurm job array by its id.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.fetch_script.html#runtraj.execution.fetch_script" title="runtraj.execution.fetch_script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.fetch_script</span></code></a></p></td>
 <td><p>Return the <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> script of the job that gets the met files before a job array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html#runtraj.execution.slurm.submit_array" title="runtraj.execution.slurm.submit_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.submit_array</span></code></a></p></td>
+<td><p>Write a submission folder for <em>pending</em> releases, submit its job array, and return its job id and cluster.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.run_task.html#runtraj.execution.slurm.run_task" title="runtraj.execution.slurm.run_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.run_task</span></code></a></p></td>
+<td><p>Run a task's releases and return their status table; requeue the task when Slurm stopped it.</p></td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,6 @@
+﻿runtraj.execution.slurm.run\_task
+=================================
+
+.. currentmodule:: runtraj.execution.slurm
+
+.. autofunction:: run_task
