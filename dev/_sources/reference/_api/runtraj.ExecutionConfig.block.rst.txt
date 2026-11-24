@@ -1,0 +1,6 @@
+runtraj.ExecutionConfig.block
+=============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: ExecutionConfig.block

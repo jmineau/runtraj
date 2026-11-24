@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=f6cc089f"></script>
+    <script src="../../../_static/documentation_options.js?v=881e4f9d"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev16+gba16b68e1" />
+  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -464,14 +464,14 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._transient</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_transient</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span><span class="p">,</span> <span class="n">get_backend</span><span class="p">,</span> <span class="n">not_waited</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">LocalConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">lock</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.fetch</span><span class="w"> </span><span class="kn">import</span> <span class="n">downloads</span><span class="p">,</span> <span class="n">fetch_project</span>
 
@@ -740,6 +740,8 @@
 <span class="sd">    and this waits for it. When some simulations look unfinished after the</span>
 <span class="sd">    job ends, their results are listed once more :data:`RELIST_SECONDS`</span>
 <span class="sd">    later, since a network filesystem can show this node new files late.</span>
+<span class="sd">    Another backend runs them as its :meth:`~runtraj.execution.Backend.run`</span>
+<span class="sd">    does, and one that runtraj does not wait for (``kubernetes``) is refused.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -776,8 +778,8 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If a release id is not in the project, or *task* is not from 0 to</span>
-<span class="sd">        ``n - 1``.</span>
+<span class="sd">        If a release id is not in the project, *task* is not from 0 to</span>
+<span class="sd">        ``n - 1``, or the backend is not waited for.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -789,61 +791,126 @@
 <span class="sd">    stopped by ``scancel`` is not requeued.</span>
 <span class="sd">    """</span>
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
-    <span class="k">if</span> <span class="n">execution</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">"kubernetes"</span> <span class="ow">and</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"run() waits for its runs, and a Kubernetes Job is not waited "</span>
-            <span class="s2">"for here. Use submit() (runtraj submit), and runtraj status to "</span>
-            <span class="s2">"follow it."</span>
-        <span class="p">)</span>
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">backend</span><span class="o">.</span><span class="n">waits</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">not_waited</span><span class="p">(</span><span class="n">backend</span><span class="p">))</span>
     <span class="n">todo</span> <span class="o">=</span> <span class="n">pending</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="o">=</span><span class="n">releases</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">todo</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"run: every simulation is complete; nothing to do"</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">execution</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">"slurm"</span> <span class="ow">and</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># One task of a job array, in this process, whatever the backend.</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">slurm</span>
 
-        <span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span> <span class="o">=</span> <span class="n">slurm</span><span class="o">.</span><span class="n">submit_array</span><span class="p">(</span>
-            <span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span>
+        <span class="k">return</span> <span class="n">slurm</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span>
+            <span class="n">todo</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">run_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="n">slurm</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span><span class="o">=</span><span class="n">cluster</span><span class="p">)</span>
-        <span class="n">table</span> <span class="o">=</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_unfinished</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">"Some simulations look unfinished; listing again in </span><span class="si">%d</span><span class="s2"> s, in "</span>
-                <span class="s2">"case this node sees the compute nodes' files late."</span><span class="p">,</span>
-                <span class="n">RELIST_SECONDS</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">RELIST_SECONDS</span><span class="p">)</span>
-            <span class="n">table</span> <span class="o">=</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">table</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"run(</span><span class="si">%s</span><span class="s2">): </span><span class="si">%d</span><span class="s2"> releases"</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">variants</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">todo</span><span class="p">))</span>
-        <span class="c1"># In this process, so Ctrl-C and SIGTERM stop the workers cleanly</span>
-        <span class="c1"># and progress prints as it happens.</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_releases</span>
+    <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="n">project</span><span class="p">,</span>
+        <span class="n">todo</span><span class="p">,</span>
+        <span class="n">execution</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">work</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">run_releases</span><span class="p">(</span>
-                <span class="n">project</span><span class="p">,</span>
-                <span class="n">todo</span><span class="p">,</span>
-                <span class="n">compute_root</span><span class="o">=</span><span class="n">resolve_compute_root</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">),</span>
-                <span class="n">execution</span><span class="o">=</span><span class="n">execution</span><span class="p">,</span>
-                <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-            <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">unrun</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">_to_fetch</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">execution</span><span class="o">.</span><span class="n">cpus</span> <span class="o">&gt;</span> <span class="mi">1</span>
-                <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">unrun</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">_fetch_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">)</span>
-            <span class="n">work</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">slurm</span>
 
-            <span class="k">return</span> <span class="n">slurm</span><span class="o">.</span><span class="n">run_task</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">work</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">)</span></div>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_here</span><span class="p">(</span>
+    <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+    <span class="n">release_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run *release_ids* in this process, ``cpus`` at a time, so Ctrl-C and SIGTERM stop the workers and progress prints as it happens."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.worker</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_releases</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"run(</span><span class="si">%s</span><span class="s2">): </span><span class="si">%d</span><span class="s2"> releases"</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">variants</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_ids</span><span class="p">))</span>
+    <span class="n">run_releases</span><span class="p">(</span>
+        <span class="n">project</span><span class="p">,</span>
+        <span class="n">release_ids</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="o">=</span><span class="n">resolve_compute_root</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">),</span>
+        <span class="n">execution</span><span class="o">=</span><span class="n">execution</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1">#: Why :func:`submit` refuses the ``local`` backend.</span>
+<span class="n">NOTHING_TO_SUBMIT</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"submit sends work to a scheduler, and this run's backend is 'local'. "</span>
+    <span class="s2">"Use run(), or set execution.backend to slurm or kubernetes."</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="LocalBackend">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.runner.LocalBackend.html#runtraj.execution.LocalBackend">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalBackend</span><span class="p">(</span><span class="n">Backend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The ``local`` backend: the releases run here, in this process, ``cpus`` at a time.</span>
+
+<span class="sd">    With ``cpus`` above 1 and a met that downloads, the met files are got</span>
+<span class="sd">    first, unless ``execution.local.fetch`` is ``false``, so the workers do</span>
+<span class="sd">    not download the same file at once. There is nothing to submit.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">"local"</span>
+    <span class="n">config_class</span> <span class="o">=</span> <span class="n">LocalConfig</span>
+    <span class="n">waits</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">here</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="LocalBackend.submit">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.runner.LocalBackend.submit.html#runtraj.execution.LocalBackend.submit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Raise: a local run has nothing to submit.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            Always.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">NOTHING_TO_SUBMIT</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalBackend.run">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.runner.LocalBackend.run.html#runtraj.execution.LocalBackend.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Get the met files first when the workers would download them at once, run *releases* here, and return their status table."""</span>
+        <span class="n">unrun</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">_to_fetch</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">execution</span><span class="o">.</span><span class="n">cpus</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">unrun</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_fetch_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">)</span>
+        <span class="n">run_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalBackend.describe">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.runner.LocalBackend.describe.html#runtraj.execution.LocalBackend.describe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waits</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the line a local run prints before it starts."""</span>
+        <span class="k">return</span> <span class="s2">"Running here, one line per release as it finishes"</span></div>
+</div>
 
 
 
@@ -858,7 +925,7 @@
     <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Submit every simulation of a project that has not finished to Slurm or Kubernetes.</span>
+<span class="sd">    Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.</span>
 
 <span class="sd">    The releases with missing results are split among up to ``n_workers``</span>
 <span class="sd">    tasks of one job array, and this returns once it is submitted. The</span>
@@ -888,7 +955,9 @@
 <span class="sd">    (:func:`runtraj.execution.kubernetes.submit_job`), and creates it with</span>
 <span class="sd">    ``kubectl``. Each task runs its share of every release of the project</span>
 <span class="sd">    and skips the complete ones, so *releases* and ``skip_existing=False``</span>
-<span class="sd">    are refused there, and *compute_root* is each pod's own.</span>
+<span class="sd">    are refused there, and *compute_root* is each pod's own. Another</span>
+<span class="sd">    backend starts its tasks as its :meth:`~runtraj.execution.Backend.submit`</span>
+<span class="sd">    does.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -908,47 +977,42 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If the execution backend is ``local``, or on Kubernetes with</span>
-<span class="sd">        *releases* or ``skip_existing=False``.</span>
+<span class="sd">        If the execution backend is ``local``, or one that takes no list</span>
+<span class="sd">        of releases (Kubernetes) with *releases* or ``skip_existing=False``.</span>
 <span class="sd">    """</span>
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
-    <span class="k">if</span> <span class="n">execution</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">"local"</span><span class="p">:</span>
+    <span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">backend</span><span class="o">.</span><span class="n">here</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">NOTHING_TO_SUBMIT</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">backend</span><span class="o">.</span><span class="n">takes_releases</span> <span class="ow">and</span> <span class="p">(</span><span class="n">releases</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">skip_existing</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"submit sends work to Slurm or Kubernetes, and this run's backend "</span>
-            <span class="s2">"is 'local'. Use run(), or set execution.backend to slurm or "</span>
-            <span class="s2">"kubernetes."</span>
-        <span class="p">)</span>
-    <span class="k">if</span> <span class="n">execution</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">"kubernetes"</span> <span class="ow">and</span> <span class="p">(</span>
-        <span class="n">releases</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">skip_existing</span>
-    <span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"A Kubernetes Job runs every unfinished release of the project and "</span>
-            <span class="s2">"skips the complete ones, as a retried pod must: it takes no list "</span>
-            <span class="s2">"of releases and no --no-skip."</span>
+            <span class="sa">f</span><span class="s2">"A </span><span class="si">{</span><span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> job runs every unfinished release of the project "</span>
+            <span class="s2">"and skips the complete ones, as a retried task must: it takes no "</span>
+            <span class="s2">"list of releases and no --no-skip."</span>
         <span class="p">)</span>
     <span class="n">todo</span> <span class="o">=</span> <span class="n">pending</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="o">=</span><span class="n">releases</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">todo</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"submit: every simulation is complete; nothing to do"</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">execution</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">"kubernetes"</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">.kubernetes</span><span class="w"> </span><span class="kn">import</span> <span class="n">submit_job</span>
-
-        <span class="k">return</span> <span class="n">submit_job</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">execution</span><span class="p">)</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">slurm</span>
-
-    <span class="n">job_id</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">slurm</span><span class="o">.</span><span class="n">submit_array</span><span class="p">(</span>
-        <span class="n">project</span><span class="p">,</span> <span class="n">todo</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">job_id</span></div>
+    <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+        <span class="n">project</span><span class="p">,</span>
+        <span class="n">todo</span><span class="p">,</span>
+        <span class="n">execution</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
+    <span class="p">)</span></div>
 
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"FETCH_LOCK"</span><span class="p">,</span>
+    <span class="s2">"LocalBackend"</span><span class="p">,</span>
+    <span class="s2">"NOTHING_TO_SUBMIT"</span><span class="p">,</span>
     <span class="s2">"RELIST_SECONDS"</span><span class="p">,</span>
     <span class="s2">"fetch_shared"</span><span class="p">,</span>
     <span class="s2">"resolve_compute_root"</span><span class="p">,</span>
     <span class="s2">"run"</span><span class="p">,</span>
+    <span class="s2">"run_here"</span><span class="p">,</span>
     <span class="s2">"submit"</span><span class="p">,</span>
     <span class="s2">"task_share"</span><span class="p">,</span>
 <span class="p">]</span>

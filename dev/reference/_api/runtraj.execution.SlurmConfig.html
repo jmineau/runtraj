@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=f6cc089f"></script>
+    <script src="../../_static/documentation_options.js?v=881e4f9d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev16+gba16b68e1" />
+  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -620,17 +620,29 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.ExecutionConfig.html">runtraj.ExecutionConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.block.html">runtraj.ExecutionConfig.block</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.cpus.html">runtraj.ExecutionConfig.cpus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.fetch.html">runtraj.ExecutionConfig.fetch</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.LocalConfig.html">runtraj.execution.LocalConfig</a></li>
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#">runtraj.execution.SlurmConfig</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.options.html">runtraj.execution.SlurmConfig.options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.tasks.html">runtraj.execution.SlurmConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.check.html">runtraj.execution.SlurmConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.KubernetesConfig.tasks.html">runtraj.execution.KubernetesConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.KubernetesConfig.check.html">runtraj.execution.KubernetesConfig.check</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
@@ -681,6 +693,49 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_stages.html">runtraj.execution.worker.run_stages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_release.html">runtraj.execution.worker.run_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.Backend.html">runtraj.execution.Backend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.config_class.html">runtraj.execution.Backend.config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.here.html">runtraj.execution.Backend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.name.html">runtraj.execution.Backend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.takes_releases.html">runtraj.execution.Backend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.waits.html">runtraj.execution.Backend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.describe.html">runtraj.execution.Backend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.jobs.html">runtraj.execution.Backend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.run.html">runtraj.execution.Backend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.submit.html">runtraj.execution.Backend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.get_backend.html">runtraj.execution.get_backend</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.html">runtraj.execution.runner.LocalBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.here.html">runtraj.execution.runner.LocalBackend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.name.html">runtraj.execution.runner.LocalBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.waits.html">runtraj.execution.runner.LocalBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.describe.html">runtraj.execution.runner.LocalBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.run.html">runtraj.execution.runner.LocalBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.submit.html">runtraj.execution.runner.LocalBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.html">runtraj.execution.slurm.SlurmBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.name.html">runtraj.execution.slurm.SlurmBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.waits.html">runtraj.execution.slurm.SlurmBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.describe.html">runtraj.execution.slurm.SlurmBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.run.html">runtraj.execution.slurm.SlurmBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.submit.html">runtraj.execution.slurm.SlurmBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.html">runtraj.execution.kubernetes.KubernetesBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.name.html">runtraj.execution.kubernetes.KubernetesBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.takes_releases.html">runtraj.execution.kubernetes.KubernetesBackend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.describe.html">runtraj.execution.kubernetes.KubernetesBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.jobs.html">runtraj.execution.kubernetes.KubernetesBackend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
@@ -912,7 +967,7 @@
 <h1>runtraj.execution.SlurmConfig<a class="headerlink" href="#runtraj-execution-slurmconfig" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="runtraj.execution.SlurmConfig">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">runtraj.execution.</span></span><span class="sig-name descname"><span class="pre">SlurmConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">account</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_parallelism</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span> <span class="pre">|</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.FetchConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="k"><span class="pre">False</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../_modules/runtraj/execution/config.html#SlurmConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.SlurmConfig" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">runtraj.execution.</span></span><span class="sig-name descname"><span class="pre">SlurmConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.FetchConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="k"><span class="pre">False</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">account</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_parallelism</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span> <span class="pre">|</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../_modules/runtraj/execution/config.html#SlurmConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.SlurmConfig" title="Link to this definition">#</a></dt>
 <dd><p>The Slurm job array a project’s releases run as: the <code class="docutils literal notranslate"><span class="pre">slurm</span></code> block of <code class="docutils literal notranslate"><span class="pre">execution</span></code>.</p>
 <p>The releases are split among <code class="docutils literal notranslate"><span class="pre">n_workers</span></code> tasks, and each task runs
 <code class="docutils literal notranslate"><span class="pre">cpus</span></code> of them at once. Any key that is not a setting below is an
@@ -937,45 +992,45 @@ write. The fetch job takes <code class="docutils literal notranslate"><span clas
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></p></td>
-<td><p>Number of array tasks, which the releases are split evenly among.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code></p></td>
 <td><p>Releases each task runs at once, and the CPUs each task asks for.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
-<td><p>Time limit per task, as <code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code>, <code class="docutils literal notranslate"><span class="pre">D-HH:MM:SS</span></code>, or minutes. Required with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>: without it a task gets the partition’s default, which can be days.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mem</span></code></p></td>
-<td><p>Memory per task, such as <code class="docutils literal notranslate"><span class="pre">8G</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">partition</span></code></p></td>
-<td><p>Slurm partition.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">account</span></code></p></td>
-<td><p>Slurm account.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">qos</span></code></p></td>
-<td><p>Slurm quality of service.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">array_parallelism</span></code></p></td>
-<td><p>Most tasks running at once. Unset leaves it to Slurm.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">setup</span></code></p></td>
-<td><p>Shell commands run in each task before the worker, such as <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span></code> lines. They run after the script exports <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, one thread per worker, so a line here can change it. The worker itself runs with the Python that submitted it.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fetch</span></code></p></td>
 <td><p>Get the met files a met with <code class="docutils literal notranslate"><span class="pre">download</span></code> lacks once, in a job of its own that the array waits for, with these resources (<a class="reference internal" href="runtraj.execution.FetchConfig.html#runtraj.execution.FetchConfig" title="runtraj.execution.FetchConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">FetchConfig</span></code></a>). <code class="docutils literal notranslate"><span class="pre">false</span></code> leaves each run to download what it needs, as when something else fills the met directory.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">FetchConfig(partition=None,</span> <span class="pre">account=None,</span> <span class="pre">qos=None,</span> <span class="pre">time=None,</span> <span class="pre">mem=None)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></p></td>
+<td><p>Number of array tasks, which the releases are split evenly among.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time limit per task, as <code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code>, <code class="docutils literal notranslate"><span class="pre">D-HH:MM:SS</span></code>, or minutes. Required with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>: without it a task gets the partition’s default, which can be days.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mem</span></code></p></td>
+<td><p>Memory per task, such as <code class="docutils literal notranslate"><span class="pre">8G</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">partition</span></code></p></td>
+<td><p>Slurm partition.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">account</span></code></p></td>
+<td><p>Slurm account.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qos</span></code></p></td>
+<td><p>Slurm quality of service.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">array_parallelism</span></code></p></td>
+<td><p>Most tasks running at once. Unset leaves it to Slurm.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">setup</span></code></p></td>
+<td><p>Shell commands run in each task before the worker, such as <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span></code> lines. They run after the script exports <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, one thread per worker, so a line here can change it. The worker itself runs with the Python that submitted it.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -987,6 +1042,20 @@ write. The fetch job takes <code class="docutils literal notranslate"><span clas
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="runtraj.execution.SlurmConfig.options.html#runtraj.execution.SlurmConfig.options" title="runtraj.execution.SlurmConfig.options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">options</span></code></a></p></td>
 <td><p>every key of the block that is not one of its settings.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="runtraj.execution.SlurmConfig.tasks.html#runtraj.execution.SlurmConfig.tasks" title="runtraj.execution.SlurmConfig.tasks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tasks</span></code></a></p></td>
+<td><p>The number of array tasks, <code class="docutils literal notranslate"><span class="pre">n_workers</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="runtraj.execution.SlurmConfig.check.html#runtraj.execution.SlurmConfig.check" title="runtraj.execution.SlurmConfig.check"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check</span></code></a>()</p></td>
+<td><p>Raise when the array has no time limit.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1044,6 +1113,7 @@ write. The fetch job takes <code class="docutils literal notranslate"><span clas
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.execution.SlurmConfig"><code class="docutils literal notranslate"><span class="pre">SlurmConfig</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#methods">Methods</a></li>
 </ul>
   </nav></div>
 

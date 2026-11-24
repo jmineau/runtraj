@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=f6cc089f"></script>
+    <script src="../../_static/documentation_options.js?v=881e4f9d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="runtraj.ExecutionConfig.cpus" href="runtraj.ExecutionConfig.cpus.html" />
+    <link rel="next" title="runtraj.ExecutionConfig.block" href="runtraj.ExecutionConfig.block.html" />
     <link rel="prev" title="runtraj.ProjectConfig.to_yaml" href="runtraj.ProjectConfig.to_yaml.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev16+gba16b68e1" />
+  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -620,17 +620,29 @@
 </ul>
 </details></li>
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#">runtraj.ExecutionConfig</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.block.html">runtraj.ExecutionConfig.block</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.cpus.html">runtraj.ExecutionConfig.cpus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.fetch.html">runtraj.ExecutionConfig.fetch</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.LocalConfig.html">runtraj.execution.LocalConfig</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.SlurmConfig.html">runtraj.execution.SlurmConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.options.html">runtraj.execution.SlurmConfig.options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.tasks.html">runtraj.execution.SlurmConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.check.html">runtraj.execution.SlurmConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.KubernetesConfig.tasks.html">runtraj.execution.KubernetesConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.KubernetesConfig.check.html">runtraj.execution.KubernetesConfig.check</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
@@ -681,6 +693,49 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_stages.html">runtraj.execution.worker.run_stages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_release.html">runtraj.execution.worker.run_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.Backend.html">runtraj.execution.Backend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.config_class.html">runtraj.execution.Backend.config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.here.html">runtraj.execution.Backend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.name.html">runtraj.execution.Backend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.takes_releases.html">runtraj.execution.Backend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.waits.html">runtraj.execution.Backend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.describe.html">runtraj.execution.Backend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.jobs.html">runtraj.execution.Backend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.run.html">runtraj.execution.Backend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.submit.html">runtraj.execution.Backend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.get_backend.html">runtraj.execution.get_backend</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.html">runtraj.execution.runner.LocalBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.here.html">runtraj.execution.runner.LocalBackend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.name.html">runtraj.execution.runner.LocalBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.waits.html">runtraj.execution.runner.LocalBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.describe.html">runtraj.execution.runner.LocalBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.run.html">runtraj.execution.runner.LocalBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.submit.html">runtraj.execution.runner.LocalBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.html">runtraj.execution.slurm.SlurmBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.name.html">runtraj.execution.slurm.SlurmBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.waits.html">runtraj.execution.slurm.SlurmBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.describe.html">runtraj.execution.slurm.SlurmBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.run.html">runtraj.execution.slurm.SlurmBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.submit.html">runtraj.execution.slurm.SlurmBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.html">runtraj.execution.kubernetes.KubernetesBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.name.html">runtraj.execution.kubernetes.KubernetesBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.takes_releases.html">runtraj.execution.kubernetes.KubernetesBackend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.describe.html">runtraj.execution.kubernetes.KubernetesBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.jobs.html">runtraj.execution.kubernetes.KubernetesBackend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
@@ -912,16 +967,18 @@
 <h1>runtraj.ExecutionConfig<a class="headerlink" href="#runtraj-executionconfig" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="runtraj.ExecutionConfig">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">runtraj.</span></span><span class="sig-name descname"><span class="pre">ExecutionConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal['local'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'slurm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'kubernetes']</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'local'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.LocalConfig</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slurm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.SlurmConfig</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kubernetes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.KubernetesConfig</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span> <span class="pre">|</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_workdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../_modules/runtraj/execution/config.html#ExecutionConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.ExecutionConfig" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">runtraj.</span></span><span class="sig-name descname"><span class="pre">ExecutionConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'local'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.LocalConfig</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slurm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.SlurmConfig</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kubernetes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">runtraj.execution.config.KubernetesConfig</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated[int</span> <span class="pre">|</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ge(ge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1)]</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_workdir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**extra_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../_modules/runtraj/execution/config.html#ExecutionConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.ExecutionConfig" title="Link to this definition">#</a></dt>
 <dd><p>Where a project’s releases run, and with what resources.</p>
 <p><code class="docutils literal notranslate"><span class="pre">backend</span></code> names the place, and every setting of that place is in the
 block of its name. With <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">local</span></code> the releases run on this
 machine as one task (<code class="xref py py-class docutils literal notranslate"><span class="pre">LocalConfig</span></code>). With <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>
 they are split among the tasks of one Slurm job array
 (<code class="xref py py-class docutils literal notranslate"><span class="pre">SlurmConfig</span></code>), and with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code> among the pods
-of one indexed Job (<code class="xref py py-class docutils literal notranslate"><span class="pre">KubernetesConfig</span></code>). Only the block
-<code class="docutils literal notranslate"><span class="pre">backend</span></code> names is read, so a config can hold several and be run
-either way. <code class="docutils literal notranslate"><span class="pre">timeout</span></code> and
+of one indexed Job (<code class="xref py py-class docutils literal notranslate"><span class="pre">KubernetesConfig</span></code>). A backend in another
+package is named by the import path of its class
+(<a class="reference internal" href="runtraj.execution.Backend.html#runtraj.execution.Backend" title="runtraj.execution.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.execution.Backend</span></code></a>), and its block is under the
+class’s <code class="docutils literal notranslate"><span class="pre">name</span></code>. Only the block <code class="docutils literal notranslate"><span class="pre">backend</span></code> names is read, so a config
+can hold several and be run either way. <code class="docutils literal notranslate"><span class="pre">timeout</span></code> and
 <code class="docutils literal notranslate"><span class="pre">keep_workdir</span></code> apply wherever a run happens. None of these settings
 change a result.</p>
 </dd></dl>
@@ -942,7 +999,7 @@ change a result.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backend</span></code></p></td>
-<td><p>Where to run: on this machine (<code class="docutils literal notranslate"><span class="pre">local</span></code>), as a Slurm job array (<code class="docutils literal notranslate"><span class="pre">slurm</span></code>), or as a Kubernetes indexed Job (<code class="docutils literal notranslate"><span class="pre">kubernetes</span></code>).</p></td>
+<td><p>Where to run: on this machine (<code class="docutils literal notranslate"><span class="pre">local</span></code>), as a Slurm job array (<code class="docutils literal notranslate"><span class="pre">slurm</span></code>), as a Kubernetes indexed Job (<code class="docutils literal notranslate"><span class="pre">kubernetes</span></code>), or with a backend in another package, named by the import path of its class, such as <code class="docutils literal notranslate"><span class="pre">mypkg.backends.MyBackend</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'local'</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">local</span></code></p></td>
@@ -951,11 +1008,11 @@ change a result.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">slurm</span></code></p></td>
 <td><p>The job array of a Slurm run (<code class="xref py py-class docutils literal notranslate"><span class="pre">SlurmConfig</span></code>), and any other <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> option by name. Read with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">SlurmConfig(n_workers=1,</span> <span class="pre">cpus=1,</span> <span class="pre">time=None,</span> <span class="pre">mem=None,</span> <span class="pre">partition=None,</span> <span class="pre">account=None,</span> <span class="pre">q...</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SlurmConfig(cpus=1,</span> <span class="pre">fetch=FetchConfig(partition=None,</span> <span class="pre">account=None,</span> <span class="pre">qos=None,</span> <span class="pre">time=No...</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kubernetes</span></code></p></td>
 <td><p>The indexed Job of a Kubernetes run (<code class="xref py py-class docutils literal notranslate"><span class="pre">KubernetesConfig</span></code>). Read with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">KubernetesConfig(image=None,</span> <span class="pre">completions=1,</span> <span class="pre">parallelism=None,</span> <span class="pre">cpus=1,</span> <span class="pre">memory=None,</span> <span class="pre">na...</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">KubernetesConfig(cpus=1,</span> <span class="pre">fetch=False,</span> <span class="pre">image=None,</span> <span class="pre">completions=1,</span> <span class="pre">parallelism=None,</span> <span class="pre">me...</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code></p></td>
 <td><p>Time limit for one transport model run, in seconds. A run that exceeds it is stopped and recorded as a failed simulation, and the worker moves on. Unset waits indefinitely, so a hung run can hold a worker until its job ends.</p></td>
@@ -973,10 +1030,13 @@ change a result.</p>
 <h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="runtraj.ExecutionConfig.cpus.html#runtraj.ExecutionConfig.cpus" title="runtraj.ExecutionConfig.cpus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cpus</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="runtraj.ExecutionConfig.block.html#runtraj.ExecutionConfig.block" title="runtraj.ExecutionConfig.block"><code class="xref py py-obj docutils literal notranslate"><span class="pre">block</span></code></a></p></td>
+<td><p>The block of the backend <code class="docutils literal notranslate"><span class="pre">backend</span></code> names, the one a run reads.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="runtraj.ExecutionConfig.cpus.html#runtraj.ExecutionConfig.cpus" title="runtraj.ExecutionConfig.cpus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cpus</span></code></a></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code> of the block <code class="docutils literal notranslate"><span class="pre">backend</span></code> names.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="runtraj.ExecutionConfig.fetch.html#runtraj.ExecutionConfig.fetch" title="runtraj.ExecutionConfig.fetch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="runtraj.ExecutionConfig.fetch.html#runtraj.ExecutionConfig.fetch" title="runtraj.ExecutionConfig.fetch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch</span></code></a></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fetch</span></code> of the block <code class="docutils literal notranslate"><span class="pre">backend</span></code> names.</p></td>
 </tr>
 </tbody>
@@ -1005,11 +1065,11 @@ change a result.</p>
       </div>
     </a>
     <a class="right-next"
-       href="runtraj.ExecutionConfig.cpus.html"
+       href="runtraj.ExecutionConfig.block.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">runtraj.ExecutionConfig.cpus</p>
+        <p class="prev-next-title">runtraj.ExecutionConfig.block</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

@@ -1,0 +1,6 @@
+runtraj.execution.Backend.waits
+===============================
+
+.. currentmodule:: runtraj.execution
+
+.. autoattribute:: Backend.waits

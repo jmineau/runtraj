@@ -1,0 +1,6 @@
+runtraj.execution.SlurmConfig.tasks
+===================================
+
+.. currentmodule:: runtraj.execution
+
+.. autoproperty:: SlurmConfig.tasks

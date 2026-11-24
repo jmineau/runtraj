@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=f6cc089f"></script>
+    <script src="../_static/documentation_options.js?v=881e4f9d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev16+gba16b68e1" />
+  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -620,17 +620,29 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.ExecutionConfig.html">runtraj.ExecutionConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.ExecutionConfig.block.html">runtraj.ExecutionConfig.block</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.ExecutionConfig.cpus.html">runtraj.ExecutionConfig.cpus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.ExecutionConfig.fetch.html">runtraj.ExecutionConfig.fetch</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.LocalConfig.html">runtraj.execution.LocalConfig</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.html">runtraj.execution.SlurmConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.options.html">runtraj.execution.SlurmConfig.options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.tasks.html">runtraj.execution.SlurmConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.check.html">runtraj.execution.SlurmConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.tasks.html">runtraj.execution.KubernetesConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.check.html">runtraj.execution.KubernetesConfig.check</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
@@ -681,6 +693,49 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_stages.html">runtraj.execution.worker.run_stages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_release.html">runtraj.execution.worker.run_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.Backend.html">runtraj.execution.Backend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.config_class.html">runtraj.execution.Backend.config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.here.html">runtraj.execution.Backend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.name.html">runtraj.execution.Backend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.takes_releases.html">runtraj.execution.Backend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.waits.html">runtraj.execution.Backend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.describe.html">runtraj.execution.Backend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.jobs.html">runtraj.execution.Backend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.run.html">runtraj.execution.Backend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.submit.html">runtraj.execution.Backend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.get_backend.html">runtraj.execution.get_backend</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.html">runtraj.execution.runner.LocalBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.here.html">runtraj.execution.runner.LocalBackend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.name.html">runtraj.execution.runner.LocalBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.waits.html">runtraj.execution.runner.LocalBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.describe.html">runtraj.execution.runner.LocalBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.run.html">runtraj.execution.runner.LocalBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.submit.html">runtraj.execution.runner.LocalBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.html">runtraj.execution.slurm.SlurmBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.name.html">runtraj.execution.slurm.SlurmBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.waits.html">runtraj.execution.slurm.SlurmBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.describe.html">runtraj.execution.slurm.SlurmBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.run.html">runtraj.execution.slurm.SlurmBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.submit.html">runtraj.execution.slurm.SlurmBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.html">runtraj.execution.kubernetes.KubernetesBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.name.html">runtraj.execution.kubernetes.KubernetesBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.takes_releases.html">runtraj.execution.kubernetes.KubernetesBackend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.describe.html">runtraj.execution.kubernetes.KubernetesBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.jobs.html">runtraj.execution.kubernetes.KubernetesBackend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
@@ -956,7 +1011,7 @@ Slurm job array by its id.</p>
 <td><p>Run every simulation of a project that has not finished, and wait for it.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.submit.html#runtraj.execution.submit" title="runtraj.execution.submit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.submit</span></code></a></p></td>
-<td><p>Submit every simulation of a project that has not finished to Slurm or Kubernetes.</p></td>
+<td><p>Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.pending</span></code></a></p></td>
 <td><p>Return the ids of the releases a run would run, each once, in project order.</p></td>
@@ -993,6 +1048,60 @@ Slurm job array by its id.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html#runtraj.execution.worker.run_releases" title="runtraj.execution.worker.run_releases"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.worker.run_releases</span></code></a></p></td>
 <td><p>Run a list of releases, in this process or in a process pool.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="backends">
+<h2>Backends<a class="headerlink" href="#backends" title="Link to this heading">#</a></h2>
+<p>Where the releases run is a backend, which <code class="docutils literal notranslate"><span class="pre">execution.backend</span></code> names:
+<code class="docutils literal notranslate"><span class="pre">local</span></code> runs them in this process, <code class="docutils literal notranslate"><span class="pre">slurm</span></code> as one Slurm job array,
+<code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> as one Kubernetes indexed Job. Each is a
+<a class="reference internal" href="_api/runtraj.execution.Backend.html#runtraj.execution.Backend" title="runtraj.execution.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">Backend</span></code></a>, and its block under <code class="docutils literal notranslate"><span class="pre">execution</span></code> is
+its <code class="docutils literal notranslate"><span class="pre">config_class</span></code>, a <a class="reference internal" href="_api/runtraj.execution.BackendConfig.html#runtraj.execution.BackendConfig" title="runtraj.execution.BackendConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">BackendConfig</span></code></a>.
+<a class="reference internal" href="_api/runtraj.execution.run.html#runtraj.execution.run" title="runtraj.execution.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code></a> and <a class="reference internal" href="_api/runtraj.execution.submit.html#runtraj.execution.submit" title="runtraj.execution.submit"><code class="xref py py-func docutils literal notranslate"><span class="pre">submit()</span></code></a> find
+it with <a class="reference internal" href="_api/runtraj.execution.get_backend.html#runtraj.execution.get_backend" title="runtraj.execution.get_backend"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_backend()</span></code></a> and hand it the releases
+whose results are missing.</p>
+<p>A scheduler runtraj does not have can be a backend in a package of your
+own, named by the import path of its class, as a transport model or a
+stage is:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">execution</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mypkg.backends.QueueBackend</span>
+<span class="w">  </span><span class="nt">queue</span><span class="p">:</span><span class="w">              </span><span class="c1"># the class's name</span>
+<span class="w">    </span><span class="nt">queue</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">short</span>
+<span class="w">    </span><span class="nt">cpus</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+</pre></div>
+</div>
+<p>Its <a class="reference internal" href="_api/runtraj.execution.Backend.submit.html#runtraj.execution.Backend.submit" title="runtraj.execution.Backend.submit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">submit()</span></code></a> starts the tasks, each of
+which runs <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">&lt;project&gt;</span> <span class="pre">--task</span> <span class="pre">i/N</span></code> with <code class="docutils literal notranslate"><span class="pre">i</span></code> from the
+scheduler (<code class="docutils literal notranslate"><span class="pre">$SLURM_ARRAY_TASK_ID</span></code> in a Slurm array), and returns what
+names them. A backend that sets <code class="docutils literal notranslate"><span class="pre">waits</span></code> and writes
+<a class="reference internal" href="_api/runtraj.execution.Backend.run.html#runtraj.execution.Backend.run" title="runtraj.execution.Backend.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> waits for them, so <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code>
+can use it; one that writes <a class="reference internal" href="_api/runtraj.execution.Backend.jobs.html#runtraj.execution.Backend.jobs" title="runtraj.execution.Backend.jobs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs()</span></code></a> lists
+them in <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code>. The tasks need nothing else: every task splits
+the releases the same way (<a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">task_share()</span></code></a>), skips
+what is complete, and exits with a code that says whether to try it again
+(<a class="reference internal" href="../guides/containers.html#exit-codes"><span class="std std-ref">Exit codes</span></a>).</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.Backend.html#runtraj.execution.Backend" title="runtraj.execution.Backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.Backend</span></code></a></p></td>
+<td><p>A place a project's releases run: a scheduler that starts <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span> <span class="pre">i/N</span></code> tasks.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.BackendConfig.html#runtraj.execution.BackendConfig" title="runtraj.execution.BackendConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.BackendConfig</span></code></a></p></td>
+<td><p>A backend's block under <code class="docutils literal notranslate"><span class="pre">execution</span></code>: the settings of one place a project runs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.get_backend.html#runtraj.execution.get_backend" title="runtraj.execution.get_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.get_backend</span></code></a></p></td>
+<td><p>Return the backend <em>name</em> names.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.html#runtraj.execution.runner.LocalBackend" title="runtraj.execution.runner.LocalBackend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.runner.LocalBackend</span></code></a></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">local</span></code> backend: the releases run here, in this process, <code class="docutils literal notranslate"><span class="pre">cpus</span></code> at a time.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.html#runtraj.execution.slurm.SlurmBackend" title="runtraj.execution.slurm.SlurmBackend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.SlurmBackend</span></code></a></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">slurm</span></code> backend: the releases as the tasks of one Slurm job array (<code class="xref py py-func docutils literal notranslate"><span class="pre">submit_array()</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.html#runtraj.execution.kubernetes.KubernetesBackend" title="runtraj.execution.kubernetes.KubernetesBackend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.kubernetes.KubernetesBackend</span></code></a></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> backend: the releases as the pods of one indexed Job (<code class="xref py py-func docutils literal notranslate"><span class="pre">submit_job()</span></code>).</p></td>
 </tr>
 </tbody>
 </table>
@@ -1222,6 +1331,7 @@ model installed (<a class="reference internal" href="_api/runtraj.testing.Replay
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running">Running</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workers">Workers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backends">Backends</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#slurm-job-arrays">Slurm job arrays</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kubernetes-indexed-jobs">Kubernetes indexed Jobs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-every-hour">Running every hour</a></li>

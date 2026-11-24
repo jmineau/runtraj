@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=f6cc089f"></script>
+    <script src="../../_static/documentation_options.js?v=881e4f9d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev16+gba16b68e1" />
+  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -620,17 +620,29 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.ExecutionConfig.html">runtraj.ExecutionConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.block.html">runtraj.ExecutionConfig.block</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.cpus.html">runtraj.ExecutionConfig.cpus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.ExecutionConfig.fetch.html">runtraj.ExecutionConfig.fetch</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.LocalConfig.html">runtraj.execution.LocalConfig</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.SlurmConfig.html">runtraj.execution.SlurmConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.options.html">runtraj.execution.SlurmConfig.options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.tasks.html">runtraj.execution.SlurmConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.SlurmConfig.check.html">runtraj.execution.SlurmConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.KubernetesConfig.tasks.html">runtraj.execution.KubernetesConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.KubernetesConfig.check.html">runtraj.execution.KubernetesConfig.check</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.Bounds.html">runtraj.Bounds</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.Bounds.contains</a></li>
@@ -681,6 +693,49 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_stages.html">runtraj.execution.worker.run_stages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_release.html">runtraj.execution.worker.run_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.Backend.html">runtraj.execution.Backend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.config_class.html">runtraj.execution.Backend.config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.here.html">runtraj.execution.Backend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.name.html">runtraj.execution.Backend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.takes_releases.html">runtraj.execution.Backend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.waits.html">runtraj.execution.Backend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.describe.html">runtraj.execution.Backend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.jobs.html">runtraj.execution.Backend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.run.html">runtraj.execution.Backend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.Backend.submit.html">runtraj.execution.Backend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.get_backend.html">runtraj.execution.get_backend</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.html">runtraj.execution.runner.LocalBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.here.html">runtraj.execution.runner.LocalBackend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.name.html">runtraj.execution.runner.LocalBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.waits.html">runtraj.execution.runner.LocalBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.describe.html">runtraj.execution.runner.LocalBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.run.html">runtraj.execution.runner.LocalBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.runner.LocalBackend.submit.html">runtraj.execution.runner.LocalBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.html">runtraj.execution.slurm.SlurmBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.name.html">runtraj.execution.slurm.SlurmBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.waits.html">runtraj.execution.slurm.SlurmBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.describe.html">runtraj.execution.slurm.SlurmBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.run.html">runtraj.execution.slurm.SlurmBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.slurm.SlurmBackend.submit.html">runtraj.execution.slurm.SlurmBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.html">runtraj.execution.kubernetes.KubernetesBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.name.html">runtraj.execution.kubernetes.KubernetesBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.takes_releases.html">runtraj.execution.kubernetes.KubernetesBackend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.describe.html">runtraj.execution.kubernetes.KubernetesBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.jobs.html">runtraj.execution.kubernetes.KubernetesBackend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>

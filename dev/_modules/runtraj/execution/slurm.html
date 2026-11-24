@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=f6cc089f"></script>
+    <script src="../../../_static/documentation_options.js?v=881e4f9d"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev16+gba16b68e1" />
+  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -451,7 +451,7 @@
 <span></span><span class="sd">"""</span>
 <span class="sd">The Slurm backend: a project's unfinished releases as a job array, and a task that Slurm stops.</span>
 
-<span class="sd">With ``backend: slurm``, :func:`runtraj.execution.submit` writes a job array</span>
+<span class="sd">With ``backend: slurm`` (:class:`SlurmBackend`), :func:`runtraj.execution.submit` writes a job array</span>
 <span class="sd">script into ``_slurm/&lt;stamp&gt;/`` in the project and submits it with</span>
 <span class="sd">``sbatch`` (:func:`submit_array`). Each task of the array runs ``runtraj</span>
 <span class="sd">run --task``, so a task is a command line that can be read, and run again,</span>
@@ -483,8 +483,10 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_parquet</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">FetchConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">FetchConfig</span><span class="p">,</span> <span class="n">SlurmConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">RELIST_SECONDS</span><span class="p">,</span>
     <span class="n">_project_slug</span><span class="p">,</span>
     <span class="n">_status</span><span class="p">,</span>
     <span class="n">_to_fetch</span><span class="p">,</span>
@@ -903,6 +905,79 @@
 
 
 
+<div class="viewcode-block" id="SlurmBackend">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.html#runtraj.execution.SlurmBackend">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlurmBackend</span><span class="p">(</span><span class="n">Backend</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The ``slurm`` backend: the releases as the tasks of one Slurm job array (:func:`submit_array`).</span>
+
+<span class="sd">    ``runtraj run`` waits for the array with ``sacct`` (:func:`wait`), and</span>
+<span class="sd">    when some simulations look unfinished after it ends, lists their</span>
+<span class="sd">    results once more :data:`runtraj.execution.runner.RELIST_SECONDS`</span>
+<span class="sd">    later, since a network filesystem can show this node new files late.</span>
+<span class="sd">    """</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">"slurm"</span>
+    <span class="n">config_class</span> <span class="o">=</span> <span class="n">SlurmConfig</span>
+    <span class="n">waits</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="SlurmBackend.submit">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.submit.html#runtraj.execution.SlurmBackend.submit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Submit the job array, after its fetch job when a met downloads, and return its job id."""</span>
+        <span class="n">job_id</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">submit_array</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">job_id</span></div>
+
+
+<div class="viewcode-block" id="SlurmBackend.run">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.run.html#runtraj.execution.SlurmBackend.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Submit the job array, wait for every task to end, and return the status table of *releases*."""</span>
+        <span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span> <span class="o">=</span> <span class="n">submit_array</span><span class="p">(</span>
+            <span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">execution</span><span class="p">,</span> <span class="n">skip_existing</span><span class="p">,</span> <span class="n">compute_root</span>
+        <span class="p">)</span>
+        <span class="n">wait</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span><span class="o">=</span><span class="n">cluster</span><span class="p">)</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_unfinished</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"Some simulations look unfinished; listing again in </span><span class="si">%d</span><span class="s2"> s, in "</span>
+                <span class="s2">"case this node sees the compute nodes' files late."</span><span class="p">,</span>
+                <span class="n">RELIST_SECONDS</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">RELIST_SECONDS</span><span class="p">)</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">_status</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">table</span></div>
+
+
+<div class="viewcode-block" id="SlurmBackend.describe">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.describe.html#runtraj.execution.SlurmBackend.describe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waits</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the line ``runtraj run`` or ``runtraj submit`` prints before it submits."""</span>
+        <span class="k">if</span> <span class="n">waits</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"Submitting to Slurm and waiting for the job to finish (squeue shows its tasks)"</span>
+        <span class="k">return</span> <span class="s2">"Submitting to Slurm and returning"</span></div>
+</div>
+
+
+
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># A task that is told to stop</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -1026,6 +1101,7 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"MAX_REQUEUES"</span><span class="p">,</span>
     <span class="s2">"NOTICE_SECONDS"</span><span class="p">,</span>
+    <span class="s2">"SlurmBackend"</span><span class="p">,</span>
     <span class="s2">"fetch_script"</span><span class="p">,</span>
     <span class="s2">"job_script"</span><span class="p">,</span>
     <span class="s2">"run_task"</span><span class="p">,</span>

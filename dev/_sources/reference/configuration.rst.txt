@@ -199,6 +199,7 @@ can share one.
 
    ProjectConfig
    ExecutionConfig
+   execution.BackendConfig
    execution.LocalConfig
    execution.SlurmConfig
    execution.FetchConfig

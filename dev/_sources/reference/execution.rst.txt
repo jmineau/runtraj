@@ -72,6 +72,52 @@ Internal: importable from their modules, and free to change.
    runtraj.execution.worker.run_release
    runtraj.execution.worker.run_releases
 
+Backends
+--------
+
+Where the releases run is a backend, which ``execution.backend`` names:
+``local`` runs them in this process, ``slurm`` as one Slurm job array,
+``kubernetes`` as one Kubernetes indexed Job. Each is a
+:class:`~runtraj.execution.Backend`, and its block under ``execution`` is
+its ``config_class``, a :class:`~runtraj.execution.BackendConfig`.
+:func:`~runtraj.execution.run` and :func:`~runtraj.execution.submit` find
+it with :func:`~runtraj.execution.get_backend` and hand it the releases
+whose results are missing.
+
+A scheduler runtraj does not have can be a backend in a package of your
+own, named by the import path of its class, as a transport model or a
+stage is:
+
+.. code-block:: yaml
+
+   execution:
+     backend: mypkg.backends.QueueBackend
+     queue:              # the class's name
+       queue: short
+       cpus: 4
+
+Its :meth:`~runtraj.execution.Backend.submit` starts the tasks, each of
+which runs ``runtraj run <project> --task i/N`` with ``i`` from the
+scheduler (``$SLURM_ARRAY_TASK_ID`` in a Slurm array), and returns what
+names them. A backend that sets ``waits`` and writes
+:meth:`~runtraj.execution.Backend.run` waits for them, so ``runtraj run``
+can use it; one that writes :meth:`~runtraj.execution.Backend.jobs` lists
+them in ``runtraj status``. The tasks need nothing else: every task splits
+the releases the same way (:func:`~runtraj.execution.task_share`), skips
+what is complete, and exits with a code that says whether to try it again
+(:ref:`exit-codes`).
+
+.. autosummary::
+   :toctree: _api
+   :nosignatures:
+
+   runtraj.execution.Backend
+   runtraj.execution.BackendConfig
+   runtraj.execution.get_backend
+   runtraj.execution.runner.LocalBackend
+   runtraj.execution.slurm.SlurmBackend
+   runtraj.execution.kubernetes.KubernetesBackend
+
 Slurm job arrays
 ----------------
 

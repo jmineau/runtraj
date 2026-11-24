@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=f6cc089f"></script>
+    <script src="../_static/documentation_options.js?v=881e4f9d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5.dev16+gba16b68e1" />
+  <meta name="docsearch:version" content="0.1.0a5.dev17+g67c81a8c6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -620,17 +620,29 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.ExecutionConfig.html">runtraj.ExecutionConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.ExecutionConfig.block.html">runtraj.ExecutionConfig.block</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.ExecutionConfig.cpus.html">runtraj.ExecutionConfig.cpus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.ExecutionConfig.fetch.html">runtraj.ExecutionConfig.fetch</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.LocalConfig.html">runtraj.execution.LocalConfig</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.html">runtraj.execution.SlurmConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.options.html">runtraj.execution.SlurmConfig.options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.tasks.html">runtraj.execution.SlurmConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.check.html">runtraj.execution.SlurmConfig.check</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html">runtraj.execution.FetchConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html">runtraj.execution.KubernetesConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.tasks.html">runtraj.execution.KubernetesConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.check.html">runtraj.execution.KubernetesConfig.check</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.Volume.html">runtraj.execution.Volume</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.Bounds.html">runtraj.Bounds</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.Bounds.contains.html">runtraj.Bounds.contains</a></li>
@@ -681,6 +693,49 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_stages.html">runtraj.execution.worker.run_stages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_release.html">runtraj.execution.worker.run_release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_releases.html">runtraj.execution.worker.run_releases</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.Backend.html">runtraj.execution.Backend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.config_class.html">runtraj.execution.Backend.config_class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.here.html">runtraj.execution.Backend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.name.html">runtraj.execution.Backend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.takes_releases.html">runtraj.execution.Backend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.waits.html">runtraj.execution.Backend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.describe.html">runtraj.execution.Backend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.jobs.html">runtraj.execution.Backend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.run.html">runtraj.execution.Backend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.Backend.submit.html">runtraj.execution.Backend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.html">runtraj.execution.BackendConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.tasks.html">runtraj.execution.BackendConfig.tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.BackendConfig.check.html">runtraj.execution.BackendConfig.check</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.get_backend.html">runtraj.execution.get_backend</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.html">runtraj.execution.runner.LocalBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.here.html">runtraj.execution.runner.LocalBackend.here</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.name.html">runtraj.execution.runner.LocalBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.waits.html">runtraj.execution.runner.LocalBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.describe.html">runtraj.execution.runner.LocalBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.run.html">runtraj.execution.runner.LocalBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.runner.LocalBackend.submit.html">runtraj.execution.runner.LocalBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.html">runtraj.execution.slurm.SlurmBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.name.html">runtraj.execution.slurm.SlurmBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.waits.html">runtraj.execution.slurm.SlurmBackend.waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.describe.html">runtraj.execution.slurm.SlurmBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.run.html">runtraj.execution.slurm.SlurmBackend.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.slurm.SlurmBackend.submit.html">runtraj.execution.slurm.SlurmBackend.submit</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.html">runtraj.execution.kubernetes.KubernetesBackend</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.name.html">runtraj.execution.kubernetes.KubernetesBackend.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.takes_releases.html">runtraj.execution.kubernetes.KubernetesBackend.takes_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.describe.html">runtraj.execution.kubernetes.KubernetesBackend.describe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.jobs.html">runtraj.execution.kubernetes.KubernetesBackend.jobs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
@@ -1682,7 +1737,7 @@ its name. Only that block is read, so a config can hold several.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backend</span></code></p></td>
-<td><p>Where to run: on this machine (<code class="docutils literal notranslate"><span class="pre">local</span></code>), as a Slurm job array (<code class="docutils literal notranslate"><span class="pre">slurm</span></code>), or as a Kubernetes indexed Job (<code class="docutils literal notranslate"><span class="pre">kubernetes</span></code>).</p></td>
+<td><p>Where to run: on this machine (<code class="docutils literal notranslate"><span class="pre">local</span></code>), as a Slurm job array (<code class="docutils literal notranslate"><span class="pre">slurm</span></code>), as a Kubernetes indexed Job (<code class="docutils literal notranslate"><span class="pre">kubernetes</span></code>), or with a backend in another package, named by the import path of its class, such as <code class="docutils literal notranslate"><span class="pre">mypkg.backends.MyBackend</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'local'</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">local</span></code></p></td>
@@ -1691,11 +1746,11 @@ its name. Only that block is read, so a config can hold several.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">slurm</span></code></p></td>
 <td><p>The job array of a Slurm run (<code class="xref py py-class docutils literal notranslate"><span class="pre">SlurmConfig</span></code>), and any other <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> option by name. Read with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">SlurmConfig(n_workers=1,</span> <span class="pre">cpus=1,</span> <span class="pre">time=None,</span> <span class="pre">mem=None,</span> <span class="pre">partition=None,</span> <span class="pre">account=None,</span> <span class="pre">q...</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SlurmConfig(cpus=1,</span> <span class="pre">fetch=FetchConfig(partition=None,</span> <span class="pre">account=None,</span> <span class="pre">qos=None,</span> <span class="pre">time=No...</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kubernetes</span></code></p></td>
 <td><p>The indexed Job of a Kubernetes run (<code class="xref py py-class docutils literal notranslate"><span class="pre">KubernetesConfig</span></code>). Read with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">KubernetesConfig(image=None,</span> <span class="pre">completions=1,</span> <span class="pre">parallelism=None,</span> <span class="pre">cpus=1,</span> <span class="pre">memory=None,</span> <span class="pre">na...</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">KubernetesConfig(cpus=1,</span> <span class="pre">fetch=False,</span> <span class="pre">image=None,</span> <span class="pre">completions=1,</span> <span class="pre">parallelism=None,</span> <span class="pre">me...</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code></p></td>
 <td><p>Time limit for one transport model run, in seconds. A run that exceeds it is stopped and recorded as a failed simulation, and the worker moves on. Unset waits indefinitely, so a hung run can hold a worker until its job ends.</p></td>
@@ -1748,45 +1803,45 @@ its name. Only that block is read, so a config can hold several.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></p></td>
-<td><p>Number of array tasks, which the releases are split evenly among.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code></p></td>
 <td><p>Releases each task runs at once, and the CPUs each task asks for.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
-<td><p>Time limit per task, as <code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code>, <code class="docutils literal notranslate"><span class="pre">D-HH:MM:SS</span></code>, or minutes. Required with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>: without it a task gets the partition’s default, which can be days.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mem</span></code></p></td>
-<td><p>Memory per task, such as <code class="docutils literal notranslate"><span class="pre">8G</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">partition</span></code></p></td>
-<td><p>Slurm partition.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">account</span></code></p></td>
-<td><p>Slurm account.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">qos</span></code></p></td>
-<td><p>Slurm quality of service.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">array_parallelism</span></code></p></td>
-<td><p>Most tasks running at once. Unset leaves it to Slurm.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">setup</span></code></p></td>
-<td><p>Shell commands run in each task before the worker, such as <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span></code> lines. They run after the script exports <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, one thread per worker, so a line here can change it. The worker itself runs with the Python that submitted it.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fetch</span></code></p></td>
 <td><p>Get the met files a met with <code class="docutils literal notranslate"><span class="pre">download</span></code> lacks once, in a job of its own that the array waits for, with these resources (<code class="xref py py-class docutils literal notranslate"><span class="pre">FetchConfig</span></code>). <code class="docutils literal notranslate"><span class="pre">false</span></code> leaves each run to download what it needs, as when something else fills the met directory.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">FetchConfig(partition=None,</span> <span class="pre">account=None,</span> <span class="pre">qos=None,</span> <span class="pre">time=None,</span> <span class="pre">mem=None)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_workers</span></code></p></td>
+<td><p>Number of array tasks, which the releases are split evenly among.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
+<td><p>Time limit per task, as <code class="docutils literal notranslate"><span class="pre">HH:MM:SS</span></code>, <code class="docutils literal notranslate"><span class="pre">D-HH:MM:SS</span></code>, or minutes. Required with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">slurm</span></code>: without it a task gets the partition’s default, which can be days.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mem</span></code></p></td>
+<td><p>Memory per task, such as <code class="docutils literal notranslate"><span class="pre">8G</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">partition</span></code></p></td>
+<td><p>Slurm partition.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">account</span></code></p></td>
+<td><p>Slurm account.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qos</span></code></p></td>
+<td><p>Slurm quality of service.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">array_parallelism</span></code></p></td>
+<td><p>Most tasks running at once. Unset leaves it to Slurm.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">setup</span></code></p></td>
+<td><p>Shell commands run in each task before the worker, such as <code class="docutils literal notranslate"><span class="pre">module</span> <span class="pre">load</span></code> lines. They run after the script exports <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>, one thread per worker, so a line here can change it. The worker itself runs with the Python that submitted it.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1844,6 +1899,14 @@ that gets the met files before a job array (<a class="reference internal" href="
 </tr>
 </thead>
 <tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code></p></td>
+<td><p>Releases each pod runs at once, and the CPUs each pod requests.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fetch</span></code></p></td>
+<td><p>Get the met files once, before the pods run, for a met with <code class="docutils literal notranslate"><span class="pre">download</span></code> whose directory is on a volume every pod mounts: each pod first gets the files of every unfinished simulation, one pod at a time (a lock where the inputs are), so the first downloads them and the others find them. Leave it <code class="docutils literal notranslate"><span class="pre">false</span></code> when each pod has its own met directory.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p>Container image of the pods, with runtraj, the transport model and the project’s stages. Required with <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
@@ -1856,41 +1919,33 @@ that gets the met files before a job array (<a class="reference internal" href="
 <td><p>Most pods running at once. Unset runs every task at once.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cpus</span></code></p></td>
-<td><p>Releases each pod runs at once, and the CPUs each pod requests.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">memory</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">memory</span></code></p></td>
 <td><p>Memory each pod requests, and its limit, in Kubernetes’ binary units such as <code class="docutils literal notranslate"><span class="pre">8Gi</span></code> or <code class="docutils literal notranslate"><span class="pre">512Mi</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">namespace</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">namespace</span></code></p></td>
 <td><p>Namespace of the Job. Unset is <code class="docutils literal notranslate"><span class="pre">kubectl</span></code>’s current one.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code></p></td>
 <td><p>Bucket URL the project’s inputs (<code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">tables/</span></code>, <code class="docutils literal notranslate"><span class="pre">sites.csv</span></code>) are copied to at submit, such as <code class="docutils literal notranslate"><span class="pre">s3://bucket/projects/my_project</span></code>; each pod copies them back. Unset, the pods open the project folder at the path it has here, so it must be on a volume they mount at that path.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">volumes</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">volumes</span></code></p></td>
 <td><p>PersistentVolumeClaims mounted in every pod (<code class="xref py py-class docutils literal notranslate"><span class="pre">Volume</span></code>), such as the met archive.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">secrets</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">secrets</span></code></p></td>
 <td><p>Secrets whose keys become each pod’s environment variables, such as a bucket’s credentials.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">service_account</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">service_account</span></code></p></td>
 <td><p>Service account of the pods, on a cluster that grants bucket access through one.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_deadline_seconds</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">active_deadline_seconds</span></code></p></td>
 <td><p>Seconds the whole Job may run before Kubernetes stops it. Unset lets it run as long as its simulations take.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fetch</span></code></p></td>
-<td><p>Get the met files once, before the pods run, for a met with <code class="docutils literal notranslate"><span class="pre">download</span></code> whose directory is on a volume every pod mounts: each pod first gets the files of every unfinished simulation, one pod at a time (a lock where the inputs are), so the first downloads them and the others find them. Leave it <code class="docutils literal notranslate"><span class="pre">false</span></code> when each pod has its own met directory.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1952,22 +2007,25 @@ can share one.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.ExecutionConfig.html#runtraj.ExecutionConfig" title="runtraj.ExecutionConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExecutionConfig</span></code></a></p></td>
 <td><p>Where a project's releases run, and with what resources.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.LocalConfig.html#runtraj.execution.LocalConfig" title="runtraj.execution.LocalConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.LocalConfig</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.BackendConfig.html#runtraj.execution.BackendConfig" title="runtraj.execution.BackendConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.BackendConfig</span></code></a></p></td>
+<td><p>A backend's block under <code class="docutils literal notranslate"><span class="pre">execution</span></code>: the settings of one place a project runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.LocalConfig.html#runtraj.execution.LocalConfig" title="runtraj.execution.LocalConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.LocalConfig</span></code></a></p></td>
 <td><p>How a project's releases run on this machine: the <code class="docutils literal notranslate"><span class="pre">local</span></code> block of <code class="docutils literal notranslate"><span class="pre">execution</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.html#runtraj.execution.SlurmConfig" title="runtraj.execution.SlurmConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.SlurmConfig</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.SlurmConfig.html#runtraj.execution.SlurmConfig" title="runtraj.execution.SlurmConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.SlurmConfig</span></code></a></p></td>
 <td><p>The Slurm job array a project's releases run as: the <code class="docutils literal notranslate"><span class="pre">slurm</span></code> block of <code class="docutils literal notranslate"><span class="pre">execution</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html#runtraj.execution.FetchConfig" title="runtraj.execution.FetchConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.FetchConfig</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.FetchConfig.html#runtraj.execution.FetchConfig" title="runtraj.execution.FetchConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.FetchConfig</span></code></a></p></td>
 <td><p>The Slurm resources of the job that gets the met files before a job array.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html#runtraj.execution.KubernetesConfig" title="runtraj.execution.KubernetesConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.KubernetesConfig</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.KubernetesConfig.html#runtraj.execution.KubernetesConfig" title="runtraj.execution.KubernetesConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.KubernetesConfig</span></code></a></p></td>
 <td><p>The Kubernetes indexed Job a project's releases run as: the <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block of <code class="docutils literal notranslate"><span class="pre">execution</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.Volume.html#runtraj.execution.Volume" title="runtraj.execution.Volume"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.Volume</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.Volume.html#runtraj.execution.Volume" title="runtraj.execution.Volume"><code class="xref py py-obj docutils literal notranslate"><span class="pre">execution.Volume</span></code></a></p></td>
 <td><p>A PersistentVolumeClaim mounted in every pod: one entry of <code class="docutils literal notranslate"><span class="pre">volumes</span></code> in the <code class="docutils literal notranslate"><span class="pre">kubernetes</span></code> block.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.Bounds.html#runtraj.Bounds" title="runtraj.Bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bounds</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.Bounds.html#runtraj.Bounds" title="runtraj.Bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bounds</span></code></a></p></td>
 <td><p>Longitude/latitude bounding box, in degrees.</p></td>
 </tr>
 </tbody>

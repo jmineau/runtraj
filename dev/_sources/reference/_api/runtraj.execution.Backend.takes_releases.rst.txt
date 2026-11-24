@@ -1,0 +1,6 @@
+runtraj.execution.Backend.takes\_releases
+=========================================
+
+.. currentmodule:: runtraj.execution
+
+.. autoattribute:: Backend.takes_releases

@@ -1,0 +1,50 @@
+﻿runtraj.execution.runner.LocalBackend
+=====================================
+
+.. currentmodule:: runtraj.execution.runner
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.runner.LocalBackend
+
+
+.. class-parameters:: runtraj.execution.runner.LocalBackend
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~LocalBackend.here
+   ~LocalBackend.name
+   ~LocalBackend.waits
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~LocalBackend.describe
+   ~LocalBackend.run
+   ~LocalBackend.submit
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.Backend`: :py:obj:`~.Backend.jobs`, :py:obj:`~.Backend.takes_releases`
+
+

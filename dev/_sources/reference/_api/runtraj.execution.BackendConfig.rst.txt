@@ -1,0 +1,41 @@
+﻿runtraj.execution.BackendConfig
+===============================
+
+.. currentmodule:: runtraj.execution
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.BackendConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.execution.BackendConfig
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~BackendConfig.tasks
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~BackendConfig.check
+
+
+

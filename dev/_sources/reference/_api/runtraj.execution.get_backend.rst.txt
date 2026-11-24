@@ -1,0 +1,6 @@
+﻿runtraj.execution.get\_backend
+==============================
+
+.. currentmodule:: runtraj.execution
+
+.. autofunction:: get_backend
