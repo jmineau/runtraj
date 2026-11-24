@@ -115,7 +115,12 @@ def test_a_backward_trajectory_goes_back_in_time(tmp_path, met_dir):
     )
     # One release without a project, as the guide runs it.
     table = runtraj.run_trajectories(
-        release, reference_met(met_dir), n_hours=-3, mode="trajectory", tout=30
+        release,
+        reference_met(met_dir),
+        model="hysplit",
+        n_hours=-3,
+        mode="trajectory",
+        tout=30,
     )
     assert table["age"].tolist() == [0, -30, -60, -90, -120, -150, -180]
     assert table["time"].is_monotonic_decreasing

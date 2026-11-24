@@ -795,7 +795,7 @@ def run_trajectories(
     release: Release,
     met: BaseModel | Mapping[str, Any],
     *,
-    model: str = "hysplit",
+    model: str,
     workdir: str | Path | None = None,
     timeout: int | None = None,
     **params: Any,
@@ -819,8 +819,10 @@ def run_trajectories(
         (:class:`runtraj.models.hysplit.HysplitMetConfig` for HYSPLIT). A string is
         the folder of its files, and a relative folder starts from the
         working directory.
-    model : str, default "hysplit"
-        The transport model.
+    model : str
+        The transport model: a built-in one (:data:`MODELS`, such as
+        ``"hysplit"``) or the import path of a model class. There is no
+        default.
     workdir : str or Path, optional
         Directory the model runs in, kept afterwards for a look at its
         files. It must be empty or not exist yet. Without it the model runs
@@ -867,7 +869,7 @@ def run_trajectories(
     ...     numpar=200,  # HYSPLIT's particle count
     ... )  # doctest: +SKIP
     >>> table = runtraj.run_trajectories(
-    ...     release, "/data/hrrr", n_hours=-24, mode="trajectory"
+    ...     release, "/data/hrrr", model="hysplit", n_hours=-24, mode="trajectory"
     ... )  # doctest: +SKIP
     """
     transport_model = get_model(model)

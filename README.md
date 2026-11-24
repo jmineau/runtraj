@@ -19,14 +19,13 @@
 runtraj runs particle dispersion models at scale. You describe where and when particles are
 released and the settings to run them under, and it runs the transport model once for each,
 on your machine or as a Slurm job array, and keeps the particles where you can find them again.
-You choose the transport model; two are built in:
+You choose the transport model and install it yourself. runtraj supports the two below; any
+other model, and what is made from the particles afterwards, plug in by the import path of a class.
 
-| Model | What it is | Docs |
+| Block in `config.yaml` | Transport model | How runtraj runs it |
 |---|---|---|
-| `hysplit` | [HYSPLIT](https://www.ready.noaa.gov/HYSPLIT.php), NOAA's model, on ARL met files | [HYSPLIT](https://jmineau.github.io/runtraj/stable/reference/hysplit.html) |
-| `flexpart` | [FLEXPART 11](https://www.flexpart.eu), built from its source, on ERA5 | [FLEXPART](https://jmineau.github.io/runtraj/stable/reference/flexpart.html) |
-
-Any other model, and what is made from the particles afterwards, plug in by the import path of a class.
+| `hysplit` | [HYSPLIT](https://www.ready.noaa.gov/HYSPLIT.php), NOAA's model, on ARL met files | [HYSPLIT in runtraj](https://jmineau.github.io/runtraj/stable/reference/hysplit.html) |
+| `flexpart` | [FLEXPART 11](https://www.flexpart.eu), built from its source, on ERA5 | [FLEXPART in runtraj](https://jmineau.github.io/runtraj/stable/reference/flexpart.html) |
 
 runtraj is not a model: it runs one, for every release and every set of settings, and
 keeps track of what is done.
@@ -120,21 +119,25 @@ when it was stopped, or a connection error stopped some, before they finished.
 
 A variant is a named set of settings. Every release runs once under each variant, and a
 variant's results are in a folder named for its settings, so a changed setting never
-overwrites an earlier run:
+overwrites an earlier run. Variants can run different transport models in one project, each
+naming its model block:
 
 ```yaml
 mets:
-  hrrr: /data/hrrr
+  hrrr: /data/hrrr          # ARL files, for HYSPLIT
+  era5: /data/era5          # GRIB files from flex_extract, for FLEXPART
 models:
-  hysplit: {n_hours: -24, numpar: 100}
+  hysplit: {directory: /path/to/hysplit, n_hours: -24, numpar: 100}
+  flexpart: {directory: /path/to/flexpart, eta: true, n_hours: -24, numpar: 100}
 variants:
-  hrrr: {}
-  hrrr-long: {n_hours: -72}
+  hrrr: {model: hysplit}
+  hrrr-long: {model: hysplit, n_hours: -72}
+  era5: {model: flexpart}
 ```
 
 ## Plug-ins
 
-A transport model in another package runs in place of HYSPLIT, and a stage makes one file per
+A transport model in another package runs as HYSPLIT and FLEXPART do, and a stage makes one file per
 release from the particles after the model runs. `config.yaml` names each by the import path
 of its class, so runtraj imports neither until a project asks for it:
 

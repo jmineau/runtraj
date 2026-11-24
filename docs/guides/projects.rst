@@ -71,8 +71,8 @@ file loads, before anything runs.
 Transport models
 ~~~~~~~~~~~~~~~~
 
-You choose the transport model: a block under ``models`` named for it.
-Two are built in:
+You choose the transport model, a block under ``models`` named for it,
+and install the model yourself. runtraj supports two:
 
 .. list-table::
    :header-rows: 1
@@ -206,6 +206,7 @@ FLEXPART on ERA5, each variant naming its model and its met:
 
    models:
      hysplit:
+       directory: /path/to/hysplit
        n_hours: -24
        numpar: 1000
      flexpart:
@@ -217,6 +218,10 @@ FLEXPART on ERA5, each variant naming its model and its met:
    variants:
      hrrr: {model: hysplit}     # each variant is named after its met
      era5: {model: flexpart}
+
+Each block names its model's folder. HYSPLIT can do without it when its
+``hycs_std`` is on ``PATH`` (:doc:`../getting_started/installation`);
+FLEXPART needs it.
 
 ``stages``
    The settings of a stage this variant changes, under the stage's name,

@@ -254,6 +254,13 @@ def test_run_trajectories_checks_the_models_parameters(tmp_path, point_release, 
         run_trajectories(point_release, _met(tmp_path), model="echo")
 
 
+def test_run_trajectories_has_no_default_model(tmp_path, point_release):
+    from runtraj import run_trajectories
+
+    with pytest.raises(TypeError, match="model"):
+        run_trajectories(point_release, _met(tmp_path), n_hours=-24)
+
+
 def _release():
     from runtraj.releases import PointRelease
 

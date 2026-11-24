@@ -85,6 +85,7 @@ follows them through the meteorology:
    particles = runtraj.run_trajectories(
        release,
        met,
+       model="hysplit",
        n_hours=-12,     # follow the air 12 hours back in time
        numpar=100,      # number of particles to release
        krand=2,         # the random numbers a seed can fix

@@ -120,7 +120,7 @@ def test_every_multipoint_location_gets_the_same_particles(tmp_path, met_dir):
 
     release = _forty_points()
     particles = runtraj.run_trajectories(
-        release, reference_met(met_dir), workdir=tmp_path, n_hours=-1,
+        release, reference_met(met_dir), workdir=tmp_path, model="hysplit", n_hours=-1,
         numpar=1000, krand=2, seed=42,
     )  # fmt: skip
 
@@ -145,7 +145,7 @@ def test_a_maxpar_that_cuts_a_multipoint_release_short_fails(tmp_path, met_dir):
 
     with pytest.raises(SimulationError, match="40 release locations") as caught:
         runtraj.run_trajectories(
-            _forty_points(), reference_met(met_dir), workdir=tmp_path, n_hours=-1,
+            _forty_points(), reference_met(met_dir), workdir=tmp_path, model="hysplit", n_hours=-1,
             numpar=1000, maxpar=1000, krand=2, seed=42,
         )  # fmt: skip
     assert caught.value.reason == FailureReason.PARTICLE_LIMIT
@@ -210,6 +210,7 @@ def test_delt_has_no_effect(tmp_path, wbb_release, met_dir):
     def run(name, **settings):
         return runtraj.run_trajectories(
             wbb_release, reference_met(met_dir), workdir=tmp_path / name,
+            model="hysplit",
             n_hours=-1, numpar=100, krand=2, seed=7, **settings,
         )  # fmt: skip
 

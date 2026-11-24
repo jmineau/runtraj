@@ -887,7 +887,7 @@ def _model_blocks(
     if not models:
         raise ValueError(
             "The config names no transport model. Add a models: block for the "
-            f"one to run: a built-in model ({', '.join(sorted(MODELS))}), such "
+            f"one to run: a model runtraj supports ({', '.join(sorted(MODELS))}), such "
             "as\n  models:\n    hysplit: {}\nto run it with its own defaults, "
             "or a block of any name with class: and the import path of a model "
             "class in another package, such as class: mypkg.models.MyModel."

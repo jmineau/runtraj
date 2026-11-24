@@ -13,7 +13,8 @@ run under, and it runs the transport model once for each, on your computer
 or as a Slurm job array, and keeps the particles where you can find them
 again.
 
-You choose the transport model. Two are built in:
+You choose the transport model and install it yourself. runtraj supports
+two:
 
 - `HYSPLIT <https://www.ready.noaa.gov/HYSPLIT.php>`_ (:doc:`reference/hysplit`)
 - `FLEXPART 11 <https://www.flexpart.eu>`_ (:doc:`reference/flexpart`)
