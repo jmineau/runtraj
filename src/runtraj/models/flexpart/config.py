@@ -8,12 +8,13 @@ user finds them where they expect.
 
 from __future__ import annotations
 
+import os
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from pydantic import (
-    BaseModel,
     ConfigDict,
     Field,
     PrivateAttr,
@@ -21,7 +22,12 @@ from pydantic import (
     model_validator,
 )
 
-from runtraj.models import TransportConfig
+from runtraj.models import MetConfig, TransportConfig
+
+if TYPE_CHECKING:
+    import xarray as xr
+
+    from runtraj.spatial import Bounds
 
 
 class FlexpartConfig(TransportConfig):
@@ -232,7 +238,7 @@ GFS_REFUSED = (
 )
 
 
-class FlexpartMetConfig(BaseModel):
+class FlexpartMetConfig(MetConfig):
     """
     The meteorology FLEXPART reads: a directory of GRIB files.
 
@@ -335,6 +341,26 @@ class FlexpartMetConfig(BaseModel):
         from runtraj.models.flexpart.met import grib_grid
 
         return {"source": self.source(), "grid": grib_grid(self._first_file())}
+
+    def open(
+        self,
+        files: Iterable[str | os.PathLike[str]],
+        bounds: Bounds | None = None,
+    ) -> xr.Dataset:
+        """
+        Return the GRIB *files* a run read as one Dataset in :func:`arlmet.open_dataset`'s layout.
+
+        The met is read at the particles this way (:mod:`runtraj.sampling`).
+        The files are ERA5, since this config refuses any other. ERA5 files,
+        as flex_extract writes them, are converted with
+        :func:`arlmet.converters.from_flex_extract`
+        (:func:`~runtraj.models.flexpart.met.open_era5`); they are already
+        cropped to their domain, so *bounds* is not used, and they hold no
+        boundary layer height.
+        """
+        from runtraj.models.flexpart.met import open_era5
+
+        return open_era5(files)
 
 
 __all__ = ["FlexpartConfig", "FlexpartMetConfig", "flexpart_version"]

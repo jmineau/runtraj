@@ -153,7 +153,7 @@ each stage to read the files its settings name, and the model its version.
   see `runtraj._paths`. A local output must stay as fast: time a large listing.
 - **Identity is content.** runtraj never deletes or overwrites a results folder.
 - **The CLI stays thin.** Orchestration does not belong in `cli.py`.
-- **ARL met I/O goes through [arlmet](https://github.com/jmineau/arl-met)**; FLEXPART's GRIB, through eccodes (valid times) and cfgrib with arlmet's converters (`open_met`).
+- **ARL met I/O goes through [arlmet](https://github.com/jmineau/arl-met)**; FLEXPART's GRIB, through eccodes (valid times) and cfgrib with arlmet's converters (`FlexpartMetConfig.open`).
 - **runtraj ships no HYSPLIT file**: `directory/exec/hycs_std` and `bdyfiles/`, else `PATH`. The trajectory mode runs `exec/hyts_std`, found and hashed the same way. The SHA-256
   of `hycs_std` is in the particles hash, read on first use (`Variant.build`); its
   printed version is recorded as `model_version`, never hashed. Without `hycs_std` a

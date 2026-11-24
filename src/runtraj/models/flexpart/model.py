@@ -17,19 +17,16 @@ import numpy as np
 import pandas as pd
 
 from runtraj.exceptions import SimulationError
-from runtraj.models import ModelRun
+from runtraj.models import ModelRun, TransportModel
 from runtraj.releases import ColumnRelease, MultiPointRelease
 
 from .config import FlexpartConfig, FlexpartMetConfig, flexpart_version
 from .inputs import split, write_inputs
-from .met import catalog, files_for, open_era5
+from .met import catalog, files_for
 from .output import read_partoutput
 
 if TYPE_CHECKING:
-    import xarray as xr
-
     from runtraj.releases import Release
-    from runtraj.spatial import Bounds
 
 #: FLEXPART's output, kept in the workdir as the run's log.
 LOG_FILE = "flexpart.log"
@@ -41,7 +38,7 @@ SUCCESS = "CONGRATULATIONS"
 TAIL_LINES = 20
 
 
-class FlexpartModel:
+class FlexpartModel(TransportModel[FlexpartConfig]):
     """
     FLEXPART 11 as a transport model, the object ``get_model("flexpart")`` returns.
 
@@ -50,18 +47,15 @@ class FlexpartModel:
     runs the checkout's executable there, and reads its particle output
     (:func:`~runtraj.models.flexpart.read_partoutput`). The particles
     carry FLEXPART's ``mlht`` and ``dens`` at each particle, for a stage to
-    read. :meth:`open_met` opens a run's ERA5 files for
-    :mod:`runtraj.sampling`, to read other met at the particles.
+    read. Its met config's :meth:`~runtraj.models.flexpart.FlexpartMetConfig.open`
+    opens a run's ERA5 files for :mod:`runtraj.sampling`, to read other met
+    at the particles.
     """
 
     name = "flexpart"
     config_class = FlexpartConfig
     #: FLEXPART reads GRIB files, by valid time.
     met_config_class = FlexpartMetConfig
-    #: FLEXPART writes its inputs and outputs as files in a directory.
-    needs_workdir = True
-    #: One FLEXPART process per release.
-    batched = False
 
     def sha256(self, config: FlexpartConfig) -> str:
         """
@@ -88,29 +82,6 @@ class FlexpartModel:
             return flexpart_version(config.checkout)
         except FileNotFoundError:
             return None
-
-    def data_files(self, config: FlexpartConfig) -> dict[str, str] | None:
-        """Return ``None``: the land-use and surface tables are the checkout's, part of its version."""
-        return None
-
-    def open_met(
-        self,
-        met: FlexpartMetConfig,
-        files: list[Path],
-        bounds: Bounds | None = None,
-    ) -> xr.Dataset:
-        """
-        Return the GRIB *files* a run read as one Dataset in :func:`arlmet.open_dataset`'s layout.
-
-        The met is read at the particles this way (:mod:`runtraj.sampling`).
-        The files are ERA5, since the met config refuses any other. ERA5 files, as
-        flex_extract writes them, are converted with
-        :func:`arlmet.converters.from_flex_extract`
-        (:func:`~runtraj.models.flexpart.met.open_era5`); they are already
-        cropped to their domain, so *bounds* is not used, and they hold no
-        boundary layer height.
-        """
-        return open_era5(files)
 
     def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
         """
