@@ -13,10 +13,10 @@ from typing import Any
 
 import pytest
 import yaml
-from pydantic import RootModel
+from pydantic import ConfigDict
 
 from runtraj.execution.config import ExecutionConfig
-from runtraj.models import TransportConfig
+from runtraj.models import MetConfig, TransportConfig, TransportModel
 
 DOCS = Path(__file__).parent.parent / "docs"
 README = DOCS.parent / "README.md"
@@ -134,12 +134,24 @@ def test_the_docs_show_examples():
     assert len(BASH) >= 10
 
 
-class _MyModel:
+class _AnyMet(MetConfig):
+    """A met that takes any keys, as the docs' placeholder model reads any met."""
+
+    model_config = ConfigDict(extra="allow")
+
+    def settings(self) -> dict[str, Any]:
+        return self.model_dump(mode="json")
+
+
+class _MyModel(TransportModel):
     """The docs' placeholder transport model, ``mypkg.models.MyModel``: it reads any met and runs nothing."""
 
     name = "mine"
     config_class = TransportConfig
-    met_config_class = RootModel[Any]
+    met_config_class = _AnyMet
+
+    def run(self, release, config, met, window, workdir=None, timeout=None):
+        raise NotImplementedError
 
 
 @pytest.fixture

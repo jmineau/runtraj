@@ -8,7 +8,6 @@ import hashlib
 import re
 import subprocess
 import tempfile
-from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,7 +33,7 @@ from .driver import (
     write_inputs,
 )
 from .failures import FailureReason
-from .met import Met, MetConfig
+from .met import HysplitMetConfig, Met
 from .releases import check_releases, release_rows
 from .tdump import read_tdump
 
@@ -145,7 +144,7 @@ class HysplitModel(TransportModel[HysplitConfig]):
     name = "hysplit"
     config_class = HysplitConfig
     #: HYSPLIT reads ARL files, found, downloaded, or cropped as a met says.
-    met_config_class = MetConfig
+    met_config_class = HysplitMetConfig
 
     def result(self, config: HysplitConfig) -> str:
         """
@@ -225,72 +224,6 @@ class HysplitModel(TransportModel[HysplitConfig]):
             )
         }
 
-    def check_met(
-        self, met: MetConfig, releases: pd.DataFrame, n_hours: int
-    ) -> pd.DataFrame:
-        """
-        Return what would stop HYSPLIT from running *releases* with *met*, found before any run.
-
-        The checks of :meth:`Met.check_releases`: the met's directory
-        holds ARL files, every file a run needs is there, and the releases
-        are inside the crop. Nothing is run or downloaded, and files are read
-        no further than their headers.
-
-        Parameters
-        ----------
-        met : MetConfig
-            The met, with an absolute directory in a project.
-        releases : pandas.DataFrame
-            One row per release point, with ``release``, ``time``,
-            ``longitude``, and ``latitude`` columns.
-        n_hours : int
-            The length of the runs, which sets the files each needs.
-
-        Returns
-        -------
-        pandas.DataFrame
-            ``check``, ``release`` (``NA`` for a problem of the met
-            itself), and ``message`` columns, one row for each problem.
-        """
-        return Met("met", met).check_releases(releases, n_hours)
-
-    def fetch_met(
-        self, met: MetConfig, windows: Iterable[tuple[dt.datetime, dt.datetime]]
-    ) -> pd.DataFrame:
-        """
-        Get the met files that cover *windows*, downloading the ones a download lacks.
-
-        The files :meth:`run` would ask for, one request to the archive for
-        windows that overlap (:meth:`Met.fetch`). A met without ``download``
-        is only checked for missing files.
-
-        Parameters
-        ----------
-        met : MetConfig
-            The met, with an absolute directory in a project.
-        windows : iterable of tuple of datetime
-            The time each run covers (:func:`runtraj.meteorology.run_window`).
-
-        Returns
-        -------
-        pandas.DataFrame
-            ``file`` and ``message`` columns: a row for each file, then a
-            row for each window whose files could not be had.
-        """
-        return Met("met", met).fetch(windows)
-
-    def downloads_met(self, met: MetConfig) -> bool:
-        """
-        Whether *met* downloads its files from an ARL archive (``download`` is set).
-
-        Examples
-        --------
-        >>> met = MetConfig(directory="/data/hrrr", download="hrrr")
-        >>> HysplitModel().downloads_met(met)
-        True
-        """
-        return met.download is not None
-
     def check_releases(
         self, releases: pd.DataFrame, config: HysplitConfig
     ) -> pd.DataFrame:
@@ -322,7 +255,7 @@ class HysplitModel(TransportModel[HysplitConfig]):
         self,
         release: Release,
         config: HysplitConfig,
-        met: MetConfig,
+        met: HysplitMetConfig,
         window: tuple[dt.datetime, dt.datetime],
         workdir: Path | None = None,
         timeout: int | None = None,

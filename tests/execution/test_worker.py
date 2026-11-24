@@ -16,7 +16,7 @@ from runtraj.execution import worker
 from runtraj.execution.config import ExecutionConfig
 from runtraj.execution.worker import run_release, run_releases
 from runtraj.models import ModelRun, TransportModel
-from runtraj.models.hysplit import HysplitConfig, Met, MetConfig
+from runtraj.models.hysplit import HysplitConfig, HysplitMetConfig, Met
 from runtraj.output import Output
 from runtraj.releases import PointRelease, Release
 from runtraj.simulation import Simulation
@@ -51,7 +51,7 @@ def other_release() -> Release:
 
 
 @pytest.fixture
-def met_config(tmp_path) -> MetConfig:
+def met_config(tmp_path) -> HysplitMetConfig:
     return make_met_config(tmp_path / "met")
 
 

@@ -10,7 +10,7 @@ from arlmet.archives import HRRRArchive
 from typer.testing import CliRunner
 
 from runtraj import models
-from runtraj.models.hysplit import Met, MetConfig
+from runtraj.models.hysplit import HysplitMetConfig, Met
 from runtraj.project import Project
 from tests.fixtures.factories import blocks
 
@@ -287,7 +287,7 @@ def _window(start: str, end: str):
 def test_met_fetch_asks_once_for_overlapping_windows_and_apart_for_the_rest(
     tmp_path, archive
 ):
-    met = Met("hrrr", MetConfig(directory=tmp_path, download="hrrr"))
+    met = Met("hrrr", HysplitMetConfig(directory=tmp_path, download="hrrr"))
 
     files = met.fetch(
         [
@@ -305,7 +305,7 @@ def test_met_fetch_asks_once_for_overlapping_windows_and_apart_for_the_rest(
 def test_met_fetch_errors_other_than_a_missing_file_are_not_swallowed(
     tmp_path, archive, monkeypatch
 ):
-    met = Met("hrrr", MetConfig(directory=tmp_path, download="hrrr"))
+    met = Met("hrrr", HysplitMetConfig(directory=tmp_path, download="hrrr"))
 
     def no_extra(*args, **kwargs):
         raise ImportError("fsspec is required")

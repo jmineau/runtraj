@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from runtraj.models.hysplit import Met, MetConfig
+from runtraj.models.hysplit import HysplitMetConfig, Met
 from runtraj.models.hysplit import catalog as catalog_module
 from runtraj.models.hysplit.catalog import Catalog, catalog_path
 
@@ -63,7 +63,9 @@ def test_each_folder_has_its_own_table(tmp_path):
 def test_a_met_keeps_its_table_where_a_project_says(tmp_path):
     """A relative ``subgrid_dir`` was made absolute by the project, as ``directory`` was."""
     _block(tmp_path / "met")
-    config = MetConfig(directory=tmp_path / "met", subgrid_dir=tmp_path / "crops")
+    config = HysplitMetConfig(
+        directory=tmp_path / "met", subgrid_dir=tmp_path / "crops"
+    )
     Met("hrrr", config).files_for(WINDOW)
     assert list((tmp_path / "crops" / "catalogs").glob("*.parquet"))
 

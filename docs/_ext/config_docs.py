@@ -177,11 +177,17 @@ class ConfigModelDirective(SphinxDirective):
     def run(self) -> list[nodes.Node]:
         """Return the list-table of the model's fields."""
         model = _resolve_model(self.arguments[0])
-        rows = _iter_fields(
-            model,
-            declared_only="declared-only" in self.options,
-            include_internal="include-internal" in self.options,
+        rows = list(
+            _iter_fields(
+                model,
+                declared_only="declared-only" in self.options,
+                include_internal="include-internal" in self.options,
+            )
         )
+        if not rows:  # a base class, such as MetConfig: its subclasses add them
+            return [
+                nodes.paragraph(text="None of its own: a subclass adds its fields.")
+            ]
 
         source = [
             ".. list-table::",

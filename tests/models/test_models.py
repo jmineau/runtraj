@@ -10,11 +10,12 @@ from pathlib import Path
 import pytest
 import xarray as xr
 import yaml
+from pydantic import BaseModel
 
 from runtraj import models
 from runtraj.config import ProjectConfig
 from runtraj.identity import read_run_settings, settings_hash
-from runtraj.models import ModelInfo, TransportModel, open_met
+from runtraj.models import MetConfig, ModelInfo, TransportConfig, TransportModel
 from runtraj.spatial import Bounds
 
 from ..fixtures.factories import make_met_config
@@ -268,34 +269,48 @@ def test_a_model_in_its_own_package_runs_from_a_fresh_interpreter(tmp_path):
     assert done.stdout.strip() == "6 [10, 20, 30]"
 
 
-# -- open_met: a run's met files as runtraj.sampling reads them ---------------
+# -- MetConfig: a met and what is done with its files -------------------------
 
 
-class _OpensItsMet(TransportModel):
-    """A transport model whose met files are not ARL files: it opens them itself."""
+class _NoFiles(MetConfig):
+    """A met that names no files: every method but settings is the default."""
 
-    name = "grib"
+    weather: str = "built-in"
 
-    def run(self, release, config, met, window, workdir=None, timeout=None):
-        raise NotImplementedError
-
-    def open_met(self, met, files, bounds):
-        return xr.Dataset(attrs={"met": met, "files": files, "bounds": bounds})
+    def settings(self):
+        return {"weather": self.weather}
 
 
-def test_open_met_returns_the_files_of_a_model_without_the_hook():
-    files = open_met("hysplit", None, ["a.arl", "b.arl"])
+class _Grib(_NoFiles):
+    """A met whose files are not ARL files: it opens them itself."""
 
-    assert files == [Path("a.arl"), Path("b.arl")]
+    def open(self, files, bounds=None):
+        return xr.Dataset(attrs={"files": list(files), "bounds": bounds})
 
 
-def test_open_met_asks_a_model_with_the_hook(monkeypatch):
-    monkeypatch.setattr(models, "get_model", lambda name: _OpensItsMet())
+def test_a_met_keeps_the_defaults_it_does_not_override():
+    met = _NoFiles()
+    checked = met.check(None, -24)
+    assert checked.empty and list(checked.columns) == ["check", "release", "message"]
+    assert met.fetch([]).empty and list(met.fetch([]).columns) == ["file", "message"]
+    assert met.downloads() is False
+    assert met.open(["a.arl", "b.arl"]) == [Path("a.arl"), Path("b.arl")]
+
+
+def test_a_met_that_opens_its_files_returns_a_dataset():
     bounds = Bounds(xmin=-113, xmax=-111, ymin=40, ymax=41)
+    opened = _Grib().open((f for f in ["a.grb2"]), bounds)
+    assert opened.attrs == {"files": ["a.grb2"], "bounds": bounds}
 
-    opened = open_met("grib", "gfs", (f for f in ["a.grb2"]), bounds)
 
-    assert opened.attrs == {"met": "gfs", "files": ["a.grb2"], "bounds": bounds}
+def test_a_met_without_settings_cannot_be_made():
+    class NoSettings(MetConfig):
+        pass
+
+    with pytest.raises(
+        TypeError, match="abstract method 'settings'|abstract method settings"
+    ):
+        NoSettings()
 
 
 # -- the TransportModel base class ---------------------------------------------
@@ -321,11 +336,8 @@ def test_a_model_keeps_the_defaults_it_does_not_override():
         None,
     )
     assert model.release_rows(None, None) is None
-    assert model.downloads_met(None) is False
-    assert model.open_met(None, ["a.arl"]) == [Path("a.arl")]
-    for table in (model.check_releases(None, None), model.check_met(None, None, -24)):
-        assert table.empty and list(table.columns) == ["check", "release", "message"]
-    assert model.fetch_met(None, []).empty
+    table = model.check_releases(None, None)
+    assert table.empty and list(table.columns) == ["check", "release", "message"]
     with pytest.raises(NotImplementedError, match="sets batched but has no run_many"):
         model.run_many([], None, None, [])
 
@@ -353,3 +365,20 @@ def test_check_model_reports_a_name_spelled_almost_like_a_hook():
 def test_get_model_refuses_a_class_that_is_not_a_transport_model():
     with pytest.raises(ValueError, match="must subclass runtraj.models.TransportModel"):
         models.get_model("tests.fixtures.models.ToyConfig")
+
+
+def test_get_model_refuses_a_met_config_that_is_not_a_met_config(monkeypatch):
+    import sys
+    import types
+
+    class PlainMet(_Defaults):
+        config_class = TransportConfig
+        met_config_class = BaseModel
+
+    module = types.ModuleType("plainmet_for_this_test")
+    module.PlainMet = PlainMet  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "plainmet_for_this_test", module)
+    with pytest.raises(
+        ValueError, match="met_config_class must subclass runtraj.models.MetConfig"
+    ):
+        models.get_model("plainmet_for_this_test.PlainMet")

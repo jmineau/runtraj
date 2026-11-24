@@ -206,10 +206,11 @@ Met files that are not ARL files, such as GRIB, are read as one Dataset in
 :func:`arlmet.open_dataset`'s layout, the way a converter in
 :mod:`arlmet.converters` writes it. Both functions take that Dataset in
 place of the files, and sample it as they would sample the ARL file
-:func:`arlmet.write_dataset` would write from it. A transport model that
-reads such files opens them for you: :func:`runtraj.models.open_met` returns
-the Dataset, cropped to where the particles are, or the paths of ARL files
-as they are.
+:func:`arlmet.write_dataset` would write from it. The met of a transport
+model that reads such files opens them for you: a variant's
+``met_config.open(files, bounds)`` (:meth:`runtraj.models.MetConfig.open`)
+returns the Dataset, cropped to where the particles are, or the paths of
+ARL files as they are.
 
 .. autosummary::
    :toctree: _api

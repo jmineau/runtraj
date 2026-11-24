@@ -182,8 +182,96 @@ class TransportConfig(BaseModel):
 #: The config class a transport model takes, a subclass of :class:`TransportConfig`.
 C = TypeVar("C", bound=TransportConfig)
 
-#: The columns of the table ``check_releases`` and ``check_met`` return.
+#: The columns of the table ``check_releases`` and :meth:`MetConfig.check` return.
 CHECK_COLUMNS = ("check", "release", "message")
+
+
+class MetConfig(BaseModel):
+    """
+    The base of every transport model's met config: one entry under ``mets:`` and what is done with its files.
+
+    A model names its subclass as ``met_config_class``; HYSPLIT's is
+    :class:`runtraj.models.hysplit.HysplitMetConfig`. The subclass's fields
+    are the keys of the entry, and it implements :meth:`settings`. The
+    other methods have defaults for a met that names no files, such as a
+    model's built-in weather: nothing to check or fetch, nothing
+    downloaded, and ARL files when the met is read at the particles. A met
+    of files overrides the ones its files need.
+    """
+
+    @abstractmethod
+    def settings(self) -> dict[str, Any]:
+        """
+        Return what a run records of this met: which weather it is, and anything else that changes the result.
+
+        Never where its files are kept or how they are named, so that moving
+        them changes no settings folder. Plain values (mappings, lists,
+        strings, numbers). HYSPLIT's are the source id in the ARL headers
+        and the crop.
+        """
+
+    def check(self, releases: pd.DataFrame, n_hours: int) -> pd.DataFrame:
+        """
+        Return what would stop the runs of *releases* on this met, found before any starts; nothing here.
+
+        ``runtraj check`` calls it. *releases* is a table with one row per
+        release point (``release``, ``time``, ``longitude``, ``latitude``),
+        and *n_hours* the length of the runs. It returns a DataFrame with
+        ``check`` (a short name, such as ``met_files``), ``release`` (the id,
+        or ``NA`` for a problem of the met itself), and ``message`` columns,
+        one row for each problem. It runs and downloads nothing.
+        """
+        return pd.DataFrame(columns=list(CHECK_COLUMNS))
+
+    def fetch(self, windows: Iterable[tuple[dt.datetime, dt.datetime]]) -> pd.DataFrame:
+        """
+        Get the files runs of *windows* need before any starts, and return what was got; nothing here.
+
+        ``runtraj fetch`` calls it, with the time each run covers
+        (:func:`runtraj.meteorology.run_window`). It gets the files a run of
+        those windows would ask for, downloading what the met downloads, and
+        returns a DataFrame with ``file`` and ``message`` columns: a row for
+        each file, then a row for each window whose files could not be had.
+        """
+        return pd.DataFrame(columns=["file", "message"])
+
+    def downloads(self) -> bool:
+        """
+        Return whether this met downloads its files, False here.
+
+        Getting the files once before the runs then saves each run from
+        downloading its own, so ``runtraj submit`` submits a fetch job before
+        the job array when it is true for a met the unfinished simulations
+        use. Reads no file.
+        """
+        return False
+
+    def open(
+        self,
+        files: Iterable[str | os.PathLike[str]],
+        bounds: Bounds | None = None,
+    ) -> list[Path] | xr.Dataset:
+        """
+        Return *files*, the met files a run read, as :mod:`runtraj.sampling` reads them: as ARL file paths here.
+
+        A met whose files are not ARL files returns them as one
+        :class:`xarray.Dataset` in :func:`arlmet.open_dataset`'s layout,
+        such as an arlmet converter's output, cropped to *bounds* (a
+        :class:`runtraj.Bounds`, or ``None`` for the whole grid). Either can
+        be passed to :func:`runtraj.sampling.sample_met` and
+        :func:`runtraj.sampling.calc_pbl_height`. The files are a run's
+        ``met_files`` (:class:`ModelRun`, or
+        :func:`runtraj.particles.particles_metadata`).
+
+        Examples
+        --------
+        >>> meta = runtraj.particles.particles_metadata(
+        ...     sim.particles_path
+        ... )  # doctest: +SKIP
+        >>> met = variant.met_config.open(meta.met_files)  # doctest: +SKIP
+        >>> runtraj.sampling.sample_met(sim.particles, met)  # doctest: +SKIP
+        """
+        return [Path(f) for f in files]
 
 
 class TransportModel(ABC, Generic[C]):
@@ -205,14 +293,16 @@ class TransportModel(ABC, Generic[C]):
 
     Examples
     --------
-    >>> from runtraj.models import ModelRun, TransportConfig, TransportModel
-    >>> from pydantic import BaseModel
+    >>> from runtraj.models import MetConfig, ModelRun, TransportConfig, TransportModel
     >>> class StillConfig(TransportConfig):
     ...     pass
+    >>> class StillMet(MetConfig):
+    ...     def settings(self):
+    ...         return {}
     >>> class StillModel(TransportModel[StillConfig]):
     ...     name = "still"
     ...     config_class = StillConfig
-    ...     met_config_class = BaseModel
+    ...     met_config_class = StillMet
     ...
     ...     def run(self, release, config, met, window, workdir=None, timeout=None):
     ...         return ModelRun(result=...)
@@ -224,12 +314,10 @@ class TransportModel(ABC, Generic[C]):
     name: str
     #: The model's config, a :class:`TransportConfig`, which validates its parameters.
     config_class: type[C]
-    #: The model's met config, which validates an entry under ``mets:``.
-    #: Its ``settings()`` returns what a run records of the met: which
-    #: weather it is, and anything else that changes the particles, but not
-    #: where its files are kept. HYSPLIT's is
-    #: :class:`runtraj.models.hysplit.MetConfig`.
-    met_config_class: type[BaseModel]
+    #: The model's met config, a :class:`MetConfig`, which validates an entry
+    #: under ``mets:`` and checks, gets and opens its files. HYSPLIT's is
+    #: :class:`runtraj.models.hysplit.HysplitMetConfig`.
+    met_config_class: type[MetConfig]
     #: Whether :meth:`run` is handed an empty directory for its files. A
     #: model that writes no files sets it False, and gets ``None``.
     needs_workdir: bool = True
@@ -353,66 +441,6 @@ class TransportModel(ABC, Generic[C]):
         """
         return None
 
-    def check_met(self, met: Any, releases: pd.DataFrame, n_hours: int) -> pd.DataFrame:
-        """
-        Return what would stop the runs of *releases* on the met *met*, found before any starts; nothing here.
-
-        ``runtraj check`` calls it. *met* is the model's met config,
-        *releases* a table with one row per release point (``release``,
-        ``time``, ``longitude``, ``latitude``), and *n_hours* the length of
-        the runs. It returns a DataFrame with ``check`` (a short name, such
-        as ``met_files``), ``release`` (the id, or ``NA`` for a problem of
-        the met itself), and ``message`` columns, one row for each problem.
-        It runs and downloads nothing. A model that reads no files keeps
-        this default.
-        """
-        return pd.DataFrame(columns=list(CHECK_COLUMNS))
-
-    def fetch_met(
-        self, met: Any, windows: Iterable[tuple[dt.datetime, dt.datetime]]
-    ) -> pd.DataFrame:
-        """
-        Get the met files runs of *windows* need before any starts, and return what was got; nothing here.
-
-        ``runtraj fetch`` calls it. *met* is the model's met config and
-        *windows* the time each run covers
-        (:func:`runtraj.meteorology.run_window`). It gets the files a run of
-        those windows would ask for, downloading what the met downloads, and
-        returns a DataFrame with ``file`` and ``message`` columns: a row for
-        each file, then a row for each window whose files could not be had.
-        A model that reads no files keeps this default.
-        """
-        return pd.DataFrame(columns=["file", "message"])
-
-    def downloads_met(self, met: Any) -> bool:
-        """
-        Return whether *met* downloads its files, False here.
-
-        For a model with :meth:`fetch_met`: getting the files once before
-        the runs then saves each run from downloading its own, so
-        ``runtraj submit`` submits a fetch job before the job array when it
-        is true for a met the unfinished simulations use.
-        """
-        return False
-
-    def open_met(
-        self,
-        met: Any,
-        files: list[str | os.PathLike[str]],
-        bounds: Bounds | None = None,
-    ) -> list[Path] | xr.Dataset:
-        """
-        Return *files*, the met files a run read, as :mod:`runtraj.sampling` reads them: as ARL file paths here.
-
-        A model whose met files are not ARL files returns them as one
-        :class:`xarray.Dataset` in :func:`arlmet.open_dataset`'s layout,
-        such as an arlmet converter's output, cropped to *bounds* (a
-        :class:`runtraj.Bounds`, or ``None`` for the whole grid).
-        :func:`open_met` calls it, so that the met is read at particles
-        without guessing its format from the files.
-        """
-        return [Path(f) for f in files]
-
     def check_releases(self, releases: pd.DataFrame, config: C) -> pd.DataFrame:
         """
         Return the releases the model cannot run with *config*, one row each; none here.
@@ -505,6 +533,11 @@ def get_model(name: str) -> TransportModel:
             raise ValueError(
                 f"{name} is not a transport model: it has no {', '.join(missing)}."
             )
+        met_class = cls.met_config_class
+        if not (isinstance(met_class, type) and issubclass(met_class, MetConfig)):
+            raise ValueError(
+                f"{name}'s met_config_class must subclass runtraj.models.MetConfig."
+            )
         return cls()
     factory = MODELS.get(name)
     if factory is None:
@@ -514,54 +547,6 @@ def get_model(name: str) -> TransportModel:
             "mypkg.models.MyModel."
         )
     return factory()
-
-
-def open_met(
-    name: str,
-    met: Any,
-    files: Iterable[str | os.PathLike[str]],
-    bounds: Bounds | None = None,
-) -> list[Path] | xr.Dataset:
-    """
-    Return the met files of a run of the transport model *name* as :mod:`runtraj.sampling` reads them.
-
-    A model whose met files are not ARL files opens them itself, with its
-    met config *met*, as one Dataset in :func:`arlmet.open_dataset`'s
-    layout (its ``open_met``, :class:`TransportModel`); for any other model,
-    HYSPLIT included, the files are ARL files and are returned as paths.
-    Either can be passed to :func:`runtraj.sampling.sample_met` and
-    :func:`runtraj.sampling.calc_pbl_height`.
-
-    Parameters
-    ----------
-    name : str
-        The transport model the run used (:func:`get_model`).
-    met : BaseModel
-        The run's met, of the model's ``met_config_class``.
-    files : iterable of path-like
-        The met files the run read (``met_files`` of :class:`ModelRun` or
-        of :func:`runtraj.particles.particles_metadata`).
-    bounds : Bounds, optional
-        Where the particles are. A model that opens its files reads only
-        this part of the grid, plus a margin of its own. ``None`` reads the
-        whole grid.
-
-    Returns
-    -------
-    list of Path or xarray.Dataset
-        The files, or the Dataset the model opened.
-
-    Examples
-    --------
-    >>> meta = runtraj.particles.particles_metadata(
-    ...     sim.particles_path
-    ... )  # doctest: +SKIP
-    >>> met = runtraj.models.open_met(
-    ...     "hysplit", variant.met_config, meta.met_files
-    ... )  # doctest: +SKIP
-    >>> runtraj.sampling.sample_met(sim.particles, met)  # doctest: +SKIP
-    """
-    return get_model(name).open_met(met, list(files), bounds)
 
 
 def run_model(
@@ -821,7 +806,7 @@ def run_trajectories(
     met : str, dict or BaseModel
         The meteorology, as one entry under ``mets:`` in ``config.yaml``,
         checked by the model's met config
-        (:class:`runtraj.models.hysplit.MetConfig` for HYSPLIT). A string is
+        (:class:`runtraj.models.hysplit.HysplitMetConfig` for HYSPLIT). A string is
         the folder of its files, and a relative folder starts from the
         working directory.
     model : str, default "hysplit"
@@ -920,8 +905,7 @@ def check_model(
       public name of its class is spelled almost like a member of the base
       class, as ``release_row`` is, which runtraj would never call;
     - ``config_class`` is a :class:`TransportConfig` whose fields use none
-      of :data:`RESERVED_SETTINGS`, and ``met_config_class`` a pydantic
-      model;
+      of :data:`RESERVED_SETTINGS`, and ``met_config_class`` a :class:`MetConfig`;
     - the record ``config.settings()`` writes is plain data, and
       ``config_class`` reads it back to a config with the same record: a
       stored settings folder is found that way; and so for each config
@@ -973,8 +957,8 @@ def check_model(
         "records or reads those keys beside the model's settings"
     )
     assert isinstance(model.met_config_class, type) and issubclass(
-        model.met_config_class, BaseModel
-    ), f"{name}.met_config_class must be a pydantic model"
+        model.met_config_class, MetConfig
+    ), f"{name}.met_config_class must subclass runtraj.models.MetConfig"
     assert isinstance(config, model.config_class), (
         f"config must be a {model.config_class.__name__}"
     )
@@ -996,11 +980,7 @@ def check_model(
     assert isinstance(met, model.met_config_class), (
         f"met must be a {model.met_config_class.__name__} to run the model"
     )
-    met_settings = getattr(met, "settings", None)
-    assert callable(met_settings), (
-        f"{model.met_config_class.__name__} needs settings(), what a run records of the met"
-    )
-    _plain(met_settings(), f"{name}'s met settings()")
+    _plain(met.settings(), f"{name}'s met settings()")
     if not _check_refusal(model, config, met, release):
         _check_run(model, config, met, release)
 
@@ -1174,13 +1154,13 @@ def _check_stored(
 __all__ = [
     "MODELS",
     "ModelInfo",
+    "MetConfig",
     "ModelRun",
     "TransportConfig",
     "TransportModel",
     "RESERVED_SETTINGS",
     "check_model",
     "get_model",
-    "open_met",
     "run_model",
     "run_model_many",
     "run_trajectories",

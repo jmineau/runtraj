@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 
 from runtraj.meteorology import run_window
-from runtraj.models import get_model
 
 if TYPE_CHECKING:
     from runtraj.project import Project
@@ -29,10 +28,9 @@ def fetch_project(project: Project, unrun: pd.DataFrame) -> pd.DataFrame:
 
     *unrun* is the simulations whose transport model has yet to run (rows of
     ``project.simulations`` with ``release`` and ``variant`` columns). For
-    each met they use, the model gets the files for the time each run
-    covers, as a run would (``fetch_met`` of the transport model, see
-    :class:`runtraj.models.TransportModel`). A model without ``fetch_met``
-    has no files to get and adds no row.
+    each met they use, the met gets the files for the time each run covers,
+    as a run would (:meth:`runtraj.models.MetConfig.fetch`). A met that
+    names no files has none to get and adds no row.
 
     Returns
     -------
@@ -50,8 +48,8 @@ def fetch_project(project: Project, unrun: pd.DataFrame) -> pd.DataFrame:
         key = (variant.met, variant.model)
         needed.setdefault(key, (variant.met_config, set()))[1].update(windows)
     tables = []
-    for (met, model), (config, windows) in needed.items():
-        found = get_model(model).fetch_met(config, windows)
+    for (met, _model), (config, windows) in needed.items():
+        found = config.fetch(windows)
         if not found.empty:
             tables.append(found.assign(met=met))
     if not tables:
@@ -64,13 +62,13 @@ def downloads(project: Project, variants: Iterable[str]) -> bool:
     """
     Whether the met of one of *variants* downloads its files.
 
-    Each variant's transport model says, with its ``downloads_met`` (see
-    :class:`runtraj.models.TransportModel`). Reads no file, so it is cheap
-    to ask before a listing.
+    Each variant's met says, with its ``downloads`` (see
+    :meth:`runtraj.models.MetConfig.downloads`). Reads no file, so it is
+    cheap to ask before a listing.
     """
     for name in variants:
         variant = project.variants[str(name)]
-        if get_model(variant.model).downloads_met(variant.met_config):
+        if variant.met_config.downloads():
             return True
     return False
 

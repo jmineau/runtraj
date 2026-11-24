@@ -16,8 +16,8 @@ the columns HYSPLIT writes from the met (``mlht``, ``dens``, ``pres``,
 :func:`calc_pbl_height` finds the mixed-layer height from the met, as the
 transport model of the run did (HYSPLIT's ``kmixd``, or FLEXPART's
 method). Both read ARL files, or met in another
-format converted by arlmet (:func:`runtraj.models.open_met` opens a run's
-met files the way its transport model reads them).
+format converted by arlmet (:meth:`runtraj.models.MetConfig.open` opens a
+run's met files the way its transport model reads them).
 """
 
 from __future__ import annotations
@@ -438,7 +438,7 @@ def sample_met(
         run read (``met_files`` of :class:`runtraj.models.ModelRun` or of
         :func:`runtraj.particles.particles_metadata`), or met in another
         format as one Dataset in :func:`arlmet.open_dataset`'s layout
-        (:func:`runtraj.models.open_met`, or an arlmet converter's output).
+        (:meth:`runtraj.models.MetConfig.open`, or an arlmet converter's output).
     columns : iterable of str, default ("mlht", "dens", "pres", "zsfc")
         The columns to add.
     z_top : float or None, default 25000
@@ -792,9 +792,7 @@ def calc_pbl_height(
 
     A FLEXPART run on ERA5, with the met its transport model opens:
 
-    >>> met = runtraj.models.open_met(
-    ...     "flexpart", met_config, files, bounds
-    ... )  # doctest: +SKIP
+    >>> met = met_config.open(files, bounds)  # doctest: +SKIP
     >>> mlht = runtraj.sampling.calc_pbl_height(
     ...     particles, met, method="flexpart"
     ... )  # doctest: +SKIP

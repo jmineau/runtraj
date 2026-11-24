@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from runtraj.config import ProjectConfig
-from runtraj.models.hysplit import MetConfig
+from runtraj.models.hysplit import HysplitMetConfig
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
 from tests.fixtures.factories import blocks, make_met_config
 
@@ -23,7 +23,7 @@ REFERENCE_TIME = dt.datetime(2021, 1, 15, 6, 0)
 HYSPLIT = {"n_hours": -6, "numpar": 100}
 
 
-def reference_met(met_dir: Path) -> MetConfig:
+def reference_met(met_dir: Path) -> HysplitMetConfig:
     """Return the met config of the test met cache: 6-hour HRRR files."""
     return make_met_config(met_dir)
 

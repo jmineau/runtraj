@@ -7,9 +7,9 @@ import yaml
 import runtraj
 from runtraj.config import ProjectConfig, Variant
 from runtraj.exceptions import HYSPLITNotFoundError
-from runtraj.identity import read_run_settings, run_settings, settings_hash
+from runtraj.identity import read_run_settings, run_settings, settings_hash, stage_hash
 from runtraj.models import ModelInfo
-from runtraj.models.hysplit import HysplitConfig, MetConfig
+from runtraj.models.hysplit import HysplitConfig, HysplitMetConfig
 from runtraj.models.hysplit.model import hysplit_version
 from runtraj.output import Output
 from tests.fixtures.factories import blocks
@@ -25,11 +25,11 @@ from .fixtures.factories import (
 GRID = {"xmin": -112, "xmax": -111, "ymin": 40, "ymax": 41, "xres": 0.1, "yres": 0.1}
 
 
-def _met(tmp_path, **overrides) -> MetConfig:
+def _met(tmp_path, **overrides) -> HysplitMetConfig:
     return make_met_config(tmp_path / "met", **overrides)
 
 
-def _variant(tmp_path, met: MetConfig | None = None, **transport) -> Variant:
+def _variant(tmp_path, met: HysplitMetConfig | None = None, **transport) -> Variant:
     """The resolved ``hrrr`` variant of a one-met project with these transport fields."""
     config = ProjectConfig(
         **blocks(
@@ -343,3 +343,40 @@ def test_a_whole_number_float_and_its_integer_name_one_settings_folder(
 
 def test_a_float_with_a_fraction_names_its_own_settings_folder():
     assert settings_hash({"numpar": 1000.5}) != settings_hash({"numpar": 1000})
+
+
+# -- stored hashes do not move --------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("config", "expected"),
+    [
+        (
+            {"n_hours": -24},
+            "07bd458bf04f35ec65ee75f559631d8d5bb3ae2ba05c19af11816ee5f55099af",
+        ),
+        (
+            {"n_hours": -72, "numpar": 1000, "capemin": -1, "kmixd": 0},
+            "8884f2627081a3ada6c6a78c3d536e512696bd45379a3e49d4ce49ef4b1ecf73",
+        ),
+    ],
+)
+def test_a_particles_folder_keeps_its_hash(config, expected):
+    """The hash of HYSPLIT particles as stored since 0.1.0a2: a change that moves it orphans every folder."""
+    info = ModelInfo(
+        name="hysplit",
+        sha256="0" * 64,
+        data_files={"ASCDATA.CFG": "a" * 64},
+        version="hysplit.v5.1.0",
+    )
+    met = {"source": "HRRR", "crop": None}
+    record = run_settings(HysplitConfig(**config), met, info)
+    assert settings_hash(record) == expected
+
+
+def test_a_stage_folder_keeps_its_hash():
+    """A stage without a version is hashed as before stages had versions."""
+    assert (
+        stage_hash("count", {"scale": 1}, "p" * 64)
+        == "465f3905e5bfdcddb5237b547d176fc9b1b607d0811b92fbb241e455eecfc50c"
+    )

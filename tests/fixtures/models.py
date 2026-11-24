@@ -8,7 +8,7 @@ one differs from HYSPLIT wherever it can:
 
 - it runs no program, so it has no executable, needs no workdir, and
   writes no log;
-- it reads no met files, so it has no ``check_met`` or ``fetch_met``;
+- it reads no met files, so its met config keeps every default but ``settings``;
 - its first row is one output step after the release: it writes no row
   at ``age = 0``, and says where each particle started through
   ``release_rows`` instead;
@@ -35,10 +35,10 @@ from typing import Any, ClassVar
 import numpy as np
 import pandas as pd
 import xarray as xr
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from runtraj import Release
-from runtraj.models import ModelRun, TransportConfig, TransportModel
+from runtraj.models import MetConfig, ModelRun, TransportConfig, TransportModel
 
 #: The toy model's import path, as a ``models`` block names it.
 TOY = "tests.fixtures.models.ToyModel"
@@ -77,7 +77,7 @@ class ToyConfig(TransportConfig):
         return record
 
 
-class ToyMet(BaseModel):
+class ToyMet(MetConfig):
     """
     The toy's met: a name and no files.
 

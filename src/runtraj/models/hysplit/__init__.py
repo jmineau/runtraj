@@ -12,7 +12,7 @@ from .driver import (
     write_inputs,
 )
 from .failures import FailureReason
-from .met import Met, MetConfig
+from .met import HysplitMetConfig, Met
 from .model import HysplitModel
 from .namelist import read_namelist
 from .tdump import read_tdump
@@ -25,7 +25,7 @@ __all__ = [
     "HysplitConfig",
     "HysplitModel",
     "Met",
-    "MetConfig",
+    "HysplitMetConfig",
     "Pollutant",
     "data_tables",
     "find_hycs_std",

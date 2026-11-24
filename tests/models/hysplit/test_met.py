@@ -11,7 +11,7 @@ import pytest
 
 from runtraj.exceptions import MeteorologyError
 from runtraj.meteorology import run_window
-from runtraj.models.hysplit import Met, MetConfig
+from runtraj.models.hysplit import HysplitMetConfig, Met
 from runtraj.spatial import Bounds
 
 from ...fixtures.factories import write_arl_file
@@ -27,7 +27,7 @@ def _run_files(met, r_time, n_hours):
 
 
 def _make_met(tmp_path: Path) -> Met:
-    return Met("hrrr", MetConfig(directory=tmp_path))
+    return Met("hrrr", HysplitMetConfig(directory=tmp_path))
 
 
 def _hrrr_files(directory: Path, names: list[str]) -> list[Path]:
@@ -44,18 +44,18 @@ def _hrrr_files(directory: Path, names: list[str]) -> list[Path]:
 
 
 # ---------------------------------------------------------------------------
-# MetConfig validation
+# HysplitMetConfig validation
 # ---------------------------------------------------------------------------
 
 
 def test_a_string_is_the_mets_folder(tmp_path):
     """``hrrr: /path/to/hrrr`` is the whole entry of a met of local files."""
-    assert MetConfig.model_validate(str(tmp_path)).directory == tmp_path
-    assert MetConfig.model_validate(tmp_path).directory == tmp_path
+    assert HysplitMetConfig.model_validate(str(tmp_path)).directory == tmp_path
+    assert HysplitMetConfig.model_validate(tmp_path).directory == tmp_path
 
 
 def test_a_met_with_only_a_folder_is_valid(tmp_path):
-    cfg = MetConfig(directory=tmp_path)
+    cfg = HysplitMetConfig(directory=tmp_path)
     assert cfg.directory == tmp_path
     assert cfg.download is None
 
@@ -67,23 +67,23 @@ def test_a_met_with_only_a_folder_is_valid(tmp_path):
 )
 def test_the_old_file_settings_are_refused_with_what_to_do(tmp_path, key):
     with pytest.raises(ValueError, match=f"{next(iter(key))} is gone: delete it"):
-        MetConfig(directory=tmp_path, **key)
+        HysplitMetConfig(directory=tmp_path, **key)
 
 
 def test_metconfig_download_keeps_its_folder(tmp_path):
-    cfg = MetConfig(directory=tmp_path, download="hrrr")
+    cfg = HysplitMetConfig(directory=tmp_path, download="hrrr")
     assert cfg.download == "hrrr"
     assert cfg.directory == tmp_path
 
 
 def test_metconfig_unknown_archive_raises(tmp_path):
     with pytest.raises(Exception, match="Unknown ARL archive"):
-        MetConfig(directory=tmp_path, download="bogus_product")
+        HysplitMetConfig(directory=tmp_path, download="bogus_product")
 
 
 def test_metconfig_subgrid_requires_bounds(tmp_path):
     with pytest.raises(Exception, match="subgrid_bounds is required"):
-        MetConfig(
+        HysplitMetConfig(
             directory=tmp_path,
             download="hrrr",
             subgrid_enable=True,
@@ -94,11 +94,11 @@ def test_metconfig_refuses_a_crop_box_with_swapped_latitudes(tmp_path):
     """A swapped or NaN box held no release, so every run would fail."""
     box = {"xmin": float("nan"), "xmax": -115, "ymin": 42, "ymax": 39}
     with pytest.raises(ValueError, match="subgrid_bounds"):
-        MetConfig(directory=tmp_path, subgrid_enable=True, subgrid_bounds=box)
+        HysplitMetConfig(directory=tmp_path, subgrid_enable=True, subgrid_bounds=box)
 
 
 def test_metconfig_subgrid_valid(tmp_path):
-    cfg = MetConfig(
+    cfg = HysplitMetConfig(
         directory=tmp_path,
         download="hrrr",
         subgrid_enable=True,
@@ -109,21 +109,21 @@ def test_metconfig_subgrid_valid(tmp_path):
 
 def test_metconfig_extra_fields_as_download_options(tmp_path):
     """Extra inline fields land in download_options (for e.g. NAMSSource domain)."""
-    cfg = MetConfig(directory=tmp_path, download="nams", domain="ak")
+    cfg = HysplitMetConfig(directory=tmp_path, download="nams", domain="ak")
     assert cfg.download_options == {"domain": "ak"}
 
 
 def test_metconfig_rejects_an_unknown_key_without_download(tmp_path):
     """A typo in a plain met entry is an error, as elsewhere in config.yaml."""
     with pytest.raises(ValueError, match="subgrid_enabel"):
-        MetConfig(directory=tmp_path, subgrid_enabel=True)
+        HysplitMetConfig(directory=tmp_path, subgrid_enabel=True)
 
 
 def test_metconfig_rejects_an_option_the_archive_does_not_take(tmp_path):
     with pytest.raises(ValueError, match="does not take"):
-        MetConfig(directory=tmp_path, download="hrrr", domain="ak")
+        HysplitMetConfig(directory=tmp_path, download="hrrr", domain="ak")
     with pytest.raises(ValueError, match="does not take"):
-        MetConfig(directory=tmp_path, download="nams", domian="ak")
+        HysplitMetConfig(directory=tmp_path, download="nams", domian="ak")
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +132,9 @@ def test_metconfig_rejects_an_option_the_archive_does_not_take(tmp_path):
 
 
 def _make_download_met(tmp_path: Path, download: str = "hrrr", **kwargs) -> Met:
-    return Met(download, MetConfig(directory=tmp_path, download=download, **kwargs))
+    return Met(
+        download, HysplitMetConfig(directory=tmp_path, download=download, **kwargs)
+    )
 
 
 def test_met_download_calls_fetch(tmp_path):
@@ -177,7 +179,7 @@ def test_met_download_with_subgrid_passes_bbox(tmp_path):
     bounds = Bounds(xmin=-114.0, xmax=-110.0, ymin=39.0, ymax=42.0)
     met = Met(
         "hrrr",
-        MetConfig(
+        HysplitMetConfig(
             directory=tmp_path,
             download="hrrr",
             subgrid_enable=True,
@@ -246,7 +248,7 @@ def _archive_met(tmp_path: Path, **kwargs) -> Met:
     }
     return Met(
         "hrrr",
-        MetConfig(directory=archive, subgrid_enable=True, **settings),
+        HysplitMetConfig(directory=archive, subgrid_enable=True, **settings),
     )
 
 
@@ -513,16 +515,16 @@ def test_a_failed_crop_leaves_nothing_behind(tmp_path):
 def test_cropping_local_files_needs_subgrid_dir(tmp_path):
     """Crops are never written into the met archive by default."""
     with pytest.raises(ValueError, match="subgrid_dir is required"):
-        MetConfig(directory=tmp_path, subgrid_enable=True, subgrid_bounds=BOUNDS)
+        HysplitMetConfig(directory=tmp_path, subgrid_enable=True, subgrid_bounds=BOUNDS)
 
 
 def test_a_met_needs_its_directory():
     with pytest.raises(ValueError, match="directory"):
-        MetConfig()
+        HysplitMetConfig()
 
 
 def test_metconfig_download_crop_needs_no_subgrid_dir(tmp_path):
-    cfg = MetConfig(
+    cfg = HysplitMetConfig(
         directory=tmp_path, download="hrrr", subgrid_enable=True, subgrid_bounds=BOUNDS
     )
     assert cfg.subgrid_dir is None
@@ -670,7 +672,7 @@ def test_missing_is_what_files_for_fails_for(tmp_path):
 
 
 def test_nothing_is_missing_for_a_download(tmp_path):
-    met = Met("hrrr", MetConfig(directory=tmp_path, download="hrrr"))
+    met = Met("hrrr", HysplitMetConfig(directory=tmp_path, download="hrrr"))
 
     assert met.missing(run_window(dt.datetime(2023, 1, 1, 12), -3)) == []
 
@@ -707,7 +709,7 @@ def test_checking_releases_lists_the_folder_once(tmp_path, monkeypatch):
 
 def _outside_crop(tmp_path, west, east, longitudes, latitude=40.0):
     """Return the longitudes that ``met_crop`` flags for a box from *west* to *east* and latitudes 30 to 50."""
-    config = MetConfig(
+    config = HysplitMetConfig(
         directory=tmp_path,
         download="hrrr",
         subgrid_enable=True,
@@ -1294,7 +1296,7 @@ def test_an_hourly_download_gets_the_next_file_only_past_the_last_step_of_a_file
 
 
 def test_met_config_construction(tmp_path):
-    mc = MetConfig(directory=tmp_path / "met")
+    mc = HysplitMetConfig(directory=tmp_path / "met")
     assert mc.directory == tmp_path / "met"
 
 
@@ -1303,8 +1305,8 @@ def test_met_config_construction(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def _local(directory: Path, **fields) -> MetConfig:
-    return MetConfig(directory=directory, **fields)
+def _local(directory: Path, **fields) -> HysplitMetConfig:
+    return HysplitMetConfig(directory=directory, **fields)
 
 
 def test_settings_are_the_source_in_the_file_header_and_the_crop(tmp_path):
@@ -1314,7 +1316,7 @@ def test_settings_are_the_source_in_the_file_header_and_the_crop(tmp_path):
 
 
 def test_a_downloaded_met_records_its_archive_source_without_reading_a_file(tmp_path):
-    met = MetConfig(directory=tmp_path / "nowhere", download="gfs0p25")
+    met = HysplitMetConfig(directory=tmp_path / "nowhere", download="gfs0p25")
 
     assert met.settings() == {"source": "GFSQ", "crop": None}
 
@@ -1334,7 +1336,7 @@ def test_a_met_with_no_arl_file_cannot_say_its_source(tmp_path):
 
 
 def test_a_met_whose_directory_does_not_exist_says_so(tmp_path):
-    config = MetConfig(directory=tmp_path / "gone")
+    config = HysplitMetConfig(directory=tmp_path / "gone")
 
     with pytest.raises(FileNotFoundError) as info:
         config.source()
@@ -1346,8 +1348,8 @@ def test_where_the_files_are_and_how_they_are_named_are_not_recorded(tmp_path):
     write_arl_file(tmp_path / "b" / "hrrr.20240718.t00z")
 
     assert (
-        MetConfig(directory=tmp_path / "a").settings()
-        == MetConfig(directory=tmp_path / "b").settings()
+        HysplitMetConfig(directory=tmp_path / "a").settings()
+        == HysplitMetConfig(directory=tmp_path / "b").settings()
     )
 
 

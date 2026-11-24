@@ -9,7 +9,7 @@ from runtraj.config import ProjectConfig
 from runtraj.execution.worker import run_result
 from runtraj.meteorology import run_window
 from runtraj.models import ModelRun, TransportModel, get_model
-from runtraj.models.hysplit import HysplitConfig, HysplitModel, Met, MetConfig
+from runtraj.models.hysplit import HysplitConfig, HysplitMetConfig, HysplitModel, Met
 from runtraj.models.hysplit.driver import PARTICLE_FILE
 from runtraj.output import Output
 from runtraj.particles import particles_metadata
@@ -178,7 +178,7 @@ class _EchoModel(TransportModel):
 
     name = "echo"
     config_class = HysplitConfig
-    met_config_class = MetConfig
+    met_config_class = HysplitMetConfig
     seen: dict = {}
 
     def sha256(self, config):

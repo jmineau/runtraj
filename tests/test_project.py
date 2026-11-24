@@ -8,7 +8,7 @@ import pytest
 
 from runtraj import Project
 from runtraj.config import ProjectConfig
-from runtraj.models.hysplit import MetConfig
+from runtraj.models.hysplit import HysplitMetConfig
 from runtraj.output import Output
 from runtraj.releases import PointRelease
 
@@ -29,7 +29,7 @@ _XYERR = {
 # ---------------------------------------------------------------------------
 
 
-def _met(tmp_path) -> MetConfig:
+def _met(tmp_path) -> HysplitMetConfig:
     return make_met_config(tmp_path / "met")
 
 

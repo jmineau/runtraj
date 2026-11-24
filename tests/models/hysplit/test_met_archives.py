@@ -24,7 +24,7 @@ import pytest
 from arlmet.archives import ARCHIVES, Archive, get_archive
 
 from runtraj.exceptions import MeteorologyError
-from runtraj.models.hysplit import Met, MetConfig
+from runtraj.models.hysplit import HysplitMetConfig, Met
 
 from ...fixtures.factories import write_arl_file
 
@@ -103,7 +103,7 @@ def _download_met(tmp_path: Path, name: str) -> Met:
         ]
 
     archive.fetch = fetch  # type: ignore[method-assign]
-    met = Met(name, MetConfig(directory=tmp_path, download=name))
+    met = Met(name, HysplitMetConfig(directory=tmp_path, download=name))
     met._archive = archive
     return met
 
@@ -121,7 +121,7 @@ def _local_met(tmp_path: Path, name: str, center: str) -> Met:
         held.setdefault(_file_of(archive, step), []).append(step)
     for file_name, times in held.items():
         write_arl_file(tmp_path / file_name, times=times)
-    return Met(name, MetConfig(directory=tmp_path))
+    return Met(name, HysplitMetConfig(directory=tmp_path))
 
 
 def _met(kind: str, tmp_path: Path, name: str, center: str) -> Met:

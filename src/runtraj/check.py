@@ -107,13 +107,12 @@ def _build_checks(variant: Variant) -> Iterator[_Check]:
 
 
 def _met_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
-    """Yield what the variant's transport model finds wrong with its met, for the project's releases."""
-    model = get_model(variant.model)
+    """Yield what the variant's met finds wrong with its files, for the project's releases (:meth:`runtraj.models.MetConfig.check`)."""
     n_hours = variant.transport.n_hours
 
     def make() -> list[_Finding]:
         """Return the model's findings for the project's releases as plain tuples."""
-        table = model.check_met(variant.met_config, rows, n_hours)
+        table = variant.met_config.check(rows, n_hours)
         return [
             (str(check), None if pd.isna(release) else str(release), str(message))
             for check, release, message in table.itertuples(index=False)

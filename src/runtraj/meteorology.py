@@ -2,7 +2,7 @@
 Meteorology for any transport model: the time a run covers (:func:`run_window`), and wind-error statistics.
 
 A transport model reads its meteorology itself, from a met config of its
-own: HYSPLIT's is :class:`runtraj.models.hysplit.MetConfig`.
+own: HYSPLIT's is :class:`runtraj.models.hysplit.HysplitMetConfig`.
 """
 
 from __future__ import annotations

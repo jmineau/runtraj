@@ -8,7 +8,7 @@ A model's or a stage's block holds its settings, the defaults of every
 variant that uses it, and no setting sits at the top level. Each part has
 its own config class, next to the code that uses it: the transport model's
 and its met config (such as :class:`~runtraj.models.hysplit.HysplitConfig`
-and :class:`~runtraj.models.hysplit.MetConfig`), a stage's, and
+and :class:`~runtraj.models.hysplit.HysplitMetConfig`), a stage's, and
 :class:`~runtraj.execution.ExecutionConfig`. A stage is named by the import
 path of its class (:mod:`runtraj.stages`), so this module imports none.
 :class:`ProjectConfig` reads the file and checks it without reading any
@@ -411,7 +411,7 @@ class ProjectConfig(BaseModel):
             "Meteorology by name, such as ``hrrr``: the folder of its files, or "
             "a mapping of its settings. At least one is required. Each is "
             "checked by the met config of the transport model that reads it "
-            "(:class:`runtraj.models.hysplit.MetConfig` for HYSPLIT)."
+            "(:class:`runtraj.models.hysplit.HysplitMetConfig` for HYSPLIT)."
         ),
     )
     models: dict[str, dict[str, Any] | None] = Field(

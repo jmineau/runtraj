@@ -350,13 +350,19 @@ executable it runs, `None` by default: part of the run's settings),
 `version` (what the build reports, recorded beside them) and `data_files`
 describe the build. `sha256` raises `FileNotFoundError` when
 the executable cannot be found; the project still opens, and its status
-compares stored folders without the build. The met config is a pydantic model that
-checks one entry under `mets:`; its `settings()` returns what a run records
-of the met (which weather it is, and anything else that changes the
-particles, never where its files are kept). HYSPLIT's is
-`runtraj.models.hysplit.MetConfig`, whose settings are the source id in
-the ARL headers and the crop. A model that reads no files can take any
-keys, with no directory. `met` is that config, its `directory` and
+compares stored folders without the build. The met config subclasses
+`runtraj.models.MetConfig`, a pydantic model that checks one entry under
+`mets:` and owns what is done with its files. It implements `settings()`,
+what a run records of the met (which weather it is, and anything else that
+changes the particles, never where its files are kept), and overrides
+what its files need of `check(releases, n_hours)` (what `runtraj check`
+lists before any run), `fetch(windows)` (what `runtraj fetch` gets),
+`downloads()` (whether `runtraj submit` gets the files once before the
+runs) and `open(files, bounds)` (the files as `runtraj.sampling` reads
+them: ARL file paths by default, or one Dataset in arlmet's layout).
+HYSPLIT's is `runtraj.models.hysplit.HysplitMetConfig`, whose settings are
+the source id in the ARL headers and the crop. A met that names no files
+keeps every default but `settings()`. `met` is that config, its `directory` and
 `subgrid_dir` absolute when it has them, and `window` the `(start, end)`
 the run covers; the model finds its own met from them. `run` returns a
 `ModelRun` whose `result` is of the type the model makes: a model that

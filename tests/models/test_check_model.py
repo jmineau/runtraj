@@ -250,7 +250,7 @@ class _FewRealizations(ToyModel):
         (_NamedModel, None, AssertionError, r"field named \['model'\]"),
         (_NoName, None, AssertionError, "name must be a string"),
         (_NotTransport, None, AssertionError, "TransportConfig"),
-        (_PlainMet, None, AssertionError, "pydantic model"),
+        (_PlainMet, None, AssertionError, "must subclass runtraj.models.MetConfig"),
         (_IntSha, None, AssertionError, "ModelInfo"),
         (_IntKeys, None, AssertionError, "ModelInfo"),
         (_Frame, RELEASES[0], AssertionError, "must return a ModelRun"),

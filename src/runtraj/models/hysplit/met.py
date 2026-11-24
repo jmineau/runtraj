@@ -1,9 +1,10 @@
 """
-HYSPLIT's meteorology: the met config (:class:`MetConfig`), and finding, downloading, and cropping ARL files (:class:`Met`).
+HYSPLIT's meteorology: the met config (:class:`HysplitMetConfig`), and finding, downloading, and cropping ARL files (:class:`Met`).
 """
 
 from __future__ import annotations
 
+import datetime as dt
 import functools
 import inspect
 import logging
@@ -15,13 +16,14 @@ from typing import TYPE_CHECKING, Any, Literal, Self
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
+from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from runtraj._paths import absolute, atomic_path
 from runtraj._transient import is_transient
 from runtraj.exceptions import MeteorologyError
 from runtraj.identity import settings_hash
 from runtraj.meteorology import run_window
+from runtraj.models import MetConfig
 from runtraj.spatial import Bounds
 
 from .catalog import Catalog, Cover, catalog_path, is_stray
@@ -32,7 +34,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class MetConfig(BaseModel):
+class HysplitMetConfig(MetConfig):
     """
     HYSPLIT's config for one met, as written under ``mets:`` in ``config.yaml``.
 
@@ -189,6 +191,63 @@ class MetConfig(BaseModel):
         """Extra fields, passed as keyword arguments to the arlmet archive."""
         return dict(self.model_extra) if self.model_extra else {}
 
+    def check(self, releases: pd.DataFrame, n_hours: int) -> pd.DataFrame:
+        """
+        Return what would stop HYSPLIT from running *releases* on this met, found before any run.
+
+        The checks of :meth:`Met.check_releases`: the met's directory
+        holds ARL files, every file a run needs is there, and the releases
+        are inside the crop. Nothing is run or downloaded, and files are read
+        no further than their headers.
+
+        Parameters
+        ----------
+        releases : pandas.DataFrame
+            One row per release point, with ``release``, ``time``,
+            ``longitude``, and ``latitude`` columns.
+        n_hours : int
+            The length of the runs, which sets the files each needs.
+
+        Returns
+        -------
+        pandas.DataFrame
+            ``check``, ``release`` (``NA`` for a problem of the met
+            itself), and ``message`` columns, one row for each problem.
+        """
+        return Met("met", self).check_releases(releases, n_hours)
+
+    def fetch(self, windows: Iterable[tuple[dt.datetime, dt.datetime]]) -> pd.DataFrame:
+        """
+        Get the met files that cover *windows*, downloading the ones a download lacks.
+
+        The files a run would ask for, one request to the archive for
+        windows that overlap (:meth:`Met.fetch`). A met without ``download``
+        is only checked for missing files.
+
+        Parameters
+        ----------
+        windows : iterable of tuple of datetime
+            The time each run covers (:func:`runtraj.meteorology.run_window`).
+
+        Returns
+        -------
+        pandas.DataFrame
+            ``file`` and ``message`` columns: a row for each file, then a
+            row for each window whose files could not be had.
+        """
+        return Met("met", self).fetch(windows)
+
+    def downloads(self) -> bool:
+        """
+        Whether this met downloads its files from an ARL archive (``download`` is set).
+
+        Examples
+        --------
+        >>> HysplitMetConfig(directory="/data/hrrr", download="hrrr").downloads()
+        True
+        """
+        return self.download is not None
+
 
 def _time(value: Any) -> pd.Timestamp:
     """Return *value* as a Timestamp, raising for a missing time."""
@@ -231,11 +290,11 @@ class Met:
     ----------
     name : str
         Name of the met in the config.
-    config : MetConfig
+    config : HysplitMetConfig
         Its settings.
     """
 
-    def __init__(self, name: str, config: MetConfig):
+    def __init__(self, name: str, config: HysplitMetConfig):
         self.name = name
         self.config = config
         #: ``config.directory``, made absolute. A relative path starts from
@@ -992,4 +1051,4 @@ def _first_source(directory: Path) -> str:
     )
 
 
-__all__ = ["Met", "MetConfig"]
+__all__ = ["Met", "HysplitMetConfig"]
