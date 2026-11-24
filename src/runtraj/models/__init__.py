@@ -4,8 +4,8 @@ The transport model interface.
 A transport model turns one release and one set of transport settings into
 a result: a particle table, or another type of result
 (:mod:`runtraj.results`). HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)
-and FLEXPART 11 (:class:`runtraj.models.flexpart.FlexpartModel`) are built in
-(:data:`MODELS`); a model in another package is named by its import
+and FLEXPART 11 (:class:`runtraj.models.flexpart.FlexpartModel`) are the
+models runtraj supports (:data:`MODELS`); a model in another package is named by its import
 path. The worker reaches
 a model through :func:`get_model` by the name a run's settings record, so
 another model needs no change to the worker.
@@ -87,7 +87,7 @@ class ModelInfo(BaseModel):
         ...,
         description=(
             "The model as its ``models`` block in ``config.yaml`` names it: "
-            "a built-in name such as ``hysplit``, or the import path of a "
+            "a supported model's name such as ``hysplit``, or the import path of a "
             "model class (the block's ``class``)."
         ),
     )
@@ -497,7 +497,7 @@ def _flexpart() -> TransportModel:
     return FlexpartModel()
 
 
-#: The transport models built in, by the name of their block under
+#: The transport models runtraj supports, by the name of their block under
 #: ``models:`` in ``config.yaml``: ``hysplit``, and ``flexpart``, which runs
 #: a FLEXPART 11 checkout you built. Any other model is named
 #: by its import path instead, the ``class`` of its block.
@@ -511,7 +511,7 @@ def get_model(name: str) -> TransportModel:
     """
     Return the transport model *name* names.
 
-    *name* is a built-in model (:data:`MODELS`, such as ``hysplit``) or the
+    *name* is a model runtraj supports (:data:`MODELS`, such as ``hysplit``) or the
     import path of a model class, such as ``emulator.runtraj.EmulatorModel``,
     which is imported and made with no arguments. A model in a package of
     its own needs no registration, so every process that opens the project
@@ -520,7 +520,7 @@ def get_model(name: str) -> TransportModel:
     Raises
     ------
     ValueError
-        If *name* is not a built-in model and not an import path, or the
+        If *name* is not a model runtraj supports and not an import path, or the
         class at the import path does not subclass :class:`TransportModel`
         or lacks one of its required members.
     MissingClass
@@ -552,7 +552,7 @@ def get_model(name: str) -> TransportModel:
     factory = MODELS.get(name)
     if factory is None:
         raise ValueError(
-            f"Unknown transport model {name!r}. The built-in models are "
+            f"Unknown transport model {name!r}. The models runtraj supports are "
             f"{sorted(MODELS)}; another is named by its import path, such as "
             "mypkg.models.MyModel."
         )
@@ -820,7 +820,7 @@ def run_trajectories(
         the folder of its files, and a relative folder starts from the
         working directory.
     model : str
-        The transport model: a built-in one (:data:`MODELS`, such as
+        The transport model: one runtraj supports (:data:`MODELS`, such as
         ``"hysplit"``) or the import path of a model class. There is no
         default.
     workdir : str or Path, optional

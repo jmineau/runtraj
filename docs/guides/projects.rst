@@ -87,8 +87,8 @@ and install the model yourself. runtraj supports two:
        concentration grids or single trajectories.
      - :doc:`../reference/hysplit`
    * - ``flexpart``
-     - `FLEXPART 11 <https://www.flexpart.eu>`_, a Lagrangian particle
-       dispersion model you build yourself, on ERA5 GRIB files.
+     - `FLEXPART 11 <https://www.flexpart.eu>`_, the University of
+       Vienna's open-source Lagrangian model, on ERA5 GRIB files.
      - :doc:`../reference/flexpart`
 
 A model from another package gets a block of any name with ``class:`` and

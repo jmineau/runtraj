@@ -22,7 +22,7 @@ building, releasing) and [docs/development/architecture.rst](docs/development/ar
 runtraj runs particle dispersion models at scale: projects of releases and
 variants, settings folders, completion by file, `run` and `submit`,
 realizations, the met catalog, and the transport models. It is not a model.
-**HYSPLIT** and **FLEXPART 11** are built in, and there is no default
+runtraj supports **HYSPLIT** and **FLEXPART 11** (the user installs the model), and there is no default
 model: `config.yaml` names one in its `models` block; any other model, and what is made from the
 particles after a run (a **stage**), plug in by the import path of a class.
 It is alpha software: **there are no backward-compatibility guarantees

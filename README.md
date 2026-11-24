@@ -25,7 +25,7 @@ other model, and what is made from the particles afterwards, plug in by the impo
 | Block in `config.yaml` | Transport model | How runtraj runs it |
 |---|---|---|
 | `hysplit` | [HYSPLIT](https://www.ready.noaa.gov/HYSPLIT.php), NOAA's model, on ARL met files | [HYSPLIT in runtraj](https://jmineau.github.io/runtraj/stable/reference/hysplit.html) |
-| `flexpart` | [FLEXPART 11](https://www.flexpart.eu), built from its source, on ERA5 | [FLEXPART in runtraj](https://jmineau.github.io/runtraj/stable/reference/flexpart.html) |
+| `flexpart` | [FLEXPART 11](https://www.flexpart.eu), the University of Vienna's open-source model, on ERA5 | [FLEXPART in runtraj](https://jmineau.github.io/runtraj/stable/reference/flexpart.html) |
 
 runtraj is not a model: it runs one, for every release and every set of settings, and
 keeps track of what is done.

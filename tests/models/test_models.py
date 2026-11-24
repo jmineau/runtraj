@@ -131,7 +131,8 @@ def test_with_several_models_a_met_no_variant_uses_is_not_checked(tmp_path, toy)
 
 def test_a_models_block_must_name_a_model(tmp_path, toy):
     with pytest.raises(
-        ValueError, match="models: nope: 'nope' is not a built-in transport model"
+        ValueError,
+        match="models: nope: 'nope' is not a transport model runtraj supports",
     ):
         ProjectConfig(mets=_mets(tmp_path), models={"nope": {}}, variants={"hrrr": {}})
     with pytest.raises(ValueError, match="class must be the import path"):

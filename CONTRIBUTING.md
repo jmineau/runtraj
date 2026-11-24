@@ -379,7 +379,7 @@ A model in a package of its own needs no registration: its block under
 project imports it from there. The run settings record the `class:`
 string as written, so the same class named by two paths
 (`mypkg.models.StillModel` and a re-export, `mypkg.StillModel`) gets two
-settings folders. Pick one path and keep it. A model built into runtraj
+settings folders. Pick one path and keep it. A model runtraj supports
 goes in `runtraj.models.MODELS` under a short name instead. Keep its
 package out of the core: the import contracts in `pyproject.toml` say how.
 

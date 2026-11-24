@@ -34,7 +34,7 @@ Glossary
    transport model
       The program that moves the particles through the meteorology.
       runtraj runs the one ``config.yaml`` names: it supports :term:`HYSPLIT`
-      and FLEXPART 11, and another can be added by the import path of its
+      and :term:`FLEXPART`, and another can be added by the import path of its
       class.
 
    HYSPLIT
@@ -43,6 +43,13 @@ Glossary
       runtraj supports (:doc:`../reference/hysplit`). runtraj runs its
       ``hycs_std`` executable, and ``hyts_std`` for single trajectories, and
       includes neither (:doc:`installation`).
+
+   FLEXPART
+      `The University of Vienna's open-source particle dispersion model
+      <https://www.flexpart.eu>`_, written in Fortran, one of the
+      :term:`transport models <transport model>` runtraj supports
+      (:doc:`../reference/flexpart`). runtraj runs FLEXPART 11 from its
+      source checkout and includes none of it.
 
    meteorology
       Gridded weather-model fields (winds, temperature, turbulence, mixed

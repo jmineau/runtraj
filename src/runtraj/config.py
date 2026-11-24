@@ -142,7 +142,7 @@ class Variant:
         :class:`~runtraj.models.hysplit.HysplitConfig`, with the base seed.
     model : str
         The transport model that runs it, as ``config.yaml`` names it: a
-        built-in name such as ``hysplit``, or a model class's import path.
+        supported model's name such as ``hysplit``, or a model class's import path.
         Its build is :attr:`build`.
     realizations : int or None
         Number of realizations of an ensemble, or ``None`` for a single run.
@@ -420,7 +420,7 @@ class ProjectConfig(BaseModel):
             "Transport models by name, each a block of its settings: the "
             "defaults of every variant that runs it. At least one is "
             "required: runtraj has no default model. A block named for a "
-            "built-in model (:data:`runtraj.models.MODELS`: ``hysplit`` or "
+            "model runtraj supports (:data:`runtraj.models.MODELS`: ``hysplit`` or "
             "``flexpart``) is that model, and ``hysplit: {}`` runs HYSPLIT "
             "with its own defaults. Any other model class gets a "
             "block of any name that gives its import path as ``class``, such "
@@ -875,7 +875,7 @@ def _model_blocks(
     setting belongs.
 
     The model is as :func:`runtraj.models.get_model` names it: the block's
-    ``class``, or the block's own name for a built-in model. The settings
+    ``class``, or the block's own name for a model runtraj supports. The settings
     are checked by name here, and by value as a variant runs them.
 
     Raises
@@ -907,8 +907,8 @@ def _model_blocks(
             )
         if "." not in model and model not in MODELS:
             raise ValueError(
-                f"{where}: {model!r} is not a built-in transport model (they "
-                f"are {sorted(MODELS)}). A model in another package gets "
+                f"{where}: {model!r} is not a transport model runtraj supports "
+                f"(they are {sorted(MODELS)}). A model in another package gets "
                 "class: with its import path, such as class: mypkg.models.MyModel."
             )
         if model in block_of:
