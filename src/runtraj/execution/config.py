@@ -133,12 +133,19 @@ class LocalConfig(BackendConfig):
     )
 
 
+#: Array tasks per worker in a Slurm run with no ``n_tasks``.
+TASKS_PER_WORKER = 10
+
+
 class SlurmConfig(BackendConfig):
     """
     The Slurm job array a project's releases run as: the ``slurm`` block of ``execution``.
 
-    The releases are split among ``n_workers`` tasks, and each task runs
-    ``cpus`` of them at once. Any key that is not a setting below is an
+    The releases are split among ``n_tasks`` array tasks, at most
+    ``n_workers`` of them running at once, and each task runs ``cpus`` of
+    them at once. Unset, ``n_tasks`` is :data:`TASKS_PER_WORKER` per worker,
+    so that a worker whose tasks run fast takes on more of them and one slow
+    task does not hold up the run. Any key that is not a setting below is an
     ``sbatch`` option by its name, such as ``exclude: node1`` or
     ``constraint: skl``, written to the job script as given (``true``
     writes the bare flag) and able to replace a line the script would
@@ -147,8 +154,8 @@ class SlurmConfig(BackendConfig):
     Examples
     --------
     >>> config = SlurmConfig(n_workers=100, time="02:00:00", exclude="node1")
-    >>> config.n_workers
-    100
+    >>> config.n_workers, config.tasks
+    (100, 1000)
     >>> config.options
     {'exclude': 'node1'}
     """
@@ -158,7 +165,19 @@ class SlurmConfig(BackendConfig):
     n_workers: int = Field(
         1,
         ge=1,
-        description="Number of array tasks, which the releases are split evenly among.",
+        description=(
+            "Most array tasks running at once (``--array=0-999%100`` for 100). "
+            "Each task asks for ``cpus`` CPUs."
+        ),
+    )
+    n_tasks: int | None = Field(
+        None,
+        ge=1,
+        description=(
+            "Number of array tasks, which the releases are split evenly among. "
+            "Unset, ten per worker. Never more than one per release, nor more "
+            "than the cluster's ``MaxArraySize`` (``scontrol show config``)."
+        ),
     )
     cpus: int = Field(
         1,
@@ -177,11 +196,6 @@ class SlurmConfig(BackendConfig):
     partition: str | None = Field(None, description="Slurm partition.")
     account: str | None = Field(None, description="Slurm account.")
     qos: str | None = Field(None, description="Slurm quality of service.")
-    array_parallelism: int | None = Field(
-        None,
-        ge=1,
-        description="Most tasks running at once. Unset leaves it to Slurm.",
-    )
     setup: list[str] = Field(
         default_factory=list,
         description=(
@@ -206,6 +220,11 @@ class SlurmConfig(BackendConfig):
     def _no_misspelled_setting(cls, data: Any) -> Any:
         """Refuse a key that reads as a misspelled setting, which would otherwise go to ``sbatch`` as an option."""
         if isinstance(data, dict):
+            if "array_parallelism" in data:
+                raise ValueError(
+                    "array_parallelism is now n_workers, the most array tasks "
+                    "running at once; n_tasks is the number of tasks."
+                )
             for key in data:
                 if key in cls.model_fields:
                     continue
@@ -246,8 +265,12 @@ class SlurmConfig(BackendConfig):
 
     @property
     def tasks(self) -> int:
-        """The number of array tasks, ``n_workers``."""
-        return self.n_workers
+        """The number of array tasks, ``n_tasks``, or ten per worker when it is unset; fewer when there are fewer releases."""
+        return (
+            self.n_tasks
+            if self.n_tasks is not None
+            else TASKS_PER_WORKER * self.n_workers
+        )
 
     def check(self) -> None:
         """Raise when the array has no time limit."""
@@ -826,6 +849,7 @@ __all__ = [
     "KubernetesConfig",
     "LocalConfig",
     "SlurmConfig",
+    "TASKS_PER_WORKER",
     "Volume",
     "block_name",
     "check_url",

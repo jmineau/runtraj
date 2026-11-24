@@ -21,7 +21,7 @@ name, here ``slurm``:
    execution:
      backend: slurm
      slurm:
-       n_workers: 200              # number of array tasks
+       n_workers: 200              # array tasks running at once
        account: my-account
        partition: my-partition
        time: "02:00:00"            # time limit per array task
@@ -52,13 +52,25 @@ Options
 The keys of the ``slurm`` block:
 
 ``n_workers``
-   How many array tasks to split the releases into. With 10,000 releases
-   and ``n_workers: 200``, each task runs 50 releases one after another.
+   The most array tasks running at once: how many workers the project
+   gets, each with ``cpus`` CPUs. When one task ends, Slurm starts the
+   next. ``n_workers: 100`` with 1000 tasks becomes ``--array=0-999%100``.
+
+``n_tasks``
+   How many array tasks to split the releases into. Unset, it is ten per
+   worker, so with 10,000 releases and ``n_workers: 100`` the array has
+   1000 tasks of 10 releases each, 100 running at once. We recommend
+   leaving it unset: a worker whose tasks run fast takes on more of them,
+   so one slow share does not hold up the run, and a task that runs out of
+   time has less left to do when it starts again. Each task first loads
+   Python and the project, which took about 3 s for a 10,000-release
+   project, small beside a transport model run of a minute or more.
+
    Each release runs once per variant, so set ``time`` long enough for one
-   task's share. If fewer releases are left than ``n_workers``, runtraj
-   submits one task per release. We size the tasks to run an hour or two,
-   because each task first loads Python and the project, and a shorter
-   task spends more of its time on that.
+   task's share. There is never more than one task per release, nor more
+   than the cluster's ``MaxArraySize`` (``scontrol show config``; 1001
+   unless the site changed it): unset, ``n_tasks`` stops there, and an
+   ``n_tasks`` above it is refused.
 
 ``cpus``
    CPUs per array task (default 1). With more than one, each task runs that
@@ -82,11 +94,6 @@ The keys of the ``slurm`` block:
 
 ``mem``, ``partition``, ``account``, ``qos``
    The ``sbatch`` options of the same names.
-
-``array_parallelism``
-   The most tasks allowed to run at once, to stay within your group's
-   limits. ``array_parallelism: 50`` becomes ``--array=0-199%50``. Unset,
-   Slurm's own limits apply.
 
 ``setup``
    Shell commands to run at the start of each task, before runtraj. Use it
@@ -135,7 +142,7 @@ each file is downloaded once. ``runtraj submit`` prints both job IDs:
 .. code-block:: text
 
    Submitted fetch job: 7712; the job array waits for it to end. Log in /path/my_project/_slurm/20261115_103000_ab12cd/fetch.log
-   Submitted job: 7713 (200 tasks); logs in /path/my_project/_slurm/20261115_103000_ab12cd
+   Submitted job: 7713 (1000 tasks); logs in /path/my_project/_slurm/20261115_103000_ab12cd
    Submitted job: 7713
 
 The fetch job uses the array's ``partition``, ``account``, ``qos``, ``time``

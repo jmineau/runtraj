@@ -30,12 +30,12 @@ class QueueConfig(BackendConfig):
     """The block of :class:`QueueBackend`, ``queue``: a queue name and a number of tasks."""
 
     queue: str | None = Field(None, description="The queue to submit to. Required.")
-    n_tasks: int = Field(4, ge=1, description="Number of tasks.")
+    pods: int = Field(4, ge=1, description="Number of tasks.")
 
     @property
     def tasks(self) -> int:
-        """The number of tasks, ``n_tasks``."""
-        return self.n_tasks
+        """The number of tasks, ``pods``."""
+        return self.pods
 
     def check(self) -> None:
         """Raise when no queue is named."""

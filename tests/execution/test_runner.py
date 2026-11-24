@@ -67,7 +67,8 @@ def test_submit_writes_a_submission_and_hands_it_to_sbatch(pending, commands, tm
     stored = yaml.safe_load((folder / "execution.yaml").read_text())
     assert ExecutionConfig.model_validate(stored) == execution
     text = Path(script).read_text(encoding="utf-8")
-    assert _sbatch(text)["array"] == "0-1"
+    # Three releases, so three tasks (ten per worker would be 20), two at once.
+    assert _sbatch(text)["array"] == "0-2%2"
     assert "--no-skip" in text
 
 

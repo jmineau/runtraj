@@ -289,7 +289,10 @@ _BACKEND = typer.Option(
 _N_WORKERS = typer.Option(
     None,
     "--n-workers",
-    help="Number of Slurm array tasks. Overrides execution.slurm.n_workers in config.yaml.",
+    help=(
+        "Most Slurm array tasks running at once. Overrides "
+        "execution.slurm.n_workers in config.yaml."
+    ),
 )
 _CPUS = typer.Option(
     None,

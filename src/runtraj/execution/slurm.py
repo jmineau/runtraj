@@ -16,6 +16,7 @@ SIGTERM as it does on every backend.
 from __future__ import annotations
 
 import logging
+import re
 import shlex
 import subprocess
 import sys
@@ -136,8 +137,9 @@ def job_script(
     slurm = execution.slurm
     options: dict[str, Any] = {
         "job-name": f"runtraj-{_project_slug(project.directory)}",
+        # At most n_workers tasks at once; Slurm starts the next as one ends.
         "array": f"0-{n_tasks - 1}"
-        + (f"%{slurm.array_parallelism}" if slurm.array_parallelism else ""),
+        + (f"%{slurm.n_workers}" if slurm.n_workers < n_tasks else ""),
         "cpus-per-task": slurm.cpus,
         "time": slurm.time,
         "mem": slurm.mem,
@@ -339,7 +341,11 @@ def submit_array(
         yaml.safe_dump(execution.model_dump(exclude_unset=True), sort_keys=False),
         encoding="utf-8",
     )
-    n_tasks = max(1, min(execution.slurm.n_workers, len(pending)))
+    n_tasks = array_size(
+        execution.slurm,
+        len(pending),
+        max_array_size(execution.slurm.options.get("clusters")),
+    )
     script = folder / "job.sh"
     script.write_text(
         job_script(
@@ -401,6 +407,61 @@ def submit_array(
 def _on_cluster(cluster: str | None) -> list[str]:
     """Return the words that send a Slurm command to *cluster* (``-M``); none for the default one."""
     return ["-M", cluster] if cluster else []
+
+
+#: Slurm's own ``MaxArraySize``, for a cluster whose ``scontrol`` does not say.
+SLURM_MAX_ARRAY_SIZE = 1001
+
+
+def max_array_size(cluster: str | None = None) -> int:
+    """
+    Return the most tasks a job array may have on *cluster*: its ``MaxArraySize``, from ``scontrol show config``.
+
+    Slurm's default, :data:`SLURM_MAX_ARRAY_SIZE`, when ``scontrol``
+    cannot be run or does not say. An array's indexes must be below it.
+    """
+    try:
+        result = subprocess.run(
+            ["scontrol", *_on_cluster(cluster), "show", "config"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return SLURM_MAX_ARRAY_SIZE
+    match = re.search(r"^MaxArraySize\s*=\s*(\d+)", result.stdout, re.M)
+    return int(match.group(1)) if match else SLURM_MAX_ARRAY_SIZE
+
+
+def array_size(slurm: SlurmConfig, n_releases: int, limit: int) -> int:
+    """
+    Return the number of tasks of a job array for *n_releases*: ``n_tasks``, or ten per worker.
+
+    Never more than one task per release, nor more than *limit*, the
+    cluster's ``MaxArraySize``.
+
+    Examples
+    --------
+    >>> from runtraj.execution import SlurmConfig
+    >>> array_size(SlurmConfig(n_workers=50), 10_000, limit=1000)
+    500
+    >>> array_size(SlurmConfig(n_workers=200), 10_000, limit=1000)
+    1000
+    >>> array_size(SlurmConfig(n_workers=50), 120, limit=1000)
+    120
+
+    Raises
+    ------
+    ValueError
+        If ``n_tasks`` is more than *limit*.
+    """
+    if slurm.n_tasks is not None and slurm.n_tasks > limit:
+        raise ValueError(
+            f"execution.slurm.n_tasks is {slurm.n_tasks}, and this cluster's job "
+            f"arrays have at most {limit} tasks (MaxArraySize). Set n_tasks to "
+            f"{limit} or fewer, or leave it unset."
+        )
+    return max(1, min(slurm.tasks, n_releases, limit))
 
 
 def _task_states(
@@ -542,9 +603,12 @@ class SlurmBackend(Backend):
 __all__ = [
     "MAX_REQUEUES",
     "NOTICE_SECONDS",
+    "SLURM_MAX_ARRAY_SIZE",
     "SlurmBackend",
+    "array_size",
     "fetch_script",
     "job_script",
+    "max_array_size",
     "submit_array",
     "wait",
 ]

@@ -445,8 +445,10 @@ def submit(
     """
     Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.
 
-    The releases with missing results are split among up to ``n_workers``
-    tasks of one job array, and this returns once it is submitted. The
+    The releases with missing results are split among the ``n_tasks``
+    tasks of one job array (:func:`runtraj.execution.slurm.array_size`), at
+    most ``n_workers`` running at once, and this returns once it is
+    submitted. The
     submission is a folder ``_slurm/<date_time>_<id>/`` in the project:
     ``releases.txt`` lists the releases to run, ``releases.parquet``
     holds their checked rows from ``releases.csv``, ``execution.yaml``

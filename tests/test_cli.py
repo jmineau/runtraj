@@ -660,7 +660,7 @@ def test_run_on_slurm_submits_and_waits(tmp_path, calls):
     execution = options["execution"]
     assert execution.backend == "slurm"
     assert (execution.slurm.n_workers, execution.slurm.cpus) == (4, 2)
-    assert "backend=slurm  tasks=4  cpus=2" in result.output
+    assert "backend=slurm  tasks=40  cpus=2" in result.output  # ten per worker
     assert "Submitting to Slurm and waiting for the job to finish" in result.output
 
 

@@ -13,11 +13,12 @@ from pathlib import Path
 import pytest
 
 from runtraj.execution import runner, slurm
-from runtraj.execution.config import ExecutionConfig
-from runtraj.execution.slurm import job_script
+from runtraj.execution.config import ExecutionConfig, SlurmConfig
+from runtraj.execution.slurm import array_size, job_script, max_array_size
 from tests.fixtures.platform import not_on_windows
 
 from ..fixtures.slurm import hourly_project as _hourly_project
+from ..fixtures.slurm import out as _out
 from ..fixtures.slurm import project_at as _project_at
 from ..fixtures.slurm import sbatch_options as _sbatch
 
@@ -33,14 +34,13 @@ def test_job_script_asks_for_what_the_execution_settings_say(tmp_path):
     execution = ExecutionConfig(
         backend="slurm",
         slurm={
-            "n_workers": 50,
+            "n_workers": 3,
             "cpus": 4,
             "time": "02:00:00",
             "mem": "8G",
             "partition": "lin-np",
             "account": "lin-np",
             "qos": "lin-np",
-            "array_parallelism": 10,
             "setup": ["module load gcc", "export OMP_NUM_THREADS=2"],
             "exclude": "notch345",
             "signal": "B:USR1@300",
@@ -53,7 +53,7 @@ def test_job_script_asks_for_what_the_execution_settings_say(tmp_path):
     assert script.startswith("#!/bin/bash\n")
     assert _sbatch(script) == {
         "job-name": "runtraj-my-project",
-        "array": "0-6%10",
+        "array": "0-6%3",  # 7 tasks, at most 3 at once
         "cpus-per-task": "4",
         "time": "02:00:00",  # as given
         "mem": "8G",
@@ -212,6 +212,65 @@ def test_job_script_is_valid_bash(tmp_path):
         )
     )
     subprocess.run(["bash", "-n", str(script)], check=True)
+
+
+# ---------------------------------------------------------------------------
+# How many tasks
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("settings", "releases", "tasks"),
+    [
+        pytest.param({"n_workers": 50}, 10_000, 500, id="ten-per-worker"),
+        pytest.param({"n_workers": 200}, 10_000, 1000, id="capped-at-the-limit"),
+        pytest.param({"n_workers": 50}, 120, 120, id="one-per-release"),
+        pytest.param({"n_workers": 4, "n_tasks": 6}, 100, 6, id="n_tasks"),
+        pytest.param({}, 0, 1, id="at-least-one"),
+    ],
+)
+def test_a_job_array_has_ten_tasks_per_worker_unless_told(settings, releases, tasks):
+    assert array_size(SlurmConfig(**settings), releases, limit=1000) == tasks
+
+
+def test_more_tasks_than_the_cluster_allows_are_refused():
+    with pytest.raises(ValueError, match=r"n_tasks is 2000.*at most 1000 tasks"):
+        array_size(SlurmConfig(n_tasks=2000), 10_000, limit=1000)
+
+
+def test_the_array_limit_is_the_cluster_s_max_array_size(commands):
+    commands.answers["scontrol"] = [
+        _out(
+            "Configuration data as of ...\nMaxArraySize            = 1000\nMaxJobCount = 1000000\n"
+        )
+    ]
+    assert max_array_size("kingspeak") == 1000
+    assert commands.ran == [["scontrol", "-M", "kingspeak", "show", "config"]]
+
+
+def test_the_array_limit_is_slurm_s_default_when_scontrol_does_not_say(
+    commands, monkeypatch
+):
+    assert max_array_size() == slurm.SLURM_MAX_ARRAY_SIZE
+
+    def missing(*args, **kwargs):
+        raise FileNotFoundError("scontrol")
+
+    monkeypatch.setattr(subprocess, "run", missing)
+    assert max_array_size() == slurm.SLURM_MAX_ARRAY_SIZE
+
+
+def test_a_job_array_runs_at_most_n_workers_tasks_at_once(tmp_path):
+    project = _project_at(tmp_path, output=tmp_path / "out")
+    four = ExecutionConfig(backend="slurm", slurm={"time": "01:00:00", "n_workers": 4})
+    assert _sbatch(job_script(project, four, tmp_path, 40))["array"] == "0-39%4"
+    # As many workers as tasks: nothing to hold back.
+    assert _sbatch(job_script(project, four, tmp_path, 3))["array"] == "0-2"
+
+
+def test_array_parallelism_says_it_is_now_n_workers():
+    with pytest.raises(ValueError, match="array_parallelism is now n_workers"):
+        SlurmConfig(array_parallelism=10)
 
 
 # ---------------------------------------------------------------------------

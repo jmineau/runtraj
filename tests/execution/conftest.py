@@ -22,6 +22,12 @@ def commands(monkeypatch):
         )
 
     monkeypatch.setattr(subprocess, "run", fake_run)
+    # A submit asks the cluster how many tasks an array may have; Slurm's default here.
+    from runtraj.execution import slurm
+
+    monkeypatch.setattr(
+        slurm, "max_array_size", lambda cluster=None: slurm.SLURM_MAX_ARRAY_SIZE
+    )
     # Run inside a Slurm job, the tests would see that job's cluster.
     monkeypatch.delenv("SLURM_CLUSTER_NAME", raising=False)
     return SimpleNamespace(ran=ran, answers=answers)

@@ -73,7 +73,7 @@ def test_its_block_is_checked_by_its_own_rules():
 
 def test_a_setting_of_its_block_outside_it_names_the_block():
     with pytest.raises(ValueError, match=r"Write it under execution: queue:"):
-        ExecutionConfig(backend=QUEUE, queue={"queue": "q"}, n_tasks=2)
+        ExecutionConfig(backend=QUEUE, queue={"queue": "q"}, pods=2)
 
 
 def test_its_block_is_refused_when_another_backend_is_named():
