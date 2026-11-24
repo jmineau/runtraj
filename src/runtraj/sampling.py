@@ -136,7 +136,9 @@ def sample_field(
 
     A point outside the field horizontally, or in a missing cell, gives
     ``fill_value``. Longitudes are wrapped to the field's convention (-180
-    to 180 or 0 to 360).
+    to 180 or 0 to 360), and a cell at one end of the field reaches across
+    the seam: on a global field from 0 to 359.75, a point at 359.9 is in
+    the cell at 0.
 
     Parameters
     ----------
@@ -195,6 +197,10 @@ def sample_field(
     if x_dim == "lon":
         xs = xs % 360.0 if lons.max() > 180.0 else ((xs + 180.0) % 360.0) - 180.0
     ix = nearest_cell(lons, xs)
+    if x_dim == "lon":
+        # A point past one end of the field may be in the cell at the other end, across the seam.
+        for shift in (-360.0, 360.0):
+            ix = np.where(ix >= 0, ix, nearest_cell(lons, xs + shift))
     iy = nearest_cell(field[y_dim].to_numpy(), ys)
     inside = (ix >= 0) & (iy >= 0)
 
