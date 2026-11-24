@@ -303,7 +303,8 @@ def _times(column: pd.Series, fail: Callable[[np.ndarray, str], None]) -> pd.Ser
     Return a release table's times as naive UTC times, calling *fail* on a row that has none.
 
     Text must be ISO 8601 or ``YYYYMMDDHHMM`` (:func:`_parse_time_text`);
-    datetimes are taken as they are, an aware one converted to UTC.
+    datetimes are taken as they are, an aware one converted to UTC. Seconds
+    are dropped, as :func:`~runtraj.releases.models.parse_time` drops them.
     """
     if pd.api.types.is_numeric_dtype(column):
         fail(
@@ -322,7 +323,7 @@ def _times(column: pd.Series, fail: Callable[[np.ndarray, str], None]) -> pd.Ser
     else:
         time = pd.to_datetime(column, utc=True)
         fail(time.isna().to_numpy(), "time is empty.")
-    return time.dt.tz_localize(None)
+    return time.dt.tz_localize(None).dt.floor("min")
 
 
 def _build(
