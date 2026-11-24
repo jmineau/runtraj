@@ -370,8 +370,9 @@ class PbsConfig(BackendConfig):
             for key in data:
                 if key in cls.model_fields:
                     continue
+                # 0.9, so PBS's own vmem, pmem, ncpus and min_walltime pass.
                 close = difflib.get_close_matches(
-                    str(key), list(cls.model_fields), n=1, cutoff=0.8
+                    str(key), list(cls.model_fields), n=1, cutoff=0.9
                 )
                 if close:
                     raise ValueError(

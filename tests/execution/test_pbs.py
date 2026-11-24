@@ -62,6 +62,11 @@ def test_a_misspelled_setting_is_refused_not_sent_to_qsub():
         PbsConfig(wallltime="01:00:00")
 
 
+def test_a_pbs_resource_spelled_like_a_setting_is_a_resource():
+    resources = {"vmem": "8gb", "pmem": "2gb", "ncpus": 4, "min_walltime": "00:30:00"}
+    assert PbsConfig(walltime="01:00:00", **resources).resources == resources
+
+
 def test_a_pbs_run_has_no_fetch_job():
     with pytest.raises(ValueError, match="fetch"):
         PbsConfig(fetch=True)

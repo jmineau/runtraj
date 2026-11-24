@@ -52,6 +52,9 @@ The keys of the ``pbs`` block:
 
 ``cpus``
    Releases each subjob runs at once, and the CPUs (``ncpus``) it asks for.
+   On a queue that gives every job a whole node, a subjob is charged the
+   node whatever ``cpus`` says: set ``cpus`` to the node's cores there, so
+   each subjob fills the node it pays for.
 
 ``walltime``
    The time limit of each subjob, as ``HH:MM:SS`` or seconds. It is

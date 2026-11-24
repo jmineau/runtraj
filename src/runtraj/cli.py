@@ -299,7 +299,7 @@ _CPUS = typer.Option(
     "--cpus",
     help=(
         "Releases each task runs at once (local processes, or CPUs per "
-        "Slurm task). Overrides cpus in the backend's block of execution "
+        "array task). Overrides cpus in the backend's block of execution "
         "in config.yaml."
     ),
 )
@@ -740,7 +740,7 @@ def submit(
     The releases are split among a Slurm or PBS job array's tasks, or a
     Kubernetes indexed Job's pods, with the resources under execution in
     config.yaml.
-    --releases limits a Slurm job array to the releases listed in a file.
+    --releases limits a job array to the releases listed in a file.
     Check on them with runtraj status.
     """
     if backend is None:

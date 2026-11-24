@@ -476,7 +476,7 @@ def run_here(
 #: Why :func:`submit` refuses the ``local`` backend.
 NOTHING_TO_SUBMIT = (
     "submit sends work to a scheduler, and this run's backend is 'local'. "
-    "Use run(), or set execution.backend to slurm or kubernetes."
+    "Use run(), or set execution.backend to slurm, pbs or kubernetes."
 )
 
 
@@ -550,7 +550,7 @@ def submit(
     Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.
 
     The releases with missing results are split among the ``n_tasks``
-    tasks of one job array (:func:`runtraj.execution.slurm.array_size`), at
+    tasks of one job array (:func:`array_size`), at
     most ``n_workers`` running at once, and this returns once it is
     submitted. The
     submission is a folder ``_slurm/<date_time>_<id>/`` in the project:
