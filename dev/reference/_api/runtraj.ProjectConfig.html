@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1046,8 +1046,8 @@ an error that names the nearest setting.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">models</span></code></p></td>
-<td><p>Transport models by name, each a block of its settings: the defaults of every variant that runs it. A block named <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> is that built-in model. Any other model class gets a block of any name that gives its import path as <code class="docutils literal notranslate"><span class="pre">class</span></code>, such as <code class="docutils literal notranslate"><span class="pre">class:</span> <span class="pre">mypkg.models.MyModel</span></code>. A model has one block. Left out, the project runs HYSPLIT with its defaults.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">{'hysplit':</span> <span class="pre">{}}</span></code></p></td>
+<td><p>Transport models by name, each a block of its settings: the defaults of every variant that runs it. At least one is required: runtraj has no default model. A block named for a model runtraj supports (<code class="xref py py-data docutils literal notranslate"><span class="pre">runtraj.models.MODELS</span></code>: <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> or <code class="docutils literal notranslate"><span class="pre">flexpart</span></code>) is that model, and <code class="docutils literal notranslate"><span class="pre">hysplit:</span> <span class="pre">{}</span></code> runs HYSPLIT with its own defaults. Any other model class gets a block of any name that gives its import path as <code class="docutils literal notranslate"><span class="pre">class</span></code>, such as <code class="docutils literal notranslate"><span class="pre">class:</span> <span class="pre">mypkg.models.MyModel</span></code>. A model has one block.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stages</span></code></p></td>
 <td><p>What is made from each simulation’s results after the transport model runs, by name, each a block that gives the stage’s import path as <code class="docutils literal notranslate"><span class="pre">class</span></code> and then its settings. A block is named for its stage: PYSTILT’s footprint, for example, is the block <code class="docutils literal notranslate"><span class="pre">footprint</span></code> with <code class="docutils literal notranslate"><span class="pre">class:</span> <span class="pre">stilt.footprint.FootprintStage</span></code>. A stage runs for every variant, unless the variant sets it to null. Left out, the project makes particles only.</p></td>

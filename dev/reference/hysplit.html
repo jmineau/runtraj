@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1008,8 +1008,7 @@
                   
   <section id="hysplit-integration">
 <h1>HYSPLIT Integration<a class="headerlink" href="#hysplit-integration" title="Link to this heading">#</a></h1>
-<p>HYSPLIT is the transport model behind every simulation, unless a variant
-names another (FLEXPART is built in too, <a class="reference internal" href="flexpart.html"><span class="doc">FLEXPART Integration</span></a>). The worker gets it as
+<p>A variant whose model block is <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> runs <a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT.php">HYSPLIT</a>. The worker gets it as
 <a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html#runtraj.models.hysplit.HysplitModel" title="runtraj.models.hysplit.HysplitModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitModel</span></code></a> (see <a class="reference internal" href="execution.html"><span class="doc">Execution</span></a>), which
 picks the met files, writes HYSPLIT’s input files, runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, and
 reads the particles it writes, or, with <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code>, its

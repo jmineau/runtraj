@@ -13,10 +13,15 @@ run under, and it runs the transport model once for each, on your computer
 or as a Slurm job array, and keeps the particles where you can find them
 again.
 
-`HYSPLIT <https://www.ready.noaa.gov/HYSPLIT.php>`_ is the transport model
-built in. Another model, and what is made from the particles after a run
-(a stage), plug in by the import path of a class. The footprints of
-`PYSTILT <https://jmineau.github.io/PYSTILT/>`_ are made by such a stage.
+You choose the transport model and install it yourself. runtraj supports
+two:
+
+- `HYSPLIT <https://www.ready.noaa.gov/HYSPLIT.php>`_ (:doc:`reference/hysplit`)
+- `FLEXPART 11 <https://www.flexpart.eu>`_ (:doc:`reference/flexpart`)
+
+Another model, and what is made from the particles after a run (a stage),
+plug in by the import path of a class. PYSTILT's footprint
+(``stilt.footprint.FootprintStage``) is one such stage.
 
 The particles follow the air, backward from a measurement or forward from
 a source, over hours to days, at the resolution of the meteorology you give

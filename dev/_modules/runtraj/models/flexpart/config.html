@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../../../../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -582,7 +582,8 @@
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"OpenMP threads. FLEXPART seeds each thread's random numbers with "</span>
             <span class="s2">"a fixed number, so the thread count changes the particles and is "</span>
-            <span class="s2">"recorded with the run. Each release runs FLEXPART with this many "</span>
+            <span class="s2">"recorded with the run. A run with one thread repeats exactly; "</span>
+            <span class="s2">"a run with several repeats only in distribution. Each release runs FLEXPART with this many "</span>
             <span class="s2">"threads, whatever ``OMP_NUM_THREADS`` is, so ask for ``threads`` "</span>
             <span class="s2">"cores for every release that runs at once (``cpus``)."</span>
         <span class="p">),</span>
@@ -595,7 +596,7 @@
         <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">"FLEXPART has no seed: it seeds each OpenMP thread with a fixed "</span>
-                <span class="s2">"number, so a run is repeated by its thread count (threads)."</span>
+                <span class="s2">"number, so a run with threads: 1 repeats exactly."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">seed</span>
 
@@ -691,9 +692,10 @@
 <span class="c1">#: ERA5's -228 W m-2 and 0.40 N m-2. With no turbulence the particles</span>
 <span class="c1">#: stayed at a median 8 m in a 1000 m mixed layer.</span>
 <span class="n">GFS_REFUSED</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"FLEXPART 11 does not mix its particles on GFS: it derives GFS's surface "</span>
-    <span class="s2">"heat flux and stress from the 2 m and 10 m values, which come out near "</span>
-    <span class="s2">"zero, so the particles stay near the ground. Use ERA5, as flex_extract writes it."</span>
+    <span class="s2">"On current GFS pgrb2 files FLEXPART 11 derives the surface heat flux and "</span>
+    <span class="s2">"stress near zero (the files hold no surface fluxes, so it derives them from "</span>
+    <span class="s2">"the 2 m and 10 m values), so particles released near the ground stay near "</span>
+    <span class="s2">"it. Use ERA5, as flex_extract writes it."</span>
 <span class="p">)</span>
 
 
@@ -707,9 +709,10 @@
 <span class="sd">    reads the valid time from each file's first message, so the names do</span>
 <span class="sd">    not matter. Which weather model the files come from is read from the</span>
 <span class="sd">    first file too (:meth:`source`): ERA5 as flex_extract writes it (``EA*``</span>
-<span class="sd">    files on model levels) runs, and GFS is refused, because FLEXPART 11</span>
-<span class="sd">    derives GFS's surface heat flux and stress itself, they come out near</span>
-<span class="sd">    zero, and its particles do not mix (:doc:`/reference/flexpart`).</span>
+<span class="sd">    files on model levels) runs, and GFS is refused, because on current GFS</span>
+<span class="sd">    ``pgrb2`` files FLEXPART 11 derives the surface heat flux and stress near</span>
+<span class="sd">    zero, so particles released near the ground stay near it</span>
+<span class="sd">    (:doc:`/reference/flexpart`).</span>
 
 <span class="sd">    A string in ``config.yaml`` is the ``directory``: ``era5: /path/to/era5``.</span>
 <span class="sd">    """</span>
@@ -773,8 +776,8 @@
 <span class="sd">        FileNotFoundError</span>
 <span class="sd">            If ``directory`` holds no GRIB file that matches ``pattern``.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the files are GFS, on which FLEXPART 11 does not mix its</span>
-<span class="sd">            particles, or are not ERA5.</span>
+<span class="sd">            If the files are GFS (FLEXPART 11 derives its surface fluxes</span>
+<span class="sd">            near zero), or are not ERA5.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.flexpart.met</span><span class="w"> </span><span class="kn">import</span> <span class="n">grib_source</span>

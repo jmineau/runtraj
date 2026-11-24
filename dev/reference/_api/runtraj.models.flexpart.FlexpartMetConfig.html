@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1019,9 +1019,10 @@
 reads the valid time from each file’s first message, so the names do
 not matter. Which weather model the files come from is read from the
 first file too (<a class="reference internal" href="runtraj.models.flexpart.FlexpartMetConfig.source.html#runtraj.models.flexpart.FlexpartMetConfig.source" title="runtraj.models.flexpart.FlexpartMetConfig.source"><code class="xref py py-meth docutils literal notranslate"><span class="pre">source()</span></code></a>): ERA5 as flex_extract writes it (<code class="docutils literal notranslate"><span class="pre">EA*</span></code>
-files on model levels) runs, and GFS is refused, because FLEXPART 11
-derives GFS’s surface heat flux and stress itself, they come out near
-zero, and its particles do not mix (<a class="reference internal" href="../flexpart.html"><span class="doc">FLEXPART Integration</span></a>).</p>
+files on model levels) runs, and GFS is refused, because on current GFS
+<code class="docutils literal notranslate"><span class="pre">pgrb2</span></code> files FLEXPART 11 derives the surface heat flux and stress near
+zero, so particles released near the ground stay near it
+(<a class="reference internal" href="../flexpart.html"><span class="doc">FLEXPART Integration</span></a>).</p>
 <p>A string in <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> is the <code class="docutils literal notranslate"><span class="pre">directory</span></code>: <code class="docutils literal notranslate"><span class="pre">era5:</span> <span class="pre">/path/to/era5</span></code>.</p>
 </dd></dl>
 

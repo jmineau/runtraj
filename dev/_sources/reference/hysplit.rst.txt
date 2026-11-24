@@ -1,8 +1,8 @@
 HYSPLIT Integration
 ===================
 
-HYSPLIT is the transport model behind every simulation, unless a variant
-names another (FLEXPART is built in too, :doc:`flexpart`). The worker gets it as
+A variant whose model block is ``hysplit`` runs `HYSPLIT
+<https://www.ready.noaa.gov/HYSPLIT.php>`_. The worker gets it as
 :class:`runtraj.models.hysplit.HysplitModel` (see :doc:`execution`), which
 picks the met files, writes HYSPLIT's input files, runs ``hycs_std``, and
 reads the particles it writes, or, with ``mode: concentration``, its

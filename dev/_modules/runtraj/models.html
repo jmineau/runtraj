@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -454,7 +454,8 @@
 <span class="sd">A transport model turns one release and one set of transport settings into</span>
 <span class="sd">a result: a particle table, or another type of result</span>
 <span class="sd">(:mod:`runtraj.results`). HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)</span>
-<span class="sd">is the one built in; a model in another package is named by its import</span>
+<span class="sd">and FLEXPART 11 (:class:`runtraj.models.flexpart.FlexpartModel`) are the</span>
+<span class="sd">models runtraj supports (:data:`MODELS`); a model in another package is named by its import</span>
 <span class="sd">path. The worker reaches</span>
 <span class="sd">a model through :func:`get_model` by the name a run's settings record, so</span>
 <span class="sd">another model needs no change to the worker.</span>
@@ -541,7 +542,7 @@
         <span class="o">...</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"The model as its ``models`` block in ``config.yaml`` names it: "</span>
-            <span class="s2">"a built-in name such as ``hysplit``, or the import path of a "</span>
+            <span class="s2">"a supported model's name such as ``hysplit``, or the import path of a "</span>
             <span class="s2">"model class (the block's ``class``)."</span>
         <span class="p">),</span>
     <span class="p">)</span>
@@ -1009,7 +1010,7 @@
     <span class="k">return</span> <span class="n">FlexpartModel</span><span class="p">()</span>
 
 
-<span class="c1">#: The transport models built in, by the name of their block under</span>
+<span class="c1">#: The transport models runtraj supports, by the name of their block under</span>
 <span class="c1">#: ``models:`` in ``config.yaml``: ``hysplit``, and ``flexpart``, which runs</span>
 <span class="c1">#: a FLEXPART 11 checkout you built. Any other model is named</span>
 <span class="c1">#: by its import path instead, the ``class`` of its block.</span>
@@ -1025,7 +1026,7 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the transport model *name* names.</span>
 
-<span class="sd">    *name* is a built-in model (:data:`MODELS`, such as ``hysplit``) or the</span>
+<span class="sd">    *name* is a model runtraj supports (:data:`MODELS`, such as ``hysplit``) or the</span>
 <span class="sd">    import path of a model class, such as ``emulator.runtraj.EmulatorModel``,</span>
 <span class="sd">    which is imported and made with no arguments. A model in a package of</span>
 <span class="sd">    its own needs no registration, so every process that opens the project</span>
@@ -1034,7 +1035,7 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If *name* is not a built-in model and not an import path, or the</span>
+<span class="sd">        If *name* is not a model runtraj supports and not an import path, or the</span>
 <span class="sd">        class at the import path does not subclass :class:`TransportModel`</span>
 <span class="sd">        or lacks one of its required members.</span>
 <span class="sd">    MissingClass</span>
@@ -1066,7 +1067,7 @@
     <span class="n">factory</span> <span class="o">=</span> <span class="n">MODELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">factory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Unknown transport model </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. The built-in models are "</span>
+            <span class="sa">f</span><span class="s2">"Unknown transport model </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. The models runtraj supports are "</span>
             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MODELS</span><span class="p">)</span><span class="si">}</span><span class="s2">; another is named by its import path, such as "</span>
             <span class="s2">"mypkg.models.MyModel."</span>
         <span class="p">)</span>
@@ -1318,7 +1319,7 @@
     <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span>
     <span class="n">met</span><span class="p">:</span> <span class="n">BaseModel</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hysplit"</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">workdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
@@ -1342,8 +1343,10 @@
 <span class="sd">        (:class:`runtraj.models.hysplit.HysplitMetConfig` for HYSPLIT). A string is</span>
 <span class="sd">        the folder of its files, and a relative folder starts from the</span>
 <span class="sd">        working directory.</span>
-<span class="sd">    model : str, default "hysplit"</span>
-<span class="sd">        The transport model.</span>
+<span class="sd">    model : str</span>
+<span class="sd">        The transport model: one runtraj supports (:data:`MODELS`, such as</span>
+<span class="sd">        ``"hysplit"``) or the import path of a model class. There is no</span>
+<span class="sd">        default.</span>
 <span class="sd">    workdir : str or Path, optional</span>
 <span class="sd">        Directory the model runs in, kept afterwards for a look at its</span>
 <span class="sd">        files. It must be empty or not exist yet. Without it the model runs</span>
@@ -1390,7 +1393,7 @@
 <span class="sd">    ...     numpar=200,  # HYSPLIT's particle count</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
 <span class="sd">    &gt;&gt;&gt; table = runtraj.run_trajectories(</span>
-<span class="sd">    ...     release, "/data/hrrr", n_hours=-24, mode="trajectory"</span>
+<span class="sd">    ...     release, "/data/hrrr", model="hysplit", n_hours=-24, mode="trajectory"</span>
 <span class="sd">    ... )  # doctest: +SKIP</span>
 <span class="sd">    """</span>
     <span class="n">transport_model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>

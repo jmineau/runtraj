@@ -15,7 +15,7 @@ releases and stores the results.
 
 .. code-block:: python
 
-   particles = runtraj.run_trajectories(release, met, n_hours=-24, numpar=200)
+   particles = runtraj.run_trajectories(release, met, model="hysplit", n_hours=-24, numpar=200)
 
 .. autosummary::
    :toctree: _api

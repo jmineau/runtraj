@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1022,8 +1022,9 @@ the executable you built, and reads the particles it writes.</p>
 </pre></div>
 </div>
 <p>FLEXPART support is new, and two things about FLEXPART 11 itself limit
-what you can use it for today: it runs on ERA5 only, and a run with
-several threads does not repeat exactly. Read <a class="reference internal" href="#meteorology">Meteorology</a> and
+what you can use it for today: it runs on ERA5 only (on GFS it derives
+the surface fluxes near zero), and a run with several threads does not
+repeat exactly. Read <a class="reference internal" href="#meteorology">Meteorology</a> and
 <a class="reference internal" href="#repeating-a-run">Repeating a run</a> before you rely on a result.</p>
 <section id="the-flexpart-build">
 <h2>The FLEXPART build<a class="headerlink" href="#the-flexpart-build" title="Link to this heading">#</a></h2>
@@ -1060,13 +1061,14 @@ which FLEXPART reads only when it was built with <code class="docutils literal n
 <code class="docutils literal notranslate"><span class="pre">src/par_mod.f90</span></code>.</p>
 </dd>
 </dl>
-<p>GFS (<code class="docutils literal notranslate"><span class="pre">centre</span></code> <code class="docutils literal notranslate"><span class="pre">kwbc</span></code>) is refused, because FLEXPART 11 does not mix its particles
-on GFS. NCEP’s <code class="docutils literal notranslate"><span class="pre">pgrb2</span></code> files hold no surface fluxes, so FLEXPART derives
-the surface heat flux and stress from the 2 m and 10 m values against its
-lowest level, which GFS diagnoses from that same layer. At a mountain site
-at midday they came out near zero (0 W m<sup>-2</sup> where ERA5 has -228),
-and particles released near the ground stayed at a median 8 m in a 1000 m
-mixed layer. GFS comes back once FLEXPART reads GFS’s own fluxes. Any
+<p>GFS (<code class="docutils literal notranslate"><span class="pre">centre</span></code> <code class="docutils literal notranslate"><span class="pre">kwbc</span></code>) is refused, because on current GFS <code class="docutils literal notranslate"><span class="pre">pgrb2</span></code>
+files FLEXPART 11 derives the surface heat flux and stress near zero, so
+particles released near the ground stay near it. NCEP’s <code class="docutils literal notranslate"><span class="pre">pgrb2</span></code> files
+hold no surface fluxes, so FLEXPART derives them from the 2 m and 10 m
+values against its lowest level, which GFS diagnoses from that same layer.
+At a mountain site at midday the heat flux came out at 0 W m<sup>-2</sup>
+where ERA5 has -228, and particles released near the ground stayed at a
+median 8 m in a 1000 m mixed layer. GFS comes back once FLEXPART reads GFS’s own fluxes. Any
 other GRIB, such as ECMWF’s operational analysis (class <code class="docutils literal notranslate"><span class="pre">od</span></code>), is refused
 too, naming what its first file says it is.</p>
 <p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span></code> do nothing for a FLEXPART met yet.
@@ -1103,9 +1105,12 @@ same cores.</p>
 <h3>Repeating a run<a class="headerlink" href="#repeating-a-run" title="Link to this heading">#</a></h3>
 <p>FLEXPART has no seed setting, so <code class="docutils literal notranslate"><span class="pre">seed</span></code> is refused. It seeds each
 thread’s random numbers with a fixed number, which is why <code class="docutils literal notranslate"><span class="pre">threads</span></code>
-is part of a run’s settings. Runs with several threads still
-differ: two runs with the same build, met and 8 threads gave median
-particle heights of 1335 m and 1397 m over the first three hours.</p>
+is part of a run’s settings. A run with one thread repeats exactly; a
+run with several repeats only in distribution. Two runs 24 hours back on
+ERA5 with the eta build and 1000 particles were identical at every output
+time with <code class="docutils literal notranslate"><span class="pre">threads:</span> <span class="pre">1</span></code>. With <code class="docutils literal notranslate"><span class="pre">threads:</span> <span class="pre">8</span></code> every particle differed from
+the first output on, and the median heights over the first three hours
+were 1285 m and 1314 m.</p>
 </section>
 </section>
 <section id="the-particles">

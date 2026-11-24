@@ -33,7 +33,7 @@ back from 10 m above Salt Lake Valley:
        time="2021-07-15 10:30", longitude=-112.0, latitude=40.5, altitude=10
    )
    trajectories = runtraj.run_trajectories(
-       release, "/data/hrrr", n_hours=-6, mode="trajectory"
+       release, "/data/hrrr", model="hysplit", n_hours=-6, mode="trajectory"
    )
    trajectories
 
@@ -120,7 +120,7 @@ at one place, at different heights, which is how you compare levels:
        altitudes=[10, 500, 100],
    )
    trajectories = runtraj.run_trajectories(
-       levels, "/data/hrrr", n_hours=6, mode="trajectory", tout=30, tm_tpot=1, tm_mixd=1
+       levels, "/data/hrrr", model="hysplit", n_hours=6, mode="trajectory", tout=30, tm_tpot=1, tm_mixd=1
    )
    trajectories.head(6)
 

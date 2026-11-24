@@ -33,13 +33,23 @@ Glossary
 
    transport model
       The program that moves the particles through the meteorology.
-      runtraj runs it; :term:`HYSPLIT` is the one built in, and another can
-      be added by the import path of its class.
+      runtraj runs the one ``config.yaml`` names: it supports :term:`HYSPLIT`
+      and :term:`FLEXPART`, and another can be added by the import path of its
+      class.
 
    HYSPLIT
-      NOAA's particle dispersion model, written in Fortran, and runtraj's
-      built-in :term:`transport model`. runtraj runs its ``hycs_std``
-      executable and does not include it (:doc:`installation`).
+      `NOAA's particle dispersion model <https://www.ready.noaa.gov/HYSPLIT.php>`_,
+      written in Fortran, one of the :term:`transport models <transport model>`
+      runtraj supports (:doc:`../reference/hysplit`). runtraj runs its
+      ``hycs_std`` executable, and ``hyts_std`` for single trajectories, and
+      includes neither (:doc:`installation`).
+
+   FLEXPART
+      `The University of Vienna's open-source particle dispersion model
+      <https://www.flexpart.eu>`_, written in Fortran, one of the
+      :term:`transport models <transport model>` runtraj supports
+      (:doc:`../reference/flexpart`). runtraj runs FLEXPART 11 from its
+      source checkout and includes none of it.
 
    meteorology
       Gridded weather-model fields (winds, temperature, turbulence, mixed

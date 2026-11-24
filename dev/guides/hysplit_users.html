@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -560,7 +560,7 @@ hour and are followed 6 hours forward:</p>
 <span class="gp">   ...: </span>
 
 <span class="gp">In [3]: </span><span class="n">cloud</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-<span class="gp">   ...: </span>    <span class="n">start</span><span class="p">,</span> <span class="n">met_dir</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">emisshrs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="gp">   ...: </span>    <span class="n">start</span><span class="p">,</span> <span class="n">met_dir</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">emisshrs</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
 <span class="gp">   ...: </span>    <span class="n">krand</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
 <span class="gp">   ...: </span><span class="p">)</span>
 <span class="gp">   ...: </span>
@@ -591,7 +591,7 @@ file holds from its header, and gives HYSPLIT the ones the run needs.
 particle with turbulence off follows the same path, so <code class="docutils literal notranslate"><span class="pre">numpar=1</span></code> and
 <code class="docutils literal notranslate"><span class="pre">nturb=1</span></code> give you a trajectory:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [5]: </span><span class="n">path</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-<span class="gp">   ...: </span>    <span class="n">start</span><span class="p">,</span> <span class="n">met_dir</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nturb</span><span class="o">=</span><span class="mi">1</span>
+<span class="gp">   ...: </span>    <span class="n">start</span><span class="p">,</span> <span class="n">met_dir</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nturb</span><span class="o">=</span><span class="mi">1</span>
 <span class="gp">   ...: </span><span class="p">)</span>
 <span class="gp">   ...: </span>
 

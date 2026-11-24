@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1015,7 +1015,7 @@
 <dt class="sig sig-object py" id="runtraj.models.get_model">
 <span class="sig-prename descclassname"><span class="pre">runtraj.models.</span></span><span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models.html#get_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.get_model" title="Link to this definition">#</a></dt>
 <dd><p>Return the transport model <em>name</em> names.</p>
-<p><em>name</em> is a built-in model (<code class="xref py py-data docutils literal notranslate"><span class="pre">MODELS</span></code>, such as <code class="docutils literal notranslate"><span class="pre">hysplit</span></code>) or the
+<p><em>name</em> is a model runtraj supports (<code class="xref py py-data docutils literal notranslate"><span class="pre">MODELS</span></code>, such as <code class="docutils literal notranslate"><span class="pre">hysplit</span></code>) or the
 import path of a model class, such as <code class="docutils literal notranslate"><span class="pre">emulator.runtraj.EmulatorModel</span></code>,
 which is imported and made with no arguments. A model in a package of
 its own needs no registration, so every process that opens the project
@@ -1023,7 +1023,7 @@ finds it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>name</em> is not a built-in model and not an import path, or the
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>name</em> is not a model runtraj supports and not an import path, or the
     class at the import path does not subclass <a class="reference internal" href="runtraj.models.TransportModel.html#runtraj.models.TransportModel" title="runtraj.models.TransportModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransportModel</span></code></a>
     or lacks one of its required members.</p></li>
 <li><p><a class="reference internal" href="runtraj.exceptions.MissingClass.html#runtraj.exceptions.MissingClass" title="runtraj.exceptions.MissingClass"><strong>MissingClass</strong></a> – If <em>name</em> is an import path that cannot be imported on this machine

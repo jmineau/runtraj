@@ -194,8 +194,9 @@ Transport model
 ----------------
 
 The worker runs a simulation through the transport model its settings name.
-HYSPLIT (:doc:`hysplit`) and FLEXPART 11 (:doc:`flexpart`) are built in,
-and CONTRIBUTING describes how to add another, named by its import path.
+runtraj supports HYSPLIT (:doc:`hysplit`) and FLEXPART 11 (:doc:`flexpart`),
+and has no default: ``config.yaml`` names the model in its
+``models`` block. CONTRIBUTING describes how to add another, named by its import path.
 A model fails a run that its meteorology does not cover, as
 ``MET_COVERAGE``. Particles that all leave the met's domain before the end
 of the run are a complete run. Use :func:`~runtraj.models.check_model` in

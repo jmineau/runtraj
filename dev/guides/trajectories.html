@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -525,7 +525,7 @@ back from 10 m above Salt Lake Valley:</p>
     <span class="n">time</span><span class="o">=</span><span class="s2">"2021-07-15 10:30"</span><span class="p">,</span> <span class="n">longitude</span><span class="o">=-</span><span class="mf">112.0</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="mf">40.5</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="mi">10</span>
 <span class="p">)</span>
 <span class="n">trajectories</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-    <span class="n">release</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=-</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span>
+    <span class="n">release</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=-</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span>
 <span class="p">)</span>
 <span class="n">trajectories</span>
 </pre></div>
@@ -621,7 +621,7 @@ at one place, at different heights, which is how you compare levels:</p>
     <span class="n">altitudes</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
 <span class="p">)</span>
 <span class="n">trajectories</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-    <span class="n">levels</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span><span class="p">,</span> <span class="n">tout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">tm_tpot</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tm_mixd</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">levels</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span><span class="p">,</span> <span class="n">tout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">tm_tpot</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tm_mixd</span><span class="o">=</span><span class="mi">1</span>
 <span class="p">)</span>
 <span class="n">trajectories</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 </pre></div>

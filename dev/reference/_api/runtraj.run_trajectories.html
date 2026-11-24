@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1013,7 +1013,7 @@
 <h1>runtraj.run_trajectories<a class="headerlink" href="#runtraj-run-trajectories" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.run_trajectories">
-<span class="sig-prename descclassname"><span class="pre">runtraj.</span></span><span class="sig-name descname"><span class="pre">run_trajectories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">release</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hysplit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models.html#run_trajectories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.run_trajectories" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.</span></span><span class="sig-name descname"><span class="pre">run_trajectories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">release</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models.html#run_trajectories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.run_trajectories" title="Link to this definition">#</a></dt>
 <dd><p>Run the transport model for one release and return what it made, particles unless the settings say another type.</p>
 <p>This is what a project runs for each release, without a project: the
 result is returned, not stored. Its type follows the settings, as a
@@ -1029,7 +1029,9 @@ checked by the model’s met config
 (<a class="reference internal" href="runtraj.models.hysplit.HysplitMetConfig.html#runtraj.models.hysplit.HysplitMetConfig" title="runtraj.models.hysplit.HysplitMetConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitMetConfig</span></code></a> for HYSPLIT). A string is
 the folder of its files, and a relative folder starts from the
 working directory.</p></li>
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The transport model.</p></li>
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The transport model: one runtraj supports (<code class="xref py py-data docutils literal notranslate"><span class="pre">MODELS</span></code>, such as
+<code class="docutils literal notranslate"><span class="pre">&quot;hysplit&quot;</span></code>) or the import path of a model class. There is no
+default.</p></li>
 <li><p><strong>workdir</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Directory the model runs in, kept afterwards for a look at its
 files. It must be empty or not exist yet. Without it the model runs
 in a temporary directory that is removed.</p></li>
@@ -1073,7 +1075,7 @@ concentration grids (<code class="xref py py-mod docutils literal notranslate"><
 <span class="gp">... </span>    <span class="n">numpar</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>  <span class="c1"># HYSPLIT's particle count</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">release</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=-</span><span class="mi">24</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span>
+<span class="gp">... </span>    <span class="n">release</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=-</span><span class="mi">24</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>

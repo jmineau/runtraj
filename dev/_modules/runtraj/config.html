@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1275376d"></script>
+    <script src="../../_static/documentation_options.js?v=ff9586d1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev2+g22d4c7919" />
+  <meta name="docsearch:version" content="0.1.0a6.dev3+gf8501aa1a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -594,7 +594,7 @@
 <span class="sd">        :class:`~runtraj.models.hysplit.HysplitConfig`, with the base seed.</span>
 <span class="sd">    model : str</span>
 <span class="sd">        The transport model that runs it, as ``config.yaml`` names it: a</span>
-<span class="sd">        built-in name such as ``hysplit``, or a model class's import path.</span>
+<span class="sd">        supported model's name such as ``hysplit``, or a model class's import path.</span>
 <span class="sd">        Its build is :attr:`build`.</span>
 <span class="sd">    realizations : int or None</span>
 <span class="sd">        Number of realizations of an ensemble, or ``None`` for a single run.</span>
@@ -906,14 +906,16 @@
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">models</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s2">"hysplit"</span><span class="p">:</span> <span class="p">{}},</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Transport models by name, each a block of its settings: the "</span>
-            <span class="s2">"defaults of every variant that runs it. A block named "</span>
-            <span class="s2">"``hysplit`` is that built-in model. Any other model class gets a "</span>
+            <span class="s2">"defaults of every variant that runs it. At least one is "</span>
+            <span class="s2">"required: runtraj has no default model. A block named for a "</span>
+            <span class="s2">"model runtraj supports (:data:`runtraj.models.MODELS`: ``hysplit`` or "</span>
+            <span class="s2">"``flexpart``) is that model, and ``hysplit: </span><span class="si">{}</span><span class="s2">`` runs HYSPLIT "</span>
+            <span class="s2">"with its own defaults. Any other model class gets a "</span>
             <span class="s2">"block of any name that gives its import path as ``class``, such "</span>
-            <span class="s2">"as ``class: mypkg.models.MyModel``. A model has "</span>
-            <span class="s2">"one block. Left out, the project runs HYSPLIT with its defaults."</span>
+            <span class="s2">"as ``class: mypkg.models.MyModel``. A model has one block."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">stages</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1377,19 +1379,22 @@
 <span class="sd">    setting belongs.</span>
 
 <span class="sd">    The model is as :func:`runtraj.models.get_model` names it: the block's</span>
-<span class="sd">    ``class``, or the block's own name for a built-in model. The settings</span>
+<span class="sd">    ``class``, or the block's own name for a model runtraj supports. The settings</span>
 <span class="sd">    are checked by name here, and by value as a variant runs them.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If there is no block, a block names no model, two blocks name one</span>
+<span class="sd">        If there is no block (runtraj has no default model), a block names no model, two blocks name one</span>
 <span class="sd">        model, or a block holds what is no setting of its model.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">models</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"models: has no block. Leave it out to run HYSPLIT with its "</span>
-            <span class="s2">"defaults, or write models: {hysplit: </span><span class="si">{}</span><span class="s2">}."</span>
+            <span class="s2">"The config names no transport model. Add a models: block for the "</span>
+            <span class="sa">f</span><span class="s2">"one to run: a model runtraj supports (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MODELS</span><span class="p">))</span><span class="si">}</span><span class="s2">), such "</span>
+            <span class="s2">"as</span><span class="se">\n</span><span class="s2">  models:</span><span class="se">\n</span><span class="s2">    hysplit: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">to run it with its own defaults, "</span>
+            <span class="s2">"or a block of any name with class: and the import path of a model "</span>
+            <span class="s2">"class in another package, such as class: mypkg.models.MyModel."</span>
         <span class="p">)</span>
     <span class="n">blocks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">block_of</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1406,8 +1411,8 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="s2">"."</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model</span> <span class="ow">and</span> <span class="n">model</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MODELS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">model</span><span class="si">!r}</span><span class="s2"> is not a built-in transport model (they "</span>
-                <span class="sa">f</span><span class="s2">"are </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MODELS</span><span class="p">)</span><span class="si">}</span><span class="s2">). A model in another package gets "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">model</span><span class="si">!r}</span><span class="s2"> is not a transport model runtraj supports "</span>
+                <span class="sa">f</span><span class="s2">"(they are </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MODELS</span><span class="p">)</span><span class="si">}</span><span class="s2">). A model in another package gets "</span>
                 <span class="s2">"class: with its import path, such as class: mypkg.models.MyModel."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">block_of</span><span class="p">:</span>
