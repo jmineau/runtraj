@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.error
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -755,7 +756,8 @@ def test_a_pod_runs_a_project_whose_inputs_are_on_a_bucket(
     )
 
     assert result.exit_code == 0, result.output
-    assert (tmp_path / "pod-tmp" / "runtraj-inputs" / "proj" / "releases.csv").exists()
+    [copy] = (tmp_path / "pod-tmp" / "runtraj-inputs").glob("*/proj")
+    assert (copy / "releases.csv").exists()
     [(_, options)] = calls
     assert options["task"] == (1, 2)
 
@@ -913,8 +915,27 @@ def test_a_tick_adds_the_due_hours_on_the_bucket_and_runs_them_here(
     assert len(options["releases"]) == len(hours)
     assert options["execution"].backend == "local"
     assert options["execution"].cpus == 2
-    rows = Project(tmp_path / "pod-tmp" / "runtraj-inputs" / "proj").releases
+    [copy] = (tmp_path / "pod-tmp" / "runtraj-inputs").glob("*/proj")
+    rows = Project(copy).releases
     assert len(rows) == 2 + len(hours)
+
+
+def test_two_urls_of_one_name_are_copied_to_two_folders(tmp_path, monkeypatch):
+    """Two tasks on one machine, or two projects named alike, never read each other's inputs."""
+    from runtraj.cli import _local_inputs
+    from runtraj.execution.inputs import push
+
+    project = _project(tmp_path)
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "tmp"))
+    urls = [f"memory://cli-{bucket}/projects/proj" for bucket in ("a", "b")]
+    for url in urls:
+        push(project.directory, url)
+
+    first, second = (Path(_local_inputs(url)) for url in urls)
+
+    assert first != second
+    assert first.name == second.name == "proj"  # the project's name
+    assert (first / "config.yaml").exists() and (second / "config.yaml").exists()
 
 
 def test_a_tick_refuses_a_now_later_than_the_clock(tmp_path, calls):

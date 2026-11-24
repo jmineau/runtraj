@@ -45,10 +45,12 @@ any other (a bug in runtraj or the project, a bucket in the wrong region, a
 
 from __future__ import annotations
 
+import atexit
 import contextlib
 import json
 import logging
 import re
+import shutil
 import signal
 import tempfile
 import threading
@@ -364,7 +366,10 @@ def _local_inputs(project: str | None) -> str | None:
     Return the project folder to open: *project*, or a copy of its inputs when it is a URL.
 
     A URL's inputs (``config.yaml``, ``releases.csv``, ``tables/``,
-    ``sites.csv``) are copied to ``$TMPDIR/runtraj-inputs/<name>``. Exits with 2 when there is
+    ``sites.csv``) are copied to ``$TMPDIR/runtraj-inputs/<random>/<name>``,
+    a folder of this process's own, removed when it exits: two tasks on one
+    machine, or two projects of one name, never read each other's copy, and
+    a file the URL no longer has is never read. Exits with 2 when there is
     no project there, and with 3 when the URL cannot be read, which a retry
     may get past.
     """
@@ -374,8 +379,12 @@ def _local_inputs(project: str | None) -> str | None:
         check_url(project)
     except ValueError as error:
         _fail(str(error))
-    name = project.rstrip("/").rsplit("/", 1)[-1]
-    directory = Path(tempfile.gettempdir()) / "runtraj-inputs" / name
+    name = project.rstrip("/").rsplit("/", 1)[-1]  # the project's name, as its folder's
+    inputs = Path(tempfile.gettempdir()) / "runtraj-inputs"
+    inputs.mkdir(parents=True, exist_ok=True)
+    own = tempfile.mkdtemp(dir=inputs)
+    atexit.register(shutil.rmtree, own, ignore_errors=True)
+    directory = Path(own) / name
     try:
         return str(pull(project, directory))
     except FileNotFoundError as error:
