@@ -51,9 +51,9 @@ def fetch_project(project: Project, unrun: pd.DataFrame) -> pd.DataFrame:
         needed.setdefault(key, (variant.met_config, set()))[1].update(windows)
     tables = []
     for (met, model), (config, windows) in needed.items():
-        fetch_met = getattr(get_model(model), "fetch_met", None)
-        if fetch_met is not None:
-            tables.append(fetch_met(config, windows).assign(met=met))
+        found = get_model(model).fetch_met(config, windows)
+        if not found.empty:
+            tables.append(found.assign(met=met))
     if not tables:
         return pd.DataFrame(columns=list(FETCH_COLUMNS)).astype("string")
     table = pd.concat(tables, ignore_index=True)
@@ -65,13 +65,12 @@ def downloads(project: Project, variants: Iterable[str]) -> bool:
     Whether the met of one of *variants* downloads its files.
 
     Each variant's transport model says, with its ``downloads_met`` (see
-    :class:`runtraj.models.TransportModel`); a model without it downloads
-    nothing. Reads no file, so it is cheap to ask before a listing.
+    :class:`runtraj.models.TransportModel`). Reads no file, so it is cheap
+    to ask before a listing.
     """
     for name in variants:
         variant = project.variants[str(name)]
-        downloads_met = getattr(get_model(variant.model), "downloads_met", None)
-        if downloads_met is not None and downloads_met(variant.met_config):
+        if get_model(variant.model).downloads_met(variant.met_config):
             return True
     return False
 

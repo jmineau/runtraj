@@ -15,9 +15,9 @@ stage in another package needs no registration:
        class: stilt.footprint.FootprintStage
        grid: {xmin: -113.0, xmax: -110.5, ymin: 40.0, ymax: 42.0, xres: 0.01, yres: 0.01}
 
-:class:`Stage` is what such a class provides. :func:`get_stage` imports
-one, :func:`ordered` puts the stages of a config in the order they run, and
-:func:`check_stage` is for the tests of a stage of your own.
+:class:`Stage` is the class such a class subclasses. :func:`get_stage`
+imports one, :func:`ordered` puts the stages of a config in the order they
+run, and :func:`check_stage` is for the tests of a stage of your own.
 """
 
 from __future__ import annotations
@@ -25,13 +25,14 @@ from __future__ import annotations
 import functools
 import json
 import re
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
-from runtraj._plugins import import_class
+from runtraj._plugins import import_class, refuse_near_misses
 from runtraj.identity import canonical
 from runtraj.results import RESULT_TYPES
 
@@ -65,60 +66,80 @@ RESERVED_NAMES = frozenset(
 )
 
 
-class Stage(Protocol):
+#: The config class a stage takes, a pydantic model.
+C = TypeVar("C", bound=BaseModel)
+
+#: Pattern for a stage's ``version``: letters, digits, dots, dashes and underscores.
+STAGE_VERSION_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+class Stage(ABC, Generic[C]):
     """
-    What is made from each simulation's results: one file per release.
+    What is made from each simulation's results, one file per release: the class a stage subclasses.
 
-    A class with these members is a stage; it subclasses nothing. It is made
-    with no arguments, and holds no state: everything a stage needs is in
-    its config and the simulation it is handed.
+    A stage sets :attr:`name`, :attr:`config_class` and :attr:`suffix`, and
+    implements :meth:`run`; :meth:`resolve`, :meth:`settings`,
+    :meth:`check`, :attr:`reads`, :attr:`result` and :attr:`version` have
+    defaults here. runtraj calls each member directly, and a public name
+    spelled almost like one, such as ``read``, is refused when the class is
+    defined. It is generic in its config, ``class MyStage(Stage[MyConfig])``,
+    and is made with no arguments and holds no state: everything a stage
+    needs is in its config and the simulation it is handed.
 
-    Attributes
-    ----------
-    name : str
-        What the stage's results are called, such as ``footprint``: the
-        name of its block under ``stages:``, its tree in the output
-        directory, its column in ``project.status()``, the ``stage`` of a
-        failure record, and a part of the hash that names its settings
-        folders. Lowercase letters, digits and underscores.
-    config_class : type of pydantic.BaseModel
-        Checks the stage's block of ``config.yaml`` when the file loads, and
-        reads no file. It must also read back what :meth:`settings` wrote,
-        since a stored settings folder is found by validating its record
-        with this class and hashing :meth:`settings` again
-        (:func:`check_stage` holds a stage to that). Two more members are
-        optional. A classmethod ``override(block, own)`` returns a variant's
-        settings from the block's, as the class dumps them, and the
-        variant's own, as written; without it the variant's keys replace the
-        block's. A property ``zsfc_reasons`` lists what goes wrong for
-        releases above sea level whose particles lack the terrain height
-        ``zsfc``, a clause each, for ``runtraj check`` to report when the
-        transport model is not asked for it.
-    suffix : str
-        The extension of the stage's files, such as ``.parquet``, with its
-        dot. The file of a release is ``<release id><suffix>``, and
-        completion looks for it in a listing.
-    reads : tuple of str, optional
-        The names of the stages whose files this one reads, none when the
-        stage does not say. A stage runs after the ones it reads, and again
-        whenever one of them was made again.
-    result : str, optional
-        The type of transport model result the stage reads
-        (:mod:`runtraj.results`), ``particles`` when the stage does not say.
-        A variant whose model makes another type cannot use the stage.
+    The stage's :attr:`config_class` has two optional members of its own. A
+    classmethod ``override(block, own)`` returns a variant's settings from
+    the block's, as the class dumps them, and the variant's own, as
+    written; without it the variant's keys replace the block's. A property
+    ``zsfc_reasons`` lists what goes wrong for releases above sea level
+    whose particles lack the terrain height ``zsfc``, a clause each, for
+    ``runtraj check`` to report when the transport model is not asked for
+    it.
     """
 
+    #: What the stage's results are called, such as ``footprint``: the name
+    #: of its block under ``stages:``, its tree in the output directory, its
+    #: column in ``project.status()``, the ``stage`` of a failure record, and
+    #: a part of the hash that names its settings folders. Lowercase
+    #: letters, digits and underscores.
     name: str
-    config_class: type[BaseModel]
+    #: Checks the stage's block of ``config.yaml`` when the file loads, and
+    #: reads no file. It must also read back what :meth:`settings` wrote,
+    #: since a stored settings folder is found by validating its record with
+    #: this class and hashing :meth:`settings` again (:func:`check_stage`
+    #: holds a stage to that).
+    config_class: type[C]
+    #: The extension of the stage's files, such as ``.parquet``, with its
+    #: dot. The file of a release is ``<release id><suffix>``, and completion
+    #: looks for it in a listing.
     suffix: str
+    #: The names of the stages whose files this one reads, none here. A
+    #: stage runs after the ones it reads, and again whenever one of them
+    #: was made again.
+    reads: tuple[str, ...] = ()
+    #: The type of transport model result the stage reads
+    #: (:mod:`runtraj.results`), ``particles`` here. A variant whose model
+    #: makes another type cannot use the stage.
+    result: str = "particles"
+    #: The version of what the stage makes, ``None`` here. When set, it is
+    #: part of the hash that names the stage's settings folders and is
+    #: recorded as ``stage_version`` in their ``_settings.yaml``, so a fix
+    #: that changes the stage's files makes new ones under a new folder
+    #: instead of counting the old ones complete. Raise it only for such a
+    #: fix; a stage that never sets it keeps the folders it has.
+    version: str | None = None
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Refuse a public name spelled almost like a hook, as ``read`` is."""
+        super().__init_subclass__(**kwargs)
+        refuse_near_misses(cls, _stage_hooks(), "stage")
 
     def resolve(
         self,
-        config: Any,
+        config: C,
         model: str,
         model_settings: Mapping[str, Any],
         directory: Path | None,
-    ) -> Any:
+    ) -> C:
         """
         Return the config a variant's simulations run with, from the one ``config.yaml`` gives.
 
@@ -142,22 +163,24 @@ class Stage(Protocol):
         ValueError
             If the settings do not fit the model, or name a file that
             cannot be used.
-        """
-        ...
 
-    def settings(self, config: Any) -> dict[str, Any]:
+        Here *config* is returned as it is.
+        """
+        return config
+
+    def settings(self, config: C) -> dict[str, Any]:
         """
         Return what identifies the stage's results, besides what it reads: the record of its settings folder.
 
         Plain values (mappings, lists, strings, numbers), which
         :attr:`config_class` reads back. The folder's hash is of this
         record, the particles' hash, and the hash of each stage in
-        :attr:`reads`.
+        :attr:`reads`. Here, every field of *config* (``model_dump``).
         """
-        ...
+        return config.model_dump(mode="json")
 
     def check(
-        self, config: Any, releases: pd.DataFrame, directory: Path | None
+        self, config: C, releases: pd.DataFrame, directory: Path | None
     ) -> list[tuple[str, str | None, str]]:
         """
         Return what would stop this stage for the project's releases, found without running anything.
@@ -166,11 +189,13 @@ class Stage(Protocol):
         row per release point (``release``, ``time``, ``longitude``,
         ``latitude``, ``altitude``, ``altitude_ref``, ``kind``). Each thing
         found is a tuple of a short name for the check, the release id (or
-        ``None`` when it is not about one release), and a message.
+        ``None`` when it is not about one release), and a message. Nothing
+        here.
         """
-        ...
+        return []
 
-    def run(self, config: Any, sim: Simulation, path: Path | UPath) -> None:
+    @abstractmethod
+    def run(self, config: C, sim: Simulation, path: Path | UPath) -> None:
         """
         Make the stage's file for one simulation, and write it at *path*.
 
@@ -212,7 +237,15 @@ class Stage(Protocol):
             :class:`~runtraj.exceptions.SimulationError` with a ``reason`` for
             a failure you expect.
         """
-        ...
+
+
+def _stage_hooks() -> set[str]:
+    """Return the names of :class:`Stage`'s members: its hooks and attributes."""
+    return {
+        name
+        for name in (*vars(Stage), *Stage.__annotations__)
+        if not name.startswith("_")
+    }
 
 
 @functools.cache
@@ -226,22 +259,24 @@ def get_stage(path: str) -> Stage:
         If the class cannot be imported on this machine.
     ValueError
         If *path* is not an import path, or the class is not a stage: it
-        lacks a member of :class:`Stage`, or its ``name``, ``suffix`` or
-        ``config_class`` cannot be used.
+        does not subclass :class:`Stage` or lacks one of its required
+        members, or its ``name``, ``suffix``, ``config_class``, ``result``
+        or ``version`` cannot be used.
     """
     if "." not in path:
         raise ValueError(
             f"A stage is named by the import path of its class, such as "
             f"mypkg.stages.MyStage, not {path!r}."
         )
-    stage = import_class(path)()
-    members = ("name", "config_class", "suffix", "resolve", "settings", "check", "run")
-    missing = [member for member in members if not hasattr(stage, member)]
-    if missing:
+    cls = import_class(path)
+    if not (isinstance(cls, type) and issubclass(cls, Stage)):
         raise ValueError(
-            f"{path} is not a stage: it has no {', '.join(missing)} "
-            "(runtraj.stages.Stage lists what a stage provides)."
+            f"{path} is not a stage: its class must subclass runtraj.stages.Stage."
         )
+    missing = [m for m in ("name", "config_class", "suffix") if not hasattr(cls, m)]
+    if missing:
+        raise ValueError(f"{path} is not a stage: it sets no {', '.join(missing)}.")
+    stage = cls()
     name = stage.name
     if not isinstance(name, str) or not STAGE_NAME_RE.fullmatch(name):
         raise ValueError(
@@ -264,23 +299,20 @@ def get_stage(path: str) -> Stage:
             f"{path}: a stage's config_class must be a pydantic model, not "
             f"{config_class!r}."
         )
-    made_from = result(stage)
-    if made_from not in RESULT_TYPES:
+    if stage.result not in RESULT_TYPES:
         raise ValueError(
             f"{path}: a stage's result must be one of {sorted(RESULT_TYPES)}, "
-            f"not {made_from!r}."
+            f"not {stage.result!r}."
+        )
+    version = stage.version
+    if version is not None and not (
+        isinstance(version, str) and STAGE_VERSION_RE.fullmatch(version)
+    ):
+        raise ValueError(
+            f"{path}: a stage's version must be None or a string such as '2', "
+            f"of {STAGE_VERSION_RE.pattern}, not {version!r}."
         )
     return stage
-
-
-def result(stage: Stage) -> str:
-    """Return the type of transport model result *stage* reads, ``particles`` when it does not say."""
-    return getattr(stage, "result", "particles")
-
-
-def reads(stage: Stage) -> tuple[str, ...]:
-    """Return the names of the stages whose files *stage* reads, none when it does not say."""
-    return tuple(getattr(stage, "reads", ()))
 
 
 def ordered(stages: Mapping[str, Stage]) -> list[str]:
@@ -296,7 +328,7 @@ def ordered(stages: Mapping[str, Stage]) -> list[str]:
         each other in a circle.
     """
     for name, stage in stages.items():
-        for read in reads(stage):
+        for read in stage.reads:
             if read not in stages:
                 raise ValueError(
                     f"The stage {name!r} reads the stage {read!r}, which "
@@ -305,7 +337,7 @@ def ordered(stages: Mapping[str, Stage]) -> list[str]:
     order: list[str] = []
     waiting = list(stages)
     while waiting:
-        ready = [n for n in waiting if all(r in order for r in reads(stages[n]))]
+        ready = [n for n in waiting if all(r in order for r in stages[n].reads)]
         if not ready:
             raise ValueError(
                 f"The stages {sorted(waiting)} read each other in a circle, so "
@@ -332,6 +364,9 @@ def check_stage(stage: Stage, config: Any) -> None:
     AssertionError
         Saying which promise is broken.
     """
+    assert isinstance(stage, Stage), (
+        f"{type(stage).__name__} must subclass runtraj.stages.Stage"
+    )
     assert STAGE_NAME_RE.fullmatch(stage.name), (
         f"name {stage.name!r} must match {STAGE_NAME_RE.pattern}"
     )
@@ -361,10 +396,9 @@ def check_stage(stage: Stage, config: Any) -> None:
 __all__ = [
     "RESERVED_NAMES",
     "STAGE_NAME_RE",
+    "STAGE_VERSION_RE",
     "Stage",
     "check_stage",
     "get_stage",
     "ordered",
-    "reads",
-    "result",
 ]

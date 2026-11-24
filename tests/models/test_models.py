@@ -14,7 +14,7 @@ import yaml
 from runtraj import models
 from runtraj.config import ProjectConfig
 from runtraj.identity import read_run_settings, settings_hash
-from runtraj.models import ModelInfo, open_met
+from runtraj.models import ModelInfo, TransportModel, open_met
 from runtraj.spatial import Bounds
 
 from ..fixtures.factories import make_met_config
@@ -271,8 +271,13 @@ def test_a_model_in_its_own_package_runs_from_a_fresh_interpreter(tmp_path):
 # -- open_met: a run's met files as runtraj.sampling reads them ---------------
 
 
-class _OpensItsMet:
+class _OpensItsMet(TransportModel):
     """A transport model whose met files are not ARL files: it opens them itself."""
+
+    name = "grib"
+
+    def run(self, release, config, met, window, workdir=None, timeout=None):
+        raise NotImplementedError
 
     def open_met(self, met, files, bounds):
         return xr.Dataset(attrs={"met": met, "files": files, "bounds": bounds})
@@ -291,3 +296,59 @@ def test_open_met_asks_a_model_with_the_hook(monkeypatch):
     opened = open_met("grib", "gfs", (f for f in ["a.grb2"]), bounds)
 
     assert opened.attrs == {"met": "gfs", "files": ["a.grb2"], "bounds": bounds}
+
+
+# -- the TransportModel base class ---------------------------------------------
+
+
+class _Defaults(TransportModel):
+    """A transport model that overrides nothing it need not."""
+
+    name = "defaults"
+
+    def run(self, release, config, met, window, workdir=None, timeout=None):
+        raise NotImplementedError
+
+
+def test_a_model_keeps_the_defaults_it_does_not_override():
+    model = _Defaults()
+    assert (model.needs_workdir, model.batched) == (True, False)
+    assert model.result(None) == "particles"
+    assert model.result_files(None) == ()
+    assert (model.sha256(None), model.version(None), model.data_files(None)) == (
+        None,
+        None,
+        None,
+    )
+    assert model.release_rows(None, None) is None
+    assert model.downloads_met(None) is False
+    assert model.open_met(None, ["a.arl"]) == [Path("a.arl")]
+    for table in (model.check_releases(None, None), model.check_met(None, None, -24)):
+        assert table.empty and list(table.columns) == ["check", "release", "message"]
+    assert model.fetch_met(None, []).empty
+    with pytest.raises(NotImplementedError, match="sets batched but has no run_many"):
+        model.run_many([], None, None, [])
+
+
+def test_a_model_without_run_cannot_be_made():
+    class NoRun(TransportModel):
+        name = "norun"
+
+    with pytest.raises(TypeError, match="abstract method 'run'|abstract method run"):
+        NoRun()
+
+
+def test_a_name_spelled_almost_like_a_hook_is_refused_when_the_class_is_defined():
+    with pytest.raises(
+        TypeError,
+        match="Typo.release_row is spelled almost like the transport model hook 'release_rows'",
+    ):
+
+        class Typo(_Defaults):
+            def release_row(self, particles, release):
+                return None
+
+
+def test_get_model_refuses_a_class_that_is_not_a_transport_model():
+    with pytest.raises(TypeError, match="must subclass runtraj.models.TransportModel"):
+        models.get_model("tests.fixtures.models.ToyConfig")

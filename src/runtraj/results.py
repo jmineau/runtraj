@@ -129,16 +129,14 @@ def result_type(name: str) -> ResultType:
 
 def model_result(model: Any, config: Any) -> str:
     """
-    Return the type of result *model* makes with *config*: its ``result(config)``, or ``particles``.
+    Return the type of result *model* makes with *config*, its ``result(config)``, checked.
 
     Raises
     ------
     ValueError
         If the model names a type that does not exist.
     """
-    says = getattr(model, "result", None)
-    name = "particles" if says is None else says(config)
-    return result_type(name).name
+    return result_type(model.result(config)).name
 
 
 def write_result(

@@ -30,9 +30,11 @@ DataFrames, and a selection of rows goes back to the project's methods
 ``config.yaml`` names a model in another package, and each stage, by the
 import path of its class, so the config, the settings records, the output
 directory and the worker reach them without importing them by name. A
-model provides :class:`runtraj.models.TransportModel`; a stage, which
-makes one file per release after the model runs, provides
-:class:`runtraj.stages.Stage`. HYSPLIT is the model built in, and its
+model subclasses :class:`runtraj.models.TransportModel`; a stage, which
+makes one file per release after the model runs, subclasses
+:class:`runtraj.stages.Stage`. Each base class implements every optional
+member with its default, so runtraj calls them directly and a plug-in
+overrides only what it does differently. HYSPLIT is the model built in, and its
 package (:mod:`runtraj.models.hysplit`) is the only code that knows
 HYSPLIT's files.
 
@@ -50,10 +52,10 @@ Module map
      simulation.py   Simulation: a frozen (release, variant, output) value
      config.py       ProjectConfig and Variant
      identity.py     settings records and hashes
-     stages.py       the Stage protocol, get_stage, check_stage
+     stages.py       the Stage base class, get_stage, check_stage
      releases/       release classes, releases.csv, shared validation
      particles/      the particle table and files, release heights, particles.runtraj
-     models/         the TransportModel and TransportConfig protocols, MODELS, get_model, check_model
+     models/         the TransportModel and TransportConfig base classes, MODELS, get_model, check_model
        hysplit/      config, met, catalog, driver, CONTROL and SETUP.CFG writers, failures
      execution/      ExecutionConfig, the runner (plan, local run, Slurm submit), the worker,
                      kubernetes (the indexed Job, the hourly CronJob), inputs (copies to a bucket, the lock), schedule

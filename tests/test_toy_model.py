@@ -29,7 +29,7 @@ from runtraj.transforms import (
 
 from .fixtures.factories import make_met_config
 from .fixtures.models import PARTICLE_STEP, TOY, ToyConfig, ToyMet, ToyModel
-from .fixtures.stages import CELLS, COUNT
+from .fixtures.stages import CELLS, COUNT, COUNT_V2
 
 NOON = dt.datetime(2023, 1, 1, 12)
 
@@ -507,3 +507,40 @@ def test_a_verb_of_a_type_no_variant_makes_says_so(tmp_path):
         project.concentration()
     with pytest.raises(ValueError, match="its variants make particles"):
         project.trajectories()
+
+
+def test_a_stage_version_makes_new_files_in_a_folder_of_its_own(tmp_path):
+    from runtraj.identity import stage_hash
+    from runtraj.output import Output
+
+    project = _project(tmp_path, stages={"count": {"class": COUNT}})
+    _run(project)
+    before = project.variants["toy"]
+    config = project.directory / "config.yaml"
+    config.write_text(config.read_text().replace(COUNT, COUNT_V2))
+
+    again = Project(project.directory)
+    variant = again.variants["toy"]
+    assert variant.stage_settings == before.stage_settings
+    assert variant.stage_hashes["count"] == stage_hash(
+        "count",
+        variant.stage_settings["count"],
+        variant.result_hash,
+        {},
+        version="2",
+    )
+    assert variant.stage_hashes["count"] != before.stage_hashes["count"]
+    # The particles are shared; the old count files no longer count.
+    assert (again.status()["state"] == "pending").all()
+    _run(again)
+    assert (again.status()["state"] == "complete").all()
+    folder = again.output.folder("count", variant)
+    record = yaml.safe_load((folder / "_settings.yaml").read_text())
+    assert record["stage_version"] == "2"
+    # A new Output finds the folder again from what it recorded.
+    fresh = Output(again.output.directory)
+    name = folder.name.removeprefix("settings=")
+    assert fresh._read_hash("count", name) == variant.stage_hashes["count"]
+    assert before.stage_hashes["count"] == stage_hash(
+        "count", before.stage_settings["count"], before.result_hash, {}
+    )

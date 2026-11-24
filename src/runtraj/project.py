@@ -49,7 +49,6 @@ from runtraj.releases.table import (
 )
 from runtraj.results import RESULT_TYPES
 from runtraj.simulation import Simulation
-from runtraj.stages import reads
 from runtraj.trajectories import trajectories_from_table
 
 if TYPE_CHECKING:
@@ -814,7 +813,7 @@ class Project:
                 inputs = (
                     ()
                     if kind in RESULT_TYPES
-                    else (variant.result, *reads(variant.stage(kind)))
+                    else (variant.result, *variant.stage(kind).reads)
                 )
                 ready = releases.intersection(*(have[i] for i in inputs))
                 missing = ready - have[kind]

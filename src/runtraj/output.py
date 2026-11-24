@@ -94,7 +94,7 @@ from runtraj.identity import (
 from runtraj.particles.table import OLD_FILE
 from runtraj.releases import Release, parse_release_id
 from runtraj.results import RESULT_TYPES, result_type, write_result
-from runtraj.stages import get_stage, reads
+from runtraj.stages import get_stage
 
 if TYPE_CHECKING:
     from upath import UPath
@@ -612,7 +612,15 @@ class Output:
                 hashes[what] = self._folder_hash(what, folder["folder"])
             except FileNotFoundError:
                 hashes[what] = folder["hash"]  # its folder is gone: as recorded
-        return stage_hash(kind, settings, hashes.pop(made), hashes, made)
+        version = record.get("stage_version")
+        return stage_hash(
+            kind,
+            settings,
+            hashes.pop(made),
+            hashes,
+            made,
+            version=None if version is None else str(version),
+        )
 
     @staticmethod
     def _variant_hash(kind: Kind, variant: Variant) -> str | None:
@@ -725,7 +733,8 @@ class Output:
         A stage's record names the stage and its class, the folder and hash
         of each thing its files are made from (the particles, then each
         stage it reads), the versions of runtraj and of the stage's package,
-        and the stage's settings.
+        the stage's settings, and the stage's own ``version`` as
+        ``stage_version`` when it sets one.
 
         Raises
         ------
@@ -755,10 +764,7 @@ class Output:
             digest = variant.stage_hashes[kind]
             made_from = {variant.result: variant.result_hash}
             made_from.update(
-                {
-                    read: variant.stage_hashes[read]
-                    for read in reads(variant.stage(kind))
-                }
+                {read: variant.stage_hashes[read] for read in variant.stage(kind).reads}
             )
             record = {
                 "name": variant.name,
@@ -772,6 +778,9 @@ class Output:
                 "versions": _versions(variant.stage_classes[kind]),
                 "settings": variant.stage_settings[kind],
             }
+            stage_version = variant.stage(kind).version
+            if stage_version is not None:
+                record["stage_version"] = stage_version
         name = f"{variant.name}-{digest[:HASH_CHARS]}"
         _write_settings(self._dir(kind, name) / SETTINGS_FILE, record)
         self._hashes.setdefault(kind, {})[name] = digest

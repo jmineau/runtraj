@@ -54,8 +54,7 @@ from runtraj.models import (
     get_model,
 )
 from runtraj.results import model_result
-from runtraj.stages import Stage, get_stage, ordered, reads
-from runtraj.stages import result as stage_result
+from runtraj.stages import Stage, get_stage, ordered
 
 #: Pattern for variant and met names, which become directory names.
 VARIANT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -343,9 +342,15 @@ class Variant:
         """
         hashes: dict[str, str] = {}
         for name in self.stage_order:
-            read = {r: hashes[r] for r in reads(self.stage(name))}
+            stage = self.stage(name)
+            read = {r: hashes[r] for r in stage.reads}
             hashes[name] = stage_hash(
-                name, self.stage_settings[name], result_hash, read, self.result
+                name,
+                self.stage_settings[name],
+                result_hash,
+                read,
+                self.result,
+                version=stage.version,
             )
         return hashes
 
@@ -696,7 +701,7 @@ class ProjectConfig(BaseModel):
                 )
             configs[name] = config
         for name, block in self._stages.items():
-            for read in reads(block.stage):
+            for read in block.stage.reads:
                 if name in configs and read not in configs:
                     raise ValueError(
                         f"{where} sets the stage {read!r} to null, and its stage "
@@ -745,9 +750,7 @@ class ProjectConfig(BaseModel):
                 f"Variant {group!r} ({declared.model})",
             )
             made = model_result(get_model(declared.model), transport)
-            unread = {
-                name: stage_result(self._stages[name].stage) for name in declared.stages
-            }
+            unread = {name: self._stages[name].stage.result for name in declared.stages}
             unread = {name: r for name, r in unread.items() if r != made}
             if unread:
                 names = ", ".join(unread)

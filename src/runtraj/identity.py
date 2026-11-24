@@ -184,6 +184,7 @@ def stage_hash(
     result_hash: str,
     reads: Mapping[str, str] | None = None,
     result: str = "particles",
+    version: str | None = None,
 ) -> str:
     """
     Return the hash of the results of the stage *name* with *settings*.
@@ -194,7 +195,10 @@ def stage_hash(
     (*reads*, by the stage's name), and the stage's own settings record
     (:meth:`runtraj.stages.Stage.settings`). So results made from other
     particles, or from another stage's results under other settings, never
-    share a folder.
+    share a folder. A stage that sets a *version*
+    (:attr:`runtraj.stages.Stage.version`) has it hashed too, under the key
+    ``<name>.version``; without one the hash is as it was before stages had
+    versions.
 
     Examples
     --------
@@ -203,7 +207,10 @@ def stage_hash(
     ... )
     True
     """
-    return settings_hash({result: result_hash, **(reads or {}), name: settings})
+    record = {result: result_hash, **(reads or {}), name: settings}
+    if version is not None:
+        record[f"{name}.version"] = version
+    return settings_hash(record)
 
 
 __all__ = [

@@ -397,7 +397,7 @@ RELEASE_ROW_COLUMNS = ("particle", "lon", "lat", "height")
 def add_release_heights(
     particles: pd.DataFrame,
     release: Release,
-    release_rows: Callable[[pd.DataFrame, Release], pd.DataFrame] | None = None,
+    release_rows: Callable[[pd.DataFrame, Release], pd.DataFrame | None] | None = None,
 ) -> pd.DataFrame:
     """
     Return *particles* with each particle's ``release_height``, for a column or multipoint release.
@@ -429,13 +429,14 @@ def add_release_heights(
         holds each particle of *particles* once, and may hold particles
         released but not in *particles*. Used when the particles have no
         row at ``age = 0``, or their heights above sea level cannot be known
-        without ``zsfc``.
+        without ``zsfc``. It returns ``None`` when it does not know, as
+        :meth:`runtraj.models.TransportModel.release_rows` does by default.
 
     Raises
     ------
     ValueError
         If the particles have no release rows and *release_rows* is not
-        given, *release_rows* returns a table without its columns or
+        given or returns ``None``, *release_rows* returns a table without its columns or
         without each particle once, or a release row's height is needed and
         cannot be known (``zsfc`` missing for a release above sea level).
     """
@@ -457,7 +458,7 @@ def add_release_heights(
 def _started(
     p: pd.DataFrame,
     release: Release,
-    release_rows: Callable[[pd.DataFrame, Release], pd.DataFrame] | None,
+    release_rows: Callable[[pd.DataFrame, Release], pd.DataFrame | None] | None,
 ) -> pd.DataFrame:
     """Return each particle's release row, with :data:`RELEASE_ROW_COLUMNS`."""
     released = p.loc[p["age"] == 0].drop_duplicates(subset="particle")
@@ -471,21 +472,25 @@ def _started(
                 "height": _height(released, release),
             }
         )
-        # Heights a release above sea level cannot have without zsfc: the
-        # model's own release rows may know them.
-        if release_rows is None or not rows["height"].isna().any():
+        if not rows["height"].isna().any():
             return rows
-    if release_rows is None:
-        raise ValueError(
-            f"The particles of {release.kind} release {release.id} have no row "
-            "at age = 0, so where each one started is not known. A transport "
-            "model that writes no such row gives release_rows."
-        )
-    return _checked_rows(release_rows(p, release), p, release_rows)
+    # No row at age = 0, or heights a release above sea level cannot have
+    # without zsfc: the model's own release rows may know them.
+    if release_rows is not None:
+        given = release_rows(p, release)
+        if given is not None:
+            return _checked_rows(given, p, release_rows)
+    if rows is not None:
+        return rows
+    raise ValueError(
+        f"The particles of {release.kind} release {release.id} have no row "
+        "at age = 0, so where each one started is not known. A transport "
+        "model that writes no such row gives release_rows."
+    )
 
 
 def _checked_rows(
-    rows: pd.DataFrame, p: pd.DataFrame, release_rows: Callable[..., pd.DataFrame]
+    rows: pd.DataFrame, p: pd.DataFrame, release_rows: Callable[..., Any]
 ) -> pd.DataFrame:
     """Return the table *release_rows* gave, after checking it holds each particle of *p* once."""
     name = getattr(release_rows, "__qualname__", "release_rows")

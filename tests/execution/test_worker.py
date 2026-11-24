@@ -15,7 +15,7 @@ from runtraj.exceptions import MeteorologyError, SimulationError, WorkerDied
 from runtraj.execution import worker
 from runtraj.execution.config import ExecutionConfig
 from runtraj.execution.worker import run_release, run_releases
-from runtraj.models import ModelRun
+from runtraj.models import ModelRun, TransportModel
 from runtraj.models.hysplit import HysplitConfig, Met, MetConfig
 from runtraj.output import Output
 from runtraj.releases import PointRelease, Release
@@ -130,7 +130,7 @@ def test_run_particles_starts_in_an_empty_directory(
     (workdir / "PARTICLE_STILT.DAT").write_text("left over\n")
     seen: list[list[str]] = []
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -148,7 +148,7 @@ def test_a_run_stopped_partway_leaves_its_start_in_the_log(
 ):
     """The log is written when the run starts, so a cut-off run reads as interrupted."""
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -165,7 +165,7 @@ def test_a_run_stopped_partway_leaves_its_start_in_the_log(
 def test_a_model_that_needs_no_workdir_gets_none(sim, met, compute_root, monkeypatch):
     seen: list = []
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
         needs_workdir = False
 
@@ -188,7 +188,7 @@ def test_a_model_that_needs_no_workdir_gets_none(sim, met, compute_root, monkeyp
 def test_run_particles_keeps_no_empty_scratch_copy(sim, met, compute_root, monkeypatch):
     """A run that fails before writing anything, such as on missing met, leaves no scratch copy."""
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -206,7 +206,7 @@ def test_run_particles_keeps_no_empty_scratch_copy(sim, met, compute_root, monke
 def test_run_particles_without_particles_is_a_simulation_error(
     sim, met, compute_root, monkeypatch
 ):
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -242,7 +242,7 @@ def test_a_batched_model_that_writes_no_log_leaves_no_started_line(
 def test_a_run_that_fails_without_a_model_log_leaves_no_started_line(
     sim, met, compute_root, monkeypatch
 ):
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -259,7 +259,7 @@ def test_a_run_that_fails_without_a_model_log_leaves_no_started_line(
 def test_a_run_that_fails_unexpectedly_without_a_model_log_keeps_its_started_line(
     sim, met, compute_root, monkeypatch
 ):
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -327,7 +327,7 @@ def test_a_release_leaves_no_folders_under_the_compute_root(
     )
     compute_root = project.directory / "scratch"
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -350,7 +350,7 @@ def test_runs_that_share_a_compute_root_never_share_a_workdir(
     compute_root = tmp_path / "compute"
     ended: dict[str, str | None] = {}
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
         started = 0
 
@@ -522,7 +522,7 @@ def test_a_failed_run_keeps_its_log_and_working_directory(
     project = _model(tmp_path, [release])
     sim = project.simulation(str(release.id), "hrrr")
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):

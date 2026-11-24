@@ -44,7 +44,6 @@ from runtraj.exceptions import SimulationError, WorkerDied
 from runtraj.execution.config import ExecutionConfig
 from runtraj.models import get_model, run_model, run_model_many
 from runtraj.simulation import Simulation
-from runtraj.stages import reads
 
 if TYPE_CHECKING:
     from upath import UPath
@@ -224,7 +223,7 @@ def run_result(
     """
     output, rid = sim.output, sim.release.id
     model = get_model(sim.variant.model)
-    needs_workdir = getattr(model, "needs_workdir", True)
+    needs_workdir = model.needs_workdir
     if needs_workdir:
         # The model runs in an empty directory. The runner gives each run a
         # new one, but a caller can hand over a directory that a stopped run
@@ -271,8 +270,7 @@ def run_result(
             if (keep_workdir or not succeeded) and any(workdir.iterdir()):
                 # A failed run's particle files can be large, and the
                 # model's inputs and logs say why it failed.
-                files = getattr(model, "result_files", None)
-                leave_out = files(sim.transport) if files and not keep_workdir else ()
+                leave_out = () if keep_workdir else model.result_files(sim.transport)
                 output.keep_workdir(
                     sim.variant, rid, workdir, sim.realization, leave_out=leave_out
                 )
@@ -484,7 +482,7 @@ def run_stages(
             if key in seen:
                 continue
             seen.add(key)
-            read = [(r, variant.stage_hashes[r]) for r in reads(variant.stage(name))]
+            read = [(r, variant.stage_hashes[r]) for r in variant.stage(name).reads]
             if any(r in failed for r in read):
                 failed.add(key)  # nothing to read; the failure above is recorded
                 continue
@@ -594,7 +592,7 @@ def _groups(project: Project) -> dict[tuple[str, int | None], list[str]]:
 def _is_batched(project: Project, variant: str) -> bool:
     """Whether a variant's transport model runs many releases in one call."""
     model = get_model(project.variants[variant].model)
-    return bool(getattr(model, "batched", False))
+    return model.batched
 
 
 def _run_batched(

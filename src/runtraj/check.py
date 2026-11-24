@@ -108,14 +108,12 @@ def _build_checks(variant: Variant) -> Iterator[_Check]:
 
 def _met_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
     """Yield what the variant's transport model finds wrong with its met, for the project's releases."""
-    check_met = getattr(get_model(variant.model), "check_met", None)
-    if check_met is None:
-        return
+    model = get_model(variant.model)
     n_hours = variant.transport.n_hours
 
     def make() -> list[_Finding]:
         """Return the model's findings for the project's releases as plain tuples."""
-        table = check_met(variant.met_config, rows, n_hours)
+        table = model.check_met(variant.met_config, rows, n_hours)
         return [
             (str(check), None if pd.isna(release) else str(release), str(message))
             for check, release, message in table.itertuples(index=False)
@@ -126,13 +124,11 @@ def _met_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
 
 def _release_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
     """Yield the releases the variant's transport model cannot run, from its ``check_releases``."""
-    check_releases = getattr(get_model(variant.model), "check_releases", None)
-    if check_releases is None:
-        return
+    model = get_model(variant.model)
 
     def make() -> list[_Finding]:
         """Return the model's findings for the project's releases as plain tuples."""
-        table = check_releases(rows, variant.transport)
+        table = model.check_releases(rows, variant.transport)
         return [
             (str(check), None if pd.isna(release) else str(release), str(message))
             for check, release, message in table.itertuples(index=False)

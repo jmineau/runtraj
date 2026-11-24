@@ -133,7 +133,6 @@ the tests of a model of your own.
    :nosignatures:
 
    runtraj.models.TransportModel
-   runtraj.models.BatchedTransportModel
    runtraj.models.TransportConfig
    runtraj.models.ModelRun
    runtraj.models.get_model

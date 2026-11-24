@@ -79,7 +79,7 @@ from pathlib import Path
 
 import pandas as pd
 from pydantic import BaseModel
-from runtraj.models import ModelRun, TransportConfig
+from runtraj.models import ModelRun, TransportConfig, TransportModel
 from runtraj.models.hysplit.driver import run_hycs_std
 
 class SlowConfig(TransportConfig):
@@ -91,7 +91,7 @@ class SlowMet(BaseModel):
     def settings(self):
         return {"weather": self.weather}
 
-class SlowModel:
+class SlowModel(TransportModel):
     name = "slow"
     config_class = SlowConfig
     met_config_class = SlowMet

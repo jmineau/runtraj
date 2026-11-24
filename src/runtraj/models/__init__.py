@@ -16,16 +16,17 @@ import datetime as dt
 import json
 import os
 import tempfile
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar
 
 import pandas as pd
 import xarray as xr
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from runtraj._plugins import import_class
+from runtraj._plugins import import_class, refuse_near_misses
 from runtraj.exceptions import SimulationError
 from runtraj.meteorology import run_window
 from runtraj.particles import (
@@ -178,141 +179,77 @@ class TransportConfig(BaseModel):
         ]
 
 
-class TransportModel(Protocol):
-    """
-    A transport model that follows particles from a release.
+#: The config class a transport model takes, a subclass of :class:`TransportConfig`.
+C = TypeVar("C", bound=TransportConfig)
 
-    Attributes
-    ----------
-    name : str
-        The model's short name, such as ``"hysplit"``.
-    needs_workdir : bool, optional
-        Whether :meth:`run` is handed an empty directory for its files. True
-        when the model does not say; a model that writes no files sets it
-        False, and gets ``None``.
-    result_files : callable, optional
-        ``result_files(config)`` returns the names of the files in its
-        workdir that hold a run's result, such as HYSPLIT's particle file
-        or its ``cdump_<grid>`` files. A failed run's workdir is kept
-        without them, since they can be large and are read into the result
-        anyway; ``keep_workdir: true`` keeps them. A model without it has
-        every file kept.
-    batched : bool, optional
-        Whether the model runs many releases in one call
-        (:meth:`run_many`). False when the model does not say. The worker
-        then hands it every release of a variant that needs particles at
-        once, where it otherwise calls :meth:`run` for one at a time.
-    check_met : callable, optional
-        ``check_met(met, releases, n_hours)``, for a model that reads files,
-        which ``runtraj check`` calls to find what would stop its runs before
-        any starts. *met* is the model's met config, *releases* a table
-        with one row per release point (``release``, ``time``,
-        ``longitude``, ``latitude``), and *n_hours* the length of the runs.
-        It returns a DataFrame with ``check`` (a short name, such as
-        ``met_files``), ``release`` (the id, or ``NA`` for a problem of the
-        met itself), and ``message`` columns, one row for each problem. It
-        runs and downloads nothing. A model without it has no met files to
-        check.
-    fetch_met : callable, optional
-        ``fetch_met(met, windows)``, for a model that reads files, which
-        ``runtraj fetch`` calls to get the files its runs need before any
-        starts. *met* is the model's met config and *windows* the time each
-        run covers (:func:`runtraj.meteorology.run_window`). It gets the files
-        a run of those windows would ask for, downloading what the met
-        downloads, and returns a DataFrame with ``file`` and ``message``
-        columns: a row for each file, then a row for each window whose files
-        could not be had. A model without it has no met files to get.
-    downloads_met : callable, optional
-        ``downloads_met(met)``, for a model with ``fetch_met``: whether *met*
-        downloads files, so that getting them once before the runs saves
-        each run from downloading its own. ``runtraj submit`` submits a fetch
-        job before the job array only when it is true for a met the
-        unfinished simulations use. A model without it downloads nothing.
-    open_met : callable, optional
-        ``open_met(met, files, bounds)``, for a model whose met files are
-        not ARL files: returns *files*, the met files a run read, as one
-        :class:`xarray.Dataset` in :func:`arlmet.open_dataset`'s layout,
-        such as an arlmet converter's output, cropped to *bounds* (a
-        :class:`runtraj.Bounds`, or ``None`` for the whole grid).
-        :func:`open_met` calls it, so that the met is read at particles
-        (:mod:`runtraj.sampling`) without guessing its format from the
-        files. A model without it reads ARL files.
-    check_releases : callable, optional
-        ``check_releases(releases, config)``, for a model that cannot run
-        every release runtraj accepts. *releases* is a table with one row
-        per release point (``release``, ``kind``, ``longitude``,
-        ``latitude``, ``altitude``, ``altitude_ref``) and *config* the
-        model's config. It returns a DataFrame with ``check``, ``release``
-        and ``message`` columns, in that order, one row for each release it
-        cannot run. ``runtraj check`` lists them, and :func:`run_model` and
-        :func:`run_model_many` fail them with the reason
-        ``RELEASE_REFUSED`` before the model runs, so :meth:`run` and
-        ``run_many`` never get such a release. HYSPLIT refuses a multipoint
-        release whose points share a horizontal location, which it would
-        join into a line source. A model without it runs every release.
-    result : callable, optional
-        ``result(config)``: the type of result the model makes with
-        *config*, a name in :data:`runtraj.results.RESULT_TYPES`, such as
-        ``"concentration"``. ``"particles"`` when the model does not say. A
-        variant's stages read particles, so a variant whose model makes
-        another type has none.
-    release_rows : callable, optional
-        ``release_rows(particles, release)``, for a model that writes no
-        row at ``age = 0``: returns where each particle of a column or
-        multipoint release started, one row per particle with ``particle``,
-        ``lon``, ``lat``, and ``height`` in the release's vertical reference
-        (:func:`runtraj.particles.add_release_heights`). A model that writes
-        release rows needs none; one that writes neither cannot run a column
-        or multipoint release.
+#: The columns of the table ``check_releases`` and ``check_met`` return.
+CHECK_COLUMNS = ("check", "release", "message")
+
+
+class TransportModel(ABC, Generic[C]):
+    """
+    A transport model that follows particles from a release: the class a model subclasses.
+
+    A model sets :attr:`name`, :attr:`config_class` and
+    :attr:`met_config_class`, and implements :meth:`run`. Every other
+    member has a default here that suits a model which runs one release at
+    a time and makes particles, so a model overrides only what it does
+    differently: HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)
+    overrides most, a model in Python that reads no files few. runtraj calls
+    each member directly. A public name spelled almost like one of them,
+    such as ``release_row``, is refused when the class is defined, since
+    runtraj would call the default instead.
+
+    It is generic in its config: ``class MyModel(TransportModel[MyConfig])``
+    gives :meth:`run` and the other members a ``MyConfig``. It is made with
+    no arguments and holds no state.
+
+    Examples
+    --------
+    >>> from runtraj.models import ModelRun, TransportConfig, TransportModel
+    >>> from pydantic import BaseModel
+    >>> class StillConfig(TransportConfig):
+    ...     pass
+    >>> class StillModel(TransportModel[StillConfig]):
+    ...     name = "still"
+    ...     config_class = StillConfig
+    ...     met_config_class = BaseModel
+    ...
+    ...     def run(self, release, config, met, window, workdir=None, timeout=None):
+    ...         return ModelRun(result=...)
+    >>> StillModel().result(StillConfig(n_hours=-24))
+    'particles'
     """
 
+    #: The model's short name, such as ``"hysplit"``.
     name: str
+    #: The model's config, a :class:`TransportConfig`, which validates its parameters.
+    config_class: type[C]
+    #: The model's met config, which validates an entry under ``mets:``.
+    #: Its ``settings()`` returns what a run records of the met: which
+    #: weather it is, and anything else that changes the particles, but not
+    #: where its files are kept. HYSPLIT's is
+    #: :class:`runtraj.models.hysplit.MetConfig`.
+    met_config_class: type[BaseModel]
+    #: Whether :meth:`run` is handed an empty directory for its files. A
+    #: model that writes no files sets it False, and gets ``None``.
+    needs_workdir: bool = True
+    #: Whether the model runs many releases in one call (:meth:`run_many`),
+    #: such as an emulator on a GPU. The worker then hands it every release
+    #: of a variant that needs particles at once, where it otherwise calls
+    #: :meth:`run` for one at a time.
+    batched: bool = False
 
-    @property
-    def config_class(self) -> type[TransportConfig]:
-        """The model's config, a :class:`TransportConfig`, which validates its parameters."""
-        ...
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Refuse a public name spelled almost like a hook, as ``release_row`` is."""
+        super().__init_subclass__(**kwargs)
+        refuse_near_misses(cls, _model_hooks(), "transport model")
 
-    @property
-    def met_config_class(self) -> type[BaseModel]:
-        """
-        The model's met config, which validates an entry under ``mets:``.
-
-        Its ``settings()`` returns what a run records of the met: which
-        weather it is, and anything else that changes the particles, but not
-        where its files are kept. HYSPLIT's is
-        :class:`runtraj.models.hysplit.MetConfig`.
-        """
-        ...
-
-    def sha256(self, config: Any) -> str | None:
-        """
-        Return the SHA-256 of the executable *config* would run, ``None`` for a model that runs none.
-
-        Part of the run's identity: another build gives another settings
-        folder. Raises ``FileNotFoundError`` when the executable cannot be
-        found here; a project still opens, and its status compares stored
-        folders without the build.
-        """
-        ...
-
-    def version(self, config: Any) -> str | None:
-        """Return the version the build *config* would run reports, recorded with the run but not part of its identity."""
-        ...
-
-    def data_files(self, config: Any) -> dict[str, str] | None:
-        """
-        Return the checksum of each data file a run with *config* reads, by file name.
-
-        ``None`` for a model whose build fixes its data. These are part of
-        the run's identity, since the data change the particles.
-        """
-        ...
-
+    @abstractmethod
     def run(
         self,
         release: Release,
-        config: Any,
+        config: C,
         met: Any,
         window: tuple[dt.datetime, dt.datetime],
         workdir: Path | None = None,
@@ -338,7 +275,7 @@ class TransportModel(Protocol):
             (:func:`runtraj.meteorology.run_window`).
         workdir : Path, optional
             An empty directory for the run's files, kept when the run fails.
-            ``None`` for a model that needs one to make its own.
+            ``None`` for a model that does not need one (:attr:`needs_workdir`).
         timeout : int, optional
             Time limit in seconds, for a model that runs a program.
             ``None`` waits indefinitely.
@@ -348,30 +285,18 @@ class TransportModel(Protocol):
         SimulationError
             When the run fails, with the model's log in ``log``.
         """
-        ...
-
-
-class BatchedTransportModel(TransportModel, Protocol):
-    """
-    A transport model that runs many releases in one call, such as an emulator on a GPU.
-
-    It sets ``batched = True`` and gives :meth:`run_many` beside
-    :meth:`run`.
-    """
-
-    batched: bool
 
     def run_many(
         self,
         releases: list[Release],
-        config: Any,
+        config: C,
         met: Any,
         windows: list[tuple[dt.datetime, dt.datetime]],
         workdir: Path | None = None,
         timeout: int | None = None,
     ) -> ModelRun:
         """
-        Run many releases with one config, and return their particles as one table.
+        Run many releases with one config, and return their particles as one table, for a model with :attr:`batched` set.
 
         The table has a ``release`` column holding each row's release id,
         beside the particle columns :meth:`run` returns. ``windows[i]`` is
@@ -382,8 +307,157 @@ class BatchedTransportModel(TransportModel, Protocol):
         ------
         SimulationError
             When the whole call fails, with the model's log in ``log``.
+        NotImplementedError
+            Here, for a model that is not batched.
         """
-        ...
+        raise NotImplementedError(
+            f"Transport model {self.name!r} sets batched but has no run_many."
+        )
+
+    def result(self, config: C) -> str:
+        """
+        Return the type of result the model makes with *config*: ``particles`` here.
+
+        A name in :data:`runtraj.results.RESULT_TYPES`, such as
+        ``"concentration"``. A variant's stages read particles, so a variant
+        whose model makes another type has none.
+        """
+        return "particles"
+
+    def result_files(self, config: C) -> tuple[str, ...]:
+        """
+        Return the names of the files in a workdir that hold a run's result, none here.
+
+        Such as HYSPLIT's particle file or its ``cdump_<grid>`` files. A
+        failed run's workdir is kept without them, since they can be large
+        and are read into the result anyway; ``keep_workdir: true`` keeps
+        them. With none, every file is kept.
+        """
+        return ()
+
+    def sha256(self, config: C) -> str | None:
+        """
+        Return the SHA-256 of the executable *config* would run, ``None`` here, for a model that runs none.
+
+        Part of the run's identity: another build gives another settings
+        folder. Raises ``FileNotFoundError`` when the executable cannot be
+        found here; a project still opens, and its status compares stored
+        folders without the build.
+        """
+        return None
+
+    def version(self, config: C) -> str | None:
+        """Return the version the build *config* would run reports, recorded with the run but not part of its identity; ``None`` here."""
+        return None
+
+    def data_files(self, config: C) -> dict[str, str] | None:
+        """
+        Return the checksum of each data file a run with *config* reads, by file name; ``None`` here.
+
+        ``None`` for a model whose build fixes its data. These are part of
+        the run's identity, since the data change the particles.
+        """
+        return None
+
+    def check_met(self, met: Any, releases: pd.DataFrame, n_hours: int) -> pd.DataFrame:
+        """
+        Return what would stop the runs of *releases* on the met *met*, found before any starts; nothing here.
+
+        ``runtraj check`` calls it. *met* is the model's met config,
+        *releases* a table with one row per release point (``release``,
+        ``time``, ``longitude``, ``latitude``), and *n_hours* the length of
+        the runs. It returns a DataFrame with ``check`` (a short name, such
+        as ``met_files``), ``release`` (the id, or ``NA`` for a problem of
+        the met itself), and ``message`` columns, one row for each problem.
+        It runs and downloads nothing. A model that reads no files keeps
+        this default.
+        """
+        return pd.DataFrame(columns=list(CHECK_COLUMNS))
+
+    def fetch_met(
+        self, met: Any, windows: Iterable[tuple[dt.datetime, dt.datetime]]
+    ) -> pd.DataFrame:
+        """
+        Get the met files runs of *windows* need before any starts, and return what was got; nothing here.
+
+        ``runtraj fetch`` calls it. *met* is the model's met config and
+        *windows* the time each run covers
+        (:func:`runtraj.meteorology.run_window`). It gets the files a run of
+        those windows would ask for, downloading what the met downloads, and
+        returns a DataFrame with ``file`` and ``message`` columns: a row for
+        each file, then a row for each window whose files could not be had.
+        A model that reads no files keeps this default.
+        """
+        return pd.DataFrame(columns=["file", "message"])
+
+    def downloads_met(self, met: Any) -> bool:
+        """
+        Return whether *met* downloads its files, False here.
+
+        For a model with :meth:`fetch_met`: getting the files once before
+        the runs then saves each run from downloading its own, so
+        ``runtraj submit`` submits a fetch job before the job array when it
+        is true for a met the unfinished simulations use.
+        """
+        return False
+
+    def open_met(
+        self,
+        met: Any,
+        files: list[str | os.PathLike[str]],
+        bounds: Bounds | None = None,
+    ) -> list[Path] | xr.Dataset:
+        """
+        Return *files*, the met files a run read, as :mod:`runtraj.sampling` reads them: as ARL file paths here.
+
+        A model whose met files are not ARL files returns them as one
+        :class:`xarray.Dataset` in :func:`arlmet.open_dataset`'s layout,
+        such as an arlmet converter's output, cropped to *bounds* (a
+        :class:`runtraj.Bounds`, or ``None`` for the whole grid).
+        :func:`open_met` calls it, so that the met is read at particles
+        without guessing its format from the files.
+        """
+        return [Path(f) for f in files]
+
+    def check_releases(self, releases: pd.DataFrame, config: C) -> pd.DataFrame:
+        """
+        Return the releases the model cannot run with *config*, one row each; none here.
+
+        *releases* is a table with one row per release point (``release``,
+        ``kind``, ``longitude``, ``latitude``, ``altitude``,
+        ``altitude_ref``). It returns a DataFrame with ``check``,
+        ``release`` and ``message`` columns, in that order, one row for each
+        release it cannot run. ``runtraj check`` lists them, and
+        :func:`run_model` and :func:`run_model_many` fail them with the
+        reason ``RELEASE_REFUSED`` before the model runs, so :meth:`run`
+        and :meth:`run_many` never get such a release. HYSPLIT refuses a
+        multipoint release whose points share a horizontal location, which
+        it would join into a line source.
+        """
+        return pd.DataFrame(columns=list(CHECK_COLUMNS))
+
+    def release_rows(
+        self, particles: pd.DataFrame, release: Release
+    ) -> pd.DataFrame | None:
+        """
+        Return where each particle of a column or multipoint release started, ``None`` here.
+
+        For a model that writes no row at ``age = 0``: one row per particle
+        with ``particle``, ``lon``, ``lat``, and ``height`` in the release's
+        vertical reference (:func:`runtraj.particles.add_release_heights`).
+        A model that writes release rows needs none; one that writes
+        neither cannot run a column or multipoint release.
+        """
+        return None
+
+
+def _model_hooks() -> set[str]:
+    """Return the names of :class:`TransportModel`'s members: its hooks and attributes."""
+    return {
+        name
+        for name in (*vars(TransportModel), *TransportModel.__annotations__)
+        if not name.startswith("_")
+    }
 
 
 def _hysplit() -> TransportModel:
@@ -415,12 +489,28 @@ def get_model(name: str) -> TransportModel:
     ------
     ValueError
         If *name* is not a built-in model and not an import path.
+    TypeError
+        If the class at the import path does not subclass
+        :class:`TransportModel`, or lacks one of its required members.
     MissingClass
         If *name* is an import path that cannot be imported on this machine
         (an :class:`ImportError`).
     """
     if "." in name:
-        return import_class(name)()
+        cls = import_class(name)
+        if not (isinstance(cls, type) and issubclass(cls, TransportModel)):
+            raise TypeError(
+                f"{name} is not a transport model: its class must subclass "
+                "runtraj.models.TransportModel."
+            )
+        missing = [
+            member
+            for member in ("name", "config_class", "met_config_class")
+            if not hasattr(cls, member)
+        ]
+        if missing:
+            raise TypeError(f"{name} sets no {', '.join(missing)}.")
+        return cls()
     factory = MODELS.get(name)
     if factory is None:
         raise ValueError(
@@ -476,10 +566,7 @@ def open_met(
     ... )  # doctest: +SKIP
     >>> runtraj.sampling.sample_met(sim.particles, met)  # doctest: +SKIP
     """
-    hook = getattr(get_model(name), "open_met", None)
-    if hook is None:
-        return [Path(f) for f in files]
-    return hook(met, list(files), bounds)
+    return get_model(name).open_met(met, list(files), bounds)
 
 
 def run_model(
@@ -585,9 +672,6 @@ def _run_many(
     timeout: int | None,
 ) -> dict[str, ModelRun | SimulationError]:
     """Run batched *model* for *releases* as :func:`run_model_many` does."""
-    run_many = getattr(model, "run_many", None)
-    if run_many is None:
-        raise TypeError(f"Transport model {model.name!r} has no run_many.")
     made = model_result(model, config)
     if made != "particles":
         raise TypeError(
@@ -601,8 +685,12 @@ def _run_many(
     releases = [r for r in releases if str(r.id) not in results]
     if not releases:
         return results
-    windows = [run_window(r.time, config.n_hours) for r in releases]
-    run = _returned(run_many(releases, config, met, windows, workdir, timeout=timeout))
+    windows: list[tuple[dt.datetime, dt.datetime]] = [
+        run_window(r.time, config.n_hours) for r in releases
+    ]
+    run = _returned(
+        model.run_many(releases, config, met, windows, workdir, timeout=timeout)
+    )
     if not isinstance(run.result, pd.DataFrame) or "release" not in run.result.columns:
         raise SimulationError(
             "A batched transport model's particles need a release column.",
@@ -659,11 +747,8 @@ def _refused(
     model: TransportModel, releases: list[Release], config: TransportConfig
 ) -> dict[str, SimulationError]:
     """Return the error of each of *releases* the model's ``check_releases`` refuses, by release id."""
-    check_releases = getattr(model, "check_releases", None)
-    if check_releases is None:
-        return {}
     ids = {str(r.id) for r in releases}
-    table = check_releases(_release_points(releases), config)
+    table = model.check_releases(_release_points(releases), config)
     return {
         str(release): SimulationError(str(message), reason="RELEASE_REFUSED")
         for _check, release, message in table.itertuples(index=False)
@@ -708,9 +793,7 @@ def _finish(
         )
     check_particles(run.result)
     try:
-        particles = add_release_heights(
-            run.result, release, getattr(model, "release_rows", None)
-        )
+        particles = add_release_heights(run.result, release, model.release_rows)
     except ValueError as error:
         raise SimulationError(
             str(error), reason="NO_RELEASE_ROWS", log=run.log
@@ -838,6 +921,7 @@ def check_model(
     Call it from the tests of a transport model of your own, as
     :func:`runtraj.stages.check_stage` is for a stage. It checks that:
 
+    - *model* subclasses :class:`TransportModel` and sets ``name``;
     - ``config_class`` is a :class:`TransportConfig` whose fields use none
       of :data:`RESERVED_SETTINGS`, and ``met_config_class`` a pydantic
       model;
@@ -877,6 +961,9 @@ def check_model(
     >>> check_model(HysplitModel(), HysplitConfig(n_hours=-24))
     """
     name = type(model).__name__
+    assert isinstance(model, TransportModel), (
+        f"{name} must subclass runtraj.models.TransportModel"
+    )
     assert isinstance(model.name, str) and model.name, f"{name}.name must be a string"
     assert isinstance(model.config_class, type) and issubclass(
         model.config_class, TransportConfig
@@ -978,11 +1065,8 @@ def _check_refusal(
     model: TransportModel, config: TransportConfig, met: Any, release: Release
 ) -> bool:
     """Check the model's ``check_releases`` table, and return whether it refuses *release*."""
-    check_releases = getattr(model, "check_releases", None)
-    if check_releases is None:
-        return False
     name = type(model).__name__
-    table = check_releases(_release_points([release]), config)
+    table = model.check_releases(_release_points([release]), config)
     assert isinstance(table, pd.DataFrame) and list(table.columns) == [
         "check",
         "release",
@@ -1005,13 +1089,13 @@ def _check_run(
 ) -> None:
     """Run *model* once for *release* as a project's run does, and check its particles."""
     name = type(model).__name__
-    batched = bool(getattr(model, "batched", False))
-    assert not batched or callable(getattr(model, "run_many", None)), (
+    batched = model.batched
+    assert not batched or type(model).run_many is not TransportModel.run_many, (
         f"{name} is batched, so it needs run_many"
     )
     with tempfile.TemporaryDirectory(prefix="runtraj-check-") as tmp:
         workdir = None
-        if getattr(model, "needs_workdir", True):
+        if model.needs_workdir:
             workdir = Path(tmp) / "work"
             workdir.mkdir()
         runs = {"run": _promised(name, _run_one, model, release, config, met, workdir)}
@@ -1090,7 +1174,6 @@ def _check_stored(
 
 __all__ = [
     "MODELS",
-    "BatchedTransportModel",
     "ModelInfo",
     "ModelRun",
     "TransportConfig",

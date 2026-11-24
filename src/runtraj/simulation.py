@@ -18,7 +18,6 @@ import pandas as pd
 from runtraj.output import Output, completed
 from runtraj.releases import Release
 from runtraj.results import result_type
-from runtraj.stages import reads
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -246,7 +245,7 @@ class Simulation:
         for name in variant.stage_order:
             if self.has(name):
                 there.add(name)
-            elif there.issuperset(reads(variant.stage(name))):
+            elif there.issuperset(variant.stage(name).reads):
                 record = self.output.failure(name, variant, rid, self.realization)
                 if record is not None:
                     return record

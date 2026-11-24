@@ -2,7 +2,7 @@
 A toy transport model, made unlike HYSPLIT, for the tests of the core.
 
 runtraj's core must work with any transport model the
-:class:`runtraj.models.TransportModel` protocol describes. A second real
+:class:`runtraj.models.TransportModel` base class allows. A second real
 model does not show that it does, since it is written to fit the core; this
 one differs from HYSPLIT wherever it can:
 
@@ -38,7 +38,7 @@ import xarray as xr
 from pydantic import BaseModel, ConfigDict, Field
 
 from runtraj import Release
-from runtraj.models import ModelRun, TransportConfig
+from runtraj.models import ModelRun, TransportConfig, TransportModel
 
 #: The toy model's import path, as a ``models`` block names it.
 TOY = "tests.fixtures.models.ToyModel"
@@ -94,7 +94,7 @@ class ToyMet(BaseModel):
         return {"weather": self.weather}
 
 
-class ToyModel:
+class ToyModel(TransportModel[ToyConfig]):
     """
     Releases particles at the release and drifts them west and up, one row per step.
 

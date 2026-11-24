@@ -18,11 +18,13 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from runtraj import Simulation
+from runtraj.stages import Stage
 
 if TYPE_CHECKING:
     from upath import UPath
 
 COUNT = "tests.fixtures.stages.CountStage"
+COUNT_V2 = "tests.fixtures.stages.CountStageV2"
 DOUBLE = "tests.fixtures.stages.DoubleStage"
 
 ECHO = "tests.fixtures.stages.EchoStage"
@@ -46,7 +48,7 @@ class CountConfig(BaseModel):
     stale: bool = False
 
 
-class CountStage:
+class CountStage(Stage[CountConfig]):
     """Writes the number of particle rows of a simulation, times ``scale``, as text."""
 
     name = "count"
@@ -100,6 +102,12 @@ class CountStage:
         path.write_text(str(len(sim.particles) * config.scale))
 
 
+class CountStageV2(CountStage):
+    """``count`` after a fix that changed its files: the same settings, at version 2."""
+
+    version = "2"
+
+
 class DoubleConfig(BaseModel):
     """Settings of :class:`DoubleStage`."""
 
@@ -108,7 +116,7 @@ class DoubleConfig(BaseModel):
     add: int = 0
 
 
-class DoubleStage:
+class DoubleStage(Stage[DoubleConfig]):
     """Writes twice the count of the ``count`` stage, plus ``add``, as text."""
 
     name = "double"
@@ -150,7 +158,7 @@ class EchoConfig(BaseModel):
     fail: bool = False
 
 
-class EchoStage:
+class EchoStage(Stage[EchoConfig]):
     """Writes the release id as text; it reads no other stage."""
 
     name = "echo"
@@ -185,7 +193,7 @@ class EchoStage:
         path.write_text(sim.release.id)
 
 
-class Forgetful:
+class Forgetful(Stage[DoubleConfig]):
     """A stage whose config class does not read back what ``settings`` wrote."""
 
     name = "forgetful"
@@ -195,6 +203,9 @@ class Forgetful:
     def settings(self, config: DoubleConfig) -> dict[str, Any]:
         """Return a record that leaves ``add`` out, so reading it back gives the default."""
         return {"add": 0} if config.add else {"add": 1}
+
+    def run(self, config: DoubleConfig, sim: Simulation, path: Path | UPath) -> None:
+        """Write nothing: only ``settings`` is tested."""
 
 
 def chain(**count: Any) -> dict[str, dict[str, Any]]:
@@ -208,7 +219,7 @@ class CellsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class CellsStage:
+class CellsStage(Stage[CellsConfig]):
     """Writes the sum of every grid of a concentration result, as text: a stage that reads a type other than particles."""
 
     name = "cells"

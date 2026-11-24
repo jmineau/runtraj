@@ -336,13 +336,19 @@ so another model is never handed a setting it would ignore. It also gives
 an `UNRECORDED` set of the fields that change no particle (empty unless the
 subclass names some), `settings()` (what a run
 records), and `realizations(n)` (realization `k` with `seed + k`); override
-those two only where the model differs. The model itself names that class as
-`config_class`, names its met config as `met_config_class`, and gives
-`sha256` (the checksum of the executable it runs, `None` for none: part of
-the run's settings), `version` (what the build reports, recorded beside
-them), `data_files`, and
-`run(release, config, met, window, workdir=None, timeout=None)`
-(`runtraj.models.TransportModel`). `sha256` raises `FileNotFoundError` when
+those two only where the model differs. The model itself subclasses
+`runtraj.models.TransportModel`, typed by that config
+(`class MyModel(TransportModel[MyConfig])`), names the config as
+`config_class` and its met config as `met_config_class`, and implements
+`run(release, config, met, window, workdir=None, timeout=None)`. Every
+other member has a default in the base class, for a model that runs one
+release at a time, reads no files and makes particles; override the ones
+your model does differently. runtraj calls each member directly, so a
+public name spelled almost like one (`release_row` for `release_rows`) is
+refused when the class is defined. `sha256` (the checksum of the
+executable it runs, `None` by default: part of the run's settings),
+`version` (what the build reports, recorded beside them) and `data_files`
+describe the build. `sha256` raises `FileNotFoundError` when
 the executable cannot be found; the project still opens, and its status
 compares stored folders without the build. The met config is a pydantic model that
 checks one entry under `mets:`; its `settings()` returns what a run records
@@ -375,8 +381,8 @@ A model that writes no files sets
 `needs_workdir = False` and is handed `workdir=None`. A model that runs
 many releases in one call, such as an emulator on a GPU, sets
 `batched = True` and gives `run_many(releases, config, met, windows,
-workdir=None, timeout=None)`, returning one table with a `release` column
-(`runtraj.models.BatchedTransportModel`): the worker then hands it every
+workdir=None, timeout=None)`, returning one table with a `release` column:
+the worker then hands it every
 release of a variant that needs particles at once, and a release it
 returns no rows for fails alone. A model in a package of its own needs no
 registration: its block under `models:` in `config.yaml` names it by import
@@ -424,31 +430,25 @@ made for every release of a project, kept in the output directory beside
 the particles, and counted by `runtraj status`. For a calculation you run now
 and then, read the particles (`project.particles`) instead.
 
-A stage is a class with the members of `runtraj.stages.Stage`; it subclasses
-nothing and holds no state. This one writes each release's mean particle
-height:
+A stage subclasses `runtraj.stages.Stage`, typed by its config, and holds
+no state. It sets `name`, `config_class` and `suffix` and implements `run`;
+the other members have defaults in the base class. This one writes each
+release's mean particle height:
 
 ```python
 from pydantic import BaseModel
+
+from runtraj.stages import Stage
 
 
 class MeanHeightConfig(BaseModel):
     below: float = 5000.0  # meters above ground
 
 
-class MeanHeight:
+class MeanHeight(Stage[MeanHeightConfig]):
     name = "mean_height"  # its tree in the output, and its status() column
     config_class = MeanHeightConfig
     suffix = ".txt"  # the extension of its files
-
-    def resolve(self, config, model, model_settings, directory):
-        return config  # read files, and refuse a model that does not fit, here
-
-    def settings(self, config):
-        return config.model_dump(mode="json")  # what names its settings folder
-
-    def check(self, config, releases, directory):
-        return []  # (check, release id or None, message), for `runtraj check`
 
     def run(self, config, sim, path):
         zagl = sim.particles["zagl"]
@@ -474,19 +474,20 @@ stages:
   setting under its own `stages:` key, and the variant's keys replace the
   block's; give the class an `override(block, own)` classmethod to merge
   them another way, as PYSTILT's `FootprintConfig` changes a grid field by field.
-- **`resolve`** runs once for each variant when the project reads its
-  variants. Read the files the settings name there, and raise `ValueError`
+- **`resolve`** (by default, the config as it is) runs once for each
+  variant when the project reads its variants. Read the files the settings name there, and raise `ValueError`
   for a transport model whose particles the stage cannot use (`model` is
   its name and `model_settings` what a run of it records). Return the
   config the runs use.
-- **`settings`** returns the record that names the stage's settings folder,
-  as plain data. A changed value is a new folder, so leave out what changes
+- **`settings`** (by default, every field: `config.model_dump(mode="json")`)
+  returns the record that names the stage's settings folder, as plain data. A changed value is a new folder, so leave out what changes
   no result, such as a path. `config_class` must read the record back to a
   config with the same record, because a stored folder is found that way.
   `runtraj.stages.check_stage(stage, config)` checks it: call it in your
   tests, once for each kind of setting.
-- **`check`** returns what would stop the stage for the project's
-  releases, for `runtraj check`. Run nothing in it.
+- **`check`** (by default, nothing) returns what would stop the stage for
+  the project's releases, for `runtraj check`, as tuples of a short name,
+  the release id or `None`, and a message. Run nothing in it.
 - **`run`** makes one simulation's file and writes it at `path`. It gets the
   simulation: `sim.particles`, `sim.release`, `sim.variant`, and
   `sim.directory`, where a relative file name in the settings starts. Do
@@ -512,6 +513,16 @@ stages:
   stage reads (`runtraj.results`), `particles` when it does not say. A
   stage with `result = "concentration"` reads `sim.concentration`, and a
   variant whose model makes another type refuses it.
+- **`version`** (optional, `None` by default) is the version of what the
+  stage makes, such as `version = "2"`. When set it is part of the hash
+  that names the stage's settings folders, and recorded as `stage_version`
+  in their `_settings.yaml`. Raise it only for a fix that changes the
+  stage's files: their old files then stop counting, and the stage makes
+  new ones in a folder of its own. A stage that never sets it keeps the
+  folders it has.
+
+runtraj calls each member directly, so a public name spelled almost like
+one (`read` for `reads`) is refused when the class is defined.
 
 `path` is a `pathlib.Path`, or a `upath.UPath` when the output directory
 is on an object store. Write through `path.open()`, which both have, and

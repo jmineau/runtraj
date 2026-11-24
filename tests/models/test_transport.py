@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 import pandas as pd
 import pytest
 
 from runtraj.config import ProjectConfig
 from runtraj.execution.worker import run_result
 from runtraj.meteorology import run_window
-from runtraj.models import ModelRun, get_model
+from runtraj.models import ModelRun, TransportModel, get_model
 from runtraj.models.hysplit import HysplitConfig, HysplitModel, Met, MetConfig
 from runtraj.models.hysplit.driver import PARTICLE_FILE
 from runtraj.output import Output
@@ -131,7 +129,7 @@ def test_run_particles_goes_through_the_model_the_settings_name(
 ):
     calls: list[dict] = []
 
-    class _Model:
+    class _Model(TransportModel):
         name = "hysplit"
 
         def run(self, release, params, met, window, workdir=None, timeout=None):
@@ -166,7 +164,16 @@ def test_run_particles_goes_through_the_model_the_settings_name(
     assert particles_metadata(sim.particles_path).met_files == [tmp_path / "met_file"]
 
 
-class _EchoModel:
+class _Plain(TransportModel):
+    """A transport model with every default: it makes particles and gives no release rows."""
+
+    name = "plain"
+
+    def run(self, release, config, met, window, workdir=None, timeout=None):
+        raise NotImplementedError
+
+
+class _EchoModel(TransportModel):
     """A transport model that records what it was given and returns one particle."""
 
     name = "echo"
@@ -285,7 +292,7 @@ def test_a_run_keeps_each_column_the_model_wrote_unchanged():
     run = _finish(
         ModelRun(particles, met_files=[]),
         _release(),
-        SimpleNamespace(),  # a model with no release_rows and no result
+        _Plain(),  # a model with every default: no release_rows, particles
         TransportConfig(n_hours=-24),
     )
 
@@ -298,7 +305,7 @@ def test_a_run_adds_no_column_the_model_did_not_write(tmp_path):
     run = _finish(
         ModelRun(_positions_only(), log="model log\n", met_files=[tmp_path / "met"]),
         _release(),
-        SimpleNamespace(),
+        _Plain(),
         TransportConfig(n_hours=-24),
     )
 

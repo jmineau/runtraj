@@ -56,7 +56,7 @@ stage it uses, hashed with what the stage reads (`runtraj.identity`); variants
 with equal run settings share one run per release, and a changed setting
 hashes to a new folder (`docs/reference/layout.rst`). **A stage** makes one
 file per release after the model runs. `config.yaml` names its class by
-import path, in a block named for the stage, and the class provides
+import path, in a block named for the stage, and the class subclasses
 `runtraj.stages.Stage`, so the core handles any stage and imports none
 (`CONTRIBUTING.md`, "Adding a stage").
 
@@ -96,13 +96,13 @@ src/runtraj/
   output.py       Output: the output directory; `completed`, the completion rule
   simulation.py   Simulation: a frozen (release, variant, output) value
   config.py       ProjectConfig and Variant;  identity.py  settings records, hashes
-  stages.py       the Stage protocol, get_stage, check_stage;  _plugins.py  a class by import path
+  stages.py       the Stage base class, get_stage, check_stage;  _plugins.py  a class by import path
   releases/       release classes, releases.csv, shared validation
   results.py      the result types (particles, concentration, trajectories): suffix, check, write, read
   particles/      the particle table and files, release heights, the particles.runtraj accessor
   concentration.py  the concentration result: a DataTree of grids, its NetCDF file
   trajectories.py   the trajectory table and its Parquet file
-  models/         TransportModel/TransportConfig protocols, MODELS (hysplit), get_model, run_model, check_model
+  models/         TransportModel/TransportConfig base classes, MODELS (hysplit), get_model, run_model, check_model
     hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
   execution/      ExecutionConfig (a block per backend), runner (plan, local run, Slurm submit), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)

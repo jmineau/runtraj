@@ -16,7 +16,7 @@ import xarray as xr
 
 from runtraj.concentration import require_netcdf4
 from runtraj.exceptions import SimulationError
-from runtraj.models import ModelRun
+from runtraj.models import ModelRun, TransportModel
 
 from .cdump import read_cdump
 from .config import ConcentrationGrid, HysplitConfig
@@ -126,7 +126,7 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-class HysplitModel:
+class HysplitModel(TransportModel[HysplitConfig]):
     """
     HYSPLIT as a transport model, the object ``get_model("hysplit")`` returns.
 
@@ -146,10 +146,6 @@ class HysplitModel:
     config_class = HysplitConfig
     #: HYSPLIT reads ARL files, found, downloaded, or cropped as a met says.
     met_config_class = MetConfig
-    #: HYSPLIT writes its inputs and outputs as files in a directory.
-    needs_workdir = True
-    #: One hycs_std (or hyts_std) process per release.
-    batched = False
 
     def result(self, config: HysplitConfig) -> str:
         """
