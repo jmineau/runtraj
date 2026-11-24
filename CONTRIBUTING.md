@@ -602,6 +602,33 @@ with path.open("wb") as f:
     pq.write_table(table, f, compression="zstd")
 ```
 
+Test the stage end to end, as a project runs it, with
+`runtraj.testing.run_stage`. It makes a project of one release in a
+folder, whose transport model (`runtraj.testing.ReplayModel`) runs
+nothing and hands back the particles you give it, runs it as `runtraj run`
+does, and checks that the simulation is complete, that the stage's file is
+where completion looks for it, that a second run makes nothing again, and
+`check_stage` on the settings the variant resolved. It needs no transport
+model installed, so it belongs in the stage's CI:
+
+```python
+from runtraj.testing import run_stage
+
+
+def test_mean_height_runs_in_a_project(tmp_path):
+    sim = run_stage(
+        "mypkg.stages.MeanHeight",
+        particles,
+        release,
+        tmp_path,
+        settings={"below": 3000},
+    )
+    assert float(sim.path("mean_height").read_text()) < 3000
+```
+
+Pass the blocks of the stages yours reads as `others`, each with its
+`class`.
+
 A stage imports only runtraj's public names, those in a module's
 `__all__`, since only those keep their meaning from one version to the
 next. A helper of runtraj's that a stage wants, it copies. The toy stages in

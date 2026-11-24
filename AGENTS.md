@@ -97,6 +97,7 @@ src/runtraj/
   simulation.py   Simulation: a frozen (release, variant, output) value
   config.py       ProjectConfig and Variant;  identity.py  settings records, hashes
   stages.py       the Stage base class, get_stage, check_stage;  _plugins.py  a class by import path
+  testing.py      run_stage: a stage end to end in a project, on the replay transport model
   releases/       release classes, releases.csv, shared validation
   results.py      the result types (particles, concentration, trajectories): suffix, check, write, read
   particles/      the particle table and files, release heights, the particles.runtraj accessor

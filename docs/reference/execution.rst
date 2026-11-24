@@ -156,7 +156,10 @@ transport model runs. PYSTILT's footprint is one
 (``stilt.footprint.FootprintStage``). A ``stages`` block of
 ``config.yaml`` names its stage's class by import path, so a stage in a
 package of your own needs no registration, and CONTRIBUTING describes how to
-write one. Use :func:`~runtraj.stages.check_stage` in its tests.
+write one. In its tests, :func:`~runtraj.stages.check_stage` checks its
+settings record, and :func:`~runtraj.testing.run_stage` runs it end to end
+in a project of one release, on particles you give it and with no transport
+model installed (:class:`~runtraj.testing.ReplayModel`).
 
 .. autosummary::
    :toctree: _api
@@ -166,3 +169,5 @@ write one. Use :func:`~runtraj.stages.check_stage` in its tests.
    runtraj.stages.get_stage
    runtraj.stages.ordered
    runtraj.stages.check_stage
+   runtraj.testing.run_stage
+   runtraj.testing.ReplayModel

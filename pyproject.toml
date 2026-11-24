@@ -135,7 +135,7 @@ containers = ["runtraj"]
 exhaustive = true
 layers = [
     "__main__",
-    "cli",
+    "cli | testing",
     "project : execution : config",
     "check | fetch",
     "simulation",
