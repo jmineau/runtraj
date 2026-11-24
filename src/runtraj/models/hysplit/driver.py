@@ -44,6 +44,7 @@ from runtraj.models.hysplit.failures import (
     failure_in,
 )
 from runtraj.models.hysplit.namelist import NameList
+from runtraj.releases.table import _EXACT_FLOATS
 
 if TYPE_CHECKING:
     from arlmet import Grid
@@ -247,13 +248,6 @@ def _tables_here(path: Path) -> bytes:
 #: HYSPLIT's names for the columns the particle table names otherwise
 #: (:data:`runtraj.particles.PARTICLE_SCHEMA`); the rest keep HYSPLIT's.
 PARTICLE_COLUMNS = {"indx": "particle", "time": "age", "long": "lon", "lati": "lat"}
-
-# Before pandas 3 the C reader's default float parser can differ from Python's
-# in the last digit, and ``round_trip`` reads every value exactly; pandas 3
-# parses exactly by default and deprecates the argument.
-_EXACT_FLOATS: dict[str, Any] = (
-    {"float_precision": "round_trip"} if int(pd.__version__.split(".")[0]) < 3 else {}
-)
 
 
 def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:

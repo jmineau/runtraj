@@ -823,6 +823,18 @@ def test_write_releases_round_trip_point(tmp_path, point_release):
     assert read_releases(path) == [point_release]
 
 
+def test_write_releases_round_trip_keeps_every_digit_of_a_coordinate(tmp_path):
+    """On pandas 2 the default float parser read this longitude one unit off in the last place."""
+    release = PointRelease(
+        time="2023-07-15 18:00",
+        longitude=-112.77728611209807,
+        latitude=40.77,
+        altitude=5,
+    )
+    loaded = read_releases(write_releases([release], tmp_path / "r.csv"))
+    assert loaded[0].id == release.id
+
+
 def test_write_releases_round_trip_column(tmp_path, column_release):
     loaded = read_releases(write_releases([column_release], tmp_path / "r.csv"))
     assert loaded == [column_release]
