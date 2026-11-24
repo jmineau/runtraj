@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from pydantic import ValidationError
 
+from runtraj import _process
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
 from runtraj.models.hysplit import (
     FailureReason,
@@ -550,10 +551,10 @@ def test_terminate_escalates_when_group_kill_does_not_finish(monkeypatch):
     proc = FakeProc()
     killpg_calls: list[tuple[int, int]] = []
     monkeypatch.setattr(
-        driver.os, "killpg", lambda pid, sig: killpg_calls.append((pid, sig))
+        _process.os, "killpg", lambda pid, sig: killpg_calls.append((pid, sig))
     )
 
-    driver._terminate(proc)  # type: ignore[arg-type]
+    _process.terminate(proc)  # type: ignore[arg-type]
 
     assert killpg_calls == [(proc.pid, signal.SIGTERM), (proc.pid, signal.SIGKILL)]
     assert proc.wait_calls == 2
@@ -1569,9 +1570,9 @@ def test_the_met_folder_of_control_has_a_forward_slash(tmp_path):
 
 
 def test_a_running_process_is_stopped():
-    """HYSPLIT runs in a group of its own, which :func:`_terminate` ends: a session on POSIX, a process group on Windows."""
+    """HYSPLIT runs in a group of its own, which :func:`terminate` ends: a session on POSIX, a process group on Windows."""
     proc = subprocess.Popen(
-        [sys.executable, "-c", "import time; time.sleep(60)"], **driver._own_group()
+        [sys.executable, "-c", "import time; time.sleep(60)"], **_process.own_group()
     )
-    driver._terminate(proc)
+    _process.terminate(proc)
     assert proc.poll() is not None
