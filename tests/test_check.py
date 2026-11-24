@@ -237,9 +237,11 @@ def test_a_file_cut_partway_through_a_time_step_is_named(tmp_path):
 
     table = project.check()
 
-    assert list(table["check"]) == ["met_cut"]
-    assert table["release"].isna().all()
-    assert str(block) in table["message"].iloc[0]
+    # The file is not used, so the release lacks its hours too.
+    assert list(table["check"]) == ["met_files", "met_cut"]
+    cut = table.iloc[1]
+    assert pd.isna(cut["release"])
+    assert str(block) in cut["message"]
 
 
 def test_two_products_holding_one_time_are_found_for_the_releases_they_stop(tmp_path):
@@ -291,9 +293,7 @@ def test_a_met_file_the_hour_after_a_backward_run_needs_is_found_missing(tmp_pat
 
     table = project.check()
 
-    assert list(table["message"]) == [
-        "no met file for 2023-01-01 11:00 to 2023-01-01 11:30"
-    ]
+    assert list(table["message"]) == ["no met file for 2023-01-01 12:00"]
 
 
 def test_a_met_file_the_hour_after_a_forward_run_needs_is_found_missing(tmp_path):
@@ -303,9 +303,7 @@ def test_a_met_file_the_hour_after_a_forward_run_needs_is_found_missing(tmp_path
 
     table = project.check()
 
-    assert list(table["message"]) == [
-        "no met file for 2023-01-01 11:00 to 2023-01-01 11:30"
-    ]
+    assert list(table["message"]) == ["no met file for 2023-01-01 12:00"]
 
 
 def test_a_variant_with_a_longer_run_is_listed_for_its_own_files(tmp_path):

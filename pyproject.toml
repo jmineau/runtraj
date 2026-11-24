@@ -308,3 +308,7 @@ cache-keys = [
     { file = "setup.py" },
     { git = { commit = true, tags = true } },
 ]
+
+# arlmet.catalog is not released yet: arl-met#250's branch until it is.
+[tool.uv.sources]
+arlmet = { git = "https://github.com/jmineau/arl-met", rev = "899f0502" }

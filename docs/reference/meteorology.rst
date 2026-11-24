@@ -46,14 +46,18 @@ same rule, with the archive's own step (arlmet's ``Archive.step``).
 The catalog
 ~~~~~~~~~~~
 
-What the files hold is kept in a table per folder, in ``catalogs/`` inside
+What the files hold is kept in a table per folder by :func:`arlmet.catalog`
+(arlmet's "Cataloging a folder" guide), in ``catalogs/`` inside
 ``subgrid_dir``, or under ``$XDG_CACHE_HOME`` (else ``~/.cache``) without
-one. ``runtraj check`` brings it up to date; otherwise the first simulation builds it while the
-others wait. A simulation reads the table, and looks in the folder again
-only when the table has no file for one of its hours or a file it chose has
-changed. Files of two products or two grids that hold the same time fail
-the run, naming both. A file that holds part of what another file of the
-same product holds, such as a short copy, is passed over for the longer one.
+one; runtraj writes nothing in the met's folder. A table the archive's
+maintainer keeps beside its files is a starting point. Each process reads the folder once, opening only the files that are
+new or changed, and again when the table has no file for one of its hours.
+On a large archive the first read takes minutes, so run ``runtraj check``
+before a batch: it builds the table, and every simulation starts from it.
+Files of two products or two grids that hold the same time fail the run,
+naming both, and so do two copies of one file. A file whose every hour a
+longer file of the same product holds, such as a short copy, is passed over
+for the longer one.
 
 Files that fail a run
 ~~~~~~~~~~~~~~~~~~~~~

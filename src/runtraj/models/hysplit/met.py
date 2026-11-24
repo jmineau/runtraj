@@ -10,6 +10,7 @@ import inspect
 import logging
 import os
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass, field
 from itertools import pairwise
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Self
@@ -26,9 +27,8 @@ from runtraj.meteorology import run_window
 from runtraj.models import MetConfig
 from runtraj.spatial import Bounds
 
-from .catalog import Catalog, Cover, catalog_path, is_stray
-
 if TYPE_CHECKING:
+    from arlmet import Catalog
     from arlmet.archives import Archive
 
 logger = logging.getLogger(__name__)
@@ -279,7 +279,7 @@ class Met:
     The meteorology files of one met, found locally or downloaded.
 
     Without ``download``, files are found under ``directory`` by what their
-    headers say they hold (:class:`~runtraj.models.hysplit.catalog.Catalog`).
+    headers say they hold (:func:`arlmet.catalog`).
     With ``download`` set to an ARL archive name, arlmet downloads the files,
     cropping them as it goes when subgridding is on. Local files are cropped with
     ``arlmet.extract_subset`` into :attr:`crop_dir`, which all simulations
@@ -300,24 +300,24 @@ class Met:
         #: ``config.directory``, made absolute. A relative path starts from
         #: the working directory, and ``~`` and ``$VARIABLES`` are expanded.
         self.directory = absolute(config.directory)
-        #: What the files under :attr:`directory` hold, read from their headers.
-        self.catalog = Catalog(
-            self.directory,
-            catalog_path(
-                self.directory,
-                None if config.subgrid_dir is None else absolute(config.subgrid_dir),
-            ),
-        )
-        #: What the crops in :attr:`crop_dir` hold, when local files are
-        #: cropped, else ``None``. A crop serves a run by the times its header
-        #: says it holds, whatever it is named and whether or not the archive
-        #: still has its source.
-        self.crops: Catalog | None = None
         subgrid_dir = config.subgrid_dir
-        if config.subgrid_enable and config.download is None and subgrid_dir:
-            self.crops = Catalog(
-                self.crop_dir, catalog_path(self.crop_dir, absolute(subgrid_dir))
-            )
+        #: Whether local files are cropped into :attr:`crop_dir`. A crop
+        #: serves a run by the times its header says it holds, whatever it is
+        #: named and whether or not the archive still has its source.
+        self.crops = bool(
+            config.subgrid_enable and config.download is None and subgrid_dir
+        )
+        # arlmet keeps its tables in ``catalogs/`` in subgrid_dir, the place a
+        # met already writes to and shares, else in the user's cache: never
+        # in the met's own folder.
+        cache = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
+        self._cache_dir = (
+            Path(cache) / "runtraj" / "met_catalogs"
+            if subgrid_dir is None
+            else absolute(subgrid_dir) / "catalogs"
+        )
+        self._catalogs: dict[Path, Catalog | None] = {}
+        self._refreshed: set[Path] = set()
         self._archive: Archive | None = None
 
     # ------------------------------------------------------------------
@@ -399,51 +399,75 @@ class Met:
             )
         return files
 
-    def _cover(self, earlier: pd.Timestamp, later: pd.Timestamp) -> Cover:
+    def _catalog(self, folder: Path) -> Catalog | None:
+        """Return arlmet's catalog of *folder*, read once in this process, or ``None`` when the folder does not exist."""
+        from arlmet import catalog
+
+        if folder not in self._catalogs:
+            try:
+                self._catalogs[folder] = catalog(
+                    folder, recursive=True, cache_dir=self._cache_dir
+                )
+            except FileNotFoundError:
+                self._catalogs[folder] = None
+        return self._catalogs[folder]
+
+    @property
+    def catalog(self) -> Catalog | None:
+        """What the files under :attr:`directory` hold, read from their headers (:func:`arlmet.catalog`)."""
+        return self._catalog(self.directory)
+
+    def _held(self, folder: Path, earlier: pd.Timestamp, later: pd.Timestamp) -> _Cover:
+        """
+        Return the files in *folder* that hold the met steps of a run from *earlier* to *later*.
+
+        The catalog read first in this process is trusted until it has a
+        gap; then the folder is read again once, since a crop or a download
+        may have landed since.
+        """
+        cover = _look_up(self._catalog(folder), earlier, later)
+        if cover.gaps and folder not in self._refreshed:
+            self._refreshed.add(folder)
+            self._catalogs.pop(folder, None)
+            cover = _look_up(self._catalog(folder), earlier, later)
+        return cover
+
+    def _cover(self, earlier: pd.Timestamp, later: pd.Timestamp) -> _Cover:
         """
         Return the files that hold a run from *earlier* to *later*: crops where there are some, else the archive's.
 
-        Without a crop, these are the archive's files (:meth:`Catalog.cover`).
-        With one, the crops in :attr:`crop_dir` serve every stretch they
-        hold, and each stretch they do not is asked of the archive, whose
-        files :meth:`readable` crops. Crops are told by what their headers
-        hold, never by their names, so the hours a short crop lacks come from
-        the archive's whole file, and a crop whose source the archive no
-        longer has still serves.
+        Without a crop, these are the archive's files. With one, the crops in
+        :attr:`crop_dir` serve every stretch they hold, and each stretch they
+        do not is asked of the archive, whose files :meth:`readable` crops.
+        Crops are told by what their headers hold, never by their names, so
+        the hours a short crop lacks come from the archive's whole file, and
+        a crop whose source the archive no longer has still serves.
         """
-        if self.crops is None:
-            return self.catalog.cover(earlier, later)
-        crops = self.crops.cover(earlier, later)
+        if not self.crops:
+            return self._held(self.directory, earlier, later)
+        crops = self._held(self.crop_dir, earlier, later)
         if not crops.gaps or crops.clash is not None:
             return crops
-        fills = [self.catalog.cover(a, b) for a, b in crops.gaps]
-        covers = [crops, *fills]
-        # A file wholly inside another is dropped, the longer kept and a crop
-        # before an archive file, as Catalog.cover does within one folder.
+        fills = [self._held(self.directory, a, b) for a, b in crops.gaps]
         spans = {
-            path: (first, last, cover is crops)
-            for cover in covers
-            for path, first, last in zip(
-                cover.files, cover.firsts, cover.lasts, strict=True
-            )
+            **_spans_of(self._catalog(self.directory)),
+            **_spans_of(self._catalog(self.crop_dir)),
         }
+        # A file wholly inside another is dropped, the longer kept and a crop
+        # before an archive file, as arlmet.catalog does within one folder.
+        found = dict.fromkeys([*crops.files, *(p for f in fills for p in f.files)])
         kept: list[Path] = []
         for path in sorted(
-            spans,
-            key=lambda p: (spans[p][0] - spans[p][1], not spans[p][2], str(p)),
+            found,
+            key=lambda p: (spans[p][0] - spans[p][1], p not in crops.files, str(p)),
         ):
-            first, last, _ = spans[path]
+            first, last = spans[path]
             if not any(spans[k][0] <= first and last <= spans[k][1] for k in kept):
                 kept.append(path)
-        files = sorted(kept, key=lambda path: (spans[path][0], str(path)))
-        return Cover(
-            files=files,
-            firsts=[spans[path][0] for path in files],
-            lasts=[spans[path][1] for path in files],
+        return _Cover(
+            files=sorted(kept, key=lambda path: (spans[path][0], str(path))),
             gaps=[gap for fill in fills for gap in fill.gaps],
             clash=next((fill.clash for fill in fills if fill.clash), None),
-            single=[p for c in covers for p in c.single if p in kept],
-            cut=[p for c in covers for p in c.cut if p in kept],
         )
 
     def files_for(self, window: tuple[Any, Any]) -> list[Path]:
@@ -455,7 +479,7 @@ class Met:
         the window's end: the release of a backward run, the end of a
         forward one. The files are the ones whose headers say they hold the
         steps from the one at or before the start to that one
-        (:meth:`Catalog.cover`), whatever they are named. When local files
+        (:meth:`arlmet.Catalog.covering`), whatever they are named. When local files
         are cropped, a crop in :attr:`crop_dir` that holds part of the
         window is one of them, and the archive gives the rest. Downloads the
         files first when ``download`` is set.
@@ -485,7 +509,7 @@ class Met:
             raise MeteorologyError(cover.clash)
         if cover.gaps:
             where = str(self.directory)
-            if self.crops is not None:
+            if self.crops:
                 where += f" or its crops in {self.crop_dir}"
             raise MeteorologyError(
                 f"No met file in {where} for {_spans(cover.gaps)}. "
@@ -535,7 +559,7 @@ class Met:
         has no files to look for before a run, so only its crop is checked.
 
         This brings the tables of what the files and their crops hold up to
-        date first (:meth:`Catalog.refresh`), so it is the place to build
+        date first (:func:`arlmet.catalog`), so it is the place to build
         them before a batch: a first read of a large archive takes minutes. It reads each
         file's first two index records, not the rest. :meth:`check` reads
         each file at a run, and a run that passes this one can still fail as
@@ -563,9 +587,11 @@ class Met:
             if problem is not None:
                 found.append(("met_directory", None, problem))
             else:
-                self.catalog.refresh()
-                if self.crops is not None:
-                    self.crops.refresh()
+                # Read now, and not again for a gap: the check lists each folder once.
+                self._catalogs.clear()
+                self._refreshed.update(
+                    [self.directory, *([self.crop_dir] if self.crops else [])]
+                )
                 found += self._file_problems(releases, n_hours)
         found += self._outside_crop(releases)
         return pd.DataFrame(found, columns=["check", "release", "message"])
@@ -587,16 +613,19 @@ class Met:
         first = releases.drop_duplicates("release")
         messages: dict[Any, str | None] = {}
         single: dict[Path, None] = {}
-        cut: dict[Path, None] = {}
         starts: dict[Any, Path] = {}
+        folders = [self.directory, *([self.crop_dir] if self.crops else [])]
+        tables = [c.table for f in folders if (c := self._catalog(f)) is not None]
+        one_step = {
+            p for t in tables for p in t["path"][t["step"].isna() & (t["error"] == "")]
+        }
         for time in first["time"].drop_duplicates():
             earlier, later = (_time(t) for t in run_window(time, n_hours))
             cover = self._cover(earlier, later)
             messages[time] = cover.clash or (
                 f"no met file for {_spans(cover.gaps)}" if cover.gaps else None
             )
-            single.update(dict.fromkeys(cover.single))
-            cut.update(dict.fromkeys(cover.cut))
+            single.update(dict.fromkeys(p for p in cover.files if p in one_step))
             if cover.files and not self.config.subgrid_enable:
                 starts[time] = cover.files[0]
         found: list[tuple[str, str | None, str]] = [
@@ -609,14 +638,16 @@ class Met:
             found.append(
                 ("met_periods", None, _one_period_message(next(iter(single))) + more)
             )
+        # arlmet refuses a file cut partway through a time step, and says so.
         found += [
             (
                 "met_cut",
                 None,
-                f"The met file {path} ends partway through a time step, so it "
-                "is damaged. Get it again.",
+                f"The met file {path} cannot be used: {error} Get it again.",
             )
-            for path in cut
+            for t in tables
+            for path, error in zip(t["path"], t["error"], strict=True)
+            if "truncated" in error
         ]
         return found + self._outside_domain(releases, starts)
 
@@ -633,8 +664,11 @@ class Met:
         """
         if not starts:
             return []
-        grid_of = dict(
-            zip(self.catalog.table["resolved"], self.catalog.table["grid"], strict=True)
+        table = self.catalog.table if self.catalog is not None else None
+        grid_of = (
+            {}
+            if table is None
+            else dict(zip(map(str, table["path"]), table["grid"], strict=True))
         )
         file_of_grid: dict[str, Path] = {}
         for path in starts.values():
@@ -755,7 +789,7 @@ class Met:
         downloaded. When two files share a name, the first is
         kept, since a model would otherwise read the same hours twice.
         """
-        if self.crops is not None:
+        if self.crops:
             files = self._crop_local_files(files)
         kept: dict[str, Path] = {}
         for path in files:
@@ -894,9 +928,54 @@ _REMOVED = {
 }
 
 
+@dataclass
+class _Cover:
+    """The files that hold a run's met steps, in time order; the stretches no file holds; or why the files cannot be used."""
+
+    files: list[Path] = field(default_factory=list)
+    gaps: list[tuple[pd.Timestamp, pd.Timestamp]] = field(default_factory=list)
+    clash: str | None = None
+
+
+def _look_up(
+    catalog: Catalog | None, earlier: pd.Timestamp, later: pd.Timestamp
+) -> _Cover:
+    """Return the files of *catalog* for a run from *earlier* to *later*, and the stretches of met steps it lacks."""
+    if catalog is None or not (catalog.table["error"] == "").any():
+        return _Cover(gaps=[(earlier, later)])
+    try:
+        files = catalog.covering(earlier, later, missing_ok=True)
+    except ValueError as error:  # two files hold one time
+        return _Cover(
+            clash=f"{error} Keep each product in its own folder, and give each its own met."
+        )
+    stretches: list[tuple[pd.Timestamp, pd.Timestamp]] = []
+    step = catalog.step
+    for time in catalog.missing(earlier, later):
+        if stretches and step is not None and time - stretches[-1][1] <= step:
+            stretches[-1] = (stretches[-1][0], time)
+        else:
+            stretches.append((time, time))
+    return _Cover(files=files, gaps=stretches)
+
+
+def _spans_of(catalog: Catalog | None) -> dict[Path, tuple[pd.Timestamp, pd.Timestamp]]:
+    """Return the first and last valid time of each usable file in *catalog*."""
+    if catalog is None:
+        return {}
+    usable = catalog.table[catalog.table["error"] == ""]
+    return {
+        Path(p): (a, b)
+        for p, a, b in zip(usable["path"], usable["start"], usable["end"], strict=True)
+    }
+
+
 def _spans(gaps: list[tuple[pd.Timestamp, pd.Timestamp]]) -> str:
-    """Return stretches of time as text."""
-    return ", ".join(f"{a:%Y-%m-%d %H:%M} to {b:%Y-%m-%d %H:%M}" for a, b in gaps)
+    """Return stretches of time as text, a stretch of one time as that time."""
+    return ", ".join(
+        f"{a:%Y-%m-%d %H:%M}" if a == b else f"{a:%Y-%m-%d %H:%M} to {b:%Y-%m-%d %H:%M}"
+        for a, b in gaps
+    )
 
 
 def _overlapping(
@@ -1014,8 +1093,12 @@ def _arl_candidates(directory: Path) -> Iterator[Path]:
         return
     folders = []
     for entry in entries:
-        if is_stray(entry.name):
-            continue  # as the catalog skips them
+        if (
+            entry.name.startswith(".")
+            or entry.name.endswith(("~", ".partial", ".bad"))
+            or ".lock" in entry.name
+        ):
+            continue  # as arlmet.catalog skips them
         if entry.is_dir():
             folders.append(entry.path)
         elif entry.is_file():

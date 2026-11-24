@@ -104,7 +104,7 @@ src/runtraj/
   concentration.py  the concentration result: a DataTree of grids, its NetCDF file
   trajectories.py   the trajectory table and its Parquet file
   models/         TransportModel/TransportConfig base classes, MODELS (hysplit), get_model, run_model, check_model
-    hysplit/      config (and its mode), met, catalog, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
+    hysplit/      config (and its mode), met, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
   execution/      ExecutionConfig (a block per backend), backends (Backend, get_backend: a backend by name or import path),
                   runner (plan, local run), slurm (job array, requeue), worker,
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
@@ -307,7 +307,7 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   than 5 grid cells inside the domain (only at `outdt: 0`).
   `runtraj check` runs the file search for every release early; it opens one
   met file per met, to count its time periods (HYSPLIT stops on a file with
-  one, and `Met.check` refuses it), and one per grid the catalog lists, for
+  one, and `Met.check` refuses it), and one per grid arlmet's catalog lists, for
   the domain; so a damaged file still fails at run time.
 - **A `cdump` does not say which `ICHEM` wrote it.** `read_cdump` is told
   the run's `ichem` and `cmass`; 1 and 10 are read as a `source` or
