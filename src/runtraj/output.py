@@ -241,6 +241,29 @@ def _write_settings(path: Path | UPath, record: dict[str, Any]) -> None:
         )
 
 
+def _claim(path: Path | UPath, name: str) -> str:
+    """
+    Write *name* to *path* unless another writer did first, and return the name *path* holds.
+
+    A settings hash is claimed this way before its folder is made, so that
+    two projects starting the same settings at once, under different
+    variant names, both write to the folder of the first. The file is
+    created only if it is not there: a hard link on a filesystem, a
+    conditional put (``If-None-Match``) on an object store.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if isinstance(path, Path):
+            with atomic_path(path, replace=False) as tmp:
+                tmp.write_text(name, encoding="utf-8")
+        else:
+            with path.open("x", encoding="utf-8") as file:
+                file.write(name)
+    except FileExistsError:
+        return path.read_text(encoding="utf-8")
+    return name
+
+
 @functools.cache
 def _versions(stage_class: str) -> dict[str, str]:
     """
@@ -781,7 +804,11 @@ class Output:
             stage_version = variant.stage(kind).version
             if stage_version is not None:
                 record["stage_version"] = stage_version
-        name = f"{variant.name}-{digest[:HASH_CHARS]}"
+        name = _claim(
+            self.directory / kind / f".hash-{digest}",
+            f"{variant.name}-{digest[:HASH_CHARS]}",
+        )
+        record["name"] = name.rpartition("-")[0]  # another variant's, if it was first
         _write_settings(self._dir(kind, name) / SETTINGS_FILE, record)
         self._hashes.setdefault(kind, {})[name] = digest
         return name

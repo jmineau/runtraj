@@ -266,6 +266,24 @@ def test_two_workers_starting_a_run_at_once_both_succeed(tmp_path, monkeypatch):
     assert [p.name for p in folder.iterdir()] == ["_settings.yaml"]
 
 
+def test_two_projects_starting_the_same_settings_at_once_share_one_folder(
+    tmp_path, monkeypatch
+):
+    """Each listed the tree before the other wrote, and once made a folder under its own variant's name."""
+    path = tmp_path / "output"
+    zeta, alpha = output_variant("zeta"), output_variant("alpha")
+    first, second = Output(path), Output(path)
+    _interleave(monkeypatch, lambda: write_one(second, alpha))
+
+    write_one(first, zeta, release_at(hour=13))
+    write_one(first, zeta, release_at(hour=14))
+
+    assert first.folder("particles", zeta) == second.folder("particles", alpha)
+    fresh = Output(path)
+    assert list(fresh.hashes("particles")) == [f"alpha-{zeta.result_hash[:6]}"]
+    assert len(fresh.present("particles", zeta)) == 3
+
+
 def _settings_file(path):
     return Output(path).folder("particles", VARIANT) / "_settings.yaml"
 
