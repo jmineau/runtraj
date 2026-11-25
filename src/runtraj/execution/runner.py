@@ -27,7 +27,13 @@ from runtraj._paths import absolute
 from runtraj._transient import is_transient
 from runtraj.execution.backends import Backend, get_backend, not_waited
 from runtraj.execution.config import ExecutionConfig, LocalConfig, PbsConfig
-from runtraj.execution.inputs import hash_inputs, lock, read_text, write_text
+from runtraj.execution.inputs import (
+    FETCH_DONE,
+    hash_inputs,
+    lock,
+    read_text,
+    write_text,
+)
 from runtraj.fetch import downloads, fetch_project
 
 if TYPE_CHECKING:
@@ -56,6 +62,11 @@ def task_share(release_ids: list[str], task: int, n_tasks: int) -> list[str]:
 
     The share is every *n_tasks*-th release, starting at *task*, which runs
     from 0 to ``n_tasks - 1`` as the index of a job array does.
+    ``runtraj run --task i/n`` takes this share of the list
+    ``--releases`` gives; without one it takes it of every release of the
+    project in the order of a hash of their ids, so
+    ``pending(project, task=(i, n))`` (:func:`pending`) is the releases
+    such a task runs.
 
     Raises
     ------
@@ -109,8 +120,10 @@ def pending(
     skip_existing: bool = True,
 ) -> list[str]:
     """
-    Return the ids of the releases a run would run, each once, in project order.
+    Return the ids of the releases a run would run, each once.
 
+    They are in project order, or in the order of *releases* when given;
+    with *task* and no *releases*, in the order of a hash of their ids.
     A driver that starts tasks itself writes these to the ``releases.txt``
     each task reads (``runtraj run --releases``).
 
@@ -189,9 +202,9 @@ def _to_fetch(
 
 def _fetch_here(
     project: Project, unrun: pd.DataFrame, setting: str = "execution.local.fetch"
-) -> None:
+) -> bool:
     """
-    Get the met files of the *unrun* simulations in this process, before a local run's workers start.
+    Get the met files of the *unrun* simulations in this process, before a local run's workers start, and return whether every one was had.
 
     A file that could not be had, or a download that failed and that a
     retry may get past (:func:`runtraj._transient.is_transient`), is only
@@ -205,7 +218,7 @@ def _fetch_here(
         if not is_transient(error):
             raise
         logger.warning("The fetch stopped (%s); each run downloads its own.", error)
-        return
+        return False
     problems = files["message"].dropna()
     if len(problems):
         logger.warning(
@@ -213,13 +226,12 @@ def _fetch_here(
             len(problems),
             problems.iloc[0],
         )
+        return False
+    return True
 
 
 #: The lock a task holds where the inputs are while it gets the met files (:func:`fetch_shared`).
 FETCH_LOCK = "fetch"
-
-#: The file a task writes where the inputs are once it got the met files, holding the inputs' hash (:func:`fetch_shared`).
-FETCH_DONE = ".fetch.done"
 
 
 def fetch_shared(project: Project, location: str) -> None:
@@ -232,13 +244,17 @@ def fetch_shared(project: Project, location: str) -> None:
     lock :data:`FETCH_LOCK` at *location* while it fetches
     (:func:`runtraj.execution.inputs.lock`), so the first downloads the
     files and the others, waiting their turn, find them and download
-    nothing. The first then writes :data:`FETCH_DONE` there, holding the
-    hash of the inputs (:func:`runtraj.execution.inputs.hash_inputs`), and a
-    task that finds it, before the lock or once it holds it, does not list
-    the project again. New inputs, such as more releases, hash to another
-    value and are fetched again. Nothing is locked when no met downloads.
-    As for a local run's fetch, a file that could not be had, or a download
-    a retry may get past, is only logged: each run then tries again.
+    nothing. A task that got every file writes
+    :data:`~runtraj.execution.inputs.FETCH_DONE` there, holding the hash of
+    the inputs (:func:`runtraj.execution.inputs.hash_inputs`), and a task
+    that finds it, before the lock or once it holds it, does not list the
+    project again. New inputs, such as more releases, hash to another value
+    and are fetched again, and ``runtraj submit`` removes the note when it
+    makes a Job, so it holds for one Job. Nothing is locked when no met
+    downloads. As for a local run's fetch, a file that could not be had, or
+    a download a retry may get past, is only logged; the task then writes
+    no note, so the next task tries again under the lock, and each run
+    tries again too.
 
     Parameters
     ----------
@@ -263,9 +279,8 @@ def fetch_shared(project: Project, location: str) -> None:
         if read_text(location, FETCH_DONE) == inputs:
             return  # the task before fetched them while this one waited
         unrun = project._unrun(sims, skip_existing=True)
-        if not unrun.empty:
-            _fetch_here(project, unrun, "execution.kubernetes.fetch")
-        write_text(location, FETCH_DONE, inputs)
+        if unrun.empty or _fetch_here(project, unrun, "execution.kubernetes.fetch"):
+            write_text(location, FETCH_DONE, inputs)
 
 
 def _status(project: Project, release_ids: list[str]) -> pd.DataFrame:
@@ -413,9 +428,10 @@ def run(
     task : tuple of (int, int), optional
         ``(i, n)``: run share ``i`` of ``n`` of the releases here, in this
         process, whatever the backend. The share is every ``n``-th
-        release in project order (or in *releases* order), starting at
-        ``i`` (:func:`task_share`), whether it is complete or not, and the
-        complete ones are then skipped. Each task of a job array or a
+        release, starting at ``i`` (:func:`task_share`), of *releases* in
+        their order, or else of every release of the project in the order
+        of a hash of their ids (:func:`pending`), whether it is complete
+        or not, and the complete ones are then skipped. Each task of a job array or a
         Kubernetes indexed Job runs one share, and every task splits the
         releases the same way whenever it starts.
     execution : ExecutionConfig, optional

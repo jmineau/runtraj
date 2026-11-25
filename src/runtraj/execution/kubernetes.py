@@ -43,7 +43,14 @@ import yaml
 from runtraj._paths import is_url
 from runtraj.execution.backends import Backend
 from runtraj.execution.config import SCRATCH, ExecutionConfig, KubernetesConfig
-from runtraj.execution.inputs import RELEASES, has_file, hash_inputs, push
+from runtraj.execution.inputs import (
+    FETCH_DONE,
+    RELEASES,
+    has_file,
+    hash_inputs,
+    push,
+    remove_file,
+)
 from runtraj.execution.schedule import DELAY_HOURS, read_sites
 from runtraj.fetch import downloads
 
@@ -672,7 +679,8 @@ def submit_job(project: Project, pending: list[str], execution: ExecutionConfig)
     (:func:`runtraj.execution.inputs.push`) and the pods open that URL;
     else they open the project folder at its path here, which must be on a
     volume they mount. With ``fetch`` set and a met that downloads, each
-    pod first gets the met files, one pod at a time (``--fetch``). The Job
+    pod first gets the met files, one pod at a time (``--fetch``), and the
+    note a Job before it left that it got them is removed. The Job
     has ``completions`` tasks, or fewer when there are fewer releases. Its manifest is written to
     ``_kubernetes/<date_time>_<id>/job.yaml`` in the project before it is
     created, and the Job's name to ``job.name`` beside it.
@@ -689,6 +697,8 @@ def submit_job(project: Project, pending: list[str], execution: ExecutionConfig)
     input_hash = hash_inputs(project.directory)
     if kube.inputs is not None:
         push(project.directory, kube.inputs)
+    # The last Job's note that the met was fetched: this Job fetches again.
+    remove_file(target, FETCH_DONE)
     n_tasks = max(1, min(kube.completions, len(pending)))
     sims = project.simulations
     variants = sims.loc[sims["release"].isin(pending), "variant"].unique()

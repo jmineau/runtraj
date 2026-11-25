@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from runtraj.execution import inputs, kubernetes, runner
 from runtraj.execution.config import ExecutionConfig, KubernetesConfig
-from runtraj.execution.inputs import hash_inputs, pull, push
+from runtraj.execution.inputs import FETCH_DONE, hash_inputs, pull, push
 from runtraj.project import Project
 from runtraj.releases import PointRelease
 from tests.fixtures.platform import not_on_windows
@@ -285,6 +285,16 @@ def test_submit_makes_a_job_for_a_project_on_a_shared_volume(tmp_path, kubectl):
     [folder] = (project.directory / "_kubernetes").iterdir()
     assert yaml.safe_load((folder / "job.yaml").read_text()) == job
     assert (folder / "job.name").read_text() == "runtraj-hourly-x7k2p\n"
+
+
+@_SHARED_VOLUME
+def test_submit_removes_the_last_job_s_note_that_the_met_was_fetched(tmp_path, kubectl):
+    project = _project(tmp_path, 2)
+    (project.directory / FETCH_DONE).write_text(hash_inputs(project.directory))
+
+    runner.submit(project, execution=_execution())
+
+    assert not (project.directory / FETCH_DONE).exists()
 
 
 def test_submit_copies_the_inputs_to_the_bucket_the_pods_open(tmp_path, kubectl):
@@ -603,7 +613,7 @@ def test_the_pods_fetch_first_only_when_set_and_a_met_downloads(
 @pytest.fixture
 def fetches(monkeypatch):
     """Record each fetch the runner makes, and how many ran at once; ``downloads`` says whether a met downloads."""
-    state = SimpleNamespace(calls=[], at_once=0, most=0, downloads=True)
+    state = SimpleNamespace(calls=[], at_once=0, most=0, downloads=True, missing=None)
     guard = threading.Lock()
 
     def fetch_project(project, unrun):
@@ -614,7 +624,11 @@ def fetches(monkeypatch):
         state.calls.append(len(unrun))
         with guard:
             state.at_once -= 1
-        return pd.DataFrame(columns=["met", "file", "message"])
+        if state.missing is None:
+            return pd.DataFrame(columns=["met", "file", "message"])
+        return pd.DataFrame(
+            {"met": ["hrrr"], "file": ["x"], "message": [state.missing]}
+        )
 
     monkeypatch.setattr(runner, "fetch_project", fetch_project)
     monkeypatch.setattr(runner, "downloads", lambda project, variants: state.downloads)
@@ -641,10 +655,33 @@ def test_tasks_that_share_the_inputs_fetch_one_at_a_time(
 
     assert fetches.calls == [3]  # the others find the first's note, and list nothing
     assert fetches.most == 1
-    assert (project.directory / runner.FETCH_DONE).read_text() == hash_inputs(
+    assert (project.directory / FETCH_DONE).read_text() == hash_inputs(
         project.directory
     )
     assert not (project.directory / ".fetch.lock").exists()
+
+
+@pytest.mark.parametrize("fails", ["missing", "transient"])
+def test_a_fetch_that_missed_files_leaves_no_note_so_the_next_task_tries_again(
+    tmp_path, fetches, monkeypatch, fails
+):
+    if fails == "missing":
+        fetches.missing = "no file for 2023-01-01 12:00"
+    else:
+
+        def stopped(project, unrun):
+            fetches.calls.append(len(unrun))
+            raise ConnectionResetError("connection reset")
+
+        monkeypatch.setattr(runner, "fetch_project", stopped)
+    project = _project(tmp_path, 2)
+    where = str(project.directory)
+
+    runner.fetch_shared(Project(where), where)
+    runner.fetch_shared(Project(where), where)
+
+    assert fetches.calls == [2, 2]
+    assert not (project.directory / FETCH_DONE).exists()
 
 
 def test_no_lock_and_no_fetch_when_no_met_downloads(tmp_path, fetches, monkeypatch):

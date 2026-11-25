@@ -106,7 +106,7 @@ names them. A backend that sets ``waits`` and writes
 :meth:`~runtraj.execution.Backend.run` waits for them, so ``runtraj run``
 can use it; one that writes :meth:`~runtraj.execution.Backend.jobs` lists
 them in ``runtraj status``. The tasks need nothing else: every task splits
-the releases the same way (:func:`~runtraj.execution.task_share`), skips
+the releases the same way (:func:`~runtraj.execution.pending`), skips
 what is complete, and exits with a code that says whether to try it again
 (:ref:`exit-codes`).
 

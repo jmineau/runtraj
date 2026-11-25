@@ -329,8 +329,9 @@ _TASK = typer.Option(
     "--task",
     help=(
         "Run task I of N here, as one task of a job array: every Nth "
-        "release of the project, starting at I (0 to N-1). Runs in this "
-        "process whatever the backend."
+        "release, starting at I (0 to N-1), of the list --releases gives, "
+        "or else of all the project's releases in the order of a hash of "
+        "their ids. Runs in this process whatever the backend."
     ),
 )
 
@@ -1200,8 +1201,10 @@ def _print_run_start(
         typer.echo(f"Releases listed: {len(release_ids)}")
     if task is not None:
         i, n = task
-        typer.echo(
-            f"Releases of this task: share {i} of {n}, in the order of a hash of their ids"
+        # Without --releases a task shares the project's in a hash order (pending).
+        order = (
+            "" if release_ids is not None else ", in the order of a hash of their ids"
         )
+        typer.echo(f"Releases of this task: share {i} of {n}{order}")
     typer.echo(f"Variants: {', '.join(project.variants)}")
     typer.echo(backend.describe(waits))
