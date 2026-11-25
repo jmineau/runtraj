@@ -48,7 +48,9 @@ the release type that matches how your instrument samples the air.
      - ``longitudes``, ``latitudes``, ``altitudes`` (arrays)
 
 Every release also needs a ``time`` in UTC. A timezone-aware time is
-converted to UTC. Altitudes are in meters above ground level. Pass
+converted to UTC. A time is kept to the minute, and its seconds are
+dropped: HYSPLIT starts a run on the minute, and the release id names the
+minute. Altitudes are in meters above ground level. Pass
 ``altitude_ref="msl"`` to give them above mean sea level instead.
 
 PointRelease

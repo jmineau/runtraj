@@ -1080,7 +1080,8 @@ class Project:
         - the project has releases (``releases``);
         - the met's ``directory`` exists and holds an ARL file (``met_directory``);
         - every met file each release's run needs is there, naming the
-          hours (``met_files``);
+          hours (``met_files``), and a run needs at most the 128 files
+          HYSPLIT reads (``met_count``);
         - each met file they need holds at least two time periods, which
           HYSPLIT needs (``met_periods``), and ends on a whole time step
           (``met_cut``);
