@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1ffebc2c"></script>
+    <script src="../../_static/documentation_options.js?v=6b238a9c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
+  <meta name="docsearch:version" content="0.1.0a6.dev14+gc8fd54351" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -654,6 +654,14 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_yaml</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Return a YAML file of one mapping as a dict; an empty file is ``{}``."""</span>
     <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span> <span class="ow">or</span> <span class="p">{}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_record</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a failure record, or ``None`` when there is none: a worker removes it when the result is written, also while it is being listed."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_read_yaml</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_yaml</span><span class="p">(</span>
@@ -1586,8 +1594,7 @@
         <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_found</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="s2">"logs"</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">realization</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">logs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">_release_file</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">release_id</span><span class="p">,</span> <span class="n">FAILURE_SUFFIX</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_read_yaml</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span></div>
+        <span class="k">return</span> <span class="n">_read_record</span><span class="p">(</span><span class="n">_release_file</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">release_id</span><span class="p">,</span> <span class="n">FAILURE_SUFFIX</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="Output.failures">
@@ -1603,15 +1610,20 @@
 <span class="sd">        Return ``{release_id: record}`` for the releases with a failure record of *kind*.</span>
 
 <span class="sd">        With *release_ids*, only their date folders are listed. The records</span>
-<span class="sd">        found are read in a few threads.</span>
+<span class="sd">        found are read in a few threads; one a worker removed meanwhile, as it</span>
+<span class="sd">        does when the release's result is written, is left out.</span>
 <span class="sd">        """</span>
         <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_found</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="s2">"logs"</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">realization</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">logs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{}</span>
         <span class="n">paths</span> <span class="o">=</span> <span class="n">_list_release_files</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">FAILURE_SUFFIX</span><span class="p">,</span> <span class="n">release_ids</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
-            <span class="n">records</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_read_yaml</span><span class="p">,</span> <span class="n">paths</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
+            <span class="n">records</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_read_record</span><span class="p">,</span> <span class="n">paths</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">rid</span><span class="p">:</span> <span class="n">record</span>
+            <span class="k">for</span> <span class="n">rid</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">records</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="Output.record_failure">
