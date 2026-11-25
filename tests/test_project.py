@@ -14,6 +14,7 @@ from runtraj.output import Output
 from runtraj.releases import PointRelease
 
 from .fixtures.factories import make_met_config, make_release
+from .fixtures.platform import not_on_windows
 
 matplotlib.use("Agg")
 
@@ -247,6 +248,20 @@ def test_add_releases_that_stops_part_way_leaves_releases_csv_as_it_was(
 
     assert project.releases_path.read_text(encoding="utf-8") == before
     assert [p.name for p in tmp_path.rglob("*.tmp")] == []
+
+
+@not_on_windows("a symbolic link needs extra rights on Windows")
+def test_add_releases_writes_through_a_linked_releases_csv(tmp_path):
+    project = _project(tmp_path, [_release(12)])
+    shared = tmp_path / "shared.csv"
+    project.releases_path.rename(shared)
+    project.releases_path.symlink_to(shared)
+
+    project.add_releases([_release(14)])
+
+    assert project.releases_path.is_symlink()
+    assert len(Project(project.directory).releases) == 2
+    assert shared.read_text(encoding="utf-8").count("\n") == 3
 
 
 def test_a_release_the_project_does_not_have_is_a_key_error(tmp_path):

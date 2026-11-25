@@ -420,7 +420,8 @@ class Project:
         own columns (:func:`runtraj.releases.table.append_releases_csv`). Releases
         it already holds are skipped. The new file replaces the old one in one
         step, so a program reading it, or a stop part way, never sees half a
-        file.
+        file. A ``releases.csv`` that is a link to another file is left a link,
+        and the file it names gets the new releases.
 
         Parameters
         ----------
@@ -445,7 +446,9 @@ class Project:
             else:
                 text = releases_to_csv(new)
             # In one step, so a stop part way or a reader never sees half a file.
-            with atomic_path(self.releases_path) as tmp:
+            # Through a link to the file it names, so a releases.csv shared by
+            # several projects stays shared (the project is always local).
+            with atomic_path(self.releases_path.resolve()) as tmp:
                 tmp.write_text(text, encoding="utf-8")
             # These were read from the file that just changed.
             for name in ("_rows", "_positions", "releases", "_simulations"):
