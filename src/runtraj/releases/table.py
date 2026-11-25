@@ -29,6 +29,13 @@ from .models import (
 )
 from .validation import column_errors, point_errors
 
+# Before pandas 3 the C reader's default float parser can differ from Python's
+# in the last digit, and ``round_trip`` reads every value exactly; pandas 3
+# parses exactly by default and deprecates the argument.
+_EXACT_FLOATS: dict[str, Any] = (
+    {"float_precision": "round_trip"} if int(pd.__version__.split(".")[0]) < 3 else {}
+)
+
 #: The columns of a release table, one row per release point.
 COLUMNS = ("group", "time", "longitude", "latitude", "altitude", "altitude_ref")
 
@@ -303,7 +310,8 @@ def _times(column: pd.Series, fail: Callable[[np.ndarray, str], None]) -> pd.Ser
     Return a release table's times as naive UTC times, calling *fail* on a row that has none.
 
     Text must be ISO 8601 or ``YYYYMMDDHHMM`` (:func:`_parse_time_text`);
-    datetimes are taken as they are, an aware one converted to UTC.
+    datetimes are taken as they are, an aware one converted to UTC. Seconds
+    are dropped, as :func:`~runtraj.releases.models.parse_time` drops them.
     """
     if pd.api.types.is_numeric_dtype(column):
         fail(
@@ -322,7 +330,7 @@ def _times(column: pd.Series, fail: Callable[[np.ndarray, str], None]) -> pd.Ser
     else:
         time = pd.to_datetime(column, utc=True)
         fail(time.isna().to_numpy(), "time is empty.")
-    return time.dt.tz_localize(None)
+    return time.dt.tz_localize(None).dt.floor("min")
 
 
 def _build(
@@ -497,7 +505,8 @@ def read_release_frame(path: str | Path | IO[str]) -> pd.DataFrame:
     dtype: dict[Any, Any] = {
         c: str for c in header if str(c).lower() in ("group", "time")
     }
-    return pd.read_csv(path, dtype=dtype)
+    # A coordinate read one digit off would change the release's id.
+    return pd.read_csv(path, dtype=dtype, **_EXACT_FLOATS)
 
 
 def read_releases(path: str | Path | IO[str]) -> list[Release]:

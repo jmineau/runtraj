@@ -266,6 +266,24 @@ def test_two_workers_starting_a_run_at_once_both_succeed(tmp_path, monkeypatch):
     assert [p.name for p in folder.iterdir()] == ["_settings.yaml"]
 
 
+def test_two_projects_starting_the_same_settings_at_once_share_one_folder(
+    tmp_path, monkeypatch
+):
+    """Each listed the tree before the other wrote, and once made a folder under its own variant's name."""
+    path = tmp_path / "output"
+    zeta, alpha = output_variant("zeta"), output_variant("alpha")
+    first, second = Output(path), Output(path)
+    _interleave(monkeypatch, lambda: write_one(second, alpha))
+
+    write_one(first, zeta, release_at(hour=13))
+    write_one(first, zeta, release_at(hour=14))
+
+    assert first.folder("particles", zeta) == second.folder("particles", alpha)
+    fresh = Output(path)
+    assert list(fresh.hashes("particles")) == [f"alpha-{zeta.result_hash[:6]}"]
+    assert len(fresh.present("particles", zeta)) == 3
+
+
 def _settings_file(path):
     return Output(path).folder("particles", VARIANT) / "_settings.yaml"
 
@@ -514,6 +532,26 @@ def test_an_ensembles_realizations_are_partitions_of_one_folder(tmp_path):
         out.path("particles", VARIANT, release.id, 0)
     table = out.table("particles", ensemble, realization=0)
     assert set(table.column("release").to_pylist()) == {release.id}
+
+
+def test_a_failure_record_removed_while_it_is_read_is_left_out(tmp_path, monkeypatch):
+    """A worker removes its record when the result is written, also between the listing and the read."""
+    from runtraj import output as output_module
+
+    out = Output(tmp_path / "output")
+    first, second = release_at(hour=12), release_at(hour=13)
+    for release in (first, second):
+        out.record_failure("particles", VARIANT, release.id, {"reason": "X"})
+    listing = output_module._list_release_files
+
+    def listed_then_cleared(root, suffix, among=None):
+        found = listing(root, suffix, among)
+        found[first.id].unlink()  # the worker's result landed
+        return found
+
+    monkeypatch.setattr(output_module, "_list_release_files", listed_then_cleared)
+    assert out.failures("particles", VARIANT) == {second.id: {"reason": "X"}}
+    assert out.failure("particles", VARIANT, first.id) is None
 
 
 def test_a_kept_workdir_can_leave_out_named_files(tmp_path):

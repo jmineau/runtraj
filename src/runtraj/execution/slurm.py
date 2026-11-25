@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from runtraj.execution.backends import Backend
+from runtraj.execution.backends import SILENT_SCHEDULER_SECONDS, Backend
 from runtraj.execution.config import ExecutionConfig, FetchConfig, SlurmConfig
 from runtraj.execution.runner import (
     _project_slug,
@@ -458,7 +458,10 @@ def wait(
     Polls ``sacct`` every *poll* seconds. A task that ended other than
     complete, or with failed simulations (exit 1) or interrupted ones
     (exit 3), is logged with its state; its simulations stay pending in the
-    status table.
+    status table. When ``sacct`` gives no answer about the job for
+    :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`, as on a
+    cluster without Slurm's accounting database, it stops waiting with an
+    error; the job itself runs on.
 
     Parameters
     ----------
@@ -475,9 +478,25 @@ def wait(
     dict
         ``{task: (state, exit code)}`` as ``sacct`` gives them, such as
         ``{"123_0": ("COMPLETED", "0:0")}``.
+
+    Raises
+    ------
+    RuntimeError
+        If ``sacct`` gave no answer about the job for
+        :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`.
     """
+    answered = time.monotonic()
     states = _task_states(job_id, cluster)
     while states is None or any(s in _ACTIVE for s, _ in states.values()):
+        if states is not None:
+            answered = time.monotonic()
+        elif time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
+            raise RuntimeError(
+                f"sacct has said nothing about job {job_id} for "
+                f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
+                "waiting for it. The job may still be running: see squeue, and "
+                "runtraj status once it ends."
+            )
         time.sleep(poll)
         states = _task_states(job_id, cluster)
     for task, (state, code) in sorted(states.items()):

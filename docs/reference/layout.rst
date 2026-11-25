@@ -50,7 +50,11 @@ results of one set of settings, split by the release's date:
 
 A settings folder is named ``<variant>-<six characters>``. The variant is
 the name in ``config.yaml`` that first made the folder, and the six
-characters are the start of its settings hash (below). The date is the
+characters are the start of its settings hash (below). Beside the folders,
+a hidden file ``.hash-<settings hash>`` holds the name of the folder its
+hash was given first, so two projects that share an output directory and
+start the same settings at once, under different variant names, write to
+one folder. The date is the
 release's release date in UTC. An ensemble (``realizations: N``) has a
 ``realization=k`` folder between the settings folder and the dates.
 
@@ -71,7 +75,8 @@ transport model's particle file, and with ``keep_workdir: true`` under
 ``execution:`` every run's is, whole.
 
 The ``particles/``, ``trajectories/`` and ``footprint/`` trees hold only
-Parquet files and ``_settings.yaml``, so each reads as one dataset. ``concentration/`` holds
+Parquet files, ``_settings.yaml`` and the hidden ``.hash-`` files, so each
+reads as one dataset. ``concentration/`` holds
 one NetCDF file per release, a group per grid (:doc:`concentration`). A stage from another
 package has a tree under its own name, with files in the format and with
 the extension that stage chooses.

@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from runtraj.execution.backends import Backend
+from runtraj.execution.backends import SILENT_SCHEDULER_SECONDS, Backend
 from runtraj.execution.config import ExecutionConfig, PbsConfig
 from runtraj.execution.runner import (
     _project_slug,
@@ -232,8 +232,27 @@ def _job_state(job_id: str) -> str | None:
 
 
 def wait(job_id: str, poll: float = 30.0) -> None:
-    """Wait until a PBS job array has finished, polling ``qstat`` every *poll* seconds."""
-    while _job_state(job_id) != "F":
+    """
+    Wait until a PBS job array has finished, polling ``qstat`` every *poll* seconds.
+
+    Raises
+    ------
+    RuntimeError
+        If ``qstat`` gave no answer about the job for
+        :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`, as
+        one that does not take ``-F json`` gives none. The job runs on.
+    """
+    answered = time.monotonic()
+    while (state := _job_state(job_id)) != "F":
+        if state is not None:
+            answered = time.monotonic()
+        elif time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
+            raise RuntimeError(
+                f"qstat has said nothing about job {job_id} for "
+                f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
+                "waiting for it. The job may still be running: see qstat, and "
+                "runtraj status once it ends."
+            )
         time.sleep(poll)
 
 

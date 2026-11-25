@@ -1,7 +1,6 @@
 """Tests for HYSPLIT's met config and its files (runtraj.models.hysplit.met)."""
 
 import datetime as dt
-import logging
 import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -12,6 +11,7 @@ import pytest
 from runtraj.exceptions import MeteorologyError
 from runtraj.meteorology import run_window
 from runtraj.models.hysplit import HysplitMetConfig, Met
+from runtraj.models.hysplit.met import MAX_MET_FILES
 from runtraj.spatial import Bounds
 
 from ...fixtures.factories import write_arl_file
@@ -550,18 +550,31 @@ def test_readable_returns_local_files_where_they_are(tmp_path):
     assert sorted(p.name for p in tmp_path.iterdir()) == ["met"]
 
 
-def test_readable_keeps_the_first_of_two_files_with_one_name(tmp_path, caplog):
-    first = tmp_path / "met" / "a" / "20230101_12"
-    second = tmp_path / "met" / "b" / "20230101_12"
-
+def test_readable_keeps_files_of_one_name_in_two_folders(tmp_path):
+    """One folder per day, each with a wrfout_d02.arl: two files, both needed."""
+    first = write_arl_file(
+        tmp_path / "met" / "2023-01-01" / "wrf.arl", times=SIX_HOURS[:3]
+    )
+    second = write_arl_file(
+        tmp_path / "met" / "2023-01-02" / "wrf.arl", times=SIX_HOURS[3:]
+    )
     met = _make_met(tmp_path / "met")
-    with caplog.at_level(logging.WARNING):
-        files = met.readable([first, second])
 
-    assert files == [first]
-    assert "duplicate basename" in caplog.text
-    assert str(first) in caplog.text
-    assert str(second) in caplog.text
+    assert met.readable([first, second, first]) == [first, second]
+
+
+def test_files_of_one_name_in_two_folders_get_two_crops(tmp_path):
+    met = _archive_met(tmp_path)
+    days = [tmp_path / "archive" / day / "20230101_12" for day in ("a", "b")]
+    for day, times in zip(days, (SIX_HOURS[:3], SIX_HOURS[3:]), strict=True):
+        write_arl_file(day, times=times)
+
+    with patch("arlmet.extract_subset", side_effect=_fake_extract()):
+        files = met.readable([d.resolve() for d in days])
+
+    assert len(set(files)) == 2
+    assert all(f.parent == met.crop_dir for f in files)
+    assert {f.name.split(".")[0] for f in files} == {"20230101_12"}
 
 
 def test_a_global_met_grid_holds_every_longitude(tmp_path):
@@ -1424,6 +1437,32 @@ def test_check_passes_files_of_two_time_periods(tmp_path):
         for hour in range(2, 11, 2)
     ]
     _make_met(tmp_path).check(files, _WINDOW)
+
+
+def test_check_refuses_more_met_files_than_hysplit_reads(tmp_path):
+    """HYSPLIT stops on more than 128 files in time; this is found before it starts."""
+    files = [tmp_path / f"f{k:03d}" for k in range(MAX_MET_FILES + 1)]
+    with pytest.raises(MeteorologyError, match="needs 129 met files"):
+        _make_met(tmp_path).check(files, _WINDOW)
+
+
+def test_checking_releases_lists_a_run_that_needs_too_many_met_files(tmp_path):
+    start = pd.Timestamp("2023-01-01 00:00")
+    for k in range(MAX_MET_FILES + 1):  # two hours each, one after another
+        write_arl_file(
+            tmp_path / f"f{k:03d}",
+            times=pd.date_range(start + pd.Timedelta(hours=2 * k), periods=2, freq="h"),
+        )
+    last = start + pd.Timedelta(hours=2 * MAX_MET_FILES + 1)
+    releases = pd.DataFrame(
+        {"release": ["a"], "time": [last], "longitude": [-112.0], "latitude": [40.5]}
+    )
+
+    found = _make_met(tmp_path).check_releases(releases, -(2 * MAX_MET_FILES + 1))
+
+    assert list(found["check"]) == ["met_count"]
+    assert "needs 129 met files" in found["message"].iloc[0]
+    assert _make_met(tmp_path).check_releases(releases, -10).empty
 
 
 def test_check_refuses_files_that_hold_one_time_period(tmp_path):

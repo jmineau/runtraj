@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import datetime as dt
 import functools
+import hashlib
 import inspect
 import logging
 import os
@@ -252,6 +253,13 @@ class HysplitMetConfig(MetConfig):
         True
         """
         return self.download is not None
+
+
+#: The most met files HYSPLIT reads in time for one grid (``mtim`` in its
+#: ``DEFGRID.INC``, 128 from 5.1.0 on). runtraj gives a run's files as one
+#: grid, so a run that needs more stops with "Numb meteo times exceed
+#: DEFGRID limit".
+MAX_MET_FILES = 128
 
 
 def _time(value: Any) -> pd.Timestamp:
@@ -557,7 +565,8 @@ class Met:
         The file check that :meth:`files_for` makes for each run, made for
         every release at once: the met's ``directory`` exists and holds an
         ARL file, and every file a run needs is there, holds at least two
-        time periods, and ends on a whole time step. A release outside the
+        time periods, and ends on a whole time step, and a run needs at most
+        :data:`MAX_MET_FILES` files. A release outside the
         files is listed too, since HYSPLIT cannot start a particle there:
         outside ``subgrid_bounds`` with the crop on, else outside the grid of
         the first file its run reads. A met with ``download``
@@ -582,7 +591,7 @@ class Met:
         -------
         pandas.DataFrame
             One row for each thing found, with ``check`` (``met_directory``,
-            ``met_files``, ``met_periods``, ``met_cut``, ``met_domain``, or ``met_crop``), ``release`` (``NA`` when the
+            ``met_files``, ``met_count``, ``met_periods``, ``met_cut``, ``met_domain``, or ``met_crop``), ``release`` (``NA`` when the
             finding is about the met), and ``message`` columns. Empty when
             nothing would stop a run.
         """
@@ -617,6 +626,7 @@ class Met:
         """List the releases that lack a file their run needs, and the files they need that cannot be read to the end."""
         first = releases.drop_duplicates("release")
         messages: dict[Any, str | None] = {}
+        counts: dict[Any, str] = {}
         single: dict[Path, None] = {}
         starts: dict[Any, Path] = {}
         folders = [self.directory, *([self.crop_dir] if self.crops else [])]
@@ -630,6 +640,8 @@ class Met:
             messages[time] = cover.clash or (
                 f"no met file for {_spans(cover.gaps)}" if cover.gaps else None
             )
+            if messages[time] is None and len(cover.files) > MAX_MET_FILES:
+                counts[time] = _too_many_files_message(len(cover.files))
             single.update(dict.fromkeys(p for p in cover.files if p in one_step))
             if cover.files and not self.config.subgrid_enable:
                 starts[time] = cover.files[0]
@@ -637,6 +649,11 @@ class Met:
             ("met_files", str(rid), message)
             for rid, time in zip(first["release"], first["time"], strict=True)
             if (message := messages[time]) is not None
+        ]
+        found += [
+            ("met_count", str(rid), counts[time])
+            for rid, time in zip(first["release"], first["time"], strict=True)
+            if time in counts
         ]
         if single:
             more = f" {len(single) - 1} more do too." if len(single) > 1 else ""
@@ -749,8 +766,11 @@ class Met:
         ------
         MeteorologyError
             Naming the damaged file and its first problem, a file that holds
-            one time period, or the times the files do not hold.
+            one time period, or the times the files do not hold; or when
+            there are more than :data:`MAX_MET_FILES` files.
         """
+        if len(files) > MAX_MET_FILES:
+            raise MeteorologyError(_too_many_files_message(len(files)))
         held: set[pd.Timestamp] = set()
         single: list[Path] = []
         for path in files:
@@ -792,23 +812,15 @@ class Met:
         When local files are cropped, these are the cropped copies in
         :attr:`crop_dir`, made on first use; a file already there is a crop,
         and is read as it is. Downloaded files were cropped as they were
-        downloaded. When two files share a name, the first is
-        kept, since a model would otherwise read the same hours twice.
+        downloaded. Two paths to one file, such as two links to it, are
+        read once. Files in different folders that share a name, such as
+        one ``wrfout_d02.arl`` per day, are different files and are all read.
         """
         if self.crops:
             files = self._crop_local_files(files)
-        kept: dict[str, Path] = {}
+        kept: dict[Path, Path] = {}
         for path in files:
-            first = kept.setdefault(path.name, path)
-            if first is not path and first.resolve() != path.resolve():
-                logger.warning(
-                    "met %s has duplicate basename %s at %s and %s; using %s",
-                    self.name,
-                    path.name,
-                    first,
-                    path,
-                    first,
-                )
+            kept.setdefault(path.resolve(), path)
         return list(kept.values())
 
     def _crop_local_files(self, files: list[Path]) -> list[Path]:
@@ -816,7 +828,8 @@ class Met:
         Crop local files into :attr:`crop_dir`, reusing crops that already exist.
 
         A file already in :attr:`crop_dir` is a crop and is kept as it is.
-        A crop of another file is named as its source, and is reused only
+        A crop of another file is named as its source (:meth:`_crop_name`),
+        and is reused only
         when its header says it holds the source's time steps
         (:func:`_holds_as`): a crop with that name that holds fewer, or
         cannot be read, is made again. Each crop is written to a temporary
@@ -839,7 +852,7 @@ class Met:
             if src.resolve().is_relative_to(inside):
                 subsetted.append(src)
                 continue
-            cache_path = crop_dir / src.name
+            cache_path = crop_dir / self._crop_name(src)
             if not _holds_as(cache_path, src):
                 logger.info("Subsetting %s → %s", src.name, cache_path)
                 try:
@@ -854,6 +867,19 @@ class Met:
                             extract_subset(src, tmp, bbox=bbox, levels=levels)
             subsetted.append(cache_path)
         return subsetted
+
+    def _crop_name(self, src: Path) -> str:
+        """
+        Return the name of *src*'s crop: its own name, with a short hash of its folder when that is below :attr:`directory`.
+
+        Files in different folders can share a name (one ``wrfout_d02.arl``
+        per day), and their crops must not. A crop is found by the times its
+        header holds, not by its name.
+        """
+        if src.parent == self.directory:
+            return src.name
+        folder = hashlib.sha256(str(src.parent).encode("utf-8")).hexdigest()
+        return f"{src.name}.{folder[:8]}"
 
     def fetch(self, windows: Iterable[tuple[Any, Any]]) -> pd.DataFrame:
         """
@@ -1081,6 +1107,15 @@ def _holds_as(crop: Path, source: Path) -> bool:
         wanted.first,
         wanted.step,
         wanted.n_steps,
+    )
+
+
+def _too_many_files_message(n_files: int) -> str:
+    """Return why a run that needs *n_files* met files cannot run."""
+    return (
+        f"The run needs {n_files} met files, and HYSPLIT reads at most "
+        f"{MAX_MET_FILES} in time. Use met files that each hold more hours, "
+        "such as daily ones, or shorter runs."
     )
 
 

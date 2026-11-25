@@ -160,7 +160,7 @@ layers = [
     "sampling",
     "spatial",
     "_plugins",
-    "_paths | exceptions | _transient",
+    "_paths | exceptions | _transient | _process",
 ]
 
 # A transport model built in, such as HYSPLIT, is a package under

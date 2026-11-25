@@ -95,6 +95,11 @@ looks at share its rows. The command exits with 0 when it finds nothing and
        ``subgrid_bounds``.
      - Widen ``subgrid_bounds`` to hold the whole run, not only the
        release.
+   * - ``met_count``
+     - A release's run needs more than 128 met files, more than HYSPLIT
+       reads in time.
+     - Use met files that each hold more hours, such as daily ones, or
+       shorter runs.
    * - ``met_periods``
      - A file the releases need holds one time period, which HYSPLIT
        cannot read.
