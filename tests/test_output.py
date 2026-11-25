@@ -534,6 +534,26 @@ def test_an_ensembles_realizations_are_partitions_of_one_folder(tmp_path):
     assert set(table.column("release").to_pylist()) == {release.id}
 
 
+def test_a_failure_record_removed_while_it_is_read_is_left_out(tmp_path, monkeypatch):
+    """A worker removes its record when the result is written, also between the listing and the read."""
+    from runtraj import output as output_module
+
+    out = Output(tmp_path / "output")
+    first, second = release_at(hour=12), release_at(hour=13)
+    for release in (first, second):
+        out.record_failure("particles", VARIANT, release.id, {"reason": "X"})
+    listing = output_module._list_release_files
+
+    def listed_then_cleared(root, suffix, among=None):
+        found = listing(root, suffix, among)
+        found[first.id].unlink()  # the worker's result landed
+        return found
+
+    monkeypatch.setattr(output_module, "_list_release_files", listed_then_cleared)
+    assert out.failures("particles", VARIANT) == {second.id: {"reason": "X"}}
+    assert out.failure("particles", VARIANT, first.id) is None
+
+
 def test_a_kept_workdir_can_leave_out_named_files(tmp_path):
     out = Output(tmp_path / "output")
     rid = release_at().id
