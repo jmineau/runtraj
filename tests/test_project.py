@@ -1,6 +1,7 @@
 """Tests for runtraj.project: the project directory, its tables, its results, and running it."""
 
 import datetime as dt
+from pathlib import Path
 
 import matplotlib
 import pandas as pd
@@ -13,6 +14,7 @@ from runtraj.output import Output
 from runtraj.releases import PointRelease
 
 from .fixtures.factories import make_met_config, make_release
+from .fixtures.platform import not_on_windows
 
 matplotlib.use("Agg")
 
@@ -226,6 +228,40 @@ def test_add_releases_appends_the_new_ones_and_returns_their_ids(tmp_path):
     assert len(project.simulations) == 2  # read again from the file
     assert Project(project.directory).releases.equals(project.releases)
     assert project.add_releases(_release(14)) == []
+
+
+def test_add_releases_that_stops_part_way_leaves_releases_csv_as_it_was(
+    tmp_path, monkeypatch
+):
+    project = _project(tmp_path, [_release(12)])
+    before = project.releases_path.read_text(encoding="utf-8")
+    write_text = Path.write_text
+
+    def stops_part_way(path, text, *args, **kwargs):
+        write_text(path, text[: len(text) // 2], *args, **kwargs)
+        raise OSError("No space left on device")
+
+    monkeypatch.setattr(Path, "write_text", stops_part_way)
+    with pytest.raises(OSError, match="No space"):
+        project.add_releases([_release(14)])
+    monkeypatch.undo()
+
+    assert project.releases_path.read_text(encoding="utf-8") == before
+    assert [p.name for p in tmp_path.rglob("*.tmp")] == []
+
+
+@not_on_windows("a symbolic link needs extra rights on Windows")
+def test_add_releases_writes_through_a_linked_releases_csv(tmp_path):
+    project = _project(tmp_path, [_release(12)])
+    shared = tmp_path / "shared.csv"
+    project.releases_path.rename(shared)
+    project.releases_path.symlink_to(shared)
+
+    project.add_releases([_release(14)])
+
+    assert project.releases_path.is_symlink()
+    assert len(Project(project.directory).releases) == 2
+    assert shared.read_text(encoding="utf-8").count("\n") == 3
 
 
 def test_a_release_the_project_does_not_have_is_a_key_error(tmp_path):
