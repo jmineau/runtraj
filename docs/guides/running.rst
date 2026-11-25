@@ -115,9 +115,9 @@ out-of-memory killer, the run stops with an error
 cannot say which release the worker held, so the error names every release
 that was in progress. Nothing is marked failed and what finished stays
 finished: run it again and only what is missing runs, with a lower ``cpus`` or
-more memory per task if memory was the cause. The HYSPLIT run the killed
-worker started is ended too. Its directory in the compute root is not
-removed; clear it by hand.
+more memory per task if memory was the cause. The HYSPLIT or FLEXPART run
+the killed worker started is ended too. Its directory in the compute root
+is not removed; clear it by hand.
 
 Save now, run later
 -------------------
