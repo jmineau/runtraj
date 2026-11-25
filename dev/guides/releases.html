@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -549,7 +549,9 @@ release points at one time</p></td>
 </table>
 </div>
 <p>Every release also needs a <code class="docutils literal notranslate"><span class="pre">time</span></code> in UTC. A timezone-aware time is
-converted to UTC. Altitudes are in meters above ground level. Pass
+converted to UTC. A time is kept to the minute, and its seconds are
+dropped: HYSPLIT starts a run on the minute, and the release id names the
+minute. Altitudes are in meters above ground level. Pass
 <code class="docutils literal notranslate"><span class="pre">altitude_ref=&quot;msl&quot;</span></code> to give them above mean sea level instead.</p>
 <section id="pointrelease">
 <h2>PointRelease<a class="headerlink" href="#pointrelease" title="Link to this heading">#</a></h2>

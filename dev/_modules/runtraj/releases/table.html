@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -763,7 +763,8 @@
 <span class="sd">    Return a release table's times as naive UTC times, calling *fail* on a row that has none.</span>
 
 <span class="sd">    Text must be ISO 8601 or ``YYYYMMDDHHMM`` (:func:`_parse_time_text`);</span>
-<span class="sd">    datetimes are taken as they are, an aware one converted to UTC.</span>
+<span class="sd">    datetimes are taken as they are, an aware one converted to UTC. Seconds</span>
+<span class="sd">    are dropped, as :func:`~runtraj.releases.models.parse_time` drops them.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">column</span><span class="p">):</span>
         <span class="n">fail</span><span class="p">(</span>
@@ -782,7 +783,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">utc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">fail</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="s2">"time is empty."</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="s2">"min"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_build</span><span class="p">(</span>

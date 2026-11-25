@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -474,7 +474,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">SILENT_SCHEDULER_SECONDS</span><span class="p">,</span> <span class="n">Backend</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">FetchConfig</span><span class="p">,</span> <span class="n">SlurmConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_project_slug</span><span class="p">,</span>
@@ -919,7 +919,10 @@
 <span class="sd">    Polls ``sacct`` every *poll* seconds. A task that ended other than</span>
 <span class="sd">    complete, or with failed simulations (exit 1) or interrupted ones</span>
 <span class="sd">    (exit 3), is logged with its state; its simulations stay pending in the</span>
-<span class="sd">    status table.</span>
+<span class="sd">    status table. When ``sacct`` gives no answer about the job for</span>
+<span class="sd">    :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`, as on a</span>
+<span class="sd">    cluster without Slurm's accounting database, it stops waiting with an</span>
+<span class="sd">    error; the job itself runs on.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -936,9 +939,25 @@
 <span class="sd">    dict</span>
 <span class="sd">        ``{task: (state, exit code)}`` as ``sacct`` gives them, such as</span>
 <span class="sd">        ``{"123_0": ("COMPLETED", "0:0")}``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        If ``sacct`` gave no answer about the job for</span>
+<span class="sd">        :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`.</span>
 <span class="sd">    """</span>
+    <span class="n">answered</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
     <span class="n">states</span> <span class="o">=</span> <span class="n">_task_states</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">)</span>
     <span class="k">while</span> <span class="n">states</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">_ACTIVE</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">states</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">answered</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">answered</span> <span class="o">&gt;=</span> <span class="n">SILENT_SCHEDULER_SECONDS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"sacct has said nothing about job </span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2"> for "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SILENT_SCHEDULER_SECONDS</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">}</span><span class="s2"> minutes, so runtraj stopped "</span>
+                <span class="s2">"waiting for it. The job may still be running: see squeue, and "</span>
+                <span class="s2">"runtraj status once it ends."</span>
+            <span class="p">)</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">poll</span><span class="p">)</span>
         <span class="n">states</span> <span class="o">=</span> <span class="n">_task_states</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">task</span><span class="p">,</span> <span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">states</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>

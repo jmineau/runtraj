@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1021,8 +1021,9 @@
 <p>When local files are cropped, these are the cropped copies in
 <a class="reference internal" href="runtraj.models.hysplit.Met.crop_dir.html#runtraj.models.hysplit.Met.crop_dir" title="runtraj.models.hysplit.Met.crop_dir"><code class="xref py py-attr docutils literal notranslate"><span class="pre">crop_dir</span></code></a>, made on first use; a file already there is a crop,
 and is read as it is. Downloaded files were cropped as they were
-downloaded. When two files share a name, the first is
-kept, since a model would otherwise read the same hours twice.</p>
+downloaded. Two paths to one file, such as two links to it, are
+read once. Files in different folders that share a name, such as
+one <code class="docutils literal notranslate"><span class="pre">wrfout_d02.arl</span></code> per day, are different files and are all read.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>]</span></p>

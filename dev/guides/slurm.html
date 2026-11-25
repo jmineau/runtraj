@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -689,8 +689,10 @@ every task fails at once, look in the tasks’ logs (below) first. Use
 task has ended (it asks <code class="docutils literal notranslate"><span class="pre">sacct</span></code>), and returns the status table of the
 simulations it submitted. When some look unfinished then, it lists the
 output again a minute later, since a network filesystem can show the
-submitting node new files late. <code class="docutils literal notranslate"><span class="pre">project.submit()</span></code> submits and returns the
-Slurm job id at once:</p>
+submitting node new files late. On a cluster without Slurm’s accounting
+database, <code class="docutils literal notranslate"><span class="pre">sacct</span></code> never answers: after 30 minutes without an answer it
+stops waiting with an error, and the job runs on. <code class="docutils literal notranslate"><span class="pre">project.submit()</span></code>
+submits and returns the Slurm job id at once:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">job_id</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>    <span class="c1"># None when nothing needs to run</span>
 </pre></div>
 </div>

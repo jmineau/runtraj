@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -470,14 +470,14 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._process</span><span class="w"> </span><span class="kn">import</span> <span class="n">ended_if_this_process_dies</span><span class="p">,</span> <span class="n">own_group</span><span class="p">,</span> <span class="n">terminate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HYSPLITNotFoundError</span><span class="p">,</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CONCENTRATION_ONLY_SETTINGS</span><span class="p">,</span>
@@ -1194,20 +1194,20 @@
     <span class="n">log_path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span>
     <span class="k">with</span> <span class="p">(</span>
         <span class="n">log_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">,</span>
-        <span class="n">_ended_if_this_process_dies</span><span class="p">()</span> <span class="k">as</span> <span class="n">watch</span><span class="p">,</span>
+        <span class="n">ended_if_this_process_dies</span><span class="p">()</span> <span class="k">as</span> <span class="n">watch</span><span class="p">,</span>
         <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
             <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">program_file</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">program</span><span class="p">))],</span>
             <span class="n">cwd</span><span class="o">=</span><span class="n">workdir</span><span class="p">,</span>
             <span class="n">stdout</span><span class="o">=</span><span class="n">handle</span><span class="p">,</span>
             <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">_own_group</span><span class="p">(),</span>
+            <span class="o">**</span><span class="n">own_group</span><span class="p">(),</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">watch</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">_terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
+            <span class="n">terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"HYSPLIT ran longer than the </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> s timeout."</span><span class="p">,</span>
                 <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">,</span>
@@ -1216,7 +1216,7 @@
             <span class="c1"># Ctrl-C, or a worker told to stop: HYSPLIT runs in a session of</span>
             <span class="c1"># its own (a process group on Windows), so no signal reached it and</span>
             <span class="c1"># it would run on, unseen.</span>
-            <span class="n">_terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
+            <span class="n">terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
             <span class="k">raise</span>
     <span class="n">messages</span> <span class="o">=</span> <span class="n">log_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
     <span class="n">warnings</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">WARNING_FILE</span>
@@ -1255,211 +1255,6 @@
         <span class="k">with</span> <span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">log</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">runtraj: HYSPLIT </span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">. The end of </span><span class="si">{</span><span class="n">MESSAGE_FILE</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">SimulationError</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">EXIT_STATUS</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_own_group</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return the ``Popen`` arguments that start HYSPLIT in a session of its own (a new process group on Windows)."""</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">"creationflags"</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CREATE_NEW_PROCESS_GROUP</span><span class="p">}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"start_new_session"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
-
-
-<span class="c1">#: The watchdog of a HYSPLIT run on POSIX: it reads the process group to</span>
-<span class="c1">#: kill, then waits for its standard input to close, which happens when the</span>
-<span class="c1">#: process that started it ends however it ends, and kills the group. ``kill</span>
-<span class="c1">#: -9 -PGID`` is the form both bash and dash read as a group.</span>
-<span class="n">_WATCHDOG</span> <span class="o">=</span> <span class="s1">'read group &amp;&amp; read line; kill -9 -"$group" 2&gt;/dev/null'</span>
-
-
-<span class="nd">@contextmanager</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_ended_if_this_process_dies</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Yield a call that makes HYSPLIT end if this process dies while the block runs, even when it is killed outright.</span>
-
-<span class="sd">    A worker the out-of-memory killer or ``kill -9`` ends runs no</span>
-<span class="sd">    ``finally`` block, and HYSPLIT, in a session of its own, would run on.</span>
-<span class="sd">    Call the yielded function with HYSPLIT's process as soon as it starts.</span>
-<span class="sd">    On POSIX a watchdog shell, started before HYSPLIT and in a session of</span>
-<span class="sd">    its own, is sent HYSPLIT's process group, then reads a pipe from this</span>
-<span class="sd">    process, which the system closes when this process dies; it then kills</span>
-<span class="sd">    the group. On Windows HYSPLIT is put in a job object that ends it when</span>
-<span class="sd">    the job's one handle, held here, closes. A process killed between</span>
-<span class="sd">    HYSPLIT's start and the call still leaves it running. Where neither can</span>
-<span class="sd">    be set up, HYSPLIT runs without it, with a warning.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>
-        <span class="n">jobs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">join_job</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">job</span> <span class="o">=</span> <span class="n">_job_that_ends</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">job</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">join_job</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
-                <span class="n">_close_handle</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>  <span class="c1"># HYSPLIT has ended, or is ended now</span>
-        <span class="k">return</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">watchdog</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">"/bin/sh"</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="n">_WATCHDOG</span><span class="p">],</span>
-            <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-            <span class="n">start_new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># so Ctrl-C to this process leaves it</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"HYSPLIT runs without a watchdog: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="k">lambda</span> <span class="n">proc</span><span class="p">:</span> <span class="kc">None</span>
-        <span class="k">return</span>
-    <span class="n">pipe</span> <span class="o">=</span> <span class="n">watchdog</span><span class="o">.</span><span class="n">stdin</span>
-    <span class="k">assert</span> <span class="n">pipe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">tell_watchdog</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">pipe</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
-            <span class="n">pipe</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># the watchdog has ended</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"HYSPLIT runs without a watchdog: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">yield</span> <span class="n">tell_watchdog</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">watchdog</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>  <span class="c1"># before its pipe closes, so it kills nothing</span>
-        <span class="n">watchdog</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-        <span class="n">pipe</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>  <span class="c1"># Windows' job objects, through ctypes</span>
-    <span class="c1">#: The limit that ends a job's processes when its last handle closes (``JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE``).</span>
-    <span class="n">_KILL_ON_JOB_CLOSE</span> <span class="o">=</span> <span class="mh">0x2000</span>
-    <span class="c1">#: The class of ``SetInformationJobObject`` the limit is in (``JobObjectExtendedLimitInformation``).</span>
-    <span class="n">_EXTENDED_LIMITS</span> <span class="o">=</span> <span class="mi">9</span>
-    <span class="c1">#: The access to a process that putting it in a job needs (``PROCESS_SET_QUOTA | PROCESS_TERMINATE``).</span>
-    <span class="n">_JOIN_ACCESS</span> <span class="o">=</span> <span class="mh">0x0101</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_job_that_ends</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Put the Windows process *pid* in a new job object that ends it when the job closes; return the job's handle.</span>
-
-<span class="sd">        The job closes when its last handle does, and its one handle is held by</span>
-<span class="sd">        this process, so the system ends *pid* when this process ends, however</span>
-<span class="sd">        it ends. Returns ``None`` where the job cannot be made.</span>
-<span class="sd">        """</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">ctypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">wintypes</span>
-
-        <span class="k">class</span><span class="w"> </span><span class="nc">BasicLimits</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-            <span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">(</span><span class="s2">"PerProcessUserTimeLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PerJobUserTimeLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"LimitFlags"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"MinimumWorkingSetSize"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"MaximumWorkingSetSize"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"ActiveProcessLimit"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"Affinity"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PriorityClass"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"SchedulingClass"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-            <span class="p">]</span>
-
-        <span class="k">class</span><span class="w"> </span><span class="nc">ExtendedLimits</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-            <span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">(</span><span class="s2">"BasicLimitInformation"</span><span class="p">,</span> <span class="n">BasicLimits</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"IoInfo"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_uint64</span> <span class="o">*</span> <span class="mi">6</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"ProcessMemoryLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"JobMemoryLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PeakProcessMemoryUsed"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PeakJobMemoryUsed"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-            <span class="p">]</span>
-
-        <span class="n">kernel32</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">WinDLL</span><span class="p">(</span><span class="s2">"kernel32"</span><span class="p">,</span> <span class="n">use_last_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateJobObjectW</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">OpenProcess</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">SetInformationJobObject</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">,</span>
-            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">,</span>
-            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">,</span>
-            <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">AssignProcessToJobObject</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">]</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">]</span>
-        <span class="n">job</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateJobObjectW</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">job</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">"HYSPLIT runs outside a job object: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
-                <span class="n">ctypes</span><span class="o">.</span><span class="n">WinError</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">get_last_error</span><span class="p">()),</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">limits</span> <span class="o">=</span> <span class="n">ExtendedLimits</span><span class="p">()</span>
-        <span class="n">limits</span><span class="o">.</span><span class="n">BasicLimitInformation</span><span class="o">.</span><span class="n">LimitFlags</span> <span class="o">=</span> <span class="n">_KILL_ON_JOB_CLOSE</span>
-        <span class="n">process</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">OpenProcess</span><span class="p">(</span><span class="n">_JOIN_ACCESS</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">pid</span><span class="p">)</span>
-        <span class="n">joined</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">process</span>
-            <span class="ow">and</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">SetInformationJobObject</span><span class="p">(</span>
-                <span class="n">job</span><span class="p">,</span> <span class="n">_EXTENDED_LIMITS</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="n">limits</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">sizeof</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="ow">and</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">AssignProcessToJobObject</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">process</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">error</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">get_last_error</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">process</span><span class="p">:</span>
-            <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">process</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">joined</span><span class="p">:</span>
-            <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">"HYSPLIT runs outside a job object: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">WinError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="n">job</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_close_handle</span><span class="p">(</span><span class="n">handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Close a Windows handle."""</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">ctypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">wintypes</span>
-
-        <span class="n">kernel32</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">WinDLL</span><span class="p">(</span><span class="s2">"kernel32"</span><span class="p">,</span> <span class="n">use_last_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">]</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Stop a HYSPLIT process (its group, on POSIX) with SIGTERM, then SIGKILL if it does not exit."""</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_signal_group</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-        <span class="k">return</span>
-    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
-        <span class="k">pass</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_signal_group</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_signal_group</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">hard</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Send SIGKILL (*hard*) or SIGTERM to *proc*'s process group.</span>
-
-<span class="sd">    Windows has no process group to signal: ``terminate`` and ``kill`` end</span>
-<span class="sd">    the process alone, which is all HYSPLIT is (it starts no other).</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">hard</span><span class="p">:</span>
-                <span class="n">proc</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># the process has already ended</span>
-            <span class="k">raise</span> <span class="ne">ProcessLookupError</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-        <span class="k">return</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGKILL</span> <span class="k">if</span> <span class="n">hard</span> <span class="k">else</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
 </pre></div>
 
                 </article>

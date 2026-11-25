@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1582,7 +1582,8 @@
 <span class="sd">        - the project has releases (``releases``);</span>
 <span class="sd">        - the met's ``directory`` exists and holds an ARL file (``met_directory``);</span>
 <span class="sd">        - every met file each release's run needs is there, naming the</span>
-<span class="sd">          hours (``met_files``);</span>
+<span class="sd">          hours (``met_files``), and a run needs at most the 128 files</span>
+<span class="sd">          HYSPLIT reads (``met_count``);</span>
 <span class="sd">        - each met file they need holds at least two time periods, which</span>
 <span class="sd">          HYSPLIT needs (``met_periods``), and ends on a whole time step</span>
 <span class="sd">          (``met_cut``);</span>

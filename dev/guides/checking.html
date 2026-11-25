@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -589,17 +589,23 @@ its longitude.</p></td>
 <td><p>Widen <code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code> to hold the whole run, not only the
 release.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_periods</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_count</span></code></p></td>
+<td><p>A release’s run needs more than 128 met files, more than HYSPLIT
+reads in time.</p></td>
+<td><p>Use met files that each hold more hours, such as daily ones, or
+shorter runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_periods</span></code></p></td>
 <td><p>A file the releases need holds one time period, which HYSPLIT
 cannot read.</p></td>
 <td><p>Use files that each hold at least two time periods.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_cut</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_cut</span></code></p></td>
 <td><p>A file the releases need ends partway through a time step, so it is
 damaged.</p></td>
 <td><p>Download or crop the file again.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> lacks <code class="docutils literal notranslate"><span class="pre">zsfc</span></code>, the terrain height, and a release
 given above sea level needs it. The message says why.</p></td>
 <td><p>Add <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> to <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> before the runs. It is a run setting,

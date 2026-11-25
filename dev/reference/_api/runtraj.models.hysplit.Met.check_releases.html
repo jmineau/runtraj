@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1021,7 +1021,8 @@
 <p>The file check that <a class="reference internal" href="runtraj.models.hysplit.Met.files_for.html#runtraj.models.hysplit.Met.files_for" title="runtraj.models.hysplit.Met.files_for"><code class="xref py py-meth docutils literal notranslate"><span class="pre">files_for()</span></code></a> makes for each run, made for
 every release at once: the met’s <code class="docutils literal notranslate"><span class="pre">directory</span></code> exists and holds an
 ARL file, and every file a run needs is there, holds at least two
-time periods, and ends on a whole time step. A release outside the
+time periods, and ends on a whole time step, and a run needs at most
+<code class="xref py py-data docutils literal notranslate"><span class="pre">MAX_MET_FILES</span></code> files. A release outside the
 files is listed too, since HYSPLIT cannot start a particle there:
 outside <code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code> with the crop on, else outside the grid of
 the first file its run reads. A met with <code class="docutils literal notranslate"><span class="pre">download</span></code>
@@ -1042,7 +1043,7 @@ each file at a run, and a run that passes this one can still fail as
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>One row for each thing found, with <code class="docutils literal notranslate"><span class="pre">check</span></code> (<code class="docutils literal notranslate"><span class="pre">met_directory</span></code>,
-<code class="docutils literal notranslate"><span class="pre">met_files</span></code>, <code class="docutils literal notranslate"><span class="pre">met_periods</span></code>, <code class="docutils literal notranslate"><span class="pre">met_cut</span></code>, <code class="docutils literal notranslate"><span class="pre">met_domain</span></code>, or <code class="docutils literal notranslate"><span class="pre">met_crop</span></code>), <code class="docutils literal notranslate"><span class="pre">release</span></code> (<code class="docutils literal notranslate"><span class="pre">NA</span></code> when the
+<code class="docutils literal notranslate"><span class="pre">met_files</span></code>, <code class="docutils literal notranslate"><span class="pre">met_count</span></code>, <code class="docutils literal notranslate"><span class="pre">met_periods</span></code>, <code class="docutils literal notranslate"><span class="pre">met_cut</span></code>, <code class="docutils literal notranslate"><span class="pre">met_domain</span></code>, or <code class="docutils literal notranslate"><span class="pre">met_crop</span></code>), <code class="docutils literal notranslate"><span class="pre">release</span></code> (<code class="docutils literal notranslate"><span class="pre">NA</span></code> when the
 finding is about the met), and <code class="docutils literal notranslate"><span class="pre">message</span></code> columns. Empty when
 nothing would stop a run.</p>
 </dd>

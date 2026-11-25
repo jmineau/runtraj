@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -544,7 +544,8 @@
 <span class="sd">    times, and text in ISO 8601 or the compact ``"YYYYMMDDHHMM"`` form</span>
 <span class="sd">    (:func:`_parse_time_text`). Other text, such as the day-first</span>
 <span class="sd">    ``"05/07/2023 18:00"``, is refused, since it could be read either way.</span>
-<span class="sd">    A time finer than a microsecond is cut to the microsecond.</span>
+<span class="sd">    Seconds are dropped: a release starts on the minute, as the transport</span>
+<span class="sd">    model is told and as the release id names it.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'time' must be provided for all release types."</span><span class="p">)</span>
@@ -567,9 +568,8 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Release time cannot be NaT."</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">parsed</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">parsed</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="s2">"UTC"</span><span class="p">)</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-    <span class="c1"># A datetime holds microseconds; satellite times (OCO-2 seconds since an</span>
-    <span class="c1"># epoch) carry nanoseconds, which to_pydatetime would drop with a warning.</span>
-    <span class="n">parsed</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="s2">"us"</span><span class="p">)</span>
+    <span class="c1"># HYSPLIT's CONTROL and the release id are to the minute, so the time is too.</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="s2">"min"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">parsed</span><span class="o">.</span><span class="n">to_pydatetime</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 

@@ -100,8 +100,11 @@ script runs again in every worker. ``Project.init`` there stops with a
 ``runtraj run --cpus 4`` and a ``cpus`` of 1 need no guard.
 
 You can stop a run at any time with Ctrl-C (or ``SIGTERM`` from ``kill``,
-Slurm or Kubernetes). Releases that finished stay finished, and running
-again starts the ones that were cut off from the beginning. On Windows, a
+Slurm or Kubernetes), also while it is still opening the project, and
+``runtraj run`` exits with 3. Another Ctrl-C or ``SIGTERM`` while it stops
+is ignored, so that it can end its workers. Releases that finished stay
+finished, and running again starts the ones that were cut off from the
+beginning. On Windows, a
 run with ``cpus`` above 1 stops its HYSPLIT runs too, but it leaves their
 workdirs in the compute root, since Windows ends a worker before it can
 remove them.
@@ -112,9 +115,9 @@ out-of-memory killer, the run stops with an error
 cannot say which release the worker held, so the error names every release
 that was in progress. Nothing is marked failed and what finished stays
 finished: run it again and only what is missing runs, with a lower ``cpus`` or
-more memory per task if memory was the cause. The HYSPLIT run the killed
-worker started is ended too. Its directory in the compute root is not
-removed; clear it by hand.
+more memory per task if memory was the cause. The HYSPLIT or FLEXPART run
+the killed worker started is ended too. Its directory in the compute root
+is not removed; clear it by hand.
 
 Save now, run later
 -------------------

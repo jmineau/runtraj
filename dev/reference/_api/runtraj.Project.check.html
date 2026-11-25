@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=6901e54c"></script>
+    <script src="../../_static/documentation_options.js?v=1ffebc2c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev5+gfa041d240" />
+  <meta name="docsearch:version" content="0.1.0a6.dev13+g4c85f55a9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1024,7 +1024,8 @@ variant it checks that:</p>
 <li><p>the project has releases (<code class="docutils literal notranslate"><span class="pre">releases</span></code>);</p></li>
 <li><p>the met’s <code class="docutils literal notranslate"><span class="pre">directory</span></code> exists and holds an ARL file (<code class="docutils literal notranslate"><span class="pre">met_directory</span></code>);</p></li>
 <li><p>every met file each release’s run needs is there, naming the
-hours (<code class="docutils literal notranslate"><span class="pre">met_files</span></code>);</p></li>
+hours (<code class="docutils literal notranslate"><span class="pre">met_files</span></code>), and a run needs at most the 128 files
+HYSPLIT reads (<code class="docutils literal notranslate"><span class="pre">met_count</span></code>);</p></li>
 <li><p>each met file they need holds at least two time periods, which
 HYSPLIT needs (<code class="docutils literal notranslate"><span class="pre">met_periods</span></code>), and ends on a whole time step
 (<code class="docutils literal notranslate"><span class="pre">met_cut</span></code>);</p></li>
