@@ -20,8 +20,8 @@ model or a stage:
        cpus: 4
 
 Every task a backend starts runs the same command, ``runtraj run <project>
---task i/N`` (:func:`runtraj.execution.task_share` is the releases of task
-``i``), so a backend starts tasks and, if it can, waits for them; it never
+--task i/N`` (``pending(project, task=(i, N))``, :func:`runtraj.execution.pending`,
+is the releases of task ``i``), so a backend starts tasks and, if it can, waits for them; it never
 runs a transport model itself.
 """
 
@@ -95,7 +95,10 @@ class Backend(ABC):
         Start the tasks that run *releases*, and return what names them, such as a job id.
 
         *releases* are the ids of the releases with missing results, in
-        the order the tasks share them (:func:`runtraj.execution.task_share`).
+        project order. Tasks given them (``runtraj run --releases``) share
+        them in this order (:func:`runtraj.execution.task_share`); tasks
+        given none share every release of the project in the order of a
+        hash of their ids (:func:`runtraj.execution.pending`).
         ``execution.block`` is this backend's block. *compute_root* is
         where the workdirs go, or ``None`` for each task's own.
         """

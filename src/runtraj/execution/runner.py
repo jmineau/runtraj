@@ -10,6 +10,7 @@ Slurm job array to :mod:`runtraj.execution.slurm` and a Kubernetes Job to
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import math
 import os
@@ -26,7 +27,13 @@ from runtraj._paths import absolute
 from runtraj._transient import is_transient
 from runtraj.execution.backends import Backend, get_backend, not_waited
 from runtraj.execution.config import ExecutionConfig, LocalConfig, PbsConfig
-from runtraj.execution.inputs import lock
+from runtraj.execution.inputs import (
+    FETCH_DONE,
+    hash_inputs,
+    lock,
+    read_text,
+    write_text,
+)
 from runtraj.fetch import downloads, fetch_project
 
 if TYPE_CHECKING:
@@ -55,6 +62,11 @@ def task_share(release_ids: list[str], task: int, n_tasks: int) -> list[str]:
 
     The share is every *n_tasks*-th release, starting at *task*, which runs
     from 0 to ``n_tasks - 1`` as the index of a job array does.
+    ``runtraj run --task i/n`` takes this share of the list
+    ``--releases`` gives; without one it takes it of every release of the
+    project in the order of a hash of their ids, so
+    ``pending(project, task=(i, n))`` (:func:`pending`) is the releases
+    such a task runs.
 
     Raises
     ------
@@ -108,8 +120,10 @@ def pending(
     skip_existing: bool = True,
 ) -> list[str]:
     """
-    Return the ids of the releases a run would run, each once, in project order.
+    Return the ids of the releases a run would run, each once.
 
+    They are in project order, or in the order of *releases* when given;
+    with *task* and no *releases*, in the order of a hash of their ids.
     A driver that starts tasks itself writes these to the ``releases.txt``
     each task reads (``runtraj run --releases``).
 
@@ -123,7 +137,10 @@ def pending(
         ``(i, n)``: share ``i`` of ``n`` (:func:`task_share`), taken from
         all the releases (or all of *releases*) before the complete ones
         are dropped, so the tasks of a job array split the releases the
-        same way whenever each starts.
+        same way whenever each starts. All the releases are first put in
+        the order of a hash of their ids, so the unfinished ones spread
+        over the tasks however they lie in the project, such as one
+        site's hours among many sites'; *releases* keep their order.
     skip_existing : bool, default True
         Leave out releases whose simulations are all complete.
 
@@ -135,7 +152,7 @@ def pending(
     sims = project.simulations
     every = list(dict.fromkeys(sims["release"]))
     if releases is None:
-        chosen = every
+        chosen = every if task is None else sorted(every, key=_scattered)
     else:
         chosen = list(dict.fromkeys(str(r) for r in releases))
         known = set(every)
@@ -151,6 +168,11 @@ def pending(
         left = set(project.incomplete(sims[sims["release"].isin(chosen)])["release"])
         chosen = [r for r in chosen if r in left]
     return chosen
+
+
+def _scattered(release_id: str) -> bytes:
+    """Return a sort key that puts release ids in an order unrelated to the project's: a hash of the id."""
+    return hashlib.sha256(release_id.encode("utf-8")).digest()
 
 
 def _to_fetch(
@@ -180,9 +202,9 @@ def _to_fetch(
 
 def _fetch_here(
     project: Project, unrun: pd.DataFrame, setting: str = "execution.local.fetch"
-) -> None:
+) -> bool:
     """
-    Get the met files of the *unrun* simulations in this process, before a local run's workers start.
+    Get the met files of the *unrun* simulations in this process, before a local run's workers start, and return whether every one was had.
 
     A file that could not be had, or a download that failed and that a
     retry may get past (:func:`runtraj._transient.is_transient`), is only
@@ -196,7 +218,7 @@ def _fetch_here(
         if not is_transient(error):
             raise
         logger.warning("The fetch stopped (%s); each run downloads its own.", error)
-        return
+        return False
     problems = files["message"].dropna()
     if len(problems):
         logger.warning(
@@ -204,6 +226,8 @@ def _fetch_here(
             len(problems),
             problems.iloc[0],
         )
+        return False
+    return True
 
 
 #: The lock a task holds where the inputs are while it gets the met files (:func:`fetch_shared`).
@@ -220,9 +244,17 @@ def fetch_shared(project: Project, location: str) -> None:
     lock :data:`FETCH_LOCK` at *location* while it fetches
     (:func:`runtraj.execution.inputs.lock`), so the first downloads the
     files and the others, waiting their turn, find them and download
-    nothing. Nothing is locked when no met downloads. As for a local run's
-    fetch, a file that could not be had, or a download a retry may get
-    past, is only logged: each run then tries again.
+    nothing. A task that got every file writes
+    :data:`~runtraj.execution.inputs.FETCH_DONE` there, holding the hash of
+    the inputs (:func:`runtraj.execution.inputs.hash_inputs`), and a task
+    that finds it, before the lock or once it holds it, does not list the
+    project again. New inputs, such as more releases, hash to another value
+    and are fetched again, and ``runtraj submit`` removes the note when it
+    makes a Job, so it holds for one Job. Nothing is locked when no met
+    downloads. As for a local run's fetch, a file that could not be had, or
+    a download a retry may get past, is only logged; the task then writes
+    no note, so the next task tries again under the lock, and each run
+    tries again too.
 
     Parameters
     ----------
@@ -240,11 +272,15 @@ def fetch_shared(project: Project, location: str) -> None:
     sims = project.simulations
     if not downloads(project, sims["variant"].unique()):
         return
+    inputs = hash_inputs(project.directory)
+    if read_text(location, FETCH_DONE) == inputs:
+        return
     with lock(location, FETCH_LOCK):
-        # Listed under the lock: what the task before got is not fetched again.
+        if read_text(location, FETCH_DONE) == inputs:
+            return  # the task before fetched them while this one waited
         unrun = project._unrun(sims, skip_existing=True)
-        if not unrun.empty:
-            _fetch_here(project, unrun, "execution.kubernetes.fetch")
+        if unrun.empty or _fetch_here(project, unrun, "execution.kubernetes.fetch"):
+            write_text(location, FETCH_DONE, inputs)
 
 
 def _status(project: Project, release_ids: list[str]) -> pd.DataFrame:
@@ -392,9 +428,10 @@ def run(
     task : tuple of (int, int), optional
         ``(i, n)``: run share ``i`` of ``n`` of the releases here, in this
         process, whatever the backend. The share is every ``n``-th
-        release in project order (or in *releases* order), starting at
-        ``i`` (:func:`task_share`), whether it is complete or not, and the
-        complete ones are then skipped. Each task of a job array or a
+        release, starting at ``i`` (:func:`task_share`), of *releases* in
+        their order, or else of every release of the project in the order
+        of a hash of their ids (:func:`pending`), whether it is complete
+        or not, and the complete ones are then skipped. Each task of a job array or a
         Kubernetes indexed Job runs one share, and every task splits the
         releases the same way whenever it starts.
     execution : ExecutionConfig, optional

@@ -25,6 +25,7 @@ from runtraj import Project
 from runtraj._transient import is_transient
 from runtraj.cli import _resolve_project, app
 from runtraj.exceptions import WorkerDied
+from runtraj.execution.runner import _scattered
 from tests.fixtures.platform import not_on_windows
 
 from .fixtures.factories import (
@@ -537,9 +538,25 @@ def test_run_one_task_of_a_job_array(tmp_path, transport_runs):
     result = _run(project, "--task", "1/2", "--backend", "local")
 
     assert result.exit_code == 0, result.output
-    assert transport_runs.ran == [_release(13).id]
+    every = sorted((_release(h).id for h in (12, 13, 14)), key=_scattered)
+    assert transport_runs.ran == every[1::2]
     assert "task 1 of 2  cpus=1" in result.output
-    assert "Releases of this task: 1, 3, 5, ..." in result.output
+    assert (
+        "Releases of this task: share 1 of 2, in the order of a hash" in result.output
+    )
+
+
+def test_a_task_given_its_releases_shares_them_in_their_order(tmp_path, transport_runs):
+    """A Slurm or PBS task reads the list its submission wrote, and splits it as listed."""
+    project = _project(tmp_path, [_release(h) for h in (12, 13, 14)])
+    ids = tmp_path / "ids.txt"
+    ids.write_text("".join(f"{_release(h).id}\n" for h in (14, 12, 13)))
+
+    result = _run(project, "--releases", ids, "--task", "1/2", "--backend", "local")
+
+    assert result.exit_code == 0, result.output
+    assert transport_runs.ran == [_release(12).id]
+    assert "Releases of this task: share 1 of 2\n" in result.output
 
 
 @pytest.mark.parametrize("command", ["run", "tick"])

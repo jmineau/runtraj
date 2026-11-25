@@ -34,6 +34,12 @@ logger = logging.getLogger(__name__)
 RELEASES = "releases.csv"
 #: The files of a project folder a run reads.
 INPUT_FILES = ("config.yaml", RELEASES)
+
+#: The note a task writes where the inputs are once it got every met file,
+#: holding the inputs' hash (:func:`runtraj.execution.runner.fetch_shared`).
+#: ``runtraj submit`` removes it when it makes a Kubernetes Job.
+FETCH_DONE = ".fetch.done"
+
 #: The folder of extra input tables (``Project.add_table``), copied when present.
 TABLES = "tables"
 #: The places a schedule adds a release at each hour, copied when present.
@@ -239,6 +245,28 @@ def has_file(url: str, name: str) -> bool:
     """
     fs, root = fsspec.core.url_to_fs(url)
     return _exists(fs, f"{root.rstrip('/')}/{name}")
+
+
+def read_text(url: str, name: str) -> str | None:
+    """Return the text of the file *name* at *url*, or ``None`` when there is none."""
+    fs, root = fsspec.core.url_to_fs(url)
+    try:
+        return fs.cat_file(f"{root.rstrip('/')}/{name}").decode("utf-8")
+    except FileNotFoundError:
+        return None
+
+
+def write_text(url: str, name: str, text: str) -> None:
+    """Write *text* to the file *name* at *url*, in one request."""
+    fs, root = fsspec.core.url_to_fs(url)
+    fs.pipe_file(f"{root.rstrip('/')}/{name}", text.encode("utf-8"))
+
+
+def remove_file(url: str, name: str) -> None:
+    """Remove the file *name* at *url*, if it is there."""
+    fs, root = fsspec.core.url_to_fs(url)
+    with contextlib.suppress(FileNotFoundError):
+        fs.rm_file(f"{root.rstrip('/')}/{name}")
 
 
 def _atomic_put_file(fs: fsspec.AbstractFileSystem, lpath: str, rpath: str) -> None:

@@ -162,6 +162,7 @@ def test_cli_tasks_split_the_releases(tmp_path, traj_only_config):
     from typer.testing import CliRunner
 
     from runtraj.cli import app
+    from runtraj.execution.runner import _scattered
 
     project_dir = tmp_path / "tasks"
     project_dir.mkdir()
@@ -173,15 +174,12 @@ def test_cli_tasks_split_the_releases(tmp_path, traj_only_config):
         "2021-01-15 06:00:00,40.7,-111.8,5.0\n"
     )
     project = Project(project_dir)
-    every = list(dict.fromkeys(project.simulations["release"]))
+    every = sorted(set(project.simulations["release"]), key=_scattered)
 
     first = CliRunner().invoke(app, ["run", str(project_dir), "--task", "0/2"])
     assert first.exit_code == 0, first.output
     status = project.status()
-    assert set(status.loc[status.state == "complete", "release"]) == {
-        every[0],
-        every[2],
-    }
+    assert set(status.loc[status.state == "complete", "release"]) == set(every[0::2])
 
     second = CliRunner().invoke(app, ["run", str(project_dir), "--task", "1/2"])
     assert second.exit_code == 0, second.output

@@ -224,9 +224,12 @@ a pod gets the met files of every unfinished simulation, as ``runtraj
 fetch`` does, holding a lock where the inputs are (``.fetch.lock`` beside
 ``config.yaml``, on the bucket or the project's volume). The pods take
 their turn. The first downloads the files while the others wait; each
-after it finds them there and downloads nothing, and starts its share. The
-lock is rewritten every minute while it is held, so a long download keeps
-it. Pods with their own met directories gain nothing from waiting, so
+after it finds them there and downloads nothing, and starts its share. A
+pod that got every file leaves a note, ``.fetch.done`` beside the lock, so
+the pods after it do not list the project again; one that missed a file
+leaves none, so the next pod tries again. ``runtraj submit`` removes the
+note when it makes the next Job. The lock is rewritten every minute while
+it is held, so a long download keeps it. Pods with their own met directories gain nothing from waiting, so
 leave ``fetch`` off for them. With no met that downloads, the pods get no
 ``--fetch``.
 

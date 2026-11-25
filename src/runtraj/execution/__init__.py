@@ -5,8 +5,8 @@ Running simulations: the runner that starts the work and the workers that do it.
 submits it to Slurm or Kubernetes and returns, and :func:`wait` waits for a job array.
 Where they run is a :class:`Backend`, which ``execution.backend`` names
 (:func:`get_backend`); a backend in another package subclasses it.
-:func:`pending` is the releases either would run. :func:`task_share` is which releases one task of a
-job array runs, and :func:`job_script` the script such a job array runs, for
+:func:`pending` is the releases either would run, or one task of a job array
+(``task=(i, n)``). :func:`task_share` splits a list of releases among the tasks, and :func:`job_script` the script such a job array runs, for
 a scheduler runtraj does not drive itself. The Slurm backend is
 :mod:`runtraj.execution.slurm` and the Kubernetes one
 :mod:`runtraj.execution.kubernetes`; the workers are in
