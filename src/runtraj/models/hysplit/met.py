@@ -255,6 +255,13 @@ class HysplitMetConfig(MetConfig):
         return self.download is not None
 
 
+#: The most met files HYSPLIT reads in time for one grid (``mtim`` in its
+#: ``DEFGRID.INC``, 128 from 5.1.0 on). runtraj gives a run's files as one
+#: grid, so a run that needs more stops with "Numb meteo times exceed
+#: DEFGRID limit".
+MAX_MET_FILES = 128
+
+
 def _time(value: Any) -> pd.Timestamp:
     """Return *value* as a Timestamp, raising for a missing time."""
     time = pd.Timestamp(value)
@@ -558,7 +565,8 @@ class Met:
         The file check that :meth:`files_for` makes for each run, made for
         every release at once: the met's ``directory`` exists and holds an
         ARL file, and every file a run needs is there, holds at least two
-        time periods, and ends on a whole time step. A release outside the
+        time periods, and ends on a whole time step, and a run needs at most
+        :data:`MAX_MET_FILES` files. A release outside the
         files is listed too, since HYSPLIT cannot start a particle there:
         outside ``subgrid_bounds`` with the crop on, else outside the grid of
         the first file its run reads. A met with ``download``
@@ -583,7 +591,7 @@ class Met:
         -------
         pandas.DataFrame
             One row for each thing found, with ``check`` (``met_directory``,
-            ``met_files``, ``met_periods``, ``met_cut``, ``met_domain``, or ``met_crop``), ``release`` (``NA`` when the
+            ``met_files``, ``met_count``, ``met_periods``, ``met_cut``, ``met_domain``, or ``met_crop``), ``release`` (``NA`` when the
             finding is about the met), and ``message`` columns. Empty when
             nothing would stop a run.
         """
@@ -618,6 +626,7 @@ class Met:
         """List the releases that lack a file their run needs, and the files they need that cannot be read to the end."""
         first = releases.drop_duplicates("release")
         messages: dict[Any, str | None] = {}
+        counts: dict[Any, str] = {}
         single: dict[Path, None] = {}
         starts: dict[Any, Path] = {}
         folders = [self.directory, *([self.crop_dir] if self.crops else [])]
@@ -631,6 +640,8 @@ class Met:
             messages[time] = cover.clash or (
                 f"no met file for {_spans(cover.gaps)}" if cover.gaps else None
             )
+            if messages[time] is None and len(cover.files) > MAX_MET_FILES:
+                counts[time] = _too_many_files_message(len(cover.files))
             single.update(dict.fromkeys(p for p in cover.files if p in one_step))
             if cover.files and not self.config.subgrid_enable:
                 starts[time] = cover.files[0]
@@ -638,6 +649,11 @@ class Met:
             ("met_files", str(rid), message)
             for rid, time in zip(first["release"], first["time"], strict=True)
             if (message := messages[time]) is not None
+        ]
+        found += [
+            ("met_count", str(rid), counts[time])
+            for rid, time in zip(first["release"], first["time"], strict=True)
+            if time in counts
         ]
         if single:
             more = f" {len(single) - 1} more do too." if len(single) > 1 else ""
@@ -750,8 +766,11 @@ class Met:
         ------
         MeteorologyError
             Naming the damaged file and its first problem, a file that holds
-            one time period, or the times the files do not hold.
+            one time period, or the times the files do not hold; or when
+            there are more than :data:`MAX_MET_FILES` files.
         """
+        if len(files) > MAX_MET_FILES:
+            raise MeteorologyError(_too_many_files_message(len(files)))
         held: set[pd.Timestamp] = set()
         single: list[Path] = []
         for path in files:
@@ -1088,6 +1107,15 @@ def _holds_as(crop: Path, source: Path) -> bool:
         wanted.first,
         wanted.step,
         wanted.n_steps,
+    )
+
+
+def _too_many_files_message(n_files: int) -> str:
+    """Return why a run that needs *n_files* met files cannot run."""
+    return (
+        f"The run needs {n_files} met files, and HYSPLIT reads at most "
+        f"{MAX_MET_FILES} in time. Use met files that each hold more hours, "
+        "such as daily ones, or shorter runs."
     )
 
 

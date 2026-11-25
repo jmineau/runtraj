@@ -11,6 +11,7 @@ import pytest
 from runtraj.exceptions import MeteorologyError
 from runtraj.meteorology import run_window
 from runtraj.models.hysplit import HysplitMetConfig, Met
+from runtraj.models.hysplit.met import MAX_MET_FILES
 from runtraj.spatial import Bounds
 
 from ...fixtures.factories import write_arl_file
@@ -1436,6 +1437,32 @@ def test_check_passes_files_of_two_time_periods(tmp_path):
         for hour in range(2, 11, 2)
     ]
     _make_met(tmp_path).check(files, _WINDOW)
+
+
+def test_check_refuses_more_met_files_than_hysplit_reads(tmp_path):
+    """HYSPLIT stops on more than 128 files in time; this is found before it starts."""
+    files = [tmp_path / f"f{k:03d}" for k in range(MAX_MET_FILES + 1)]
+    with pytest.raises(MeteorologyError, match="needs 129 met files"):
+        _make_met(tmp_path).check(files, _WINDOW)
+
+
+def test_checking_releases_lists_a_run_that_needs_too_many_met_files(tmp_path):
+    start = pd.Timestamp("2023-01-01 00:00")
+    for k in range(MAX_MET_FILES + 1):  # two hours each, one after another
+        write_arl_file(
+            tmp_path / f"f{k:03d}",
+            times=pd.date_range(start + pd.Timedelta(hours=2 * k), periods=2, freq="h"),
+        )
+    last = start + pd.Timedelta(hours=2 * MAX_MET_FILES + 1)
+    releases = pd.DataFrame(
+        {"release": ["a"], "time": [last], "longitude": [-112.0], "latitude": [40.5]}
+    )
+
+    found = _make_met(tmp_path).check_releases(releases, -(2 * MAX_MET_FILES + 1))
+
+    assert list(found["check"]) == ["met_count"]
+    assert "needs 129 met files" in found["message"].iloc[0]
+    assert _make_met(tmp_path).check_releases(releases, -10).empty
 
 
 def test_check_refuses_files_that_hold_one_time_period(tmp_path):
