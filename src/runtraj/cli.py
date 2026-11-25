@@ -434,6 +434,25 @@ def _exit_code(table: pd.DataFrame) -> int:
     return EXIT_COMPLETE
 
 
+def _require_outside_copy(project: Project) -> None:
+    """
+    Exit with 2 when a run of a URL's project would write its results into the copy of its inputs.
+
+    The copy (:func:`_local_inputs`) is removed when this process exits. A
+    relative ``output`` starts from the project folder, which is that copy,
+    so the results would go with it. A met's relative ``subgrid_dir`` is
+    allowed: it holds crops and tables that are made again when missing.
+    """
+    output = project.output.directory
+    if isinstance(output, Path) and output.is_relative_to(project.directory.parent):
+        _fail(
+            f"The output directory {output} is inside the copy of the project's "
+            "inputs, which is removed when runtraj exits. For a project on a "
+            "URL, set output in config.yaml to a bucket or an absolute path, "
+            "or give --output s3://..."
+        )
+
+
 def _start(
     project: str | None,
     *,
@@ -448,14 +467,19 @@ def _start(
     task: tuple[int, int] | None = None,
     execution_file: Path | None = None,
     output: str | None = None,
+    copied: bool = False,
 ) -> tuple[Project, dict[str, Any]]:
     """
     Open the project, print what is about to run, and return the run's options.
 
     With *release_rows* (from ``--releases releases.parquet``) the
     project takes its releases from them, not from ``releases.csv``.
+    *copied* says the project is a copy of a URL's inputs
+    (:func:`_local_inputs`), which is removed when this process exits.
     """
     opened = _open(project, output=output, rows=release_rows)
+    if copied:
+        _require_outside_copy(opened)
     _require_build(opened)
     if execution_file is None:
         settings = opened.config.execution.model_dump(exclude_unset=True)
@@ -634,7 +658,9 @@ def run(
     I/N runs one share of them here, for each task of a job array or a
     Kubernetes indexed Job. The project can be a URL its inputs were
     copied to, such as s3://bucket/projects/my_project: they are copied to
-    this machine first, and a URL that cannot be read exits with 3.
+    this machine first, and a URL that cannot be read exits with 3. The
+    copy is removed when the run ends, so the output must then be on a
+    bucket or an absolute path (--output), not inside the project.
 
     Exits with 0 when every simulation that ran is complete, 1 when some
     failed, 3 when some did not finish (the run was stopped, a worker process
@@ -676,6 +702,7 @@ def run(
             task=share,
             execution_file=execution,
             output=output,
+            copied=given is not None and is_url(given),
         )
         if fetch:
             # Locked where every task reads the inputs: the bucket, or this folder.
@@ -869,8 +896,12 @@ def tick(
         except ValueError as error:
             _fail(str(error))
         directory = _resolve_project(_local_inputs(project))
+        copied = project is not None and is_url(project)
+        if copied:
+            # Before releases.csv is added to, so a refused run adds no hours.
+            _require_outside_copy(_open(directory, output=output))
         # releases.csv is locked, and added to, where the inputs are: the bucket or this folder.
-        location = project if project is not None and is_url(project) else directory
+        location = project if copied else directory
         try:
             release_ids = schedules.add_due_releases(
                 location, directory, now=moment, delay=delay

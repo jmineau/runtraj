@@ -820,6 +820,72 @@ def test_a_pod_with_fetch_gets_the_met_locked_where_the_inputs_are(
     assert [what for what, _ in calls] == ["run"]  # the share runs after it
 
 
+def _output_in_the_project(project: Project) -> None:
+    """Make the project's output ``results``, a folder inside it."""
+    config = yaml.safe_load(project.config_path.read_text(encoding="utf-8"))
+    config["output"] = "results"
+    project.config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+
+def test_a_pod_refuses_to_write_inside_the_copy_of_a_bucket_s_inputs(
+    tmp_path, calls, monkeypatch
+):
+    """The copy is removed at exit, and the results with it."""
+    from runtraj.execution.inputs import push
+
+    project = _project(tmp_path)
+    _output_in_the_project(project)
+    url = "memory://cli-copy/projects/proj"
+    push(project.directory, url)
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "pod-tmp"))
+
+    result = _invoke("run", url, "--task", "0/1")
+
+    assert result.exit_code == 2, result.output
+    assert "inside the copy of the project's inputs" in result.output
+    assert calls == []
+
+
+def test_a_pod_runs_a_bucket_s_project_with_its_output_given(
+    tmp_path, calls, monkeypatch
+):
+    from runtraj.execution.inputs import push
+
+    project = _project(tmp_path)
+    _output_in_the_project(project)
+    url = "memory://cli-copy-given/projects/proj"
+    push(project.directory, url)
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "pod-tmp"))
+
+    result = _invoke("run", url, "--task", "0/1", "--output", str(tmp_path / "out"))
+
+    assert result.exit_code == 0, result.output
+    assert [what for what, _ in calls] == ["run"]
+
+
+def test_a_tick_refuses_to_write_inside_the_copy_before_adding_hours(
+    tmp_path, calls, monkeypatch
+):
+    from upath import UPath
+
+    from runtraj.execution.inputs import push
+
+    project = _project(tmp_path)
+    (project.directory / "sites.csv").write_text(TOWER)
+    _output_in_the_project(project)
+    url = "memory://cli-copy-tick/projects/proj"
+    push(project.directory, url)
+    before = UPath(f"{url}/releases.csv").read_text(encoding="utf-8")
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "pod-tmp"))
+
+    result = _invoke("tick", url, "--now", "2023-01-02T20:15")
+
+    assert result.exit_code == 2, result.output
+    assert "inside the copy of the project's inputs" in result.output
+    assert UPath(f"{url}/releases.csv").read_text(encoding="utf-8") == before
+    assert calls == []
+
+
 def test_a_pod_refuses_inputs_changed_after_submit(tmp_path, calls):
     project = _project(tmp_path)
 
