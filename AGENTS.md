@@ -112,7 +112,8 @@ src/runtraj/
                   kubernetes (indexed Job, hourly CronJob), inputs (bucket copies, lock), schedule (hourly releases)
   transforms/     particle transforms: each multiplies the `weight` column, one module each
   sampling.py     sample_field: a gridded field read at points
-  meteorology.py, spatial.py, visualization.py, exceptions.py, _paths.py
+  meteorology.py, spatial.py, visualization.py, exceptions.py, _paths.py,
+  _process.py     a transport model's program in a session of its own, stopped and watched
 ```
 
 **A run** (`runtraj run`, `Project.run()`, `submit()`) happens where its
@@ -351,9 +352,9 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   `_pool_run` ends the process itself, or a stop waits for ever. Windows has
   no SIGTERM: `terminate` ends a worker alone and its HYSPLIT runs on, so
   `_end_worker` ends the tree with `taskkill /T`. A worker killed outright
-  runs no `finally`, so HYSPLIT ends with it by other means
-  (`driver._ended_if_this_process_dies`): a watchdog `sh` on POSIX, started
-  before HYSPLIT and sent its group, which kills the group when the worker's
+  runs no `finally`, so HYSPLIT or FLEXPART ends with it by other means
+  (`_process.ended_if_this_process_dies`): a watchdog `sh` on POSIX, started
+  before the model and sent its group, which kills the group when the worker's
   pipe to it closes (`kill -9 -PGID`, the form dash reads too), and a job
   object that ends on close on Windows.
 - **A pool with `cpus` above 1 first starts one worker that does nothing**

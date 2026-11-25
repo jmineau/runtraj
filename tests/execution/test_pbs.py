@@ -264,6 +264,16 @@ def test_wait_polls_qstat_until_the_array_has_finished(commands):
     assert len(commands.ran) == 4
 
 
+def test_wait_stops_when_qstat_says_nothing_for_too_long(commands, monkeypatch):
+    """A qstat that does not take -F json never answers."""
+    monkeypatch.setattr(pbs, "SILENT_SCHEDULER_SECONDS", 0)
+    commands.answers["qstat"] = [
+        _out(returncode=2, stderr="qstat: invalid option -- 'F'")
+    ]
+    with pytest.raises(RuntimeError, match=r"nothing about job 12\[\]\.pbs-server"):
+        pbs.wait("12[].pbs-server", poll=0)
+
+
 def test_a_job_the_server_has_forgotten_has_finished(commands):
     """Without job history, a finished job is unknown to qstat."""
     commands.answers["qstat"] = [

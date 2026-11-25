@@ -16,8 +16,15 @@ from runtraj.exceptions import MeteorologyError, SimulationError
 from runtraj.models import get_model
 from runtraj.models.flexpart import FlexpartConfig, FlexpartMetConfig, FlexpartModel
 from runtraj.models.flexpart.config import flexpart_version
-from runtraj.models.flexpart.inputs import available, command, partoptions, releases
+from runtraj.models.flexpart.inputs import (
+    available,
+    command,
+    outgrid,
+    partoptions,
+    releases,
+)
 from runtraj.models.flexpart.met import catalog, files_for
+from runtraj.models.flexpart.model import run_flexpart
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
 
 pytest.importorskip("eccodes")
@@ -221,6 +228,16 @@ def test_releases_of_a_point(checkout):
     assert text.count("&RELEASE\n") == 1
     assert " PARTS=1000,\n" in text and " ZKIND=1,\n" in text
     assert " Z1=25.0,\n" in text and " Z2=25.0,\n" in text
+
+
+def test_outgrid_is_a_cell_at_the_release():
+    """FLEXPART stops when the grid is outside the met, so it must be where the release is."""
+    release = PointRelease(
+        time="2023-06-01 18:00", longitude=-111.85, latitude=40.77, altitude=5
+    )
+    text = outgrid(release)
+    assert " OUTLON0=-112.35,\n" in text
+    assert " OUTLAT0=40.27,\n" in text
 
 
 def test_releases_of_a_column_stack_one_particle_per_slab():
@@ -552,3 +569,37 @@ def test_run_on_windows_says_flexpart_does_not_run_there(checkout, era5, tmp_pat
             WINDOW,
             tmp_path,
         )
+
+
+#: A stand-in FLEXPART that says it started, waits about 3 s, then says it finished.
+SLOW = "#!/bin/sh\ntouch started\nsleep 3\ntouch finished\n"
+
+
+def _run_slow_stand_in(root: str, workdir: str) -> None:
+    """Run the slow stand-in through run_flexpart, in a process the test kills."""
+    run_flexpart(Path(workdir), config(Path(root)))
+
+
+@not_on_windows("FLEXPART runs on Linux and macOS only")
+def test_a_worker_killed_outright_ends_the_flexpart_it_started(checkout, tmp_path):
+    """A worker the out-of-memory killer ends runs no finally block; its FLEXPART used to run on."""
+    import multiprocessing
+    import time
+
+    (checkout / "src" / "FLEXPART").write_text(SLOW)
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    process = multiprocessing.get_context("spawn").Process(
+        target=_run_slow_stand_in, args=(str(checkout), str(workdir))
+    )
+    process.start()
+    deadline = time.monotonic() + 60
+    while not (workdir / "started").exists():
+        assert time.monotonic() < deadline, "the stand-in never started"
+        time.sleep(0.1)
+
+    process.kill()
+    process.join()
+    time.sleep(5)  # longer than the stand-in waits
+
+    assert not (workdir / "finished").exists()

@@ -7,10 +7,12 @@ import io
 import json
 import os
 import re
+import signal
 import socket
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 
 import pandas as pd
@@ -539,6 +541,37 @@ def test_run_one_task_of_a_job_array(tmp_path, transport_runs):
     assert transport_runs.ran == every[1::2]
     assert "task 1 of 2  cpus=1" in result.output
     assert "Releases of this task: share 1 of 2" in result.output
+
+
+@pytest.mark.parametrize("command", ["run", "tick"])
+@not_on_windows("the test sends a POSIX signal to its own process")
+def test_a_sigterm_while_opening_the_project_exits_3(tmp_path, monkeypatch, command):
+    """A Slurm task's script requeues it only on exit 3; Python's default ends it with 143."""
+    project = _project(tmp_path)
+
+    def stopped(*args, **kwargs):
+        os.kill(os.getpid(), signal.SIGTERM)
+        time.sleep(1)  # the signal is handled here
+        raise AssertionError("the signal did not stop the command")
+
+    def as_default(signum, frame):
+        raise SystemExit(128 + signum)  # what Python's default action gives the shell
+
+    monkeypatch.setattr("runtraj.cli._start", stopped)
+    if command == "tick":
+        monkeypatch.setattr(
+            "runtraj.cli.schedules.add_due_releases", lambda *a, **k: []
+        )
+    before = {s: signal.getsignal(s) for s in (signal.SIGINT, signal.SIGTERM)}
+    signal.signal(signal.SIGTERM, as_default)
+    try:
+        args = ["--now", "2023-01-01T12:00"] if command == "tick" else []
+        result = _invoke(command, *args, project=project)
+    finally:
+        for sig, handler in before.items():
+            signal.signal(sig, handler)
+
+    assert result.exit_code == 3, result.output
 
 
 @pytest.mark.parametrize(

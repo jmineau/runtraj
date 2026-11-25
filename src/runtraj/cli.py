@@ -638,38 +638,42 @@ def run(
     be reached, which a retry may get past, and with 4 when it is any
     other, which a retry would repeat.
     """
-    release_ids, rows = (None, None) if releases is None else _read_releases(releases)
-    share = None if task is None else _parse_task(task)
-    given = project
-    project = _local_inputs(project)
-    if inputs_hash is not None:
-        directory = _resolve_project(project)
-        if hash_inputs(directory) != inputs_hash:
-            _fail(
-                "config.yaml or releases.csv changed after the Job was "
-                "submitted, so this task's share of the releases may not "
-                "match the other tasks'. Submit again."
-            )
-    opened, options = _start(
-        project,
-        backend=backend,
-        n_workers=n_workers,
-        cpus=cpus,
-        no_skip=no_skip,
-        compute_root=compute_root,
-        waits=True,
-        release_ids=release_ids,
-        release_rows=rows,
-        task=share,
-        execution_file=execution,
-        output=output,
-    )
-    if fetch:
-        # Locked where every task reads the inputs: the bucket, or this folder.
-        fetch_shared(
-            opened, given if given and is_url(given) else str(opened.directory)
+    # From the start: a task stopped while it opens the project exits 3, and is requeued.
+    with _stop_once():
+        release_ids, rows = (
+            (None, None) if releases is None else _read_releases(releases)
         )
-    _run_and_exit(opened, options, release_ids, share)
+        share = None if task is None else _parse_task(task)
+        given = project
+        project = _local_inputs(project)
+        if inputs_hash is not None:
+            directory = _resolve_project(project)
+            if hash_inputs(directory) != inputs_hash:
+                _fail(
+                    "config.yaml or releases.csv changed after the Job was "
+                    "submitted, so this task's share of the releases may not "
+                    "match the other tasks'. Submit again."
+                )
+        opened, options = _start(
+            project,
+            backend=backend,
+            n_workers=n_workers,
+            cpus=cpus,
+            no_skip=no_skip,
+            compute_root=compute_root,
+            waits=True,
+            release_ids=release_ids,
+            release_rows=rows,
+            task=share,
+            execution_file=execution,
+            output=output,
+        )
+        if fetch:
+            # Locked where every task reads the inputs: the bucket, or this folder.
+            fetch_shared(
+                opened, given if given and is_url(given) else str(opened.directory)
+            )
+        _run_and_exit(opened, options, release_ids, share)
 
 
 def _run_and_exit(
@@ -849,34 +853,36 @@ def tick(
     releases run in this process, as runtraj run --releases would, and the
     exit codes are runtraj run's. A bucket that cannot be read exits with 3.
     """
-    try:
-        moment = schedules.check_now(now)
-    except ValueError as error:
-        _fail(str(error))
-    directory = _resolve_project(_local_inputs(project))
-    # releases.csv is locked, and added to, where the inputs are: the bucket or this folder.
-    location = project if project is not None and is_url(project) else directory
-    try:
-        release_ids = schedules.add_due_releases(
-            location, directory, now=moment, delay=delay
+    # From the start: a task stopped while it opens the project exits 3, and is requeued.
+    with _stop_once():
+        try:
+            moment = schedules.check_now(now)
+        except ValueError as error:
+            _fail(str(error))
+        directory = _resolve_project(_local_inputs(project))
+        # releases.csv is locked, and added to, where the inputs are: the bucket or this folder.
+        location = project if project is not None and is_url(project) else directory
+        try:
+            release_ids = schedules.add_due_releases(
+                location, directory, now=moment, delay=delay
+            )
+        except (FileNotFoundError, ValueError) as error:
+            _fail(str(error))
+        except OSError as error:
+            typer.echo(f"runtraj exits with 3: {error}", err=True)
+            raise typer.Exit(code=EXIT_INTERRUPTED) from None
+        opened, options = _start(
+            directory,
+            backend="local",
+            n_workers=None,
+            cpus=cpus,
+            no_skip=False,
+            compute_root=compute_root,
+            waits=True,
+            release_ids=release_ids,
+            output=output,
         )
-    except (FileNotFoundError, ValueError) as error:
-        _fail(str(error))
-    except OSError as error:
-        typer.echo(f"runtraj exits with 3: {error}", err=True)
-        raise typer.Exit(code=EXIT_INTERRUPTED) from None
-    opened, options = _start(
-        directory,
-        backend="local",
-        n_workers=None,
-        cpus=cpus,
-        no_skip=False,
-        compute_root=compute_root,
-        waits=True,
-        release_ids=release_ids,
-        output=output,
-    )
-    _run_and_exit(opened, options, release_ids, None)
+        _run_and_exit(opened, options, release_ids, None)
 
 
 @app.command()

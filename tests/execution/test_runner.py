@@ -109,6 +109,16 @@ def test_submit_says_why_sbatch_refused(pending, commands, tmp_path):
         )
 
 
+def test_waiting_stops_when_sacct_says_nothing_for_too_long(commands, monkeypatch):
+    """On a cluster without the accounting database, sacct never answers."""
+    monkeypatch.setattr(slurm, "SILENT_SCHEDULER_SECONDS", 0)
+    commands.answers["sacct"] = [
+        _out(returncode=1, stderr="Slurm accounting storage is disabled")
+    ]
+    with pytest.raises(RuntimeError, match="nothing about job 9 for 0 minutes"):
+        slurm.wait("9", poll=0)
+
+
 def test_waiting_polls_sacct_until_every_task_ends(commands, caplog):
     commands.answers["sacct"] = [
         _out(returncode=1),  # the accounting database has not heard of it yet

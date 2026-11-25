@@ -94,7 +94,8 @@ def parse_time(time: TimeLike) -> dt.datetime:
     times, and text in ISO 8601 or the compact ``"YYYYMMDDHHMM"`` form
     (:func:`_parse_time_text`). Other text, such as the day-first
     ``"05/07/2023 18:00"``, is refused, since it could be read either way.
-    A time finer than a microsecond is cut to the microsecond.
+    Seconds are dropped: a release starts on the minute, as the transport
+    model is told and as the release id names it.
     """
     if time is None:
         raise ValueError("'time' must be provided for all release types.")
@@ -117,9 +118,8 @@ def parse_time(time: TimeLike) -> dt.datetime:
         raise ValueError("Release time cannot be NaT.")
     if parsed.tzinfo is not None:
         parsed = parsed.tz_convert("UTC").tz_localize(None)
-    # A datetime holds microseconds; satellite times (OCO-2 seconds since an
-    # epoch) carry nanoseconds, which to_pydatetime would drop with a warning.
-    parsed = parsed.floor("us")
+    # HYSPLIT's CONTROL and the release id are to the minute, so the time is too.
+    parsed = parsed.floor("min")
     return cast(dt.datetime, parsed.to_pydatetime()).replace(tzinfo=None)
 
 

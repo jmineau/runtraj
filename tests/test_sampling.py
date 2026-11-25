@@ -232,6 +232,19 @@ def test_sample_field_wraps_longitudes_to_the_field_convention():
     assert sample_field(_flux(), x=[249.0], y=[40.0]).tolist() == [1.0]
 
 
+@pytest.mark.parametrize("first", [0.0, -180.0])
+def test_sample_field_reaches_across_the_seam_of_a_global_field(first):
+    lons = first + np.arange(1440) * 0.25
+    values = np.zeros((1, lons.size))
+    values[0, 0], values[0, -1] = 1.0, 2.0
+    field = xr.DataArray(
+        values, coords={"lat": [40.0], "lon": lons}, dims=("lat", "lon")
+    )
+    seam = first + 360.0  # the same meridian as the first column
+    x = [seam - 0.1, seam - 0.2, first + 0.1]
+    assert sample_field(field, x=x, y=[40.0] * 3).tolist() == [1.0, 2.0, 1.0]
+
+
 def test_sample_field_requires_z_and_times_when_the_field_has_them():
     with pytest.raises(ValueError, match="pass z"):
         sample_field(_field_3d(), x=[-112.0], y=[40.0])

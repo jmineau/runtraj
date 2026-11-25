@@ -153,6 +153,13 @@ def not_waited(backend: Backend) -> str:
     )
 
 
+#: How long a backend's ``wait`` goes on when the scheduler gives no answer
+#: about the job (``sacct`` or ``qstat`` failing, or not knowing it), before
+#: it stops with an error: long enough for an accounting database that is
+#: slow to hear of a new job, short of waiting for ever where it never will.
+SILENT_SCHEDULER_SECONDS = 1800
+
+
 #: The backends built in, by the name ``execution.backend`` gives them, and
 #: the import path of each one's class. Any other backend is named by its
 #: own import path.

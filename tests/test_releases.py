@@ -354,7 +354,7 @@ def test_read_releases_refuses_an_empty_time():
         read_releases(io.StringIO("time,lon,lat,z\n,-111.8,40.7,10\n"))
 
 
-def test_release_time_with_nanoseconds_is_cut_to_microseconds():
+def test_release_time_is_cut_to_the_minute():
     # satellite readers give nanosecond times (OCO-2: float seconds since 1970)
     r = PointRelease(
         time=pd.Timestamp("2026-02-08T19:37:37.282009602"),
@@ -362,7 +362,17 @@ def test_release_time_with_nanoseconds_is_cut_to_microseconds():
         latitude=29.22,
         altitude=5.0,
     )
-    assert r.time == dt.datetime(2026, 2, 8, 19, 37, 37, 282009)
+    assert r.time == dt.datetime(2026, 2, 8, 19, 37)
+
+
+def test_a_release_with_seconds_reads_back_from_csv_as_it_was_made():
+    """The CSV holds whole seconds, so a time below the minute came back unequal."""
+    r = PointRelease(
+        time="2023-07-15T18:00:30.5", longitude=-111.85, latitude=40.77, altitude=5
+    )
+    assert read_releases(io.StringIO(releases_to_csv([r]))) == [r]
+    table = io.StringIO("time,lon,lat,z\n2023-07-15T18:00:30.5,-111.85,40.77,5\n")
+    assert read_releases(table) == [r]
 
 
 def test_release_equality():
@@ -821,6 +831,18 @@ def test_write_releases_round_trip_point(tmp_path, point_release):
     path = write_releases([point_release], tmp_path / "releases.csv")
     assert path == tmp_path / "releases.csv"
     assert read_releases(path) == [point_release]
+
+
+def test_write_releases_round_trip_keeps_every_digit_of_a_coordinate(tmp_path):
+    """On pandas 2 the default float parser read this longitude one unit off in the last place."""
+    release = PointRelease(
+        time="2023-07-15 18:00",
+        longitude=-112.77728611209807,
+        latitude=40.77,
+        altitude=5,
+    )
+    loaded = read_releases(write_releases([release], tmp_path / "r.csv"))
+    assert loaded[0].id == release.id
 
 
 def test_write_releases_round_trip_column(tmp_path, column_release):

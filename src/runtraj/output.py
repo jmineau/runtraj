@@ -206,6 +206,14 @@ def _read_yaml(path: Path | UPath) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
 
+def _read_record(path: Path | UPath) -> dict[str, Any] | None:
+    """Return a failure record, or ``None`` when there is none: a worker removes it when the result is written, also while it is being listed."""
+    try:
+        return _read_yaml(path)
+    except FileNotFoundError:
+        return None
+
+
 def _write_yaml(
     path: Path | UPath, record: dict[str, Any], *, replace: bool = True
 ) -> None:
@@ -239,6 +247,29 @@ def _write_settings(path: Path | UPath, record: dict[str, Any]) -> None:
             f"{path} holds settings with hash {existing.get('hash')}, "
             f"not {record['hash']}."
         )
+
+
+def _claim(path: Path | UPath, name: str) -> str:
+    """
+    Write *name* to *path* unless another writer did first, and return the name *path* holds.
+
+    A settings hash is claimed this way before its folder is made, so that
+    two projects starting the same settings at once, under different
+    variant names, both write to the folder of the first. The file is
+    created only if it is not there: a hard link on a filesystem, a
+    conditional put (``If-None-Match``) on an object store.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if isinstance(path, Path):
+            with atomic_path(path, replace=False) as tmp:
+                tmp.write_text(name, encoding="utf-8")
+        else:
+            with path.open("x", encoding="utf-8") as file:
+                file.write(name)
+    except FileExistsError:
+        return path.read_text(encoding="utf-8")
+    return name
 
 
 @functools.cache
@@ -781,7 +812,11 @@ class Output:
             stage_version = variant.stage(kind).version
             if stage_version is not None:
                 record["stage_version"] = stage_version
-        name = f"{variant.name}-{digest[:HASH_CHARS]}"
+        name = _claim(
+            self.directory / kind / f".hash-{digest}",
+            f"{variant.name}-{digest[:HASH_CHARS]}",
+        )
+        record["name"] = name.rpartition("-")[0]  # another variant's, if it was first
         _write_settings(self._dir(kind, name) / SETTINGS_FILE, record)
         self._hashes.setdefault(kind, {})[name] = digest
         return name
@@ -1066,8 +1101,7 @@ class Output:
         logs = self._found(kind, "logs", variant, realization)
         if logs is None:
             return None
-        path = _release_file(logs, release_id, FAILURE_SUFFIX)
-        return _read_yaml(path) if path.exists() else None
+        return _read_record(_release_file(logs, release_id, FAILURE_SUFFIX))
 
     def failures(
         self,
@@ -1080,15 +1114,20 @@ class Output:
         Return ``{release_id: record}`` for the releases with a failure record of *kind*.
 
         With *release_ids*, only their date folders are listed. The records
-        found are read in a few threads.
+        found are read in a few threads; one a worker removed meanwhile, as it
+        does when the release's result is written, is left out.
         """
         logs = self._found(kind, "logs", variant, realization)
         if logs is None:
             return {}
         paths = _list_release_files(logs, FAILURE_SUFFIX, release_ids)
         with ThreadPoolExecutor(max_workers=16) as pool:
-            records = list(pool.map(_read_yaml, paths.values()))
-        return dict(zip(paths, records, strict=True))
+            records = list(pool.map(_read_record, paths.values()))
+        return {
+            rid: record
+            for rid, record in zip(paths, records, strict=True)
+            if record is not None
+        }
 
     def record_failure(
         self,

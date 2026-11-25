@@ -6,7 +6,6 @@ import contextlib
 import datetime as dt
 import hashlib
 import os
-import signal
 import subprocess
 import sys
 import tempfile
@@ -16,6 +15,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
+from runtraj._process import ended_if_this_process_dies, own_group, terminate
 from runtraj.exceptions import SimulationError
 from runtraj.models import ModelRun, TransportModel
 from runtraj.releases import ColumnRelease, MultiPointRelease
@@ -186,7 +186,9 @@ def run_flexpart(
     segmentation fault). ``OMP_PLACES`` and ``OMP_PROC_BIND``, which the
     documentation also suggests, are left as they are: several FLEXPART
     processes on one node would each bind to the same cores. If this process is interrupted while it waits,
-    FLEXPART is stopped too.
+    FLEXPART is stopped too, and if it is killed outright, as by the
+    out-of-memory killer, a watchdog ends FLEXPART
+    (:func:`runtraj._process.ended_if_this_process_dies`).
 
     Raises
     ------
@@ -203,26 +205,28 @@ def run_flexpart(
     env = {**os.environ, "OMP_NUM_THREADS": str(config.threads)}
     with (
         log_path.open("w", encoding="utf-8") as handle,
+        ended_if_this_process_dies() as watch,
         subprocess.Popen(
             [str(config.executable), "pathnames"],
             cwd=workdir,
             stdout=handle,
             stderr=subprocess.STDOUT,
             env=env,
-            start_new_session=True,
             preexec_fn=_raise_stack_limit,
+            **own_group(),
         ) as proc,
     ):
+        watch(proc)
         try:
             proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired as e:
-            _terminate(proc)
+            terminate(proc)
             raise SimulationError(
                 f"FLEXPART ran longer than the {timeout} s timeout.", reason="TIMEOUT"
             ) from e
         except BaseException:
             # FLEXPART runs in a session of its own, so no signal reached it.
-            _terminate(proc)
+            terminate(proc)
             raise
     output = log_path.read_text(encoding="utf-8", errors="replace")
     if proc.returncode != 0 or SUCCESS not in output:
@@ -245,17 +249,6 @@ def _raise_stack_limit() -> None:
     _, hard = resource.getrlimit(resource.RLIMIT_STACK)
     with contextlib.suppress(ValueError, OSError):
         resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
-
-
-def _terminate(proc: subprocess.Popen) -> None:
-    """Stop FLEXPART's process group, and wait for it."""
-    try:
-        os.killpg(proc.pid, signal.SIGTERM)
-        proc.wait(timeout=10)
-    except (ProcessLookupError, subprocess.TimeoutExpired):
-        with contextlib.suppress(ProcessLookupError):
-            os.killpg(proc.pid, signal.SIGKILL)
-        proc.wait()
 
 
 def _read_log(workdir: Path) -> str:
