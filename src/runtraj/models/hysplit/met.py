@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import datetime as dt
 import functools
+import hashlib
 import inspect
 import logging
 import os
@@ -792,23 +793,15 @@ class Met:
         When local files are cropped, these are the cropped copies in
         :attr:`crop_dir`, made on first use; a file already there is a crop,
         and is read as it is. Downloaded files were cropped as they were
-        downloaded. When two files share a name, the first is
-        kept, since a model would otherwise read the same hours twice.
+        downloaded. Two paths to one file, such as two links to it, are
+        read once. Files in different folders that share a name, such as
+        one ``wrfout_d02.arl`` per day, are different files and are all read.
         """
         if self.crops:
             files = self._crop_local_files(files)
-        kept: dict[str, Path] = {}
+        kept: dict[Path, Path] = {}
         for path in files:
-            first = kept.setdefault(path.name, path)
-            if first is not path and first.resolve() != path.resolve():
-                logger.warning(
-                    "met %s has duplicate basename %s at %s and %s; using %s",
-                    self.name,
-                    path.name,
-                    first,
-                    path,
-                    first,
-                )
+            kept.setdefault(path.resolve(), path)
         return list(kept.values())
 
     def _crop_local_files(self, files: list[Path]) -> list[Path]:
@@ -816,7 +809,8 @@ class Met:
         Crop local files into :attr:`crop_dir`, reusing crops that already exist.
 
         A file already in :attr:`crop_dir` is a crop and is kept as it is.
-        A crop of another file is named as its source, and is reused only
+        A crop of another file is named as its source (:meth:`_crop_name`),
+        and is reused only
         when its header says it holds the source's time steps
         (:func:`_holds_as`): a crop with that name that holds fewer, or
         cannot be read, is made again. Each crop is written to a temporary
@@ -839,7 +833,7 @@ class Met:
             if src.resolve().is_relative_to(inside):
                 subsetted.append(src)
                 continue
-            cache_path = crop_dir / src.name
+            cache_path = crop_dir / self._crop_name(src)
             if not _holds_as(cache_path, src):
                 logger.info("Subsetting %s → %s", src.name, cache_path)
                 try:
@@ -854,6 +848,19 @@ class Met:
                             extract_subset(src, tmp, bbox=bbox, levels=levels)
             subsetted.append(cache_path)
         return subsetted
+
+    def _crop_name(self, src: Path) -> str:
+        """
+        Return the name of *src*'s crop: its own name, with a short hash of its folder when that is below :attr:`directory`.
+
+        Files in different folders can share a name (one ``wrfout_d02.arl``
+        per day), and their crops must not. A crop is found by the times its
+        header holds, not by its name.
+        """
+        if src.parent == self.directory:
+            return src.name
+        folder = hashlib.sha256(str(src.parent).encode("utf-8")).hexdigest()
+        return f"{src.name}.{folder[:8]}"
 
     def fetch(self, windows: Iterable[tuple[Any, Any]]) -> pd.DataFrame:
         """
