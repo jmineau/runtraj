@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=6b238a9c"></script>
+    <script src="../../_static/documentation_options.js?v=d701e89e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev14+gc8fd54351" />
+  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1020,7 +1020,10 @@
 <dd><p>Add releases to <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> and return the ids of the new ones.</p>
 <p>The file is created if needed, and otherwise only appended to, in its
 own columns (<code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.releases.table.append_releases_csv()</span></code>). Releases
-it already holds are skipped.</p>
+it already holds are skipped. The new file replaces the old one in one
+step, so a program reading it, or a stop part way, never sees half a
+file. A <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> that is a link to another file is left a link,
+and the file it names gets the new releases.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>releases</strong> (<span class="sphinx_autodoc_typehints-type">runtraj.releases.Release | <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[runtraj.releases.Release] | <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></span>) – Releases, or the path of a releases CSV to add them from.</p>
