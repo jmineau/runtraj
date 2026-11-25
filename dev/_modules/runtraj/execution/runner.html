@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -460,6 +460,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -476,7 +477,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._transient</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_transient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span><span class="p">,</span> <span class="n">get_backend</span><span class="p">,</span> <span class="n">not_waited</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">LocalConfig</span><span class="p">,</span> <span class="n">PbsConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">lock</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FETCH_DONE</span><span class="p">,</span>
+    <span class="n">hash_inputs</span><span class="p">,</span>
+    <span class="n">lock</span><span class="p">,</span>
+    <span class="n">read_text</span><span class="p">,</span>
+    <span class="n">write_text</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.fetch</span><span class="w"> </span><span class="kn">import</span> <span class="n">downloads</span><span class="p">,</span> <span class="n">fetch_project</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -507,6 +514,11 @@
 
 <span class="sd">    The share is every *n_tasks*-th release, starting at *task*, which runs</span>
 <span class="sd">    from 0 to ``n_tasks - 1`` as the index of a job array does.</span>
+<span class="sd">    ``runtraj run --task i/n`` takes this share of the list</span>
+<span class="sd">    ``--releases`` gives; without one it takes it of every release of the</span>
+<span class="sd">    project in the order of a hash of their ids, so</span>
+<span class="sd">    ``pending(project, task=(i, n))`` (:func:`pending`) is the releases</span>
+<span class="sd">    such a task runs.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -566,8 +578,10 @@
     <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the ids of the releases a run would run, each once, in project order.</span>
+<span class="sd">    Return the ids of the releases a run would run, each once.</span>
 
+<span class="sd">    They are in project order, or in the order of *releases* when given;</span>
+<span class="sd">    with *task* and no *releases*, in the order of a hash of their ids.</span>
 <span class="sd">    A driver that starts tasks itself writes these to the ``releases.txt``</span>
 <span class="sd">    each task reads (``runtraj run --releases``).</span>
 
@@ -581,7 +595,10 @@
 <span class="sd">        ``(i, n)``: share ``i`` of ``n`` (:func:`task_share`), taken from</span>
 <span class="sd">        all the releases (or all of *releases*) before the complete ones</span>
 <span class="sd">        are dropped, so the tasks of a job array split the releases the</span>
-<span class="sd">        same way whenever each starts.</span>
+<span class="sd">        same way whenever each starts. All the releases are first put in</span>
+<span class="sd">        the order of a hash of their ids, so the unfinished ones spread</span>
+<span class="sd">        over the tasks however they lie in the project, such as one</span>
+<span class="sd">        site's hours among many sites'; *releases* keep their order.</span>
 <span class="sd">    skip_existing : bool, default True</span>
 <span class="sd">        Leave out releases whose simulations are all complete.</span>
 
@@ -593,7 +610,7 @@
     <span class="n">sims</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulations</span>
     <span class="n">every</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">sims</span><span class="p">[</span><span class="s2">"release"</span><span class="p">]))</span>
     <span class="k">if</span> <span class="n">releases</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">chosen</span> <span class="o">=</span> <span class="n">every</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">every</span> <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">every</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_scattered</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">chosen</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">))</span>
         <span class="n">known</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">every</span><span class="p">)</span>
@@ -610,6 +627,11 @@
         <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">chosen</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">left</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">chosen</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_scattered</span><span class="p">(</span><span class="n">release_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a sort key that puts release ids in an order unrelated to the project's: a hash of the id."""</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">release_id</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_to_fetch</span><span class="p">(</span>
@@ -639,9 +661,9 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_here</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">setting</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"execution.local.fetch"</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Get the met files of the *unrun* simulations in this process, before a local run's workers start.</span>
+<span class="sd">    Get the met files of the *unrun* simulations in this process, before a local run's workers start, and return whether every one was had.</span>
 
 <span class="sd">    A file that could not be had, or a download that failed and that a</span>
 <span class="sd">    retry may get past (:func:`runtraj._transient.is_transient`), is only</span>
@@ -655,7 +677,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_transient</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
             <span class="k">raise</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"The fetch stopped (</span><span class="si">%s</span><span class="s2">); each run downloads its own."</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
-        <span class="k">return</span>
+        <span class="k">return</span> <span class="kc">False</span>
     <span class="n">problems</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="s2">"message"</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -663,6 +685,8 @@
             <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">),</span>
             <span class="n">problems</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
 
 
 <span class="c1">#: The lock a task holds where the inputs are while it gets the met files (:func:`fetch_shared`).</span>
@@ -681,9 +705,17 @@
 <span class="sd">    lock :data:`FETCH_LOCK` at *location* while it fetches</span>
 <span class="sd">    (:func:`runtraj.execution.inputs.lock`), so the first downloads the</span>
 <span class="sd">    files and the others, waiting their turn, find them and download</span>
-<span class="sd">    nothing. Nothing is locked when no met downloads. As for a local run's</span>
-<span class="sd">    fetch, a file that could not be had, or a download a retry may get</span>
-<span class="sd">    past, is only logged: each run then tries again.</span>
+<span class="sd">    nothing. A task that got every file writes</span>
+<span class="sd">    :data:`~runtraj.execution.inputs.FETCH_DONE` there, holding the hash of</span>
+<span class="sd">    the inputs (:func:`runtraj.execution.inputs.hash_inputs`), and a task</span>
+<span class="sd">    that finds it, before the lock or once it holds it, does not list the</span>
+<span class="sd">    project again. New inputs, such as more releases, hash to another value</span>
+<span class="sd">    and are fetched again, and ``runtraj submit`` removes the note when it</span>
+<span class="sd">    makes a Job, so it holds for one Job. Nothing is locked when no met</span>
+<span class="sd">    downloads. As for a local run's fetch, a file that could not be had, or</span>
+<span class="sd">    a download a retry may get past, is only logged; the task then writes</span>
+<span class="sd">    no note, so the next task tries again under the lock, and each run</span>
+<span class="sd">    tries again too.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -701,11 +733,15 @@
     <span class="n">sims</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulations</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">downloads</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">sims</span><span class="p">[</span><span class="s2">"variant"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
         <span class="k">return</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">hash_inputs</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">read_text</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_DONE</span><span class="p">)</span> <span class="o">==</span> <span class="n">inputs</span><span class="p">:</span>
+        <span class="k">return</span>
     <span class="k">with</span> <span class="n">lock</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_LOCK</span><span class="p">):</span>
-        <span class="c1"># Listed under the lock: what the task before got is not fetched again.</span>
+        <span class="k">if</span> <span class="n">read_text</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_DONE</span><span class="p">)</span> <span class="o">==</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c1"># the task before fetched them while this one waited</span>
         <span class="n">unrun</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">_unrun</span><span class="p">(</span><span class="n">sims</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">unrun</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">_fetch_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">,</span> <span class="s2">"execution.kubernetes.fetch"</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">unrun</span><span class="o">.</span><span class="n">empty</span> <span class="ow">or</span> <span class="n">_fetch_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">,</span> <span class="s2">"execution.kubernetes.fetch"</span><span class="p">):</span>
+            <span class="n">write_text</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_DONE</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span></div>
 
 
 
@@ -862,9 +898,10 @@
 <span class="sd">    task : tuple of (int, int), optional</span>
 <span class="sd">        ``(i, n)``: run share ``i`` of ``n`` of the releases here, in this</span>
 <span class="sd">        process, whatever the backend. The share is every ``n``-th</span>
-<span class="sd">        release in project order (or in *releases* order), starting at</span>
-<span class="sd">        ``i`` (:func:`task_share`), whether it is complete or not, and the</span>
-<span class="sd">        complete ones are then skipped. Each task of a job array or a</span>
+<span class="sd">        release, starting at ``i`` (:func:`task_share`), of *releases* in</span>
+<span class="sd">        their order, or else of every release of the project in the order</span>
+<span class="sd">        of a hash of their ids (:func:`pending`), whether it is complete</span>
+<span class="sd">        or not, and the complete ones are then skipped. Each task of a job array or a</span>
 <span class="sd">        Kubernetes indexed Job runs one share, and every task splits the</span>
 <span class="sd">        releases the same way whenever it starts.</span>
 <span class="sd">    execution : ExecutionConfig, optional</span>

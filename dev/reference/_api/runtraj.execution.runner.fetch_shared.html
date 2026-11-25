@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1021,9 +1021,17 @@ gives each pod with <code class="docutils literal notranslate"><span class="pre"
 lock <code class="xref py py-data docutils literal notranslate"><span class="pre">FETCH_LOCK</span></code> at <em>location</em> while it fetches
 (<a class="reference internal" href="runtraj.execution.inputs.lock.html#runtraj.execution.inputs.lock" title="runtraj.execution.inputs.lock"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.execution.inputs.lock()</span></code></a>), so the first downloads the
 files and the others, waiting their turn, find them and download
-nothing. Nothing is locked when no met downloads. As for a local run’s
-fetch, a file that could not be had, or a download a retry may get
-past, is only logged: each run then tries again.</p>
+nothing. A task that got every file writes
+<code class="xref py py-data docutils literal notranslate"><span class="pre">FETCH_DONE</span></code> there, holding the hash of
+the inputs (<a class="reference internal" href="runtraj.execution.inputs.hash_inputs.html#runtraj.execution.inputs.hash_inputs" title="runtraj.execution.inputs.hash_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.execution.inputs.hash_inputs()</span></code></a>), and a task
+that finds it, before the lock or once it holds it, does not list the
+project again. New inputs, such as more releases, hash to another value
+and are fetched again, and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span></code> removes the note when it
+makes a Job, so it holds for one Job. Nothing is locked when no met
+downloads. As for a local run’s fetch, a file that could not be had, or
+a download a retry may get past, is only logged; the task then writes
+no note, so the next task tries again under the lock, and each run
+tries again too.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

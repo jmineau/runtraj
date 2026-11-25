@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1019,7 +1019,10 @@
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Backend.</span></span><span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">releases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_root</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/execution/backends.html#Backend.submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.Backend.submit" title="Link to this definition">#</a></dt>
 <dd><p>Start the tasks that run <em>releases</em>, and return what names them, such as a job id.</p>
 <p><em>releases</em> are the ids of the releases with missing results, in
-the order the tasks share them (<a class="reference internal" href="runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.execution.task_share()</span></code></a>).
+project order. Tasks given them (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--releases</span></code>) share
+them in this order (<a class="reference internal" href="runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.execution.task_share()</span></code></a>); tasks
+given none share every release of the project in the order of a
+hash of their ids (<a class="reference internal" href="runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.execution.pending()</span></code></a>).
 <code class="docutils literal notranslate"><span class="pre">execution.block</span></code> is this backend’s block. <em>compute_root</em> is
 where the workdirs go, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for each task’s own.</p>
 <dl class="field-list simple">

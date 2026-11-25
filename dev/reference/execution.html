@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1060,7 +1060,7 @@ for a Slurm job array by its id.</p>
 <td><p>Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.pending</span></code></a></p></td>
-<td><p>Return the ids of the releases a run would run, each once, in project order.</p></td>
+<td><p>Return the ids of the releases a run would run, each once.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.wait.html#runtraj.execution.wait" title="runtraj.execution.wait"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.wait</span></code></a></p></td>
 <td><p>Wait until every task of a Slurm job array has ended, and return how each ended.</p></td>
@@ -1127,7 +1127,7 @@ names them. A backend that sets <code class="docutils literal notranslate"><span
 <a class="reference internal" href="_api/runtraj.execution.Backend.run.html#runtraj.execution.Backend.run" title="runtraj.execution.Backend.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> waits for them, so <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code>
 can use it; one that writes <a class="reference internal" href="_api/runtraj.execution.Backend.jobs.html#runtraj.execution.Backend.jobs" title="runtraj.execution.Backend.jobs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs()</span></code></a> lists
 them in <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code>. The tasks need nothing else: every task splits
-the releases the same way (<a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">task_share()</span></code></a>), skips
+the releases the same way (<a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-func docutils literal notranslate"><span class="pre">pending()</span></code></a>), skips
 what is complete, and exits with a code that says whether to try it again
 (<a class="reference internal" href="../guides/any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a>).</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">

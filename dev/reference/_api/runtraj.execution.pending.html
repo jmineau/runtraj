@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1014,8 +1014,10 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.execution.pending">
 <span class="sig-prename descclassname"><span class="pre">runtraj.execution.</span></span><span class="sig-name descname"><span class="pre">pending</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">releases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/execution/runner.html#pending"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.pending" title="Link to this definition">#</a></dt>
-<dd><p>Return the ids of the releases a run would run, each once, in project order.</p>
-<p>A driver that starts tasks itself writes these to the <code class="docutils literal notranslate"><span class="pre">releases.txt</span></code>
+<dd><p>Return the ids of the releases a run would run, each once.</p>
+<p>They are in project order, or in the order of <em>releases</em> when given;
+with <em>task</em> and no <em>releases</em>, in the order of a hash of their ids.
+A driver that starts tasks itself writes these to the <code class="docutils literal notranslate"><span class="pre">releases.txt</span></code>
 each task reads (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--releases</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1025,7 +1027,10 @@ each task reads (<code class="docutils literal notranslate"><span class="pre">ru
 <li><p><strong>task</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">n)</span></code>: share <code class="docutils literal notranslate"><span class="pre">i</span></code> of <code class="docutils literal notranslate"><span class="pre">n</span></code> (<a class="reference internal" href="runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">task_share()</span></code></a>), taken from
 all the releases (or all of <em>releases</em>) before the complete ones
 are dropped, so the tasks of a job array split the releases the
-same way whenever each starts.</p></li>
+same way whenever each starts. All the releases are first put in
+the order of a hash of their ids, so the unfinished ones spread
+over the tasks however they lie in the project, such as one
+site’s hours among many sites’; <em>releases</em> keep their order.</p></li>
 <li><p><strong>skip_existing</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Leave out releases whose simulations are all complete.</p></li>
 </ul>
 </dd>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1016,7 +1016,12 @@
 <span class="sig-prename descclassname"><span class="pre">runtraj.execution.</span></span><span class="sig-name descname"><span class="pre">task_share</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">release_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_tasks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/execution/runner.html#task_share"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.task_share" title="Link to this definition">#</a></dt>
 <dd><p>Return task <em>task</em>’s share of <em>release_ids</em>, split <em>n_tasks</em> ways.</p>
 <p>The share is every <em>n_tasks</em>-th release, starting at <em>task</em>, which runs
-from 0 to <code class="docutils literal notranslate"><span class="pre">n_tasks</span> <span class="pre">-</span> <span class="pre">1</span></code> as the index of a job array does.</p>
+from 0 to <code class="docutils literal notranslate"><span class="pre">n_tasks</span> <span class="pre">-</span> <span class="pre">1</span></code> as the index of a job array does.
+<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span> <span class="pre">i/n</span></code> takes this share of the list
+<code class="docutils literal notranslate"><span class="pre">--releases</span></code> gives; without one it takes it of every release of the
+project in the order of a hash of their ids, so
+<code class="docutils literal notranslate"><span class="pre">pending(project,</span> <span class="pre">task=(i,</span> <span class="pre">n))</span></code> (<a class="reference internal" href="runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-func docutils literal notranslate"><span class="pre">pending()</span></code></a>) is the releases
+such a task runs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>task</em> is not from 0 to <code class="docutils literal notranslate"><span class="pre">n_tasks</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p>

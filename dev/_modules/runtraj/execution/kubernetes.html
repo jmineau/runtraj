@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -493,7 +493,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_url</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SCRATCH</span><span class="p">,</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">KubernetesConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">RELEASES</span><span class="p">,</span> <span class="n">has_file</span><span class="p">,</span> <span class="n">hash_inputs</span><span class="p">,</span> <span class="n">push</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FETCH_DONE</span><span class="p">,</span>
+    <span class="n">RELEASES</span><span class="p">,</span>
+    <span class="n">has_file</span><span class="p">,</span>
+    <span class="n">hash_inputs</span><span class="p">,</span>
+    <span class="n">push</span><span class="p">,</span>
+    <span class="n">remove_file</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.schedule</span><span class="w"> </span><span class="kn">import</span> <span class="n">DELAY_HOURS</span><span class="p">,</span> <span class="n">read_sites</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.fetch</span><span class="w"> </span><span class="kn">import</span> <span class="n">downloads</span>
 
@@ -1139,7 +1146,8 @@
 <span class="sd">    (:func:`runtraj.execution.inputs.push`) and the pods open that URL;</span>
 <span class="sd">    else they open the project folder at its path here, which must be on a</span>
 <span class="sd">    volume they mount. With ``fetch`` set and a met that downloads, each</span>
-<span class="sd">    pod first gets the met files, one pod at a time (``--fetch``). The Job</span>
+<span class="sd">    pod first gets the met files, one pod at a time (``--fetch``), and the</span>
+<span class="sd">    note a Job before it left that it got them is removed. The Job</span>
 <span class="sd">    has ``completions`` tasks, or fewer when there are fewer releases. Its manifest is written to</span>
 <span class="sd">    ``_kubernetes/&lt;date_time&gt;_&lt;id&gt;/job.yaml`` in the project before it is</span>
 <span class="sd">    created, and the Job's name to ``job.name`` beside it.</span>
@@ -1156,6 +1164,8 @@
     <span class="n">input_hash</span> <span class="o">=</span> <span class="n">hash_inputs</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">kube</span><span class="o">.</span><span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">push</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">kube</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="c1"># The last Job's note that the met was fetched: this Job fetches again.</span>
+    <span class="n">remove_file</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">FETCH_DONE</span><span class="p">)</span>
     <span class="n">n_tasks</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">kube</span><span class="o">.</span><span class="n">completions</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">)))</span>
     <span class="n">sims</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulations</span>
     <span class="n">variants</span> <span class="o">=</span> <span class="n">sims</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">sims</span><span class="p">[</span><span class="s2">"release"</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span> <span class="s2">"variant"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>

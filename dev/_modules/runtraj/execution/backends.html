@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -470,8 +470,8 @@
 <span class="sd">       cpus: 4</span>
 
 <span class="sd">Every task a backend starts runs the same command, ``runtraj run &lt;project&gt;</span>
-<span class="sd">--task i/N`` (:func:`runtraj.execution.task_share` is the releases of task</span>
-<span class="sd">``i``), so a backend starts tasks and, if it can, waits for them; it never</span>
+<span class="sd">--task i/N`` (``pending(project, task=(i, N))``, :func:`runtraj.execution.pending`,</span>
+<span class="sd">is the releases of task ``i``), so a backend starts tasks and, if it can, waits for them; it never</span>
 <span class="sd">runs a transport model itself.</span>
 <span class="sd">"""</span>
 
@@ -549,7 +549,10 @@
 <span class="sd">        Start the tasks that run *releases*, and return what names them, such as a job id.</span>
 
 <span class="sd">        *releases* are the ids of the releases with missing results, in</span>
-<span class="sd">        the order the tasks share them (:func:`runtraj.execution.task_share`).</span>
+<span class="sd">        project order. Tasks given them (``runtraj run --releases``) share</span>
+<span class="sd">        them in this order (:func:`runtraj.execution.task_share`); tasks</span>
+<span class="sd">        given none share every release of the project in the order of a</span>
+<span class="sd">        hash of their ids (:func:`runtraj.execution.pending`).</span>
 <span class="sd">        ``execution.block`` is this backend's block. *compute_root* is</span>
 <span class="sd">        where the workdirs go, or ``None`` for each task's own.</span>
 <span class="sd">        """</span></div>

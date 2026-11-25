@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=d701e89e"></script>
+    <script src="../../_static/documentation_options.js?v=34eddd34"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev15+g352ca1d95" />
+  <meta name="docsearch:version" content="0.1.0a6.dev17+g7462c5d09" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1019,7 +1019,8 @@
 (<a class="reference internal" href="runtraj.execution.inputs.push.html#runtraj.execution.inputs.push" title="runtraj.execution.inputs.push"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.execution.inputs.push()</span></code></a>) and the pods open that URL;
 else they open the project folder at its path here, which must be on a
 volume they mount. With <code class="docutils literal notranslate"><span class="pre">fetch</span></code> set and a met that downloads, each
-pod first gets the met files, one pod at a time (<code class="docutils literal notranslate"><span class="pre">--fetch</span></code>). The Job
+pod first gets the met files, one pod at a time (<code class="docutils literal notranslate"><span class="pre">--fetch</span></code>), and the
+note a Job before it left that it got them is removed. The Job
 has <code class="docutils literal notranslate"><span class="pre">completions</span></code> tasks, or fewer when there are fewer releases. Its manifest is written to
 <code class="docutils literal notranslate"><span class="pre">_kubernetes/&lt;date_time&gt;_&lt;id&gt;/job.yaml</span></code> in the project before it is
 created, and the Job’s name to <code class="docutils literal notranslate"><span class="pre">job.name</span></code> beside it.</p>
