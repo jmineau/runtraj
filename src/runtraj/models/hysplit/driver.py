@@ -72,6 +72,11 @@ ZICONTROL_FILE = "ZICONTROL"
 #: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once
 #: it has read ``ZICONTROL`` (:func:`winderrtf`).
 ZICONTROL_ADDS_TWO = (5, 3, 0)
+#: The first HYSPLIT version whose ``hyts_std`` makes every hour of a run a full
+#: hour and writes every ``TOUT`` minutes from the start. Before it, a run that
+#: starts off the hour ends its first hour at the next clock hour (5.4.0 changed
+#: ``hymodelt.F``).
+TRAJECTORY_FULL_HOURS = (5, 4, 0)
 #: The first HYSPLIT version whose ``hycs_std`` checks ``WINDERRTF`` against
 #: ``IDSP`` before the run, and sets ``WINDERRTF`` to 0 (the wind errors off)
 #: unless ``IDSP`` is 2 (:func:`check_wind_error`).

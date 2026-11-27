@@ -12,6 +12,7 @@ from runtraj import MultiPointRelease, PointRelease, Project
 from runtraj.exceptions import SimulationError
 from runtraj.models import run_model
 from runtraj.models.hysplit import HysplitConfig, HysplitModel, read_tdump
+from runtraj.models.hysplit.driver import TRAJECTORY_FULL_HOURS, version_at_least
 
 from ..conftest import integration
 from .conftest import reference_met
@@ -107,6 +108,9 @@ def test_a_run_writes_the_reader_fixture_again(tmp_path, met_dir):
 
 @integration
 def test_a_backward_trajectory_goes_back_in_time(tmp_path, met_dir):
+    config = HysplitConfig(n_hours=-3, mode="trajectory")
+    if not version_at_least(HysplitModel().version(config), TRAJECTORY_FULL_HOURS):
+        pytest.skip("Before 5.4.0 hyts_std runs short from a release off the hour.")
     release = PointRelease(
         time=dt.datetime(2021, 7, 15, 10, 30),
         longitude=-112.0,
@@ -124,6 +128,22 @@ def test_a_backward_trajectory_goes_back_in_time(tmp_path, met_dir):
     )
     assert table["age"].tolist() == [0, -30, -60, -90, -120, -150, -180]
     assert table["time"].is_monotonic_decreasing
+
+
+@integration
+def test_an_off_hour_release_is_refused_before_hyts_std_5_4_0(tmp_path, met_dir):
+    config = HysplitConfig(n_hours=-3, mode="trajectory")
+    if version_at_least(HysplitModel().version(config), TRAJECTORY_FULL_HOURS):
+        pytest.skip("From 5.4.0 hyts_std runs a release off the hour in full.")
+    release = PointRelease(
+        time=dt.datetime(2021, 7, 15, 10, 30),
+        longitude=-112.0,
+        latitude=40.5,
+        altitude=10.0,
+    )
+    with pytest.raises(SimulationError, match="Release on the hour") as raised:
+        run_model("hysplit", release, config, reference_met(met_dir))
+    assert raised.value.reason == "RELEASE_REFUSED"
 
 
 @integration
