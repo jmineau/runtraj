@@ -1,5 +1,6 @@
 """Tests for runtraj.sampling: a gridded field and met files read at points."""
 
+import lzma
 from pathlib import Path
 from unittest.mock import patch
 
@@ -444,6 +445,109 @@ def test_a_terrain_following_file_is_read_with_the_runs_top(tmp_path, z_top):
 
     assert sample_points.call_args.kwargs["model_top"] == z_top
     assert np.isfinite(sampled["pres"]).all()
+
+
+def _message(tmp_path: Path, grid: str = "11 2.5 2.5 0.0") -> Path:
+    """Write a MESSAGE file with the internal grid line in HYSPLIT's form."""
+    path = tmp_path / "MESSAGE"
+    path.write_text(
+        " Starting HYSPLIT\n"
+        f" Internal grid parameters (nlvl,aa,bb,cc):  {grid}\n"
+        " Calculation started\n"
+    )
+    return path
+
+
+@pytest.mark.parametrize("version", ["5.0.2", "5.4.2"])
+def test_the_internal_grid_is_read_from_the_messages_of_recorded_runs(
+    tmp_path, version
+):
+    """Every recorded run, on the oldest HYSPLIT and a current one, prints one of the two grids of its top (25000 m or 10000 m)."""
+    recorded = Path(__file__).parent / "recorded" / "hysplit" / version / "hycs_std"
+    read = set()
+    for xz in sorted(recorded.glob("*/outputs/MESSAGE.xz")):
+        text = lzma.decompress(xz.read_bytes()).decode(errors="replace")
+        if "Internal grid parameters" not in text:
+            continue  # a case that never started HYSPLIT
+        path = tmp_path / "MESSAGE"
+        path.write_text(text)
+        read.add(sampling._read_internal_grid(path))
+
+    assert read == {(41, 15.0, -5.0, 0.0), (33, 10.0, -10.0, 10.0)}
+
+
+def test_the_internal_grid_line_is_read_in_the_form_of_every_version(tmp_path):
+    for numbers in [
+        "11 2.5 2.5 0.0",
+        "11   2.50000000       2.50000000       0.00000000",
+    ]:
+        path = _message(tmp_path, numbers)
+        assert sampling._read_internal_grid(path) == (11, 2.5, 2.5, 0.0)
+
+
+def test_a_message_without_the_internal_grid_is_refused(tmp_path):
+    path = tmp_path / "MESSAGE"
+    path.write_text(" Starting HYSPLIT\n")
+
+    with pytest.raises(ValueError, match="no 'Internal grid parameters"):
+        sample_met(
+            _particles_at([_T0], [100.0]), [_met_file(tmp_path / "m.arl")], message=path
+        )
+
+
+def test_sample_met_with_a_message_reads_the_runs_internal_grid(tmp_path):
+    """The grid the run printed is the one sampled on, not the one arlmet picks for z_top."""
+    met = _met_file(tmp_path / "met.arl")
+    # 700 m is between the grid's levels at 400 and 900 m, which straddle the
+    # file's level at 462.5 m, so a coarser grid reads a different pressure.
+    particles = _particles_at([_T0], [700.0])
+    grid = (3, 100.0, 0.0, 0.0)  # levels at 100, 400 and 900 m
+
+    with patch("arlmet.sample_points", wraps=arlmet.sample_points) as sample_points:
+        sampled = sample_met(
+            particles,
+            [met],
+            columns=["pres"],
+            z_top=10000.0,
+            message=_message(tmp_path, "3 100.0 0.0 0.0"),
+        )
+
+    assert sample_points.call_args.kwargs["internal_grid"] == grid
+    assert sample_points.call_args.kwargs["model_top"] == 10000.0
+    expected = arlmet.sample_points(
+        [met],
+        pd.DataFrame({"lon": [25.5], "lat": [-5.0], "z": [700.0], "time": [_T0]}),
+        "PRES",
+        z_kind="agl",
+        model_top=10000.0,
+        internal_grid=grid,
+    )
+    np.testing.assert_allclose(sampled["pres"], expected["PRES"])
+    assert not np.allclose(
+        sampled["pres"], sample_met(particles, [met], columns=["pres"])["pres"]
+    )
+
+
+def test_sample_met_without_a_message_leaves_the_grid_to_arlmet(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+
+    with patch("arlmet.sample_points", wraps=arlmet.sample_points) as sample_points:
+        sample_met(_particles_at([_T0], [100.0]), [met], columns=["pres"])
+
+    assert sample_points.call_args.kwargs["internal_grid"] is None
+
+
+def test_calc_pbl_height_with_a_message_reads_the_runs_internal_grid(tmp_path):
+    met = _met_file(tmp_path / "met.arl", winds=True)
+    particles = _particles_at([_T0], [100.0])
+    message = _message(tmp_path, "3 100.0 0.0 0.0")
+
+    with patch("arlmet.internal_levels", wraps=arlmet.internal_levels) as levels:
+        sampling.calc_pbl_height(
+            particles, [met], method="hysplit_temperature", message=message
+        )
+
+    assert levels.call_args.kwargs["internal_grid"] == (3, 100.0, 0.0, 0.0)
 
 
 @pytest.mark.parametrize(
