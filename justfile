@@ -61,7 +61,7 @@ test-real *versions:
     builds="$(uv run python tests/fixtures/replay.py builds "$@")"
     while read -r version build <&3; do
         echo "== HYSPLIT $version: $build"
-        PATH="$build/exec:$PATH" uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup
+        PATH="$build/exec:$PATH" RUNTRAJ_HYSPLIT_VERSION="$version" uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup
     done 3<<< "$builds"
 
 # Record the integration tests' runs, and for 5.4.2 the docs build's, on each build in hysplit-builds.toml (or the VERSIONS given), replacing tests/recorded/hysplit/<version>/

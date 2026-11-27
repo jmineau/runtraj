@@ -124,6 +124,16 @@ change that made them. HYSPLIT's random numbers make the particles differ from
 run to run unless a run sets a seed, so a new recording changes every case's
 output: record only when the inputs changed or a version is added.
 
+**What each version does.** The tests in `tests/integration/test_hysplit_*.py`
+pin HYSPLIT behaviors that differ between versions, several of which runtraj
+works around. Each asserts what HYSPLIT should do and is marked
+`xfail(strict=True)` on the versions with a known bug, so a version that fixes
+it fails the run (`XPASS`) as much as one that gains it. They take the version
+from `RUNTRAJ_HYSPLIT_VERSION`, which `just test-real` sets from
+`hysplit-builds.toml` (the development branch prints 5.4.2, so it is told apart
+only as `dev`), else from what `hycs_std` prints, and skip on replayed and
+recorded runs.
+
 ## Testing against real FLEXPART
 
 The unit tests run FLEXPART's part of runtraj on a stand-in program and a
