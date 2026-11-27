@@ -1,11 +1,15 @@
 # The HYSPLIT build and met files these cases were recorded with
 # (tests/fixtures/replay.py; CONTRIBUTING.md, 'Testing against real HYSPLIT').
-recorded: 2026-11-26
+recorded: 2026-11-27
 programs:
   hycs_std:
     version: hysplit.v5.0.2
     sha256: 994ea7bd60369ff62cab4d138beae428f5a681dd91d8696c18ab8c2837e588a4
-    cases: 43
+    cases: 44
+  hyts_std:
+    version: hysplit.v5.0.2
+    sha256: 4cfd728db700685f9c237b4d877b4dbaf5aff8471a3b9b24fc5f7301cbfd63ea
+    cases: 4
 met_files:
   20210114_12-17_hrrr.crop_-114.00_39.00_-110.00_42.00: 5025307cf363b8aa61d14c5143cc6677f8fc2bafcc55fd82509bece60362c942
   20210114_18-23_hrrr.crop_-114.00_39.00_-110.00_42.00: 31d9e779f0c806152d19526f6215178ddf3ce39198c54995b822411d20b4146f
