@@ -888,7 +888,8 @@ class HysplitConfig(TransportConfig):
         description=(
             "Maximum number of particles in a simulation. Unset gives every "
             "release location its full share: ``numpar`` for one location, "
-            "``n * (numpar // n + 1)`` for n; and a concentration run, which "
+            "``n * (numpar // n + 1)`` for n, more when ``emisshrs`` spans "
+            "several time steps; and a concentration run, which "
             "releases over many time steps, ``numpar`` and HYSPLIT's rounding "
             "for each emission cycle. A set value that stops a "
             "multipoint release before its last location fails the run."
@@ -1517,8 +1518,9 @@ class HysplitConfig(TransportConfig):
         its rounding often raises by one, and stops releasing when it reaches
         ``MAXPAR``. A set ``maxpar`` is used as given. Unset, one location
         gets ``numpar`` (HYSPLIT may ask for one more and keeps ``numpar``),
-        and several get ``locations * (numpar // locations + 1)``, so the
-        last locations are not left short.
+        and several get what each releases over the ``emisshrs`` of the
+        release, every one-minute time step of it (at least
+        ``numpar // locations + 1``), so the last locations are not left short.
 
         A concentration run releases over many time steps, each pollutant
         for its ``hours``, and again every ``qcycle`` hours. HYSPLIT
@@ -1554,7 +1556,11 @@ class HysplitConfig(TransportConfig):
             return cycles * (self.numpar + max(locations, 1) * rounding)
         if locations <= 1:
             return self.numpar
-        return locations * (self.numpar // locations + 1)
+        from .releases import particles_per_step
+
+        steps = max(1, math.ceil(self.emisshrs * 60))
+        each = steps * self.nbptyp * particles_per_step(self, locations)
+        return locations * max(self.numpar // locations + 1, each)
 
     def hourly_ziscale(self) -> list[float]:
         """Return ``ziscale`` as one factor per hour: a single value repeated over the run, or the list as given."""

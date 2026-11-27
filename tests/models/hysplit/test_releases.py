@@ -134,6 +134,13 @@ def test_particles_per_step_counts_as_hysplit_does(settings, per_step):
     assert particles_per_step(HysplitConfig(n_hours=-1, **settings)) == per_step
 
 
+def test_particles_per_step_divides_numpar_among_the_locations():
+    """HYSPLIT's ``NUMPAR/NRPTS``: 333 of 1000 over half an hour is 12 a minute."""
+    config = HysplitConfig(n_hours=-1, numpar=1000, emisshrs=0.5)
+    assert particles_per_step(config, 3) == 12
+    assert particles_per_step(config, 1) == particles_per_step(config)
+
+
 def test_a_column_released_over_several_steps_starts_each_step_at_the_bottom():
     """With emisshrs 0.5, each minute releases 34 particles up the whole column."""
     column = ColumnRelease(

@@ -1367,6 +1367,17 @@ def test_unset_maxpar_gives_every_location_its_rounded_up_share():
     )  # at least one each
 
 
+def test_unset_maxpar_covers_every_time_step_of_a_long_release():
+    """HYSPLIT rounds each location's share up at each step: 12 x 3 x 30 particles."""
+    p = HysplitConfig(n_hours=-6, numpar=1000, emisshrs=0.5)
+    assert p.maxpar_for(1) == 1000  # one location keeps numpar
+    assert p.maxpar_for(3) == 12 * 3 * 30
+    two_sizes = HysplitConfig(n_hours=-6, numpar=1000, emisshrs=0.5, nbptyp=2)
+    assert two_sizes.maxpar_for(3) == 6 * 2 * 3 * 30  # the size bins share numpar
+    capped = HysplitConfig(n_hours=-6, numpar=1000, emisshrs=0.5, maxpar=900)
+    assert capped.maxpar_for(3) == 900
+
+
 def test_a_set_maxpar_is_used_as_given():
     p = HysplitConfig(n_hours=-24, numpar=1000, maxpar=800)
     assert p.maxpar_for(1) == p.maxpar_for(40) == 800
