@@ -166,17 +166,17 @@ layers = [
 # A transport model built in, such as HYSPLIT, is a package under
 # runtraj.models, reached through runtraj.models.get_model. Its package is
 # the only place that knows the model's files and behavior, so another
-# model does not have to touch the core. Every module under runtraj.models
-# counts as a model's package: code the models share goes in
-# runtraj/models/__init__.py or elsewhere in the core, not beside them.
+# model does not have to touch the core. The model packages are named
+# here and in the next contract; code the models share goes in the core
+# modules of runtraj.models (base, registry, run) or elsewhere, not beside them.
 [[tool.importlinter.contracts]]
 name = "Only runtraj.models imports a transport model's package"
 type = "forbidden"
 source_modules = ["runtraj.*"]
-forbidden_modules = ["runtraj.models.*"]
+forbidden_modules = ["runtraj.models.hysplit", "runtraj.models.flexpart"]
 # get_model imports a model's package when asked for it; that is the boundary.
 ignore_imports = [
-    "runtraj.models -> runtraj.models.*",
+    "runtraj.models.registry -> runtraj.models.*",
 ]
 allow_indirect_imports = true
 
@@ -185,12 +185,12 @@ allow_indirect_imports = true
 [[tool.importlinter.contracts]]
 name = "A transport model's package imports no other model's"
 type = "independence"
-modules = ["runtraj.models.*"]
+modules = ["runtraj.models.hysplit", "runtraj.models.flexpart"]
 # Each model imports runtraj.models for the protocol, and get_model imports
 # each model: a path between two models through it is not one importing the
 # other.
 ignore_imports = [
-    "runtraj.models -> runtraj.models.*",
+    "runtraj.models.registry -> runtraj.models.*",
 ]
 
 # Config classes do no I/O when they validate, so a config.yaml loads

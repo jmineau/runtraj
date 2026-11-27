@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from runtraj.identity import run_settings, settings_hash
-from runtraj.models import ModelInfo, check_model
+from runtraj.models import ModelInfo
 from runtraj.models.hysplit import (
     ConcentrationGrid,
     ControlFile,
@@ -17,6 +17,7 @@ from runtraj.models.hysplit import (
 )
 from runtraj.models.hysplit.control import cdump_name
 from runtraj.models.hysplit.driver import setup_entries
+from runtraj.testing import check_model
 
 GRID = {"name": "local", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0, 100]}
 

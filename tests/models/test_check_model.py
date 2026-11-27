@@ -11,8 +11,9 @@ import pytest
 
 from runtraj import ColumnRelease, MultiPointRelease, PointRelease
 from runtraj.exceptions import SimulationError
-from runtraj.models import ModelRun, TransportConfig, check_model
+from runtraj.models import ModelRun, TransportConfig
 from runtraj.models.hysplit import HysplitConfig, HysplitModel
+from runtraj.testing import check_model
 
 from ..fixtures.models import ToyConfig, ToyMet, ToyModel
 

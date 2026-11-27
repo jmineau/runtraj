@@ -20,6 +20,7 @@ import runtraj
 from runtraj import ColumnRelease, MultiPointRelease, PointRelease, Project, models
 from runtraj.exceptions import SimulationError
 from runtraj.models import ModelRun
+from runtraj.testing import check_model
 from runtraj.transforms import (
     FirstOrderLifetime,
     PressureWeighting,
@@ -438,9 +439,7 @@ def test_run_trajectories_returns_the_type_the_settings_make():
 
 
 def test_check_model_holds_a_concentration_model_to_its_type():
-    models.check_model(
-        ToyModel(), ToyConfig(n_hours=-2, counts=True), ToyMet(), _release()
-    )
+    check_model(ToyModel(), ToyConfig(n_hours=-2, counts=True), ToyMet(), _release())
 
 
 # ---------------------------------------------------------------------------

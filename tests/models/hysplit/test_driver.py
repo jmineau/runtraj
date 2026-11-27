@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from runtraj import _process
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
-from runtraj.models import _release_points, run_model
+from runtraj.models import run_model
 from runtraj.models.hysplit import (
     FailureReason,
     HysplitConfig,
@@ -36,6 +36,7 @@ from runtraj.models.hysplit.driver import (
     zicontroltf,
     ziscale_factors,
 )
+from runtraj.models.run import _release_points
 from tests.fixtures.platform import not_on_windows
 
 from ...fixtures.factories import (

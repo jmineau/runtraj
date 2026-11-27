@@ -137,7 +137,7 @@ def test_run_particles_starts_in_an_empty_directory(
             seen.append(sorted(p.name for p in workdir.iterdir()))
             raise RuntimeError("stop here")
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     with pytest.raises(RuntimeError):
         worker.run_result(sim, workdir=workdir)
     assert seen == [[]]
@@ -154,7 +154,7 @@ def test_a_run_stopped_partway_leaves_its_start_in_the_log(
         def run(self, release, params, met, window, workdir=None, timeout=None):
             raise KeyboardInterrupt  # SIGTERM from Slurm, mid-run
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     with pytest.raises(KeyboardInterrupt):
         worker.run_result(sim, workdir=compute_root / "w")
 
@@ -173,7 +173,7 @@ def test_a_model_that_needs_no_workdir_gets_none(sim, met, compute_root, monkeyp
             seen.append(workdir)
             raise SimulationError("stop here", log="model log\n")
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     monkeypatch.setattr(worker, "get_model", lambda name: _Model())
     workdir = compute_root / sim.release.id / sim.variant.name
     with pytest.raises(SimulationError):
@@ -194,7 +194,7 @@ def test_run_particles_keeps_no_empty_scratch_copy(sim, met, compute_root, monke
         def run(self, release, params, met, window, workdir=None, timeout=None):
             raise MeteorologyError("No met file for 2023-01-01 11:00.")
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     with pytest.raises(MeteorologyError):
         worker.run_result(sim, workdir=compute_root / sim.release.id / sim.variant.name)
 
@@ -212,7 +212,7 @@ def test_run_particles_without_particles_is_a_simulation_error(
         def run(self, release, params, met, window, workdir=None, timeout=None):
             return ModelRun(result=pd.DataFrame(), met_files=[])
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     with pytest.raises(SimulationError) as caught:
         worker.run_result(sim, workdir=compute_root / sim.release.id / sim.variant.name)
     assert caught.value.reason == "NO_PARTICLE_DATA"
@@ -248,7 +248,7 @@ def test_a_run_that_fails_without_a_model_log_leaves_no_started_line(
         def run(self, release, params, met, window, workdir=None, timeout=None):
             raise SimulationError("stop here", reason="TIMEOUT")
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     with pytest.raises(SimulationError):
         worker.run_result(sim, workdir=compute_root / "w")
 
@@ -265,7 +265,7 @@ def test_a_run_that_fails_unexpectedly_without_a_model_log_keeps_its_started_lin
         def run(self, release, params, met, window, workdir=None, timeout=None):
             raise RuntimeError("a bug in the model")
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     with pytest.raises(RuntimeError):
         worker.run_result(sim, workdir=compute_root / "w")
 
@@ -334,7 +334,7 @@ def test_a_release_leaves_no_folders_under_the_compute_root(
             (workdir / "CONTROL").write_text("")
             raise RuntimeError("stop here")
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
 
     assert len(_run_release(project, release)) == 2  # both realizations failed
     assert list(compute_root.iterdir()) == []
@@ -364,7 +364,7 @@ def test_runs_that_share_a_compute_root_never_share_a_workdir(
             ended[mine] = control.read_text() if control.exists() else None
             raise RuntimeError("stop here")
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     run_release(first, str(release.id), compute_root=compute_root)
 
     # Each run finds its own input in its workdir when it ends.
@@ -533,7 +533,7 @@ def test_a_failed_run_keeps_its_log_and_working_directory(
                 log="hycs_std said something\n",
             )
 
-    monkeypatch.setattr("runtraj.models.get_model", lambda name: _Model())
+    monkeypatch.setattr("runtraj.models.run.get_model", lambda name: _Model())
     _run_release(project, release)
 
     failure = sim.failure
