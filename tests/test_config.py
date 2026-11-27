@@ -473,6 +473,15 @@ def test_several_realizations_accept_krand_4_or_seeded_krand_2(tmp_path):
         _variant_config(tmp_path, variants={"e": {"realizations": 0}})
 
 
+def test_krand_4_realizations_each_get_their_own_seed(tmp_path):
+    # HYSPLIT's development branch reseeds from SEED outside ichem=8, so
+    # realizations that share a SEED would repeat one another.
+    config = _variant_config(tmp_path, krand=4, variants={"e": {"realizations": 3}})
+    e = config.resolve()["e"]
+    assert e.transport.seed is None  # the folder's settings are unchanged
+    assert [e.transport_for(k).seed for k in range(3)] == [0, 1, 2]
+
+
 def test_an_ensemble_keeps_its_folder_when_its_realizations_grow(tmp_path):
     """An ensemble of one is an ensemble, so raising the count later only adds runs."""
     cfg = _variant_config(tmp_path, variants={"e": {"realizations": 1}, "single": {}})

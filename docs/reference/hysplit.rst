@@ -70,6 +70,7 @@ the input files of a run. A project run then adds the release heights
 
 .. code-block:: python
 
+   from functools import partial
    from pathlib import Path
 
    from runtraj.particles import add_release_heights
@@ -93,7 +94,9 @@ the input files of a run. A project run then adds the release heights
    )
    run_hycs_std(Path("run"))
    particles = read_particle_dat(Path("run") / PARTICLE_FILE, config.varsiwant)
-   particles = add_release_heights(particles, release, HysplitModel().release_rows)
+   particles = add_release_heights(
+       particles, release, partial(HysplitModel().release_rows, config=config)
+   )
 
 .. autosummary::
    :toctree: _api
@@ -214,7 +217,7 @@ HYSPLIT 5.4.2:
        builds; 7 needs momentum fluxes in the met files; 11 needs a
        ``DAUGHTER.TXT`` from HYSPLIT's preprocessor.
    * - 8
-     - Refused here: it is ``mode: particles``, which takes ``ichem: 8``
+     - Refused here: it is ``mode: particle``, which takes ``ichem: 8``
        or none.
    * - others
      - Refused: HYSPLIT ran ``ICHEM=12`` as 0 without a message.
@@ -330,12 +333,13 @@ line source, so it refuses a multipoint release whose points share a
 horizontal location
 (:func:`~runtraj.models.hysplit.releases.check_releases`): ``runtraj check``
 lists it, and its run fails as ``RELEASE_REFUSED`` before ``hycs_std``
-starts. HYSPLIT 5.1.0
-writes no particle row at ``age = 0``, so
+starts. HYSPLIT 5.1.0 to 5.4.2
+write no particle row at ``age = 0``, so
 :func:`~runtraj.models.hysplit.releases.release_rows` says where each
-particle of a column or multipoint release started: particle ``k`` of a
-column in slab ``k``, and a multipoint release's particles matched to a
-point from their first row (:doc:`particles`).
+particle of a column or multipoint release started: a column's particles
+from their numbers, :func:`~runtraj.models.hysplit.releases.particles_per_step`
+of them up the column at each minute of ``emisshrs``, and a multipoint
+release's particles matched to a point from their first row (:doc:`particles`).
 
 .. autosummary::
    :toctree: _api
@@ -343,6 +347,7 @@ point from their first row (:doc:`particles`).
 
    runtraj.models.hysplit.releases.check_releases
    runtraj.models.hysplit.releases.release_rows
+   runtraj.models.hysplit.releases.particles_per_step
 
 Failure reasons
 ---------------

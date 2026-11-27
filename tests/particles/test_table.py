@@ -13,7 +13,6 @@ import pytest
 from runtraj.identity import run_settings, transport_from_settings
 from runtraj.models import ModelInfo
 from runtraj.models.hysplit import HysplitConfig
-from runtraj.models.hysplit.releases import release_rows
 from runtraj.particles import (
     particles_from_table,
     particles_metadata,
@@ -29,7 +28,7 @@ from ..fixtures.particles import finished
 
 def add_release_heights(particles: pd.DataFrame, release) -> pd.DataFrame:
     """Add release heights as after a HYSPLIT run: its release rows when it wrote no row at age = 0."""
-    return _add_release_heights(particles, release, release_rows)
+    return finished(particles, release)
 
 
 def _particles_basic() -> pd.DataFrame:
@@ -244,16 +243,17 @@ def test_finished_particles_column_release_spans_column_monotonically(tmp_path):
         bottom=5.0,
         top=1000.0,
     )
+    # HYSPLIT releases 8 particles in 8 slabs (most counts get one slab more).
     particles = _particles_release_rows(
-        indices=list(range(1, 13)),
-        longs=[-111.85] * 12,
-        lats=[40.77] * 12,
+        indices=list(range(1, 9)),
+        longs=[-111.85] * 8,
+        lats=[40.77] * 8,
     )
     traj = finished(particles, release)
 
     expected = [
-        ((i - 0.5) * (release.top - release.bottom) / 12) + release.bottom
-        for i in range(1, 13)
+        ((i - 0.5) * (release.top - release.bottom) / 8) + release.bottom
+        for i in range(1, 9)
     ]
     assert traj["release_height"].tolist() == pytest.approx(expected)
     assert traj["release_height"].is_monotonic_increasing

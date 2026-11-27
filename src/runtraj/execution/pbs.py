@@ -21,7 +21,6 @@ import logging
 import re
 import shlex
 import subprocess
-import sys
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -31,8 +30,8 @@ from runtraj.execution.config import ExecutionConfig, PbsConfig
 from runtraj.execution.runner import (
     _project_slug,
     array_size,
-    resolve_compute_root,
     status_after_job,
+    task_command,
     write_submission,
 )
 
@@ -99,28 +98,20 @@ def job_script(
         f"#PBS -o {folder}/",
     ]
 
-    command = [
-        sys.executable,
-        "-m",
-        "runtraj",
-        "run",
-        str(project.directory),
-        "--releases",
-        str(folder / "releases.parquet"),
-        "--task",
-        f"$index/{n_tasks}",
-        "--execution",
-        str(folder / "execution.yaml"),
-        "--cpus",
-        str(pbs.cpus),
-        "--output",
-        str(project.output.directory),
-    ]
-    if compute_root is not None:
-        command += ["--compute-root", str(resolve_compute_root(project, compute_root))]
-    words = [f'"{w}"' if w.startswith("$") else shlex.quote(w) for w in command]
-    log = shlex.quote(str(folder)) + '/"$index.log"'
     started = shlex.quote(str(folder)) + '/"$index.started"'
+    # A subjob PBS starts again keeps what it finished before.
+    skip_lines, command = task_command(
+        project,
+        folder,
+        n_tasks,
+        index="$index",
+        cpus=pbs.cpus,
+        compute_root=compute_root,
+        skip_existing=skip_existing,
+        restarted=f"[ -e {started} ]",
+        on_first_start=[f"touch {started}"],
+    )
+    log = shlex.quote(str(folder)) + '/"$index.log"'
     lines += [
         "",
         # One job, not an array, when there is one task: its index is 0.
@@ -130,16 +121,9 @@ def job_script(
         "export OMP_NUM_THREADS=1",
         *pbs.setup,
     ]
-    if not skip_existing:
-        # A subjob PBS starts again keeps what it finished before.
-        lines += [
-            'skip="--no-skip"',
-            f'[ -e {started} ] && skip=""',
-            f"touch {started}",
-        ]
-        words.append("$skip")
+    lines += skip_lines
     # exec, so this process is the one PBS signals.
-    lines.append("exec " + " ".join(words))
+    lines.append("exec " + command)
     return "\n".join(lines) + "\n"
 
 

@@ -978,25 +978,6 @@ class Output:
         suffix = self._suffix(kind, variant)
         return frozenset(_list_release_files(folder, suffix, release_ids))
 
-    def complete(
-        self,
-        variant: Variant,
-        release_ids: Iterable[str] | None = None,
-        realization: int | None = None,
-    ) -> frozenset[str]:
-        """
-        Return the releases whose simulations under *variant* are complete (:func:`completed`).
-
-        Only the releases with the model's result are looked for in each
-        stage's folder.
-        """
-        made = self.present(variant.result, variant, release_ids, realization)
-        stages = [
-            self.present(name, variant, made, realization)
-            for name in variant.stage_order
-        ]
-        return completed(made, *stages)
-
     def table(
         self,
         kind: Kind,
@@ -1182,11 +1163,6 @@ class Output:
             complete, and a run with no particles is a failure
             (``NO_PARTICLE_DATA``).
         """
-        if particles.empty:
-            raise ValueError(
-                f"No particles to write for {release.id}: a particle file "
-                "would make the simulation complete."
-            )
         if variant.result != "particles":
             raise ValueError(
                 f"Variant {variant.name!r} makes {variant.result}, not particles."

@@ -412,12 +412,13 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
     """
     Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.
 
-    In the particles mode the entries of :data:`FIXED_SETUP` come first.
+    In the particle mode the entries of :data:`FIXED_SETUP` come first.
     Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,
-    under their own names; the concentration mode leaves out the particle
+    under their own names (``DSWF`` in ``VARSIWANT`` in upper case, which
+    ``hycs_std`` 5.2 and later needs to fill it); the concentration mode leaves out the particle
     file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the
     config's ``ichem``, 0 unless set. The driver adds
-    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
+    ``KMSL``, ``IVMAX`` (in the particle mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
     is unset, which depend on the release locations or follow from other
     settings.
 
@@ -434,7 +435,7 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
             if getattr(params, name) is not None
         )
         return entries
-    particles = params.mode == "particles"
+    particles = params.mode == "particle"
     entries = dict(FIXED_SETUP) if particles else {}
     skip = NOT_IN_SETUP if particles else NOT_IN_SETUP | set(PARTICLES_SETTINGS)
     entries.update(
@@ -443,6 +444,13 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
         if name not in skip and getattr(params, name) is not None
     )
     entries["zicontroltf"] = zicontroltf(params)
+    if "varsiwant" in entries:
+        # From 5.2.0 hycs_std turns the shortwave flux on by a case-sensitive
+        # comparison to 'DSWF': in lower case the column is written as 0. Every
+        # other name stays lower case, which 'zcfx' needs ('ZCFX' is unknown).
+        entries["varsiwant"] = [
+            "DSWF" if name == "dswf" else name for name in params.varsiwant
+        ]
     if params.seed is not None:
         entries["seed"] = setup_seed(params.seed)
     return entries
@@ -775,7 +783,7 @@ def write_inputs(
         setup.write(workdir / SETUP_FILE)
         return
     entries["maxpar"] = config.maxpar_for(release_locations(locations))
-    if config.mode == "particles":
+    if config.mode == "particle":
         entries["ivmax"] = len(config.varsiwant)  # number of output variables
     factors = ziscale_factors(config)
     # Read only with ziscale, the one setting whose WINDERRTF depends on it.

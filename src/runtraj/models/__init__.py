@@ -20,6 +20,7 @@ import tempfile
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeVar
 
@@ -480,14 +481,15 @@ class TransportModel(ABC, Generic[C]):
         return pd.DataFrame(columns=list(CHECK_COLUMNS))
 
     def release_rows(
-        self, particles: pd.DataFrame, release: Release
+        self, particles: pd.DataFrame, release: Release, config: C
     ) -> pd.DataFrame | None:
         """
         Return where each particle of a column or multipoint release started, ``None`` here.
 
         For a model that writes no row at ``age = 0``: one row per particle
         with ``particle``, ``lon``, ``lat``, and ``height`` in the release's
-        vertical reference (:func:`runtraj.particles.add_release_heights`).
+        vertical reference (:func:`runtraj.particles.add_release_heights`),
+        from the particles and the *config* of the run that made them.
         A model that writes release rows needs none; one that writes
         neither cannot run a column or multipoint release.
         """
@@ -811,7 +813,10 @@ def _finish(
         )
     check_particles(run.result)
     try:
-        particles = add_release_heights(run.result, release, model.release_rows)
+        rows = model.release_rows
+        particles = add_release_heights(
+            run.result, release, None if rows is None else partial(rows, config=config)
+        )
     except ValueError as error:
         raise SimulationError(
             str(error), reason="NO_RELEASE_ROWS", log=run.log

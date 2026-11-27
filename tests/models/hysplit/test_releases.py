@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+from functools import partial
 
 import pandas as pd
 import pytest
@@ -10,7 +11,12 @@ import pytest
 from runtraj.exceptions import SimulationError
 from runtraj.models import run_model
 from runtraj.models.hysplit import HysplitConfig, HysplitModel
-from runtraj.models.hysplit.releases import REPEATED_LOCATION, check_releases
+from runtraj.models.hysplit.releases import (
+    REPEATED_LOCATION,
+    check_releases,
+    particles_per_step,
+    release_rows,
+)
 from runtraj.particles.table import add_release_heights
 from runtraj.releases import (
     ColumnRelease,
@@ -79,11 +85,11 @@ def test_check_releases_names_each_refused_release_once():
 
 
 def test_a_column_particle_missing_from_the_table_keeps_hysplits_slabs():
-    """Particle k is in slab k of numpar, even when another particle has no row."""
+    """Particle k is in slab k of the step, even when another particle has no row."""
     column = ColumnRelease(
-        time=TIME, longitude=-111.85, latitude=40.77, bottom=0, top=1000
+        time=TIME, longitude=-111.85, latitude=40.77, bottom=0, top=800
     )
-    kept = [k for k in range(1, 11) if k != 4]  # particle 4 left before its first row
+    kept = [k for k in range(1, 9) if k != 4]  # particle 4 left before its first row
     particles = pd.DataFrame(
         {
             "particle": kept,
@@ -93,7 +99,53 @@ def test_a_column_particle_missing_from_the_table_keeps_hysplits_slabs():
             "zagl": [100.0 * k - 50 for k in kept],
         }
     )
+    config = HysplitConfig(n_hours=-1, numpar=8)  # 8 particles in one step
 
-    found = add_release_heights(particles, column, HysplitModel().release_rows)
+    found = add_release_heights(
+        particles, column, partial(HysplitModel().release_rows, config=config)
+    )
 
     assert found["release_height"].tolist() == [100.0 * k - 50 for k in kept]
+
+
+# Particles HYSPLIT 5.1.0 and 5.4.2 released in each one-minute step of a
+# column release, counted from the first row of each particle in runs of
+# hycs_std (outdt: 0) at -112.0, 40.5 on 2021-01-15 with HRRR.
+@pytest.mark.parametrize(
+    ("settings", "per_step"),
+    [
+        ({"numpar": 1000}, 1001),
+        ({"numpar": 1000, "emisshrs": 0.02}, 834),
+        ({"numpar": 1000, "emisshrs": 0.5}, 34),
+        ({"numpar": 1200, "emisshrs": 0.5}, 41),
+        ({"numpar": 500, "emisshrs": 0.3}, 28),
+        ({"numpar": 777, "emisshrs": 0.1}, 130),
+        ({"numpar": 2500, "emisshrs": 0.25}, 167),
+        ({"numpar": 1000, "emisshrs": 0.7}, 24),
+        ({"numpar": 1000, "emisshrs": 1.0}, 17),
+        ({"numpar": 100, "emisshrs": 2.0}, 1),
+        ({"numpar": 1000, "emisshrs": 0.5, "nbptyp": 2}, 17),
+        ({"numpar": 1000, "emisshrs": 0.5, "maxdim": 2}, 34),
+        ({"numpar": 1000, "emisshrs": 0.5, "initd": 2}, 1),
+        ({"numpar": 1000, "emisshrs": 0.5, "initd": 103}, 34),
+    ],
+)
+def test_particles_per_step_counts_as_hysplit_does(settings, per_step):
+    assert particles_per_step(HysplitConfig(n_hours=-1, **settings)) == per_step
+
+
+def test_a_column_released_over_several_steps_starts_each_step_at_the_bottom():
+    """With emisshrs 0.5, each minute releases 34 particles up the whole column."""
+    column = ColumnRelease(
+        time=TIME, longitude=-111.85, latitude=40.77, bottom=5, top=1000
+    )
+    particles = pd.DataFrame({"particle": range(1, 1001), "age": -1.0})
+    config = HysplitConfig(n_hours=-1, numpar=1000, emisshrs=0.5)
+
+    rows = release_rows(particles, column, config).set_index("particle")
+
+    slab = 995 / 34
+    assert rows.loc[[1, 35, 69], "height"].tolist() == pytest.approx([5 + slab / 2] * 3)
+    assert rows.loc[34, "height"] == pytest.approx(1000 - slab / 2)
+    # The 30th step is cut short at MAXPAR: its 14 particles fill the bottom 14 slabs.
+    assert rows.loc[1000, "height"] == pytest.approx(5 + 13.5 * slab)

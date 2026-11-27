@@ -55,7 +55,10 @@ def _check_particle_table(result: Any) -> None:
             f"A particles result is a pandas.DataFrame, not {type(result).__name__}."
         )
     if result.empty:
-        raise ValueError("The transport model wrote no particles.")
+        raise ValueError(
+            "No particles to write: the transport model wrote none, and a "
+            "particle file would make the simulation complete."
+        )
     check_particles(result)
 
 
