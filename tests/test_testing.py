@@ -5,8 +5,14 @@ import datetime as dt
 import pytest
 
 from runtraj import PointRelease
-from runtraj.models import check_model, get_model
-from runtraj.testing import REPLAY_MODEL, ReplayConfig, ReplayMet, run_stage
+from runtraj.models import get_model
+from runtraj.testing import (
+    REPLAY_MODEL,
+    ReplayConfig,
+    ReplayMet,
+    check_model,
+    run_stage,
+)
 
 from .fixtures.output import fake_particles
 from .fixtures.stages import COUNT, DOUBLE

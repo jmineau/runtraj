@@ -199,7 +199,7 @@ and has no default: ``config.yaml`` names the model in its
 ``models`` block. CONTRIBUTING describes how to add another, named by its import path.
 A model fails a run that its meteorology does not cover, as
 ``MET_COVERAGE``. Particles that all leave the met's domain before the end
-of the run are a complete run. Use :func:`~runtraj.models.check_model` in
+of the run are a complete run. Use :func:`~runtraj.testing.check_model` in
 the tests of a model of your own.
 
 .. autosummary::
@@ -213,7 +213,7 @@ the tests of a model of your own.
    runtraj.models.run_model
    runtraj.models.run_model_many
    runtraj.models.MetConfig
-   runtraj.models.check_model
+   runtraj.testing.check_model
    runtraj.models.hysplit.HysplitModel
    runtraj.models.flexpart.FlexpartModel
    runtraj.models.flexpart.read_partoutput

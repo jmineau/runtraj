@@ -146,7 +146,7 @@ def test_run_particles_goes_through_the_model_the_settings_name(
 
     asked: list[str] = []
     monkeypatch.setattr(
-        "runtraj.models.get_model", lambda name: asked.append(name) or _Model()
+        "runtraj.models.run.get_model", lambda name: asked.append(name) or _Model()
     )
     met_config = make_met_config(tmp_path)
     variant = make_variant(met_config=met_config, n_hours=-1, numpar=1)
@@ -289,7 +289,8 @@ def _positions_only() -> pd.DataFrame:
 
 def test_a_run_keeps_each_column_the_model_wrote_unchanged():
     """A stage may read a column the model wrote, so a run passes each one through as it is."""
-    from runtraj.models import TransportConfig, _finish
+    from runtraj.models import TransportConfig
+    from runtraj.models.run import _finish
 
     particles = _positions_only().assign(
         foot=[1e-5, 2e-5], dens=1.2, samt=1.0, sigw=0.1, tlgr=10.0, mlht=500.0
@@ -305,7 +306,8 @@ def test_a_run_keeps_each_column_the_model_wrote_unchanged():
 
 
 def test_a_run_adds_no_column_the_model_did_not_write(tmp_path):
-    from runtraj.models import TransportConfig, _finish
+    from runtraj.models import TransportConfig
+    from runtraj.models.run import _finish
 
     run = _finish(
         ModelRun(_positions_only(), log="model log\n", met_files=[tmp_path / "met"]),
