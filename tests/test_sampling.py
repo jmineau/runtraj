@@ -226,6 +226,32 @@ def test_sample_field_vertical_is_nearest_level_held_at_the_ends():
     assert sampled.tolist() == [0.0, 200.0, 200.0, 0.0]
 
 
+@pytest.mark.parametrize(
+    "levels",
+    [
+        [10.0, 20.0, 30.0, 40.0],
+        [40.0, 30.0, 20.0, 10.0],
+        [30.0, 10.0, 40.0, 20.0],
+        [10.0, 20.0, 20.0, 40.0],
+        [25.0],
+    ],
+)
+def test_nearest_level_matches_the_distance_matrix(levels):
+    rng = np.random.default_rng(0)
+    z = np.concatenate(
+        [
+            rng.uniform(0.0, 50.0, 500),
+            np.arange(0.0, 50.0, 2.5),  # exact levels and midpoints (ties)
+            [np.nan, np.inf, -np.inf],
+        ]
+    )
+    coords = np.asarray(levels)
+    with np.errstate(invalid="ignore"):
+        expected = np.abs(coords[None, :] - z[:, None]).argmin(axis=1)
+    got = sampling._nearest_level(xr.DataArray(coords, dims="lev"), z)
+    assert got.tolist() == expected.tolist()
+
+
 def test_sample_field_wraps_longitudes_to_the_field_convention():
     east = _flux(lons=(248.0, 249.0, 250.0))  # 0..360
     assert sample_field(east, x=[-111.0], y=[40.0]).tolist() == [1.0]
