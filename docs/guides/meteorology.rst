@@ -291,6 +291,27 @@ move your archive, or switch to a copy with different names, and every run
 already made still counts. Two products in folders named alike, such as
 HRRR and NAM, still give different results folders.
 
+Because the folder is not recorded, two mets whose files carry the same
+source id look like one met to a run. Two WRF runs that differ only in
+their boundary-layer scheme both convert to ARL files with the source
+``AWRF``, and their variants would share one run. Give each met a
+``label``, which the run records beside the product:
+
+.. code-block:: yaml
+
+   mets:
+     wrf-mynn:
+       directory: /data/met/wrf-mynn
+       label: mynn
+     wrf-ysu:
+       directory: /data/met/wrf-ysu
+       label: ysu
+
+``runtraj check`` lists two mets of one transport model that record the
+same settings, and a run refuses them, until each has a label of its own. A
+met without a label records none, so its settings folders stay where they
+are; giving it one later makes its particles again in a new folder.
+
 When the meteorology is the problem
 -----------------------------------
 
