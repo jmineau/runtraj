@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=dd86dbcf"></script>
+    <script src="../_static/documentation_options.js?v=66c8aa66"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev34+gcc2d64a2d" />
+  <meta name="docsearch:version" content="0.1.0a6.dev35+gfa91479d4" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1055,6 +1055,31 @@ run uses, from the <code class="docutils literal notranslate"><span class="pre">
 </table>
 </div>
 </section>
+<section id="hysplit-versions">
+<span id="id1"></span><h2>HYSPLIT versions<a class="headerlink" href="#hysplit-versions" title="Link to this heading">#</a></h2>
+<p>runtraj supports HYSPLIT 5.0 and later. It runs the <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> you give
+it and reads the version it prints (<a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.version.html#runtraj.models.hysplit.HysplitModel.version" title="runtraj.models.hysplit.HysplitModel.version"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HysplitModel.version</span></code></a>); a version it cannot read is
+taken to be the oldest. Between versions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">krand</span></code> 10 to 13 are new in HYSPLIT 5.1.0. Before it, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> runs
+them as <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">4</span></code> without a word, so a run with one of them on an older
+<code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> is refused (<a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html#runtraj.models.hysplit.write_inputs" title="runtraj.models.hysplit.write_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_inputs()</span></code></a> raises
+a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>, and the simulation fails) instead of getting the
+clock-seeded draw.</p></li>
+<li><p>HYSPLIT 5.0.x never seeds the random numbers behind a column release and
+an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run (the generator of Fortran’s <code class="docutils literal notranslate"><span class="pre">RANDOM_NUMBER</span></code>;
+HYSPLIT 5.1.0 seeds it from <code class="docutils literal notranslate"><span class="pre">seed</span></code>). On 5.0.x those runs differ from one
+run to the next, whatever <code class="docutils literal notranslate"><span class="pre">seed</span></code> is, and runtraj cannot change that. A
+point release with <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">2</span></code> and a <code class="docutils literal notranslate"><span class="pre">seed</span></code> repeats on 5.0.x as on every
+later version, and 5.0.2 gave the same files as 5.1.0 in 48 of
+runtraj’s 50 recorded cases, the two others being a column release
+and an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run. runtraj does not warn about it when it runs: use
+HYSPLIT 5.1.0 or later for a column release or <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run you need
+to repeat.</p></li>
+<li><p>From HYSPLIT 5.3.0, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> adds 2 to <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> once it has read
+<code class="docutils literal notranslate"><span class="pre">ZICONTROL</span></code> (below).</p></li>
+</ul>
+</section>
 <section id="running-hysplit">
 <h2>Running HYSPLIT<a class="headerlink" href="#running-hysplit" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html#runtraj.models.hysplit.write_inputs" title="runtraj.models.hysplit.write_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_inputs()</span></code></a> writes everything
@@ -1577,6 +1602,7 @@ reporting.</p></td>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-hysplit-build">The HYSPLIT build</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hysplit-versions">HYSPLIT versions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-hysplit">Running HYSPLIT</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-concentration-mode">The concentration mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-trajectory-mode">The trajectory mode</a></li>

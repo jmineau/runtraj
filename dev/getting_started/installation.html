@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=dd86dbcf"></script>
+    <script src="../_static/documentation_options.js?v=66c8aa66"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev34+gcc2d64a2d" />
+  <meta name="docsearch:version" content="0.1.0a6.dev35+gfa91479d4" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -529,8 +529,8 @@ Download HYSPLIT from
 <a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT.php">NOAA’s Air Resources Laboratory</a>,
 which asks you to accept the
 <a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT_agreement.php">HYSPLIT terms of use</a>
-first. Unpack it, and point <code class="docutils literal notranslate"><span class="pre">directory</span></code> at the folder it makes, in a
-project’s <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>:</p>
+first. runtraj supports HYSPLIT 5.0 and later. Unpack it, and point
+<code class="docutils literal notranslate"><span class="pre">directory</span></code> at the folder it makes, in a project’s <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">models</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">hysplit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/hysplit</span>
@@ -544,6 +544,13 @@ load it.</p>
 <p class="admonition-title">Tip</p>
 <p>Make sure <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> has permission to run:
 <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">+x</span> <span class="pre">exec/hycs_std</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>HYSPLIT 5.0.x never seeds the random numbers of a column release or of
+an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run, so on it those runs differ every time, whatever
+<code class="docutils literal notranslate"><span class="pre">seed</span></code> is. Use HYSPLIT 5.1.0 or later when you need to repeat them
+(<a class="reference internal" href="../reference/hysplit.html#hysplit-versions"><span class="std std-ref">HYSPLIT versions</span></a>).</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> says when a project can find no <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, or one that
 cannot run. <a class="reference internal" href="../guides/hysplit_build.html"><span class="doc">Your Own HYSPLIT Build And Data Tables</span></a> has more on choosing a download

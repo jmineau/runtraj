@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=dd86dbcf"></script>
+    <script src="../../_static/documentation_options.js?v=66c8aa66"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev34+gcc2d64a2d" />
+  <meta name="docsearch:version" content="0.1.0a6.dev35+gfa91479d4" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1022,7 +1022,8 @@
 them. <em>workdir</em> is created if needed, and should be empty. With
 <code class="docutils literal notranslate"><span class="pre">ziscale</span></code> set, <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> depends on the version the program
 prints (<code class="xref py py-func docutils literal notranslate"><span class="pre">winderrtf()</span></code>), which is read once per program, and so
-does the refusal of the wind error settings (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_wind_error()</span></code>).</p>
+does the refusal of the wind error settings (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_wind_error()</span></code>)
+and of <code class="docutils literal notranslate"><span class="pre">krand</span></code> 10 to 13 (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_krand()</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1041,7 +1042,8 @@ when they are above sea level.</p></li>
 <li><p><a class="reference internal" href="runtraj.exceptions.HYSPLITNotFoundError.html#runtraj.exceptions.HYSPLITNotFoundError" title="runtraj.exceptions.HYSPLITNotFoundError"><strong>HYSPLITNotFoundError</strong></a> – If there is no program to link (<a class="reference internal" href="runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program" title="runtraj.models.hysplit.find_program"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_program()</span></code></a>).</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the settings set the wind error in the concentration mode and
     the program is HYSPLIT 5.3.0 or later, which would ignore it
-    (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_wind_error()</span></code>).</p></li>
+    (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_wind_error()</span></code>), or <code class="docutils literal notranslate"><span class="pre">krand</span></code> is 10 to 13 and the program
+    is older than HYSPLIT 5.1.0 (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_krand()</span></code>).</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>

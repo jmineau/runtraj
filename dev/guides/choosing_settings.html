@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=dd86dbcf"></script>
+    <script src="../_static/documentation_options.js?v=66c8aa66"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev34+gcc2d64a2d" />
+  <meta name="docsearch:version" content="0.1.0a6.dev35+gfa91479d4" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -592,6 +592,13 @@ own draws. A <code class="docutils literal notranslate"><span class="pre">seed</
 its negative the same. <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">4</span></code> seeds each run from the clock instead, so every run
 differs and cannot be made again. <code class="docutils literal notranslate"><span class="pre">krand</span></code> in
 <a class="reference internal" href="../reference/configuration.html"><span class="doc">Configuration</span></a> lists every mode.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>HYSPLIT 5.0.x never seeds the random numbers of a column release or of
+an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run, so on it those runs differ every time whatever
+<code class="docutils literal notranslate"><span class="pre">seed</span></code> is. Use HYSPLIT 5.1.0 or later to repeat them
+(<a class="reference internal" href="../reference/hysplit.html#hysplit-versions"><span class="std std-ref">HYSPLIT versions</span></a>).</p>
+</div>
 </section>
 <section id="what-hysplit-chooses-for-you">
 <h2>What HYSPLIT chooses for you<a class="headerlink" href="#what-hysplit-chooses-for-you" title="Link to this heading">#</a></h2>

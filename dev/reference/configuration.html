@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=dd86dbcf"></script>
+    <script src="../_static/documentation_options.js?v=66c8aa66"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev34+gcc2d64a2d" />
+  <meta name="docsearch:version" content="0.1.0a6.dev35+gfa91479d4" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1130,7 +1130,7 @@ it runs.</p>
 <td><p>Required</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
-<td><p>Random seed for a reproducible run. Different seeds give different runs. Requires <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">2</span></code>. HYSPLIT 5.1.0 ignores the seed under <code class="docutils literal notranslate"><span class="pre">krand</span></code> 4 and 10 to 13, and under 1 uses it only for the initial turbulent velocity. Must be 0 or more: runtraj writes it to <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> as <code class="docutils literal notranslate"><span class="pre">-(seed</span> <span class="pre">+</span> <span class="pre">1)</span></code>, because HYSPLIT reseeds its generator only from a negative value and gives every <code class="docutils literal notranslate"><span class="pre">SEED</span></code> of 0 or more the same stream, so a seed and its negative would give the same run. Realization <code class="docutils literal notranslate"><span class="pre">k</span></code> of a variant runs with <code class="docutils literal notranslate"><span class="pre">seed</span> <span class="pre">+</span> <span class="pre">k</span></code>, so realization 0 shares the unperturbed run’s seed.</p></td>
+<td><p>Random seed for a reproducible run. Different seeds give different runs. Requires <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">2</span></code>. HYSPLIT 5.1.0 ignores the seed under <code class="docutils literal notranslate"><span class="pre">krand</span></code> 4 and 10 to 13, and under 1 uses it only for the initial turbulent velocity. HYSPLIT 5.0.x never seeds the random numbers of a column release or an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run, so the seed does not reach them there. Must be 0 or more: runtraj writes it to <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> as <code class="docutils literal notranslate"><span class="pre">-(seed</span> <span class="pre">+</span> <span class="pre">1)</span></code>, because HYSPLIT reseeds its generator only from a negative value and gives every <code class="docutils literal notranslate"><span class="pre">SEED</span></code> of 0 or more the same stream, so a seed and its negative would give the same run. Realization <code class="docutils literal notranslate"><span class="pre">k</span></code> of a variant runs with <code class="docutils literal notranslate"><span class="pre">seed</span> <span class="pre">+</span> <span class="pre">k</span></code>, so realization 0 shares the unperturbed run’s seed.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
@@ -1278,7 +1278,7 @@ it runs.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">krand</span></code></p></td>
-<td><p>How HYSPLIT draws the random numbers for turbulence. 0, or unset, picks 2 when <code class="docutils literal notranslate"><span class="pre">numpar</span></code> is 5000 or less and 1 otherwise. 1 uses a precomputed table. 2 draws them during the run and is the only mode that uses <code class="docutils literal notranslate"><span class="pre">seed</span></code>. 3 uses no random numbers (a diagnostic mode). 4 draws them during the run from a clock-based seed, so every run differs; there are about 5000 possible seeds. 10 to 13 are modes 0 to 3 with a random initial seed. HYSPLIT does not check this value and other values silently break the turbulence, so runtraj rejects them.</p></td>
+<td><p>How HYSPLIT draws the random numbers for turbulence. 0, or unset, picks 2 when <code class="docutils literal notranslate"><span class="pre">numpar</span></code> is 5000 or less and 1 otherwise. 1 uses a precomputed table. 2 draws them during the run and is the only mode that uses <code class="docutils literal notranslate"><span class="pre">seed</span></code>. 3 uses no random numbers (a diagnostic mode). 4 draws them during the run from a clock-based seed, so every run differs; there are about 5000 possible seeds. 10 to 13 are modes 0 to 3 with a random initial seed, new in HYSPLIT 5.1.0 and refused before it. HYSPLIT does not check this value and other values silently break the turbulence, so runtraj rejects them.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">krnd</span></code></p></td>

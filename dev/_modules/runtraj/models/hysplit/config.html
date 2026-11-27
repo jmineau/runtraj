@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=dd86dbcf"></script>
+    <script src="../../../../_static/documentation_options.js?v=66c8aa66"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev34+gcc2d64a2d" />
+  <meta name="docsearch:version" content="0.1.0a6.dev35+gfa91479d4" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -1291,7 +1291,8 @@
             <span class="s2">"mode that uses ``seed``. 3 uses no random numbers (a diagnostic "</span>
             <span class="s2">"mode). 4 draws them during the run from a clock-based seed, so "</span>
             <span class="s2">"every run differs; there are about 5000 possible seeds. 10 to 13 "</span>
-            <span class="s2">"are modes 0 to 3 with a random initial seed. HYSPLIT does not "</span>
+            <span class="s2">"are modes 0 to 3 with a random initial seed, new in HYSPLIT "</span>
+            <span class="s2">"5.1.0 and refused before it. HYSPLIT does not "</span>
             <span class="s2">"check this value and other values silently break the turbulence, "</span>
             <span class="s2">"so runtraj rejects them."</span>
         <span class="p">),</span>
@@ -1302,7 +1303,9 @@
             <span class="s2">"Random seed for a reproducible run. Different seeds give "</span>
             <span class="s2">"different runs. Requires ``krand: 2``. HYSPLIT 5.1.0 "</span>
             <span class="s2">"ignores the seed under ``krand`` 4 and 10 to 13, and under 1 uses "</span>
-            <span class="s2">"it only for the initial turbulent velocity. Must be 0 or more: "</span>
+            <span class="s2">"it only for the initial turbulent velocity. HYSPLIT 5.0.x never seeds "</span>
+            <span class="s2">"the random numbers of a column release or an ``ichem: 5`` run, so "</span>
+            <span class="s2">"the seed does not reach them there. Must be 0 or more: "</span>
             <span class="s2">"runtraj writes it to ``SETUP.CFG`` as ``-(seed + 1)``, because "</span>
             <span class="s2">"HYSPLIT reseeds its generator only from a negative value and "</span>
             <span class="s2">"gives every ``SEED`` of 0 or more the same stream, so a seed "</span>
