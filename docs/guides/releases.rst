@@ -230,7 +230,10 @@ How particles are released
 HYSPLIT stops releasing when it reaches ``maxpar`` and fills the locations
 in order, so a ``maxpar`` set too low would leave the last locations with
 fewer particles or none. Leave ``maxpar`` unset: runtraj then gives HYSPLIT
-room for every location (``n * (numpar // n + 1)``). A run whose ``maxpar``
+room for every location (``n * (numpar // n + 1)`` for a release of one time
+step; a longer ``emisshrs`` releases a share at every one-minute step, and
+HYSPLIT rounds each one up: 1000 particles over 3 locations and half an hour
+give 12 x 3 x 30 = 1080). A run whose ``maxpar``
 cuts a multipoint release short fails as ``PARTICLE_LIMIT``.
 
 A release happens at one time, but HYSPLIT releases its particles over

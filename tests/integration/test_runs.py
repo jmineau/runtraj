@@ -140,6 +140,25 @@ def test_every_multipoint_location_gets_the_same_particles(tmp_path, met_dir):
 
 
 @integration
+def test_a_multipoint_release_over_several_steps_is_not_cut_short(tmp_path, met_dir):
+    """Half an hour of 1000 particles over 3 locations releases 12 x 3 x 30 = 1080."""
+    import runtraj
+
+    release = MultiPointRelease(
+        time=REFERENCE_TIME,
+        longitudes=[-112.0, -111.5, -111.0],
+        latitudes=[40.5, 41.0, 41.5],
+        altitudes=[5.0, 500.0, 1000.0],
+    )
+    particles = runtraj.run_trajectories(
+        release, reference_met(met_dir), workdir=tmp_path, model="hysplit", n_hours=-1,
+        numpar=1000, emisshrs=0.5, krand=2, seed=42,
+    )  # fmt: skip
+
+    assert particles["particle"].nunique() == 1080
+
+
+@integration
 def test_a_maxpar_that_cuts_a_multipoint_release_short_fails(tmp_path, met_dir):
     import runtraj
 

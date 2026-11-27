@@ -153,11 +153,12 @@ def release_rows(
     raise ValueError(f"A {release.kind} release needs no release rows.")
 
 
-def particles_per_step(config: HysplitConfig) -> int:
+def particles_per_step(config: HysplitConfig, locations: int = 1) -> int:
     """
     Return how many particles HYSPLIT releases from one location in one block of a time step of a particle run.
 
-    HYSPLIT's ``EMSPNT`` spreads ``numpar`` over the ``emisshrs`` of the
+    HYSPLIT's ``EMSPNT`` spreads ``numpar``, divided among the *locations*
+    horizontal locations of the release, over the ``emisshrs`` of the
     release, rounding up the particles of an hour and then of a step, in
     single precision. A particle run (``ICHEM=8``) steps one minute, so a
     release of a minute or less is one step of ``numpar`` or ``numpar + 1``
@@ -175,6 +176,8 @@ def particles_per_step(config: HysplitConfig) -> int:
     1001
     >>> particles_per_step(HysplitConfig(n_hours=-24, numpar=1000, emisshrs=0.5))
     34
+    >>> particles_per_step(HysplitConfig(n_hours=-24, numpar=1000, emisshrs=0.5), 3)
+    12
     """
     initial = config.initd if config.initd < 100 else config.initd // 10 % 10
     if initial in (1, 2):
@@ -185,7 +188,7 @@ def particles_per_step(config: HysplitConfig) -> int:
     if config.maxdim == 1:  # HYSPLIT sums the hours of the bins
         for _ in range(config.nbptyp - 1):
             qsum = qsum + hours
-    per_hour = math.ceil(np.float32(config.numpar) / qsum)
+    per_hour = math.ceil(np.float32(config.numpar // locations) / qsum)
     return max(1, math.ceil(np.float32(per_hour) * minute))
 
 
