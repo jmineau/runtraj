@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c30b6de1"></script>
+    <script src="../../_static/documentation_options.js?v=1ea6b5a4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev41+g28060138b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1021,9 +1021,10 @@
 <code class="docutils literal notranslate"><span class="pre">ZICONTROL</span></code>, <code class="docutils literal notranslate"><span class="pre">WINDERR</span></code>, and <code class="docutils literal notranslate"><span class="pre">ZIERR</span></code> when the settings call for
 them. <em>workdir</em> is created if needed, and should be empty. With
 <code class="docutils literal notranslate"><span class="pre">ziscale</span></code> set, <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> depends on the version the program
-prints (<code class="xref py py-func docutils literal notranslate"><span class="pre">winderrtf()</span></code>), which is read once per program, and so
-does the refusal of the wind error settings (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_wind_error()</span></code>)
-and of <code class="docutils literal notranslate"><span class="pre">krand</span></code> 10 to 13 (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_krand()</span></code>).</p>
+prints (<code class="xref py py-func docutils literal notranslate"><span class="pre">winderrtf()</span></code>), which is read once per program. It does
+not check the settings a version refuses (<code class="xref py py-func docutils literal notranslate"><span class="pre">setting_refusals()</span></code>):
+<a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_releases.html#runtraj.models.hysplit.HysplitModel.check_releases" title="runtraj.models.hysplit.HysplitModel.check_releases"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HysplitModel.check_releases</span></code></a> does, before a
+run gets here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1038,13 +1039,7 @@ when they are above sea level.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="runtraj.exceptions.HYSPLITNotFoundError.html#runtraj.exceptions.HYSPLITNotFoundError" title="runtraj.exceptions.HYSPLITNotFoundError"><strong>HYSPLITNotFoundError</strong></a> – If there is no program to link (<a class="reference internal" href="runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program" title="runtraj.models.hysplit.find_program"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_program()</span></code></a>).</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the settings set the wind error in the concentration mode and
-    the program is HYSPLIT 5.3.0 or later, which would ignore it
-    (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_wind_error()</span></code>), or <code class="docutils literal notranslate"><span class="pre">krand</span></code> is 10 to 13 and the program
-    is older than HYSPLIT 5.1.0 (<code class="xref py py-func docutils literal notranslate"><span class="pre">check_krand()</span></code>).</p></li>
-</ul>
+<dd class="field-even"><p><a class="reference internal" href="runtraj.exceptions.HYSPLITNotFoundError.html#runtraj.exceptions.HYSPLITNotFoundError" title="runtraj.exceptions.HYSPLITNotFoundError"><strong>HYSPLITNotFoundError</strong></a> – If there is no program to link (<a class="reference internal" href="runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program" title="runtraj.models.hysplit.find_program"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_program()</span></code></a>).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span></p>

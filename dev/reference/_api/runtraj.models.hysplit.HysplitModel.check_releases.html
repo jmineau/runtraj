@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c30b6de1"></script>
+    <script src="../../_static/documentation_options.js?v=1ea6b5a4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev41+g28060138b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1017,7 +1017,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="runtraj.models.hysplit.HysplitModel.check_releases">
 <span class="sig-prename descclassname"><span class="pre">HysplitModel.</span></span><span class="sig-name descname"><span class="pre">check_releases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">releases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/model.html#HysplitModel.check_releases"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.HysplitModel.check_releases" title="Link to this definition">#</a></dt>
-<dd><p>Return the releases HYSPLIT cannot run with <em>config</em>.</p>
+<dd><p>Return the releases HYSPLIT cannot run with <em>config</em>, and the settings it cannot.</p>
 <p>Multipoint releases whose points share a location, which
 <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> joins into a line source; in the trajectory mode,
 column releases, since <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> has no line source, and, when
@@ -1026,6 +1026,10 @@ on the hour, whose run would come up short; and in a
 concentration run with <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">1</span></code>, column releases too, which
 are one source at two locations. See
 <a class="reference internal" href="runtraj.models.hysplit.releases.check_releases.html#runtraj.models.hysplit.releases.check_releases" title="runtraj.models.hysplit.releases.check_releases"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.models.hysplit.releases.check_releases()</span></code></a>.</p>
+<p>A setting the program would ignore or change without a word is
+one row with no release (<code class="docutils literal notranslate"><span class="pre">setting_refused</span></code>), which refuses every
+release: <code class="docutils literal notranslate"><span class="pre">krand</span></code> 10 to 13 before HYSPLIT 5.1.0, and the wind error
+in the concentration mode from 5.3.0 (<code class="xref py py-func docutils literal notranslate"><span class="pre">setting_refusals()</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>

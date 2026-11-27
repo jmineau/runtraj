@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=c30b6de1"></script>
+    <script src="../../../_static/documentation_options.js?v=1ea6b5a4"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev41+g28060138b" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -668,14 +668,15 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_refused</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">TransportModel</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Release</span><span class="p">],</span> <span class="n">config</span><span class="p">:</span> <span class="n">TransportConfig</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SimulationError</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return the error of each of *releases* the model's ``check_releases`` refuses, by release id."""</span>
+<span class="w">    </span><span class="sd">"""Return the error of each of *releases* the model's ``check_releases`` refuses, by release id, every one for a row with no release."""</span>
     <span class="n">ids</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">}</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">check_releases</span><span class="p">(</span><span class="n">_release_points</span><span class="p">(</span><span class="n">releases</span><span class="p">),</span> <span class="n">config</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="p">):</span> <span class="n">SimulationError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"RELEASE_REFUSED"</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">_check</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="p">)</span> <span class="ow">in</span> <span class="n">ids</span>
-    <span class="p">}</span>
+    <span class="n">refused</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">_check</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># A row with no release is about the settings: no release can run.</span>
+        <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">ids</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">release</span><span class="p">)</span> <span class="k">else</span> <span class="n">ids</span> <span class="o">&amp;</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="p">)}:</span>
+            <span class="n">refused</span><span class="p">[</span><span class="n">each</span><span class="p">]</span> <span class="o">=</span> <span class="n">SimulationError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">),</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"RELEASE_REFUSED"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">refused</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_finish</span><span class="p">(</span>

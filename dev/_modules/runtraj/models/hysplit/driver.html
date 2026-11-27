@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=c30b6de1"></script>
+    <script src="../../../../_static/documentation_options.js?v=1ea6b5a4"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev41+g28060138b" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -470,7 +470,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
@@ -529,11 +529,11 @@
 <span class="n">TRAJECTORY_FULL_HOURS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="c1">#: The first HYSPLIT version whose ``hycs_std`` checks ``WINDERRTF`` against</span>
 <span class="c1">#: ``IDSP`` before the run, and sets ``WINDERRTF`` to 0 (the wind errors off)</span>
-<span class="c1">#: unless ``IDSP`` is 2 (:func:`check_wind_error`).</span>
+<span class="c1">#: unless ``IDSP`` is 2 (:func:`wind_error_refusal`).</span>
 <span class="n">WINDERR_NEEDS_IDSP</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="c1">#: The first HYSPLIT version with ``KRAND`` 10 to 13 (``hymodelc.F:979-980`` in</span>
 <span class="c1">#: 5.1.0). Before it ``hycs_std`` draws them as ``KRAND=4`` without saying so</span>
-<span class="c1">#: (:func:`check_krand`).</span>
+<span class="c1">#: (:func:`krand_refusal`).</span>
 <span class="n">KRAND_10_TO_13</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="c1">#: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.</span>
 <span class="n">CHEMRATE_FILE</span> <span class="o">=</span> <span class="s2">"CHEMRATE.TXT"</span>
@@ -1164,56 +1164,78 @@
     <span class="k">return</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">groups</span><span class="p">()))</span> <span class="o">&gt;=</span> <span class="n">minimum</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">check_krand</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">setting_refusals</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Refuse ``krand`` 10 to 13 on a ``hycs_std`` that prints *version* and does not know them.</span>
+<span class="sd">    Return why a ``hycs_std`` cannot run *params*, one message for each setting it would ignore or change without a word.</span>
 
-<span class="sd">    They are new in HYSPLIT 5.1.0 (:data:`KRAND_10_TO_13`). Before it,</span>
-<span class="sd">    ``hycs_std`` takes them for ``KRAND=4`` without a word, so a run asked</span>
-<span class="sd">    for one of the random-seeded modes 0 to 3 would get the clock-seeded</span>
-<span class="sd">    draw of 4. A *version* runtraj cannot read, or none, is taken to be older.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If ``krand`` is 10 to 13 and *version* is older than 5.1.0.</span>
+<span class="sd">    The settings are ``krand`` 10 to 13 and the wind error in the concentration</span>
+<span class="sd">    mode (:func:`krand_refusal`, :func:`wind_error_refusal`). *version* returns</span>
+<span class="sd">    the version the program prints; it is called only when a setting depends</span>
+<span class="sd">    on it, and at most once for each of them (the program is asked once per</span>
+<span class="sd">    file). The trajectory mode has neither setting.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; config = HysplitConfig(n_hours=-24, krand=10)</span>
-<span class="sd">    &gt;&gt;&gt; check_krand(config, "hysplit.v5.1.0")</span>
-<span class="sd">    &gt;&gt;&gt; check_krand(config, "hysplit.v5.0.2")</span>
-<span class="sd">    Traceback (most recent call last):</span>
-<span class="sd">        ...</span>
-<span class="sd">    ValueError: krand=10 is new in HYSPLIT 5.1.0: ... hysplit.v5.0.2 ...</span>
+<span class="sd">    &gt;&gt;&gt; setting_refusals(config, lambda: "hysplit.v5.1.0")</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; setting_refusals(config, lambda: "hysplit.v5.0.2")</span>
+<span class="sd">    ['krand=10 is new in HYSPLIT 5.1.0: ...']</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">krand</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">version_at_least</span><span class="p">(</span>
-        <span class="n">version</span><span class="p">,</span> <span class="n">KRAND_10_TO_13</span>
-    <span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"krand=</span><span class="si">{</span><span class="n">params</span><span class="o">.</span><span class="n">krand</span><span class="si">}</span><span class="s2"> is new in HYSPLIT 5.1.0: the hycs_std here "</span>
-            <span class="sa">f</span><span class="s2">"prints </span><span class="si">{</span><span class="n">version</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'no version'</span><span class="si">}</span><span class="s2"> and would run it as krand=4, "</span>
-            <span class="s2">"with a seed drawn from the clock. Use krand 0 to 4, or HYSPLIT "</span>
-            <span class="s2">"5.1.0 or later."</span>
-        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">(</span><span class="n">krand_refusal</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">version</span><span class="p">),</span> <span class="n">wind_error_refusal</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">version</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">message</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="n">message</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">check_wind_error</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">krand_refusal</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Refuse the wind error settings in the concentration mode on a ``hycs_std`` that prints *version* and ignores them.</span>
+<span class="sd">    Return why a ``hycs_std`` that prints *version* cannot run ``krand`` 10 to 13, or ``None``.</span>
+
+<span class="sd">    They are new in HYSPLIT 5.1.0 (:data:`KRAND_10_TO_13`). Before it,</span>
+<span class="sd">    ``hycs_std`` takes them for ``KRAND=4`` without a word, so a run asked</span>
+<span class="sd">    for one of the random-seeded modes 0 to 3 would get the clock-seeded</span>
+<span class="sd">    draw of 4. A version runtraj cannot read, or none, is taken to be older.</span>
+<span class="sd">    *version* is called only when ``krand`` is 10 to 13.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; config = HysplitConfig(n_hours=-24, krand=10)</span>
+<span class="sd">    &gt;&gt;&gt; krand_refusal(config, lambda: "hysplit.v5.1.0") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; krand_refusal(config, lambda: "hysplit.v5.0.2")</span>
+<span class="sd">    'krand=10 is new in HYSPLIT 5.1.0: ... hysplit.v5.0.2 ...'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">krand</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">version</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">KRAND_10_TO_13</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"krand=</span><span class="si">{</span><span class="n">params</span><span class="o">.</span><span class="n">krand</span><span class="si">}</span><span class="s2"> is new in HYSPLIT 5.1.0: the hycs_std here "</span>
+        <span class="sa">f</span><span class="s2">"prints </span><span class="si">{</span><span class="n">found</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'no version'</span><span class="si">}</span><span class="s2"> and would run it as krand=4, "</span>
+        <span class="s2">"with a seed drawn from the clock. Use krand 0 to 4, or HYSPLIT "</span>
+        <span class="s2">"5.1.0 or later."</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">wind_error_refusal</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return why a ``hycs_std`` that prints *version* cannot run the wind error settings in the concentration mode, or ``None``.</span>
 
 <span class="sd">    From HYSPLIT 5.3.0 (:data:`WINDERR_NEEDS_IDSP`), ``hycs_std`` applies the</span>
 <span class="sd">    wind error only with ``IDSP=2``, which the concentration mode does not</span>
 <span class="sd">    set, and otherwise prints ``IDSP must be set to 2 to use WINDERRTF=1``</span>
 <span class="sd">    and runs without it, so the settings would do nothing. Earlier versions</span>
-<span class="sd">    apply it, and the particles mode sets ``IDSP=2``. A *version* runtraj</span>
-<span class="sd">    cannot read, or none, is taken to be older.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If *params* set the wind error in the concentration mode and</span>
-<span class="sd">        *version* is 5.3.0 or later.</span>
+<span class="sd">    apply it, and the particles mode sets ``IDSP=2``. A version runtraj</span>
+<span class="sd">    cannot read, or none, is taken to be older. *version* is called only</span>
+<span class="sd">    when *params* set the wind error in the concentration mode.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -1228,24 +1250,23 @@
 <span class="sd">    ...     zcoruverr=500.0,</span>
 <span class="sd">    ...     horcoruverr=40.0,</span>
 <span class="sd">    ... )</span>
-<span class="sd">    &gt;&gt;&gt; check_wind_error(config, "hysplit.v5.2.3")</span>
-<span class="sd">    &gt;&gt;&gt; check_wind_error(config, "hysplit.v5.4.2")</span>
-<span class="sd">    Traceback (most recent call last):</span>
-<span class="sd">        ...</span>
-<span class="sd">    ValueError: The wind error settings (siguverr, ... on hysplit.v5.4.2: ...</span>
+<span class="sd">    &gt;&gt;&gt; wind_error_refusal(config, lambda: "hysplit.v5.2.3") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; wind_error_refusal(config, lambda: "hysplit.v5.4.2")</span>
+<span class="sd">    'The wind error settings (siguverr, ... on hysplit.v5.4.2: ...'</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span>
-        <span class="ow">and</span> <span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="ow">and</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">WINDERR_NEEDS_IDSP</span><span class="p">)</span>
-    <span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"The wind error settings (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">WIND_ERROR_SETTINGS</span><span class="p">)</span><span class="si">}</span><span class="s2">) do "</span>
-            <span class="sa">f</span><span class="s2">"nothing in the concentration mode on </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">: HYSPLIT 5.3.0 "</span>
-            <span class="s2">"and later apply the wind error only with IDSP=2, which this "</span>
-            <span class="s2">"mode does not set, so the run would go on without it. Remove "</span>
-            <span class="s2">"them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."</span>
-        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">"concentration"</span> <span class="ow">or</span> <span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">version</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">WINDERR_NEEDS_IDSP</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"The wind error settings (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">WIND_ERROR_SETTINGS</span><span class="p">)</span><span class="si">}</span><span class="s2">) do "</span>
+        <span class="sa">f</span><span class="s2">"nothing in the concentration mode on </span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2">: HYSPLIT 5.3.0 "</span>
+        <span class="s2">"and later apply the wind error only with IDSP=2, which this "</span>
+        <span class="s2">"mode does not set, so the run would go on without it. Remove "</span>
+        <span class="s2">"them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_values</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1275,9 +1296,11 @@
 <span class="sd">    ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for</span>
 <span class="sd">    them. *workdir* is created if needed, and should be empty. With</span>
 <span class="sd">    ``ziscale`` set, ``WINDERRTF`` depends on the version the program</span>
-<span class="sd">    prints (:func:`winderrtf`), which is read once per program, and so</span>
-<span class="sd">    does the refusal of the wind error settings (:func:`check_wind_error`)</span>
-<span class="sd">    and of ``krand`` 10 to 13 (:func:`check_krand`).</span>
+<span class="sd">    prints (:func:`winderrtf`), which is read once per program. It does</span>
+<span class="sd">    not check the settings a version refuses (:func:`setting_refusals`):</span>
+<span class="sd">    :meth:`HysplitModel.check_releases</span>
+<span class="sd">    &lt;runtraj.models.hysplit.HysplitModel.check_releases&gt;` does, before a</span>
+<span class="sd">    run gets here.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1300,11 +1323,6 @@
 <span class="sd">    ------</span>
 <span class="sd">    HYSPLITNotFoundError</span>
 <span class="sd">        If there is no program to link (:func:`find_program`).</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If the settings set the wind error in the concentration mode and</span>
-<span class="sd">        the program is HYSPLIT 5.3.0 or later, which would ignore it</span>
-<span class="sd">        (:func:`check_wind_error`), or ``krand`` is 10 to 13 and the program</span>
-<span class="sd">        is older than HYSPLIT 5.1.0 (:func:`check_krand`).</span>
 <span class="sd">    """</span>
     <span class="n">workdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
     <span class="n">workdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1315,14 +1333,8 @@
     <span class="n">trajectory</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
     <span class="c1"># Read only where a setting depends on it: the program is run for it.</span>
-    <span class="n">needs_version</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">trajectory</span> <span class="ow">and</span> <span class="p">(</span>
-        <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="ow">or</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span> <span class="ow">and</span> <span class="n">winderr</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">krand</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="n">needs_version</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">trajectory</span> <span class="ow">and</span> <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">found</span><span class="p">))</span> <span class="k">if</span> <span class="n">needs_version</span> <span class="k">else</span> <span class="kc">None</span>
-    <span class="n">check_wind_error</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>  <span class="c1"># before anything is written</span>
-    <span class="n">check_krand</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="c1"># On Windows the link keeps the program's extension, which finds it again.</span>
     <span class="n">linked</span> <span class="o">=</span> <span class="n">program</span> <span class="o">+</span> <span class="n">found</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span> <span class="k">else</span> <span class="n">program</span>
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="n">linked</span><span class="p">:</span> <span class="n">found</span><span class="p">}</span>

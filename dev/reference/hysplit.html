@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c30b6de1"></script>
+    <script src="../_static/documentation_options.js?v=1ea6b5a4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev41+g28060138b" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1063,9 +1063,9 @@ taken to be the oldest. Between versions:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">krand</span></code> 10 to 13 are new in HYSPLIT 5.1.0. Before it, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> runs
 them as <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">4</span></code> without a word, so a run with one of them on an older
-<code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> is refused (<a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html#runtraj.models.hysplit.write_inputs" title="runtraj.models.hysplit.write_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_inputs()</span></code></a> raises
-a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>, and the simulation fails) instead of getting the
-clock-seeded draw.</p></li>
+<code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> is refused (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> lists it as <code class="docutils literal notranslate"><span class="pre">setting_refused</span></code>,
+and a run fails as <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code> before <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> starts) instead of
+getting the clock-seeded draw.</p></li>
 <li><p>HYSPLIT 5.0.x never seeds the random numbers behind a column release and
 an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run (the generator of Fortran’s <code class="docutils literal notranslate"><span class="pre">RANDOM_NUMBER</span></code>;
 HYSPLIT 5.1.0 seeds it from <code class="docutils literal notranslate"><span class="pre">seed</span></code>). On 5.0.x those runs differ from one
@@ -1092,9 +1092,10 @@ error settings), and each version applies the errors the settings ask
 for. A <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> that prints no version gets the value as HYSPLIT
 5.2 reads it. In the concentration mode the wind error settings need the
 version too: from HYSPLIT 5.3.0, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> applies the wind error only
-with <code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, which that mode does not set, so <code class="docutils literal notranslate"><span class="pre">write_inputs</span></code> raises a
-<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> there instead of running without it (the particles mode sets
-<code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, and 5.2.3 and earlier apply the error). It takes what
+with <code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, which that mode does not set, so the settings are refused
+there (<code class="docutils literal notranslate"><span class="pre">setting_refused</span></code> in <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code>, and <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code> in a
+run) instead of running without it (the particles mode sets <code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, and
+5.2.3 and earlier apply the error). It takes what
 <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> starts from: a release time and release locations (longitude,
 latitude and height, like <code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>; the <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file lists
 each latitude first, and the writer swaps them), with <code class="docutils literal notranslate"><span class="pre">kmsl</span></code> 0 for heights

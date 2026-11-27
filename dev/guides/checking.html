@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=c30b6de1"></script>
+    <script src="../_static/documentation_options.js?v=1ea6b5a4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev41+g28060138b" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -564,55 +564,64 @@ it would join into a line source; such a run fails as
 <td><p>For HYSPLIT, use a <code class="docutils literal notranslate"><span class="pre">ColumnRelease</span></code> for a vertical column, or one
 <code class="docutils literal notranslate"><span class="pre">PointRelease</span></code> per height (<a class="reference internal" href="releases.html"><span class="doc">Releases</span></a>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_directory</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">setting_refused</span></code></p></td>
+<td><p>A setting the HYSPLIT build here would ignore or change without a
+word, which refuses every release (<code class="docutils literal notranslate"><span class="pre">release</span></code> is empty): <code class="docutils literal notranslate"><span class="pre">krand</span></code>
+10 to 13 before HYSPLIT 5.1.0, and the wind error settings in the
+concentration mode from 5.3.0. A build that prints no version is
+taken to be the oldest. Such a run fails as <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code>.</p></td>
+<td><p>Change the setting, or use another HYSPLIT build
+(<a class="reference internal" href="../reference/hysplit.html#hysplit-versions"><span class="std std-ref">HYSPLIT versions</span></a>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_directory</span></code></p></td>
 <td><p>A met’s <code class="docutils literal notranslate"><span class="pre">directory</span></code> does not exist or holds no ARL file.</p></td>
 <td><p>Correct <code class="docutils literal notranslate"><span class="pre">directory</span></code> under <code class="docutils literal notranslate"><span class="pre">mets:</span></code>. A met with <code class="docutils literal notranslate"><span class="pre">download</span></code> makes
 its folder when a run needs it, so it is not checked.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_files</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_files</span></code></p></td>
 <td><p>A release’s run needs a met file that is not there, or files of two
 products hold one of its times. The message names the hours or the
 two files.</p></td>
 <td><p>Add the files, or keep each product in its own folder
 (<a class="reference internal" href="meteorology.html"><span class="doc">Meteorology</span></a>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_domain</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_domain</span></code></p></td>
 <td><p>A release lies outside the grid of the met files its run starts in,
 where HYSPLIT cannot start particles. The grid is read from a file’s
 header.</p></td>
 <td><p>Use met files whose domain holds the release, or check the sign of
 its longitude.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_crop</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_crop</span></code></p></td>
 <td><p>With <code class="docutils literal notranslate"><span class="pre">subgrid_enable</span></code> on, a release lies outside
 <code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code>.</p></td>
 <td><p>Widen <code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code> to hold the whole run, not only the
 release.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_count</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_count</span></code></p></td>
 <td><p>A release’s run needs more than 128 met files, more than HYSPLIT
 reads in time.</p></td>
 <td><p>Use met files that each hold more hours, such as daily ones, or
 shorter runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_periods</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_periods</span></code></p></td>
 <td><p>A file the releases need holds one time period, which HYSPLIT
 cannot read.</p></td>
 <td><p>Use files that each hold at least two time periods.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_cut</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_cut</span></code></p></td>
 <td><p>A file the releases need ends partway through a time step, so it is
 damaged.</p></td>
 <td><p>Download or crop the file again.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">met_label</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">met_label</span></code></p></td>
 <td><p>Two mets of one transport model record the same settings, such as
 two folders of WRF files with one source id, so variants that differ
 only in their met would share one run. A run refuses them too.</p></td>
 <td><p>Give each met a <code class="docutils literal notranslate"><span class="pre">label</span></code> of its own under <code class="docutils literal notranslate"><span class="pre">mets:</span></code>
 (<a class="reference internal" href="meteorology.html"><span class="doc">Meteorology</span></a>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">zsfc</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> lacks <code class="docutils literal notranslate"><span class="pre">zsfc</span></code>, the terrain height, and a release
 given above sea level needs it. The message says why.</p></td>
 <td><p>Add <code class="docutils literal notranslate"><span class="pre">zsfc</span></code> to <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> before the runs. It is a run setting,

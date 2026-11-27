@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c30b6de1"></script>
+    <script src="../../_static/documentation_options.js?v=1ea6b5a4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev41+g28060138b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1022,13 +1022,16 @@
 <code class="docutils literal notranslate"><span class="pre">kind</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">longitude</span></code>, <code class="docutils literal notranslate"><span class="pre">latitude</span></code>, <code class="docutils literal notranslate"><span class="pre">altitude</span></code>,
 <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>). It returns a DataFrame with <code class="docutils literal notranslate"><span class="pre">check</span></code>,
 <code class="docutils literal notranslate"><span class="pre">release</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code> columns, in that order, one row for each
-release it cannot run. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> lists them, and
+release it cannot run; a row whose <code class="docutils literal notranslate"><span class="pre">release</span></code> is <code class="docutils literal notranslate"><span class="pre">NA</span></code> is about the
+settings, and refuses every release. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> lists them, and
 <a class="reference internal" href="runtraj.models.run_model.html#runtraj.models.run_model" title="runtraj.models.run_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_model()</span></code></a> and <a class="reference internal" href="runtraj.models.run_model_many.html#runtraj.models.run_model_many" title="runtraj.models.run_model_many"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_model_many()</span></code></a> fail them with the
 reason <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code> before the model runs, so <a class="reference internal" href="runtraj.models.TransportModel.run.html#runtraj.models.TransportModel.run" title="runtraj.models.TransportModel.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a>
 and <a class="reference internal" href="runtraj.models.TransportModel.run_many.html#runtraj.models.TransportModel.run_many" title="runtraj.models.TransportModel.run_many"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_many()</span></code></a> never get such a release. HYSPLIT refuses a
 multipoint release whose points share a horizontal location, which
-it would join into a line source, and, in its trajectory mode with
-a <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> before 5.4.0, a release not on the hour.</p>
+it would join into a line source, in its trajectory mode with
+a <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> before 5.4.0 a release not on the hour, and a setting
+its <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> would ignore (HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">krand</span></code> 10 to 13 before
+5.1.0, the wind error in the concentration mode from 5.3.0).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
