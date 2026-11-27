@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=f367d1d0"></script>
+    <script src="../../../_static/documentation_options.js?v=4fc1ef44"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev22+g2e49ff563" />
+  <meta name="docsearch:version" content="0.1.0a6.dev23+g28f3f4d40" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -1229,15 +1229,6 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s2">" Did you mean </span><span class="si">{</span><span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}{</span><span class="n">names</span><span class="p">[</span><span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="si">}</span><span class="s2">?"</span> <span class="k">if</span> <span class="n">close</span> <span class="k">else</span> <span class="s2">""</span>
 
 
-<span class="c1">#: The blocks of the backends built in, by the name ``backend`` gives them.</span>
-<span class="n">BUILT_IN_BLOCKS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">BackendConfig</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"local"</span><span class="p">:</span> <span class="n">LocalConfig</span><span class="p">,</span>
-    <span class="s2">"slurm"</span><span class="p">:</span> <span class="n">SlurmConfig</span><span class="p">,</span>
-    <span class="s2">"pbs"</span><span class="p">:</span> <span class="n">PbsConfig</span><span class="p">,</span>
-    <span class="s2">"kubernetes"</span><span class="p">:</span> <span class="n">KubernetesConfig</span><span class="p">,</span>
-<span class="p">}</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">block_name</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the name of the block under ``execution`` that holds *backend*'s settings.</span>
@@ -1257,8 +1248,6 @@
 <span class="sd">    MissingClass</span>
 <span class="sd">        If *backend* is an import path that cannot be imported here.</span>
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="n">BUILT_IN_BLOCKS</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">backend</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_backend</span>
 
     <span class="k">return</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
@@ -1364,11 +1353,11 @@
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">data</span>
-        <span class="n">blocks</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">BUILT_IN_BLOCKS</span><span class="p">)</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"backend"</span><span class="p">,</span> <span class="s2">"local"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">backend</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BUILT_IN_BLOCKS</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_backend</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">BACKENDS</span><span class="p">,</span> <span class="n">get_backend</span>
 
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">config_class</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">BACKENDS</span><span class="p">}</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"backend"</span><span class="p">,</span> <span class="s2">"local"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">backend</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BACKENDS</span><span class="p">:</span>
             <span class="n">found</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">found</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">model_fields</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1412,7 +1401,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BackendConfig</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""The block of the backend ``backend`` names, the one a run reads."""</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">block_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">BUILT_IN_BLOCKS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ExecutionConfig</span><span class="o">.</span><span class="n">model_fields</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{})[</span><span class="n">name</span><span class="p">]</span>
 
@@ -1477,7 +1466,6 @@
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"BUILT_IN_BLOCKS"</span><span class="p">,</span>
     <span class="s2">"BackendConfig"</span><span class="p">,</span>
     <span class="s2">"ExecutionConfig"</span><span class="p">,</span>
     <span class="s2">"FetchConfig"</span><span class="p">,</span>
