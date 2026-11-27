@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=a984d146"></script>
+    <script src="../../../_static/documentation_options.js?v=70cd4126"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev30+g949d6c393" />
+  <meta name="docsearch:version" content="0.1.0a6.dev31+g2e4a2f1e9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -599,9 +599,37 @@
 <span class="n">TASKS_PER_WORKER</span> <span class="o">=</span> <span class="mi">10</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_ArrayConfig</span><span class="p">(</span><span class="n">BackendConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    What the ``slurm`` and ``pbs`` blocks share: a job array of tasks, ``n_workers`` of them at once.</span>
+
+<span class="sd">    Each block declares its own ``n_workers``, ``n_tasks`` and ``setup``,</span>
+<span class="sd">    in its scheduler's words. ``setup`` stays out of this class's annotations</span>
+<span class="sd">    so that it keeps its place among the block's settings.</span>
+<span class="sd">    """</span>
+
+    <span class="n">n_workers</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">n_tasks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"setup"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">,</span> <span class="n">check_fields</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_one_command</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Accept one setup command as a string."""</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The most array tasks (subjobs on PBS): ``n_tasks``, or ten per worker when it is unset. An array has fewer when there are fewer releases (:func:`runtraj.execution.runner.array_size`)."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">TASKS_PER_WORKER</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span>
+        <span class="p">)</span>
+
+
 <div class="viewcode-block" id="SlurmConfig">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.execution.SlurmConfig.html#runtraj.SlurmConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SlurmConfig</span><span class="p">(</span><span class="n">BackendConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlurmConfig</span><span class="p">(</span><span class="n">_ArrayConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The Slurm job array a project's releases run as: the ``slurm`` block of ``execution``.</span>
 
@@ -709,12 +737,6 @@
 <span class="w">        </span><span class="sd">"""Read ``fetch: true`` (or an empty ``fetch:``) as a fetch job with the array's resources."""</span>
         <span class="k">return</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"setup"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_one_command</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Accept one setup command as a string."""</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
-
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"time"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_slurm_time</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -727,15 +749,6 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""The other ``sbatch`` options, by name: every key of the block that is not one of its settings."""</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{})</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The most array tasks: ``n_tasks``, or ten per worker when it is unset. An array has fewer when there are fewer releases (:func:`runtraj.execution.slurm.array_size`)."""</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="n">TASKS_PER_WORKER</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span>
-        <span class="p">)</span>
 
 <div class="viewcode-block" id="SlurmConfig.check">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.execution.SlurmConfig.check.html#runtraj.SlurmConfig.check">[docs]</a>
@@ -757,7 +770,7 @@
 
 <div class="viewcode-block" id="PbsConfig">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.execution.PbsConfig.html#runtraj.PbsConfig">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PbsConfig</span><span class="p">(</span><span class="n">BackendConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PbsConfig</span><span class="p">(</span><span class="n">_ArrayConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The PBS job array a project's releases run as: the ``pbs`` block of ``execution``.</span>
 
@@ -851,12 +864,6 @@
                     <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span>
 
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"setup"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_one_command</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Accept one setup command as a string."""</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
-
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"walltime"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_pbs_walltime</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -871,15 +878,6 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">resources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""The other PBS resources, by name: every key of the block that is not one of its settings."""</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{})</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The number of subjobs, ``n_tasks``, or ten per worker when it is unset; fewer when there are fewer releases."""</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_tasks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="n">TASKS_PER_WORKER</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span>
-        <span class="p">)</span>
 
 <div class="viewcode-block" id="PbsConfig.check">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.execution.PbsConfig.check.html#runtraj.PbsConfig.check">[docs]</a>

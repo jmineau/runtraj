@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=a984d146"></script>
+    <script src="../../../_static/documentation_options.js?v=70cd4126"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev30+g949d6c393" />
+  <meta name="docsearch:version" content="0.1.0a6.dev31+g2e4a2f1e9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -740,6 +740,40 @@
     <span class="k">return</span> <span class="n">data</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">write_release_file</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">met_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Write *data*, one release's rows, to a Parquet file that holds the release, the settings and the met files.</span>
+
+<span class="sd">    A ``release`` column, first, holds the release id, so a scan of many</span>
+<span class="sd">    files can tell releases apart. The release, the run's *settings* and</span>
+<span class="sd">    the *met_files* go in the file's metadata, with *metadata*. The path</span>
+<span class="sd">    written to is returned.</span>
+<span class="sd">    """</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">preserve_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"release"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">dictionary</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">(),</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">())),</span>
+        <span class="n">pa</span><span class="o">.</span><span class="n">DictionaryArray</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
+            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">release_metadata</span><span class="p">(</span><span class="n">release</span><span class="p">),</span>
+        <span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+        <span class="sa">b</span><span class="s2">"runtraj:met_files"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">met_files</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+        <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">write_parquet</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">replace_schema_metadata</span><span class="p">(</span><span class="n">meta</span><span class="p">),</span> <span class="n">location</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+
 <div class="viewcode-block" id="write_particles">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.particles.write_particles.html#runtraj.particles.write_particles">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_particles</span><span class="p">(</span>
@@ -792,23 +826,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Particle column </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is not whole numbers."</span><span class="p">)</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)})</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">preserve_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
-        <span class="mi">0</span><span class="p">,</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"release"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">dictionary</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">(),</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">())),</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">DictionaryArray</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
-            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
-            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="o">**</span><span class="n">release_metadata</span><span class="p">(</span><span class="n">release</span><span class="p">),</span>
-        <span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
-        <span class="sa">b</span><span class="s2">"runtraj:met_files"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">met_files</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
-        <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>
-    <span class="p">}</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">replace_schema_metadata</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">write_parquet</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">location</span><span class="p">(</span><span class="n">path</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">write_release_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">met_files</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span></div>
 
 
 

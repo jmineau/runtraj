@@ -1,5 +1,0 @@
-runtraj.output.Output.complete
-==============================
-
-.. currentmodule:: runtraj.output
-.. automethod:: Output.complete

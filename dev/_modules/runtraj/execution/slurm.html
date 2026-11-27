@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=a984d146"></script>
+    <script src="../../../_static/documentation_options.js?v=70cd4126"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev30+g949d6c393" />
+  <meta name="docsearch:version" content="0.1.0a6.dev31+g2e4a2f1e9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -480,8 +480,8 @@
     <span class="n">_project_slug</span><span class="p">,</span>
     <span class="n">_to_fetch</span><span class="p">,</span>
     <span class="n">array_size</span><span class="p">,</span>
-    <span class="n">resolve_compute_root</span><span class="p">,</span>
     <span class="n">status_after_job</span><span class="p">,</span>
+    <span class="n">task_command</span><span class="p">,</span>
     <span class="n">write_submission</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -601,29 +601,17 @@
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">slurm</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">options</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="n">command</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
-        <span class="s2">"-m"</span><span class="p">,</span>
-        <span class="s2">"runtraj"</span><span class="p">,</span>
-        <span class="s2">"run"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
-        <span class="s2">"--releases"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"releases.parquet"</span><span class="p">),</span>
-        <span class="s2">"--task"</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">"$SLURM_ARRAY_TASK_ID/</span><span class="si">{</span><span class="n">n_tasks</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-        <span class="s2">"--execution"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"execution.yaml"</span><span class="p">),</span>
-        <span class="c1"># A task runs its share here, so it is told the array's cpus.</span>
-        <span class="s2">"--cpus"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">slurm</span><span class="o">.</span><span class="n">cpus</span><span class="p">),</span>
-        <span class="c1"># The output the submitting process uses, which may not be config.yaml's.</span>
-        <span class="s2">"--output"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
-    <span class="p">]</span>
-    <span class="k">if</span> <span class="n">compute_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--compute-root"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resolve_compute_root</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">))]</span>
-    <span class="c1"># $SLURM_ARRAY_TASK_ID must expand, so that word is quoted with "".</span>
-    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1">"'</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"$"</span><span class="p">)</span> <span class="k">else</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">command</span><span class="p">]</span>
+    <span class="n">skip_lines</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">task_command</span><span class="p">(</span>
+        <span class="n">project</span><span class="p">,</span>
+        <span class="n">folder</span><span class="p">,</span>
+        <span class="n">n_tasks</span><span class="p">,</span>
+        <span class="n">index</span><span class="o">=</span><span class="s2">"$SLURM_ARRAY_TASK_ID"</span><span class="p">,</span>
+        <span class="n">cpus</span><span class="o">=</span><span class="n">slurm</span><span class="o">.</span><span class="n">cpus</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+        <span class="c1"># A requeued task keeps what it finished before.</span>
+        <span class="n">restarted</span><span class="o">=</span><span class="s1">'[ "$</span><span class="si">{SLURM_RESTART_COUNT:-0}</span><span class="s1">" -gt 0 ]'</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="c1"># A task's log starts with where and when it ran, again after a requeue,</span>
     <span class="c1"># so a task on a bad node can be found from its log.</span>
     <span class="n">header</span> <span class="o">=</span> <span class="p">(</span>
@@ -642,13 +630,7 @@
         <span class="n">threads</span><span class="p">,</span>
         <span class="o">*</span><span class="n">slurm</span><span class="o">.</span><span class="n">setup</span><span class="p">,</span>
     <span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_existing</span><span class="p">:</span>
-        <span class="c1"># A requeued task keeps what it finished before.</span>
-        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
-            <span class="s1">'skip="--no-skip"'</span><span class="p">,</span>
-            <span class="s1">'[ "$</span><span class="si">{SLURM_RESTART_COUNT:-0}</span><span class="s1">" -gt 0 ] &amp;&amp; skip=""'</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"$skip"</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="n">skip_lines</span>
     <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
         <span class="s2">"# The task runs as a child, so this script can requeue it. Slurm sends"</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">"# this script USR1 </span><span class="si">{</span><span class="n">NOTICE_SECONDS</span><span class="si">}</span><span class="s2"> s before the time limit, which it passes"</span><span class="p">,</span>
@@ -657,7 +639,7 @@
         <span class="s2">"on_cluster=${SLURM_CLUSTER_NAME:+-M $SLURM_CLUSTER_NAME}"</span><span class="p">,</span>
         <span class="s2">"trap 'notice=1; trapped=1; kill -TERM </span><span class="se">\"</span><span class="s2">$pid</span><span class="se">\"</span><span class="s2"> 2&gt;/dev/null' USR1"</span><span class="p">,</span>
         <span class="s2">"trap 'trapped=1; kill -TERM </span><span class="se">\"</span><span class="s2">$pid</span><span class="se">\"</span><span class="s2"> 2&gt;/dev/null' TERM INT"</span><span class="p">,</span>
-        <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" &amp;"</span><span class="p">,</span>
+        <span class="n">command</span> <span class="o">+</span> <span class="s2">" &amp;"</span><span class="p">,</span>
         <span class="s2">"pid=$!"</span><span class="p">,</span>
         <span class="s2">"# wait returns early when a trapped signal arrives; wait again then."</span><span class="p">,</span>
         <span class="s2">"while :; do"</span><span class="p">,</span>
