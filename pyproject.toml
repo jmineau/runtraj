@@ -237,7 +237,7 @@ filterwarnings = [
 ]
 markers = [
     # `just test` does not run these; CI runs -m integration (tests.yml).
-    "integration: runtraj end to end, with real met files and HYSPLIT (slow)",
+    "integration: runtraj end to end, with real met files and HYSPLIT or FLEXPART (slow)",
 ]
 env_files = [".env"]
 

@@ -6,7 +6,7 @@ name: Kubernetes
 # status. Then checks that a Job whose project is missing fails at once
 # without retries (exit code 2), and that an hourly tick from runtraj
 # schedule adds its hours to the bucket's releases.csv. HYSPLIT's programs
-# replay runs recorded on v5.1.0 (tests/recorded/kubernetes/): none is
+# replay runs recorded on v5.4.2 (tests/recorded/kubernetes/): none is
 # downloaded.
 # tests/kubernetes/README.md says what each part is.
 
@@ -60,7 +60,7 @@ jobs:
         run: |
           sudo mkdir -p /opt/replay
           sudo cp tests/fixtures/replay.py /opt/replay/
-          sudo cp -r tests/recorded/kubernetes/5.1.0 /opt/replay/recorded
+          sudo cp -r tests/recorded/kubernetes/5.4.2 /opt/replay/recorded
           sudo python3 /opt/replay/replay.py folder /opt/hysplit \
             --cases /opt/replay/recorded --python python3
 

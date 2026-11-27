@@ -27,8 +27,10 @@ relies on.
    `bdyfiles/` beside it) or the runs recorded in this repository:
    `just test-replay 5.4.2` needs no HYSPLIT
    ([Testing against real HYSPLIT](#testing-against-real-hysplit)). Without
-   either, those tests are skipped. The docs build needs a HYSPLIT folder
-   on `PATH` too: `just replay-folder 5.1.0 DEST` makes one that replays the
+   either, those tests are skipped. The FLEXPART ones need a FLEXPART
+   build and ERA5 ([Testing against real FLEXPART](#testing-against-real-flexpart)).
+   The docs build needs a HYSPLIT folder
+   on `PATH` too: `just replay-folder 5.4.2 DEST` makes one that replays the
    recorded runs.
 
 ## Making a change
@@ -62,13 +64,11 @@ date and the met files. No HYSPLIT program and no met file is committed:
 HYSPLIT's results from archived met may be shared, its programs may not.
 
 runtraj supports HYSPLIT 5.0 and later. We record the oldest version
-(5.0.2, the last 5.0 release), 5.1.0, which writes no `age = 0` row, and the
-newest:
+(5.0.2, the last 5.0 release) and the newest:
 
 | Version | Build | Programs |
 |---|---|---|
 | 5.0.2 | the oldest supported, built from NOAA's repository | `hycs_std`, `hyts_std` |
-| 5.1.0 | the oldest that writes no `age = 0` row | `hycs_std`, `hyts_std` |
 | 5.4.2 | NOAA ARL's public build, from [ARL's download page](https://www.ready.noaa.gov/HYSPLIT_linux.php) | `hycs_std`, `hyts_std` |
 
 A version in between is recorded only when it changes something runtraj reads.
@@ -79,8 +79,8 @@ same inputs, writes its files and exits as it did. A met folder in `CONTROL`
 is compared as `<met>/`, so cases replay on any machine with the test met
 files. CI runs it for each version, on Linux, macOS and Windows. `just replay-folder VERSION DEST` makes
 such a folder for anything else; put the `exec/` it prints first on `PATH`.
-The Kubernetes test replays its own cases, `tests/recorded/kubernetes/5.1.0/`
-(`tests/kubernetes/README.md`). The docs build replays 5.1.0 the same way,
+The Kubernetes test replays its own cases, `tests/recorded/kubernetes/5.4.2/`
+(`tests/kubernetes/README.md`). The docs build replays 5.4.2 the same way,
 with the runs of its pages recorded beside the tests'.
 
 **When a replay fails.** Inputs no case has fail the run, and the test session
@@ -96,7 +96,7 @@ and `bdyfiles/`) per version:
 
 ```toml
 [builds]
-"5.1.0" = "/path/to/hysplit-5.1.0"
+"5.0.2" = "/path/to/hysplit-5.0.2"
 "5.4.2" = "/path/to/hysplit.v5.4.2_RHEL8.10_public"
 ```
 
@@ -111,11 +111,11 @@ met files in `tests/met_cache/`):
 just test-real        # the integration tests on each real build
 just record           # replace tests/recorded/hysplit/<version>/ for each build
 just record 5.4.2     # one version only
-just record-kubernetes  # the Kubernetes test's runs, on 5.1.0, in tests/recorded/kubernetes/
+just record-kubernetes  # the Kubernetes test's runs, on 5.4.2, in tests/recorded/kubernetes/
 ```
 
 `just record` runs the integration tests on the build with a folder whose
-programs run the real one and save each call (for 5.1.0, the docs build too),
+programs run the real one and save each call (for 5.4.2, the docs build too),
 then writes `recorded.yaml`. A
 case leaves out the files runtraj never reads (`NOT_RECORDED` in
 `tests/fixtures/replay.py`, `PARTICLE.DAT` the largest), and the rest are
@@ -123,6 +123,36 @@ compressed with xz. Commit the cases with the
 change that made them. HYSPLIT's random numbers make the particles differ from
 run to run unless a run sets a seed, so a new recording changes every case's
 output: record only when the inputs changed or a version is added.
+
+## Testing against real FLEXPART
+
+The unit tests run FLEXPART's part of runtraj on a stand-in program and a
+slice of one real run. The tests in `tests/models/flexpart/test_real_flexpart.py`
+(marked `integration`) run a real FLEXPART 11 on ERA5, and skip unless two
+environment variables name a build and its met:
+
+- `RUNTRAJ_TEST_FLEXPART_DIR`, a FLEXPART 11 checkout built with `numpf = 3`
+  in `src/par_mod.f90`, because flex_extract writes three precipitation
+  fields. `make eta=no` builds `src/FLEXPART`, which every test runs;
+  `make clean` and then `make eta=yes` adds `src/FLEXPART_ETA`, which the eta
+  test runs (it skips without it). The rest of the build is in FLEXPART's own
+  documentation.
+- `RUNTRAJ_TEST_FLEXPART_MET_DIR`, a folder of hourly ERA5 on model levels
+  from flex_extract, from 04:00 to 18:00 UTC on 1 June 2023, over a domain
+  around Salt Lake City (the tests were written on 125 to 100° W, 30 to 50° N
+  at 0.25°, 21 MB a file).
+
+```bash
+RUNTRAJ_TEST_FLEXPART_DIR=/path/to/flexpart RUNTRAJ_TEST_FLEXPART_MET_DIR=/path/to/era5 \
+  uv run pytest tests/models/flexpart -m integration
+```
+
+Each test is one or two FLEXPART runs of 1000 particles for 6 hours: a point,
+a column and a multipoint release, one thread twice (the particles must be the
+same), four threads, the eta build, and a run FLEXPART stops with a Fortran
+`STOP`, which exits with status 0 and must still fail. On 8 cores of a
+cluster node the seven take about 90 s, each run 6 to 12 s, and a build of
+either program takes about 20 s on 4 cores. CI runs none of them.
 
 ## Writing documentation
 
