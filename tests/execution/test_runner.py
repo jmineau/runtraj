@@ -20,10 +20,9 @@ from runtraj.execution.runner import _project_slug, task_share
 from runtraj.project import Project
 from tests.fixtures.platform import not_on_windows
 
-from ..fixtures.factories import make_project_config
+from ..fixtures.factories import make_met_config, make_project_config
 from ..fixtures.slurm import hourly_project as _hourly_project
 from ..fixtures.slurm import out as _out
-from ..fixtures.slurm import project_at as _project_at
 from ..fixtures.slurm import sbatch_options as _sbatch
 
 # ---------------------------------------------------------------------------
@@ -90,7 +89,7 @@ def test_submit_uses_no_more_tasks_than_releases(pending, commands, tmp_path):
 def test_submit_with_nothing_to_do_submits_nothing(pending, commands, tmp_path):
     assert (
         runner.submit(
-            _project_at(tmp_path, output=tmp_path / "out"),
+            _hourly_project(tmp_path, 1),
             execution=ExecutionConfig(backend="slurm", slurm={"time": "01:00:00"}),
         )
         is None
@@ -328,6 +327,36 @@ def test_a_release_list_limits_the_run_and_keeps_its_order(tmp_path, monkeypatch
     ) == [every[1]]
     with pytest.raises(ValueError, match="not in this project"):
         runner.pending(project, releases=["nope", every[0]])
+
+
+def _look_alike_project(tmp_path) -> Project:
+    """A project of two mets whose files carry one source id, without labels."""
+    config = make_project_config(
+        tmp_path,
+        mets={
+            "wrf-mynn": make_met_config(tmp_path / "mynn"),
+            "wrf-ysu": make_met_config(tmp_path / "ysu"),
+        },
+        variants={"mynn": {"met": "wrf-mynn"}, "ysu": {"met": "wrf-ysu"}},
+    )
+    return Project.init(tmp_path / "proj", config=config)
+
+
+def test_a_run_refuses_two_mets_that_look_alike(tmp_path, monkeypatch):
+    project = _look_alike_project(tmp_path)
+    monkeypatch.setattr(
+        runner, "pending", lambda *a, **k: pytest.fail("listed the runs first")
+    )
+
+    with pytest.raises(ValueError, match="label: wrf-mynn"):
+        runner.run(project)
+    with pytest.raises(ValueError, match="label: wrf-mynn"):
+        runner.run(project, task=(0, 2))
+    with pytest.raises(ValueError, match="label: wrf-mynn"):
+        runner.submit(
+            project,
+            execution=ExecutionConfig(backend="slurm", slurm={"time": "01:00:00"}),
+        )
 
 
 def test_a_task_runs_here_whatever_the_backend(tmp_path, monkeypatch, commands):

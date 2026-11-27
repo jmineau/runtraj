@@ -115,6 +115,9 @@ Every settings folder holds a ``_settings.yaml``. A particles folder's:
      n_hours: -24
      # ...
 
+A met with a ``label`` records it under ``met`` as ``label: mynn``; a met
+without one records no ``label``.
+
 A stage's folder, such as a footprint's, names its stage and what its files
 were made from:
 

@@ -25,6 +25,7 @@ from uuid import uuid4
 
 from runtraj._paths import absolute
 from runtraj._transient import is_transient
+from runtraj.check import look_alike_mets
 from runtraj.execution.backends import Backend, get_backend, not_waited
 from runtraj.execution.config import ExecutionConfig, LocalConfig, PbsConfig
 from runtraj.execution.inputs import (
@@ -456,7 +457,9 @@ def run(
     ------
     ValueError
         If a release id is not in the project, *task* is not from 0 to
-        ``n - 1``, or the backend is not waited for.
+        ``n - 1``, the backend is not waited for, or two mets of one
+        transport model record the same settings, so that their variants
+        would share one run (:func:`runtraj.check.look_alike_mets`).
 
     Notes
     -----
@@ -471,6 +474,7 @@ def run(
     backend = get_backend(execution.backend)
     if task is None and not backend.waits:
         raise ValueError(not_waited(backend))
+    _refuse_look_alike_mets(project)
     todo = pending(project, releases=releases, task=task, skip_existing=skip_existing)
     if not todo:
         logger.info("run: every simulation is complete; nothing to do")
@@ -488,6 +492,13 @@ def run(
         skip_existing=skip_existing,
         compute_root=compute_root,
     )
+
+
+def _refuse_look_alike_mets(project: Project) -> None:
+    """Raise ``ValueError`` when two mets of one transport model record the same settings, before the completed runs are listed."""
+    alike = look_alike_mets(project.variants.values())
+    if alike:
+        raise ValueError("\n".join(message for _, message in alike))
 
 
 def run_here(
@@ -639,7 +650,8 @@ def submit(
     ------
     ValueError
         If the execution backend is ``local``, or one that takes no list
-        of releases (Kubernetes) with *releases* or ``skip_existing=False``.
+        of releases (Kubernetes) with *releases* or ``skip_existing=False``,
+        or two mets look alike, as for :func:`run`.
     """
     execution = execution if execution is not None else project.config.execution
     backend = get_backend(execution.backend)
@@ -651,6 +663,7 @@ def submit(
             "and skips the complete ones, as a retried task must: it takes no "
             "list of releases and no --no-skip."
         )
+    _refuse_look_alike_mets(project)
     todo = pending(project, releases=releases, skip_existing=skip_existing)
     if not todo:
         logger.info("submit: every simulation is complete; nothing to do")

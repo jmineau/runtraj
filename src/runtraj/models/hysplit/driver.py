@@ -240,6 +240,7 @@ def _printed_version(path: str, mtime_ns: int, size: int) -> str | None:
             proc = subprocess.Popen(
                 [path],
                 cwd=tmp,
+                env=hysplit_environment(),
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -802,6 +803,18 @@ def _link(path: Path, target: Path) -> None:
         shutil.copy2(target, path)
 
 
+def hysplit_environment() -> dict[str, str]:
+    """
+    Return this process's environment without the ``HYSF_*`` variables.
+
+    HYSPLIT 5.4 reads ``HYSF_CONTROL``, ``HYSF_PARTICLE_STILT`` and others to
+    rename its input and output files, which would move them out of the
+    working directory runtraj reads them from. The programs get this
+    environment.
+    """
+    return {k: v for k, v in os.environ.items() if not k.startswith("HYSF_")}
+
+
 def run_hycs_std(
     workdir: Path, timeout: int | None = None, program: str = HYCS_STD_FILE
 ) -> None:
@@ -836,6 +849,7 @@ def run_hycs_std(
             cwd=workdir,
             stdout=handle,
             stderr=subprocess.STDOUT,
+            env=hysplit_environment(),
             **own_group(),
         ) as proc,
     ):

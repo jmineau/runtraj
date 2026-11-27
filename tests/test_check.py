@@ -333,6 +333,87 @@ def test_variants_that_share_a_met_and_a_run_length_share_their_rows(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Two mets that look alike
+# ---------------------------------------------------------------------------
+
+
+def _two_mets(
+    tmp_path: Path,
+    mynn: dict[str, Any],
+    ysu: dict[str, Any],
+    variants: dict[str, Any] | None = None,
+) -> Project:
+    """A project of two mets in their own folders, whose files carry one source id, and a variant of each unless *variants*."""
+    mets = {}
+    for name, fields in (("wrf-mynn", mynn), ("wrf-ysu", ysu)):
+        make_met_files(tmp_path / name, NOON, -3)
+        mets[name] = make_met_config(tmp_path / name, **fields)
+    return Project.init(
+        tmp_path / "proj",
+        releases=[_release()],
+        **blocks(
+            mets=mets,
+            n_hours=-3,
+            variants=variants
+            or {"mynn": {"met": "wrf-mynn"}, "ysu": {"met": "wrf-ysu"}},
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("mynn", "ysu"),
+    [({}, {}), ({"label": "wrf"}, {"label": "wrf"})],
+    ids=["no-labels", "one-label"],
+)
+def test_two_mets_of_one_source_without_labels_to_tell_them_apart_are_found(
+    tmp_path, mynn, ysu
+):
+    table = _two_mets(tmp_path, mynn, ysu).check()
+
+    found = _found(table, "met_label")
+    assert list(found["variant"]) == ["mynn, ysu"]
+    assert found["release"].isna().all()
+    message = found["message"].iloc[0]
+    assert "'wrf-mynn', 'wrf-ysu'" in message
+    assert "'source': 'HRRR'" in message
+    assert "label: wrf-mynn" in message
+
+
+def test_two_mets_of_one_source_with_labels_of_their_own_pass(tmp_path):
+    project = _two_mets(tmp_path, {"label": "mynn"}, {"label": "ysu"})
+
+    assert project.check().empty
+
+
+def test_two_mets_of_one_source_cropped_apart_pass(tmp_path):
+    """They record different settings, so their variants do not share a run."""
+    crop = {"subgrid_enable": True, "subgrid_dir": tmp_path / "crops"}
+    project = _two_mets(
+        tmp_path,
+        {**crop, "subgrid_bounds": BOX},
+        {
+            **crop,
+            "subgrid_bounds": Bounds(xmin=-113.0, xmax=-111.0, ymin=40.0, ymax=41.0),
+        },
+    )
+
+    assert _found(project.check(), "met_label").empty
+
+
+def test_two_mets_of_one_source_are_found_once_for_all_their_variants(tmp_path):
+    variants = {
+        "mynn": {"met": "wrf-mynn"},
+        "mynn-zi": {"met": "wrf-mynn", "ziscale": 0.8},
+        "ysu": {"met": "wrf-ysu"},
+    }
+    project = _two_mets(tmp_path, {}, {}, variants)
+
+    found = _found(project.check(), "met_label")
+
+    assert list(found["variant"]) == ["mynn, mynn-zi, ysu"]
+
+
+# ---------------------------------------------------------------------------
 # The met's crop
 # ---------------------------------------------------------------------------
 
