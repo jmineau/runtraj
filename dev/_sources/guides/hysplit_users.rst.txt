@@ -211,7 +211,9 @@ rest itself:
    * - ``SETUP.CFG`` ``SEED``
      - ``seed``, written as ``-(seed + 1)``
    * - ``SETUP.CFG`` ``WINDERRTF``, ``ZICONTROLTF``
-     - The wind and mixed-layer error settings, and ``ziscale``
+     - The wind and mixed-layer error settings, and ``ziscale``; with
+       ``ziscale`` on HYSPLIT 5.3.0 and later, ``WINDERRTF`` is 2 less,
+       because ``hycs_std`` adds 2 itself once it has read ``ZICONTROL``
    * - ``SETUP.CFG`` ``ICHEM``, ``IDSP``
      - 8 and 2, the only values with which HYSPLIT writes particles
        (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`; ``ichem`` may

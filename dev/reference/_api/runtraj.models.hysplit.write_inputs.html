@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=28cecdaf"></script>
+    <script src="../../_static/documentation_options.js?v=3e4488cf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev27+g6830b0d80" />
+  <meta name="docsearch:version" content="0.1.0a6.dev28+g93d6411a6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1020,7 +1020,9 @@
 <a class="reference internal" href="runtraj.models.hysplit.find_program.html#runtraj.models.hysplit.find_program" title="runtraj.models.hysplit.find_program"><code class="xref py py-func docutils literal notranslate"><span class="pre">find_program()</span></code></a>) and HYSPLIT’s data tables
 (<a class="reference internal" href="runtraj.models.hysplit.data_tables.html#runtraj.models.hysplit.data_tables" title="runtraj.models.hysplit.data_tables"><code class="xref py py-func docutils literal notranslate"><span class="pre">data_tables()</span></code></a>), and writes <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> and <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code>, plus
 <code class="docutils literal notranslate"><span class="pre">ZICONTROL</span></code>, <code class="docutils literal notranslate"><span class="pre">WINDERR</span></code>, and <code class="docutils literal notranslate"><span class="pre">ZIERR</span></code> when the settings call for
-them. <em>workdir</em> is created if needed, and should be empty.</p>
+them. <em>workdir</em> is created if needed, and should be empty. With
+<code class="docutils literal notranslate"><span class="pre">ziscale</span></code> set, <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> depends on the version the program
+prints (<code class="xref py py-func docutils literal notranslate"><span class="pre">winderrtf()</span></code>), which is read once per program.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

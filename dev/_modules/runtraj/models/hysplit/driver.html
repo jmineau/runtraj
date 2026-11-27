@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=28cecdaf"></script>
+    <script src="../../../../_static/documentation_options.js?v=3e4488cf"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev27+g6830b0d80" />
+  <meta name="docsearch:version" content="0.1.0a6.dev28+g93d6411a6" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -464,12 +464,15 @@
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
@@ -519,6 +522,9 @@
 <span class="n">WINDERR_FILE</span> <span class="o">=</span> <span class="s2">"WINDERR"</span>
 <span class="n">ZIERR_FILE</span> <span class="o">=</span> <span class="s2">"ZIERR"</span>
 <span class="n">ZICONTROL_FILE</span> <span class="o">=</span> <span class="s2">"ZICONTROL"</span>
+<span class="c1">#: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once</span>
+<span class="c1">#: it has read ``ZICONTROL`` (:func:`winderrtf`).</span>
+<span class="n">ZICONTROL_ADDS_TWO</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="c1">#: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.</span>
 <span class="n">CHEMRATE_FILE</span> <span class="o">=</span> <span class="s2">"CHEMRATE.TXT"</span>
 <span class="n">LOG_FILE</span> <span class="o">=</span> <span class="s2">"hysplit.log"</span>
@@ -631,6 +637,80 @@
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">found</span><span class="p">)</span></div>
 
+
+
+<span class="c1">#: What ``hycs_std`` prints on its first lines: ``HYSPLIT version: hysplit.v5.1.0``.</span>
+<span class="n">_VERSION_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"HYSPLIT version:\s*(\S+)"</span><span class="p">)</span>
+
+<span class="c1">#: Seconds ``hycs_std`` gets to print its version; it stops at once without ``CONTROL``.</span>
+<span class="n">_VERSION_TIMEOUT</span> <span class="o">=</span> <span class="mi">30</span>
+
+<span class="c1">#: The release number in a version ``hycs_std`` prints, such as ``5.1.0`` in ``hysplit.v5.1.0``.</span>
+<span class="n">_VERSION_NUMBER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(\d+)\.(\d+)\.(\d+)"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hysplit_version</span><span class="p">(</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">program</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hycs_std"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the version the ``hycs_std`` of *directory*, or else on ``PATH``, prints when it starts.</span>
+
+<span class="sd">    *program* names another HYSPLIT program to ask, such as ``hyts_std``,</span>
+<span class="sd">    which prints the same line.</span>
+
+<span class="sd">    ``hycs_std`` prints a line such as ``HYSPLIT version: hysplit.v5.1.0``</span>
+<span class="sd">    before it reads its input; this returns ``hysplit.v5.1.0``. It runs the</span>
+<span class="sd">    binary for a moment in an empty temporary directory, where it stops for</span>
+<span class="sd">    want of a ``CONTROL`` file. The version is recorded with a run's</span>
+<span class="sd">    settings, but it is not what tells two builds apart: the SHA-256 of</span>
+<span class="sd">    ``hycs_std`` is (:meth:`~runtraj.models.hysplit.HysplitModel.sha256`). Two builds of one</span>
+<span class="sd">    release print the same version, and CHPC's ``hysplit/5.2.3`` module</span>
+<span class="sd">    prints ``hysplit.v5.2.2``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        The version, or ``None`` when ``hycs_std`` printed none or could</span>
+<span class="sd">        not be run here.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HYSPLITNotFoundError</span>
+<span class="sd">        If there is no such program (:func:`find_program`).</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">directory</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stamp</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return *path*, resolved, with its modification time and size, the key of the caches that read a program once."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">stat</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_mtime_ns</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span>
+
+
+<span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_printed_version</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mtime_ns</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the version the ``hycs_std`` at *path* prints, read once per file."""</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"runtraj-version-"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">path</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="n">tmp</span><span class="p">,</span>
+                <span class="n">env</span><span class="o">=</span><span class="n">hysplit_environment</span><span class="p">(),</span>
+                <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>  <span class="c1"># not executable here, such as another platform's build</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">_VERSION_TIMEOUT</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_VERSION_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="kc">None</span>
 
 
 <div class="viewcode-block" id="find_hycs_std">
@@ -1033,9 +1113,32 @@
     <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">values</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">winderrtf</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return HYSPLIT's ``WINDERRTF`` flag: 1 for wind errors, 2 for mixed-layer errors, 3 for both."""</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">zierr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">winderrtf</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the ``WINDERRTF`` to write for *params* to a ``hycs_std`` that prints *version*.</span>
+
+<span class="sd">    HYSPLIT applies wind errors at 1, mixed-layer errors at 2, and both at</span>
+<span class="sd">    3. From HYSPLIT 5.3.0 (:data:`ZICONTROL_ADDS_TWO`), ``hycs_std`` adds 2</span>
+<span class="sd">    to the value it read once it has read ``ZICONTROL``, so with</span>
+<span class="sd">    ``ziscale`` set the value written is 2 less, and the run gets the</span>
+<span class="sd">    errors its settings ask for: -2 for none, -1 for wind errors alone. A</span>
+<span class="sd">    *version* runtraj cannot read, or none, is taken to be older.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; zi = {"ziscale": 0.8, "sigzierr": 20.0, "tlzierr": 60.0, "horcorzierr": 40.0}</span>
+<span class="sd">    &gt;&gt;&gt; config = HysplitConfig(n_hours=-24, **zi)</span>
+<span class="sd">    &gt;&gt;&gt; winderrtf(config, "hysplit.v5.2.3"), winderrtf(config, "hysplit.v5.4.2")</span>
+<span class="sd">    (2, 0)</span>
+<span class="sd">    """</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="p">(</span><span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">zierr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_VERSION_NUMBER</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">version</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">adds_two</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">groups</span><span class="p">()))</span> <span class="o">&gt;=</span> <span class="n">ZICONTROL_ADDS_TWO</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">zicontroltf</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">and</span> <span class="n">adds_two</span><span class="p">:</span>
+        <span class="n">flag</span> <span class="o">-=</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">flag</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_values</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1063,7 +1166,9 @@
 <span class="sd">    :func:`find_program`) and HYSPLIT's data tables</span>
 <span class="sd">    (:func:`data_tables`), and writes ``CONTROL`` and ``SETUP.CFG``, plus</span>
 <span class="sd">    ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for</span>
-<span class="sd">    them. *workdir* is created if needed, and should be empty.</span>
+<span class="sd">    them. *workdir* is created if needed, and should be empty. With</span>
+<span class="sd">    ``ziscale`` set, ``WINDERRTF`` depends on the version the program</span>
+<span class="sd">    prints (:func:`winderrtf`), which is read once per program.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1129,12 +1234,14 @@
     <span class="n">entries</span><span class="p">[</span><span class="s2">"maxpar"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">maxpar_for</span><span class="p">(</span><span class="n">release_locations</span><span class="p">(</span><span class="n">locations</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
         <span class="n">entries</span><span class="p">[</span><span class="s2">"ivmax"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>  <span class="c1"># number of output variables</span>
-    <span class="n">entries</span><span class="p">[</span><span class="s2">"winderrtf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">winderrtf</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># Read only with ziscale, the one setting whose WINDERRTF depends on it.</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">factors</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
+    <span class="n">entries</span><span class="p">[</span><span class="s2">"winderrtf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">winderrtf</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="n">setup</span> <span class="o">=</span> <span class="n">NameList</span><span class="p">(</span><span class="s2">"SETUP"</span><span class="p">)</span>
     <span class="n">setup</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
     <span class="n">setup</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">SETUP_FILE</span><span class="p">)</span>
 
-    <span class="n">factors</span> <span class="o">=</span> <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">factors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">ZICONTROL_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
             <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">factors</span><span class="p">)),</span> <span class="o">*</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>
