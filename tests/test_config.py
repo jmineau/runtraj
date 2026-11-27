@@ -576,6 +576,38 @@ def test_a_met_may_be_a_path_in_python(tmp_path):
     assert config.mets == {"hrrr": str(tmp_path / "met")}
 
 
+def test_a_met_label_is_read_from_config_yaml_and_written_back(tmp_path):
+    text = textwrap.dedent(
+        f"""
+        mets:
+          wrf-mynn:
+            directory: {tmp_path / "met"}
+            label: mynn
+        models:
+          hysplit:
+            n_hours: -24
+        variants:
+          wrf-mynn: {{}}
+        """
+    )
+    path = tmp_path / "config.yaml"
+    path.write_text(text)
+
+    config = ProjectConfig.from_yaml(path)
+
+    assert config.met_config("wrf-mynn").label == "mynn"
+    assert yaml.safe_load(config.to_yaml())["mets"]["wrf-mynn"]["label"] == "mynn"
+
+
+def test_a_met_label_is_not_an_archive_option(tmp_path):
+    from runtraj.models.hysplit import HysplitMetConfig
+
+    met = HysplitMetConfig(directory=tmp_path, download="hrrr", label="mine")
+
+    assert met.label == "mine"
+    assert met.download_options == {}
+
+
 def test_a_relative_met_folder_starts_from_the_project(tmp_path):
     write_arl_file(tmp_path / "met" / "20230101_00-05_hrrr")
     config = ProjectConfig(

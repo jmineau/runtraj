@@ -390,6 +390,29 @@ def test_naming_hysplit_keeps_the_folder_it_ran_in_as_the_default(tmp_path):
     )
 
 
+def test_a_met_without_a_label_keeps_its_folder(tmp_path):
+    """A met records no label unless it has one, so its folders are the ones it had before labels."""
+    variant = _variant(tmp_path)
+
+    assert variant.met_settings == _STORED_MET
+    record = run_settings(variant.transport, variant.met_settings, _STORED_BUILD)
+    assert settings_hash(record) == (
+        "07bd458bf04f35ec65ee75f559631d8d5bb3ae2ba05c19af11816ee5f55099af"
+    )
+
+
+def test_a_met_label_is_recorded_and_names_its_own_folder(tmp_path):
+    variant = _variant(tmp_path, met=_met(tmp_path, label="mynn"))
+
+    assert variant.met_settings == {**_STORED_MET, "label": "mynn"}
+    record = run_settings(variant.transport, variant.met_settings, _STORED_BUILD)
+    assert record["met"]["label"] == "mynn"
+    assert settings_hash(record) != (
+        "07bd458bf04f35ec65ee75f559631d8d5bb3ae2ba05c19af11816ee5f55099af"
+    )
+    assert read_run_settings(record) == record
+
+
 def test_a_stage_folder_keeps_its_hash():
     """A stage without a version is hashed as before stages had versions."""
     assert (

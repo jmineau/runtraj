@@ -5,8 +5,8 @@ Every folder in an output directory holds the results of one set of
 settings, recorded in its ``_settings.yaml``. This module writes those
 records and hashes them. A run's settings are its transport config without
 the fields that change no particle (HYSPLIT's ``directory``), its met as
-the met config records it (for HYSPLIT, the weather product and the crop),
-the model build (for HYSPLIT, the SHA-256 of ``hycs_std``, not the version
+the met config records it (for HYSPLIT, the weather product and the crop)
+with its ``label`` when it has one, the model build (for HYSPLIT, the SHA-256 of ``hycs_std``, not the version
 it prints), and whether it is an ensemble (the realizations of one
 share a folder, a ``realization=k`` partition each, so the number is not
 in the hash). A

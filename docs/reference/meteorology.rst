@@ -92,6 +92,10 @@ first file in ``directory`` (a download's comes from its archive) when the
 project's settings folders are first needed, to run or to read results. So
 ``directory`` must hold the files on the machine that opens the project
 (:meth:`HysplitMetConfig.settings <runtraj.models.hysplit.HysplitMetConfig.settings>`).
+A met's ``label`` is recorded beside them when it is set, and not at all
+when it is not (:attr:`Variant.met_settings <runtraj.config.Variant.met_settings>`).
+``runtraj check`` lists two mets of one transport model that record the
+same settings, as ``met_label``, and a run refuses them: give each a label.
 
 Wind-error statistics
 ---------------------

@@ -194,11 +194,13 @@ class Variant:
     @cached_property
     def met_settings(self) -> dict[str, Any]:
         """
-        What a run records of the met, its config's ``settings()``.
+        What a run records of the met: its config's ``settings()``, and its ``label`` when it has one.
 
         For HYSPLIT, the weather product and the crop. Read on first use,
         once for all the variants of a met: the product comes from the
-        header of the met's first file.
+        header of the met's first file. A met without a label records no
+        ``label`` key, so its settings folders are the ones it had before
+        labels existed.
 
         Raises
         ------
@@ -207,9 +209,11 @@ class Variant:
             its product from.
         """
         try:
-            return self.met_config.settings()
+            settings = self.met_config.settings()
         except FileNotFoundError as error:
             raise MeteorologyError(f"Met {self.met!r}: {error}") from None
+        label = self.met_config.label
+        return settings if label is None else {**settings, "label": label}
 
     @cached_property
     def build(self) -> ModelInfo:
