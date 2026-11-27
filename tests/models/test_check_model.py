@@ -223,8 +223,8 @@ class _HalfMinutes(ToyModel):
 
 
 class _LosesAParticle(ToyModel):
-    def release_rows(self, particles, release):
-        return super().release_rows(particles, release).iloc[1:]
+    def release_rows(self, particles, release, config):
+        return super().release_rows(particles, release, config).iloc[1:]
 
 
 class _ShuffledCheck(ToyModel):

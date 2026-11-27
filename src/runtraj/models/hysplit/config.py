@@ -56,13 +56,13 @@ HYSPLIT_VARSIWANT = (
 )
 
 #: ``SETUP.CFG`` entries written with the same value in every run of the
-#: particles mode, which no setting changes. ``ICHEM=8`` is HYSPLIT's particle
+#: particle mode, which no setting changes. ``ICHEM=8`` is HYSPLIT's particle
 #: output mode, the only mode in which ``hycs_std`` opens the particle file
 #: runtraj reads, and ``IDSP=2`` is the dispersion scheme that writes its rows:
 #: with ``IDSP=1`` the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).
 FIXED_SETUP: dict[str, Any] = {"ichem": 8, "idsp": 2}
 
-#: The ``ICHEM`` of the particles mode, the only value with which
+#: The ``ICHEM`` of the particle mode, the only value with which
 #: ``hycs_std`` writes the particle file.
 PARTICLES_ICHEM = 8
 
@@ -95,7 +95,7 @@ ICHEM_REFUSED: dict[int, str] = {
         "momentum fluxes in the met files"
     ),
     8: (
-        "it is HYSPLIT's particle output, which is mode: particles; a "
+        "it is HYSPLIT's particle output, which is mode: particle; a "
         "concentration run that sets it would write no particles"
     ),
     11: (
@@ -105,7 +105,7 @@ ICHEM_REFUSED: dict[int, str] = {
 }
 
 
-#: Settings only the particles mode reads: the particle file's variables
+#: Settings only the particle mode reads: the particle file's variables
 #: and interval, the height of ``foot`` (``veght``), and the release's length (in the
 #: concentration mode each pollutant has its own ``hours``). A concentration
 #: run leaves them out: neither written nor recorded, so a ``hysplit`` block
@@ -459,7 +459,7 @@ class HysplitConfig(TransportConfig):
     ``foot`` by a random mixed-layer height error. Each group is set in full
     or not at all.
 
-    In the particles mode runtraj always writes ``ICHEM=8`` and ``IDSP=2``
+    In the particle mode runtraj always writes ``ICHEM=8`` and ``IDSP=2``
     (:data:`FIXED_SETUP`), the only values with which HYSPLIT writes
     particles: ``idsp`` is not a setting, and ``ichem`` may be 8 or left
     out there. Some settings act only together with
@@ -476,7 +476,7 @@ class HysplitConfig(TransportConfig):
     default: an unset setting is not written, and HYSPLIT chooses.
     ``n_hours`` has no default.
 
-    ``mode`` says what a run makes. ``particles`` (the default) is the
+    ``mode`` says what a run makes. ``particle`` (the default) is the
     particle table, from HYSPLIT's particle output (``ICHEM=8``). ``concentration`` is
     HYSPLIT's own concentration grids, one grid of each of
     ``grids`` with a variable for each of ``pollutants``. There ``ichem``
@@ -487,7 +487,7 @@ class HysplitConfig(TransportConfig):
     run leaves out the particle file's settings
     (:data:`PARTICLES_SETTINGS`), which a ``hysplit`` block may set for
     its particle variants; ``pollutants``, ``grids`` and ``conversions``
-    without ``mode: concentration`` are refused. A particles-mode run
+    without ``mode: concentration`` are refused. A particle-mode run
     records no ``mode``, ``pollutants`` or ``grids``, so its settings
     folder is the one it had before the mode existed.
 
@@ -512,10 +512,10 @@ class HysplitConfig(TransportConfig):
     #: table.
     UNRECORDED: ClassVar[frozenset[str]] = frozenset({"directory"})
 
-    mode: Literal["particles", "concentration", "trajectory"] = Field(
-        "particles",
+    mode: Literal["particle", "concentration", "trajectory"] = Field(
+        "particle",
         description=(
-            "What HYSPLIT makes: ``particles``, the particle table; "
+            "What HYSPLIT makes: ``particle``, the particle table; "
             "``concentration``, grids of each pollutant's concentration "
             "(``grids`` and ``pollutants``); or ``trajectory``, the "
             "trajectory table, from HYSPLIT's trajectory program "
@@ -554,7 +554,7 @@ class HysplitConfig(TransportConfig):
             "(``conversions``); 5 deposition of whole particles by "
             "probability; 6 mass divided by air density; 9 a lowest level "
             "that follows the mixed layer; 10 a grid for each emission "
-            "cycle (``qcycle``). The particles mode is ``ICHEM=8``, the only "
+            "cycle (``qcycle``). The particle mode is ``ICHEM=8``, the only "
             "value it takes, and a trajectory run reads none."
         ),
     )
@@ -619,7 +619,8 @@ class HysplitConfig(TransportConfig):
             "column of the particles under the same name, except ``indx``, "
             "``time``, ``long``, and ``lati``. ``zcfx`` is the vertical "
             "displacement by convective flux along the trajectory, in m. "
-            "The default is HYSPLIT's own list of 20."
+            "``SETUP.CFG`` gets ``dswf`` as ``DSWF``, as HYSPLIT 5.2 and later "
+            "fills it only then. The default is HYSPLIT's own list of 20."
         ),
     )
     capemin: float | None = Field(
@@ -1278,9 +1279,9 @@ class HysplitConfig(TransportConfig):
                 )
         if self.mode == "trajectory":
             self._validate_trajectory()
-        if self.mode == "particles" and self.ichem not in (None, PARTICLES_ICHEM):
+        if self.mode == "particle" and self.ichem not in (None, PARTICLES_ICHEM):
             raise ValueError(
-                f"ichem={self.ichem} is not a setting of mode: particles, "
+                f"ichem={self.ichem} is not a setting of mode: particle, "
                 f"which is HYSPLIT's ICHEM={PARTICLES_ICHEM}: with another "
                 "value HYSPLIT writes no particles. Set mode: concentration "
                 "on the variant that counts on a grid, with ichem there, or "
@@ -1434,7 +1435,7 @@ class HysplitConfig(TransportConfig):
         """
         Return what a run records of this config: the settings of its mode.
 
-        A particles-mode record has no ``mode``, ``ichem``, ``pollutants``,
+        A particle-mode record has no ``mode``, ``ichem``, ``pollutants``,
         ``grids``, ``conversions`` or ``tm_`` setting, so it is the record (and the settings folder) a
         run had before the modes existed. A concentration-mode record has
         no :data:`PARTICLES_SETTINGS`, and a trajectory-mode record only
@@ -1445,7 +1446,7 @@ class HysplitConfig(TransportConfig):
             return {name: record[name] for name in TRAJECTORY_SETTINGS}
         drop = (
             ("mode", "ichem", *CONCENTRATION_ONLY_SETTINGS)
-            if self.mode == "particles"
+            if self.mode == "particle"
             else PARTICLES_SETTINGS
         )
         for name in (*drop, *TRAJECTORY_ONLY_SETTINGS):
@@ -1563,7 +1564,11 @@ class HysplitConfig(TransportConfig):
         """
         Return *n* realizations of this config, realization ``k`` with ``seed + k``.
 
-        Realization 0 uses the configured seed.
+        Realization 0 uses the configured seed. Under ``krand=4``, which takes
+        no seed, realization ``k`` runs with seed ``k``: HYSPLIT 5.4.2 and
+        earlier ignore it and seed each run from the clock, and the
+        development branch (the coming 5.5), outside ``ichem=8``, reseeds
+        from ``SEED`` and would repeat a run with the same one.
 
         Raises
         ------
@@ -1588,7 +1593,10 @@ class HysplitConfig(TransportConfig):
                 "realization its own seed. Any other mode would repeat the same "
                 "perturbation."
             )
-        return super().realizations(n)
+        configs = super().realizations(n)
+        if self.krand == 4:
+            return [c.model_copy(update={"seed": k}) for k, c in enumerate(configs)]
+        return configs
 
 
 __all__ = [

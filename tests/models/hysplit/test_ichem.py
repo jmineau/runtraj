@@ -54,7 +54,7 @@ def test_a_concentration_run_records_and_writes_ichem_0_unless_set():
     check_model(HysplitModel(), _concentration(ichem=6))
 
 
-def test_the_particles_mode_takes_its_own_ichem_and_records_none():
+def test_the_particle_mode_takes_its_own_ichem_and_records_none():
     plain = HysplitConfig(n_hours=-24)
     with_8 = HysplitConfig(n_hours=-24, ichem=8)
     assert "ichem" not in with_8.settings()
@@ -63,7 +63,7 @@ def test_the_particles_mode_takes_its_own_ichem_and_records_none():
 
 
 @pytest.mark.parametrize("ichem", [0, 6, 10])
-def test_the_particles_mode_refuses_another_ichem(ichem):
+def test_the_particle_mode_refuses_another_ichem(ichem):
     with pytest.raises(ValidationError, match="mode: concentration"):
         HysplitConfig(n_hours=-24, ichem=ichem)
 
@@ -82,8 +82,8 @@ def test_a_value_runtraj_does_not_run_is_refused_with_the_reason(ichem):
         _concentration(ichem=ichem)
 
 
-def test_ichem_8_in_a_concentration_run_names_the_particles_mode():
-    with pytest.raises(ValidationError, match="mode: particles"):
+def test_ichem_8_in_a_concentration_run_names_the_particle_mode():
+    with pytest.raises(ValidationError, match="mode: particle"):
         _concentration(ichem=8)
 
 

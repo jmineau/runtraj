@@ -394,12 +394,13 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
     """
     Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.
 
-    In the particles mode the entries of :data:`FIXED_SETUP` come first.
+    In the particle mode the entries of :data:`FIXED_SETUP` come first.
     Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,
-    under their own names; the concentration mode leaves out the particle
+    under their own names (``DSWF`` in ``VARSIWANT`` in upper case, which
+    ``hycs_std`` 5.2 and later needs to fill it); the concentration mode leaves out the particle
     file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the
     config's ``ichem``, 0 unless set. The driver adds
-    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
+    ``KMSL``, ``IVMAX`` (in the particle mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
     is unset, which depend on the release locations or follow from other
     settings.
 
@@ -416,7 +417,7 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
             if getattr(params, name) is not None
         )
         return entries
-    particles = params.mode == "particles"
+    particles = params.mode == "particle"
     entries = dict(FIXED_SETUP) if particles else {}
     skip = NOT_IN_SETUP if particles else NOT_IN_SETUP | set(PARTICLES_SETTINGS)
     entries.update(
@@ -425,6 +426,13 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
         if name not in skip and getattr(params, name) is not None
     )
     entries["zicontroltf"] = zicontroltf(params)
+    if "varsiwant" in entries:
+        # From 5.2.0 hycs_std turns the shortwave flux on by a case-sensitive
+        # comparison to 'DSWF': in lower case the column is written as 0. Every
+        # other name stays lower case, which 'zcfx' needs ('ZCFX' is unknown).
+        entries["varsiwant"] = [
+            "DSWF" if name == "dswf" else name for name in params.varsiwant
+        ]
     if params.seed is not None:
         entries["seed"] = setup_seed(params.seed)
     return entries
@@ -663,15 +671,15 @@ def winderrtf(params: HysplitConfig, version: str | None = None) -> int:
     (2, 0)
     """
     flag = (winderr(params) is not None) + 2 * (zierr(params) is not None)
-    if zicontroltf(params) and _since(version, ZICONTROL_ADDS_TWO):
+    if zicontroltf(params) and version_at_least(version, ZICONTROL_ADDS_TWO):
         flag -= 2
     return flag
 
 
-def _since(version: str | None, first: tuple[int, int, int]) -> bool:
-    """Return whether *version*, as ``hycs_std`` prints it, is *first* or later; a version without a number is older."""
+def version_at_least(version: str | None, minimum: tuple[int, int, int]) -> bool:
+    """Return whether *version*, as ``hycs_std`` prints it, is *minimum* or later; a version without a number is older."""
     found = _VERSION_NUMBER.search(version or "")
-    return found is not None and tuple(map(int, found.groups())) >= first
+    return found is not None and tuple(map(int, found.groups())) >= minimum
 
 
 def check_krand(params: HysplitConfig, version: str | None) -> None:
@@ -697,7 +705,9 @@ def check_krand(params: HysplitConfig, version: str | None) -> None:
         ...
     ValueError: krand=10 is new in HYSPLIT 5.1.0: ... hysplit.v5.0.2 ...
     """
-    if params.krand in (10, 11, 12, 13) and not _since(version, KRAND_10_TO_13):
+    if params.krand in (10, 11, 12, 13) and not version_at_least(
+        version, KRAND_10_TO_13
+    ):
         raise ValueError(
             f"krand={params.krand} is new in HYSPLIT 5.1.0: the hycs_std here "
             f"prints {version or 'no version'} and would run it as krand=4, "
@@ -799,7 +809,7 @@ def write_inputs(
         setup.write(workdir / SETUP_FILE)
         return
     entries["maxpar"] = config.maxpar_for(release_locations(locations))
-    if config.mode == "particles":
+    if config.mode == "particle":
         entries["ivmax"] = len(config.varsiwant)  # number of output variables
     factors = ziscale_factors(config)
     # Read only where a setting depends on it: the program is run for it.

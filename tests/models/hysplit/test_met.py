@@ -1,6 +1,7 @@
 """Tests for HYSPLIT's met config and its files (runtraj.models.hysplit.met)."""
 
 import datetime as dt
+import os
 import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -11,10 +12,11 @@ import pytest
 from runtraj.exceptions import MeteorologyError
 from runtraj.meteorology import run_window
 from runtraj.models.hysplit import HysplitMetConfig, Met
-from runtraj.models.hysplit.met import MAX_MET_FILES
+from runtraj.models.hysplit.met import MAX_MET_FILES, _holds_as
 from runtraj.spatial import Bounds
 
 from ...fixtures.factories import write_arl_file
+from ...fixtures.platform import WINDOWS
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -343,15 +345,66 @@ def test_two_workers_cropping_one_file_at_once_keep_the_first_crop(tmp_path):
 
 
 def test_a_short_crop_another_worker_made_meanwhile_is_made_again(tmp_path):
-    """Its crop is replaced; on Windows a run that has it open makes this fail, and a rerun succeeds."""
+    """Its crop is replaced, or kept beside it on Windows, where a run has it open."""
     met = _archive_met(tmp_path)
-    extract = _another_worker_crops_first(SIX_HOURS[:2])
+    opened = []
+    extract = _another_worker_crops_first(SIX_HOURS[:2], opened)
+    try:
+        with patch("arlmet.extract_subset", side_effect=extract) as mock_extract:
+            files = _files(met)
+    finally:
+        for file in opened:
+            file.close()
 
-    with patch("arlmet.extract_subset", side_effect=extract) as mock_extract:
-        files = _files(met)
-
-    assert mock_extract.call_count == 2
+    assert mock_extract.call_count == (3 if WINDOWS else 2)
     assert files[0].read_text() == "cropped"
+
+
+def _whole_crop(src, dst, **kwargs):
+    """Stand-in for arlmet.extract_subset that writes a crop holding the source's six hours."""
+    return write_arl_file(Path(dst), times=SIX_HOURS)
+
+
+def test_a_short_crop_a_run_has_open_is_made_again_without_failing(tmp_path):
+    """On Windows the rename onto the open short crop is refused, and the run still gets a whole crop."""
+    met = _archive_met(tmp_path)
+    short = write_arl_file(met.crop_dir / "20230101_12", times=SIX_HOURS[:2])
+    before = short.read_bytes()
+
+    with short.open("rb") as reader:  # another worker's run reads it
+        with patch("arlmet.extract_subset", side_effect=_whole_crop):
+            files = met.readable(_run_files(met, dt.datetime(2023, 1, 1, 12), 4))
+        assert reader.read() == before
+
+    assert _holds_as(files[0], met.directory / "20230101_12")
+
+
+def test_a_refused_replace_keeps_the_new_crop_beside_the_short_one(tmp_path):
+    """The new crop gets a hidden name that catalogs skip, and later runs read it without cropping again."""
+    met = _archive_met(tmp_path)
+    short = write_arl_file(met.crop_dir / "20230101_12", times=SIX_HOURS[:2])
+    replace = os.replace
+
+    def refuse(src, dst):
+        if Path(dst) == short:
+            raise PermissionError(13, "The process cannot access the file", str(dst))
+        replace(src, dst)
+
+    run = _run_files(met, dt.datetime(2023, 1, 1, 12), 4)
+    with (
+        patch("arlmet.extract_subset", side_effect=_whole_crop),
+        patch("runtraj._paths.os.replace", side_effect=refuse),
+    ):
+        files = met.readable(run)
+    with patch("arlmet.extract_subset") as mock_extract:
+        again = met.readable(run)
+
+    spare = met.crop_dir / ".20230101_12.6"
+    assert files == again == [spare]
+    assert _holds_as(spare, met.directory / "20230101_12")
+    assert not _holds_as(short, met.directory / "20230101_12")
+    mock_extract.assert_not_called()
+    assert sorted(p.name for p in met.crop_dir.iterdir()) == [spare.name, short.name]
 
 
 def test_a_short_crop_serves_a_run_it_holds(tmp_path):

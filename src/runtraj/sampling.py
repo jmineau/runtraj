@@ -289,7 +289,21 @@ def _nearest_level(levels: xr.DataArray, z: np.ndarray) -> np.ndarray:
     coords = levels.to_numpy().astype(float)
     if coords.ndim != 1 or coords.size == 0:
         raise ValueError("The vertical coordinate must be a non-empty 1-D array.")
-    return np.abs(coords[None, :] - z[:, None]).argmin(axis=1)
+    # Memory is proportional to the points, not points x levels. The nearest
+    # level is one of the two neighbors of z in the sorted levels; a tie goes
+    # to the lower index, and non-finite z to level 0.
+    order = np.argsort(coords, kind="stable")
+    c = coords[order]
+    above = np.searchsorted(c, z)
+    hi = np.minimum(above, c.size - 1)
+    lo = np.searchsorted(c, c)[np.maximum(above - 1, 0)]  # first of repeated levels
+    d_lo, d_hi = np.abs(c[lo] - z), np.abs(c[hi] - z)
+    nearest = np.where(
+        d_lo < d_hi,
+        order[lo],
+        np.where(d_hi < d_lo, order[hi], np.minimum(order[lo], order[hi])),
+    )
+    return np.where(np.isfinite(z), nearest, 0)
 
 
 #: The ARL variables each particle column is computed from, by :func:`sample_met`.

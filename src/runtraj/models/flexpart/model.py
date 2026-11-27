@@ -83,7 +83,9 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
         except FileNotFoundError:
             return None
 
-    def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+    def release_rows(
+        self, particles: pd.DataFrame, release: Release, config: FlexpartConfig
+    ) -> pd.DataFrame:
         """
         Return where each particle of a column or multipoint release started, which FLEXPART writes no row for.
 

@@ -236,7 +236,8 @@ log, met files or `age = 0` row; particles numbered 10, 20, ...):
   submit needs `inputs` on a bucket (`_pods_open` refuses it otherwise).
   Windows refuses a rename onto a file another process has open, so a file
   that workers write once and then read (`_settings.yaml`) is written with
-  `atomic_path(path, replace=False)`, which keeps the file already there.
+  `atomic_path(path, replace=False)`, which keeps the file already there; a
+  short met crop that cannot be replaced gets a hidden sibling (`met._spare`).
 - Python 3.11+ (use `typing.Self`, `enum.StrEnum`, `datetime.UTC`, not
   backports). Ruff rules are in `pyproject.toml`; **NumPy-style docstrings**
   with the summary on the line after the opening quotes (`D213`). Keep a
@@ -339,9 +340,11 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   a multipoint run whose `WARNING` says `exceeding puff limit` (a one-location
   run writes it too, harmlessly).
 - **Release heights come from the `age = 0` row** (`add_release_heights`), or
-  from the model's `release_rows` when it writes none, as HYSPLIT 5.1.0 does
-  (its particle `k` in slab `k`; `models/hysplit/releases.py`). With neither,
-  a column or multipoint run fails `NO_RELEASE_ROWS`.
+  from the model's `release_rows(particles, release, config)` when it writes
+  none, as HYSPLIT 5.1.0 to 5.4.2 do: a column there is `particles_per_step`
+  particles up the column each minute of `emisshrs`, numbered in order
+  (`models/hysplit/releases.py`). With neither, a column or multipoint run
+  fails `NO_RELEASE_ROWS`.
 - **Never name a workdir from the simulation alone**: each run gets a new path
   in the compute root (`_new_workdir`), so projects can share one. Real runs
   are heavy: on a shared HPC system use Slurm or an allocation.

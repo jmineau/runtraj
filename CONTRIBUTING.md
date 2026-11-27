@@ -432,9 +432,10 @@ it.
   `runtraj.particles.PARTICLE_SCHEMA`, `foot` if the model computes one,
   what a stage reads, and a release row at `age = 0` when the model can
   write one (`docs/reference/particles.rst`).
-- **`release_rows(particles, release)`** is for a model that writes no
+- **`release_rows(particles, release, config)`** is for a model that writes no
   row at `age = 0`: where each particle of a column or multipoint release
-  started. Without either, such a release fails.
+  started, from the particles and the run's config. Without either, such a
+  release fails.
 - **`result(config)`** is for a model that makes another type than
   particles: the type's name in `runtraj.results.RESULT_TYPES`
   (`concentration`, a `DataTree` of grids,
@@ -694,7 +695,7 @@ description; only a setting that applies wherever a run happens goes on
 checked in its block's `check`, which runs only when that backend is
 used. A new built-in backend gets a block of its own, a field of
 `ExecutionConfig` named as `backend:` names it, and a line in
-`BACKENDS` and `BUILT_IN_BLOCKS`. Settings that
+`BACKENDS`. Settings that
 only `sbatch` understands do not need a field: users write them in the
 `slurm:` block by `sbatch`'s own names.
 

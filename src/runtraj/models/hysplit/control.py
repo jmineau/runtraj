@@ -35,7 +35,7 @@ class ControlFile(BaseModel):
     vertical motion option, the model top, and the met files, which both
     programs read alike. For ``hycs_std`` the pollutant, concentration
     grid, and deposition sections follow. Without *pollutants* and *grids*,
-    as in the particles mode, those sections are written with fixed values
+    as in the particle mode, those sections are written with fixed values
     that the particle output does not use. For ``hyts_std``
     (*trajectory*) the file ends with where the trajectories are written:
     ``tdump`` in the workdir.
@@ -311,7 +311,7 @@ def _read_concentration(
     """
     Return the pollutants and grids of the lines from *cursor*, the pollutant count.
 
-    Both are empty for the fixed sections of the particles mode, whose one
+    Both are empty for the fixed sections of the particle mode, whose one
     grid is written to ``cdump``.
     """
     words = [line.split() for line in lines]
