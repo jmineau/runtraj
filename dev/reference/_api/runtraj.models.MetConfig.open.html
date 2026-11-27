@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=e68f9857"></script>
+    <script src="../../_static/documentation_options.js?v=c30b6de1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev39+g17ebeb7c5" />
+  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1019,7 +1019,7 @@
 <span class="sig-prename descclassname"><span class="pre">MetConfig.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/base.html#MetConfig.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.MetConfig.open" title="Link to this definition">#</a></dt>
 <dd><p>Return <em>files</em>, the met files a run read, as <code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.sampling</span></code> reads them: as ARL file paths here.</p>
 <p>A met whose files are not ARL files returns them as one
-<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout,
+<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b15)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout,
 such as an arlmet converter’s output, cropped to <em>bounds</em> (a
 <a class="reference internal" href="runtraj.Bounds.html#runtraj.Bounds" title="runtraj.Bounds"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.Bounds</span></code></a>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for the whole grid). Either can
 be passed to <a class="reference internal" href="runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.sampling.sample_met()</span></code></a> and

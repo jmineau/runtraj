@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=e68f9857"></script>
+    <script src="../../_static/documentation_options.js?v=c30b6de1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev39+g17ebeb7c5" />
+  <meta name="docsearch:version" content="0.1.0a6.dev40+gf2a248efe" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1017,11 +1017,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="runtraj.models.flexpart.FlexpartMetConfig.open">
 <span class="sig-prename descclassname"><span class="pre">FlexpartMetConfig.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/flexpart/config.html#FlexpartMetConfig.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.flexpart.FlexpartMetConfig.open" title="Link to this definition">#</a></dt>
-<dd><p>Return the GRIB <em>files</em> a run read as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout.</p>
+<dd><p>Return the GRIB <em>files</em> a run read as one Dataset in <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b15)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout.</p>
 <p>The met is read at the particles this way (<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.sampling</span></code>).
 The files are ERA5, since this config refuses any other. ERA5 files,
 as flex_extract writes them, are converted with
-<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.converters.from_flex_extract.html#arlmet.converters.from_flex_extract" title="(in arl-met v0.1.0b14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.converters.from_flex_extract()</span></code></a>
+<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.converters.from_flex_extract.html#arlmet.converters.from_flex_extract" title="(in arl-met v0.1.0b15)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.converters.from_flex_extract()</span></code></a>
 (<code class="xref py py-func docutils literal notranslate"><span class="pre">open_era5()</span></code>); they are already
 cropped to their domain, so <em>bounds</em> is not used, and they hold no
 boundary layer height.</p>
