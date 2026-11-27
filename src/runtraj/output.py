@@ -91,7 +91,7 @@ from runtraj.identity import (
     settings_hash,
     stage_hash,
 )
-from runtraj.particles.table import OLD_FILE
+from runtraj.particles.table import OLD_FILE, float64_schema
 from runtraj.releases import Release, parse_release_id
 from runtraj.results import RESULT_TYPES, result_type, write_result
 from runtraj.stages import get_stage
@@ -1030,20 +1030,25 @@ class Output:
         if not paths:
             return nothing
         if isinstance(folder, Path):
-            dataset = pads.dataset(
+            open_dataset = functools.partial(
+                pads.dataset,
                 [str(p) for p in paths],
                 format="parquet",
                 partitioning=_DATE_PARTITIONING,
                 partition_base_dir=str(folder),
             )
         else:  # an object store, read through its fsspec filesystem
-            dataset = pads.dataset(
+            open_dataset = functools.partial(
+                pads.dataset,
                 [p.path for p in paths if not isinstance(p, Path)],
                 filesystem=folder.fs,
                 format="parquet",
                 partitioning=_DATE_PARTITIONING,
                 partition_base_dir=folder.path,
             )
+        # A dataset takes its types from the first file, so a float32 file
+        # first would cast a later float64 file down: ask for float64.
+        dataset = open_dataset(schema=float64_schema(open_dataset().schema))
         if "release" not in dataset.schema.names:
             raise ValueError(_old_files_message(kind, folder, paths))
         if columns is None:

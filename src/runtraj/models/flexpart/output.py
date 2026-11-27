@@ -16,7 +16,8 @@ which the reader relies on:
   ``IETIME`` for a backward run, so its values are zero or negative there.
 - ``particle`` numbers the particles from 1 in the order they were released,
   across all the files of a run.
-- Every field is float32 with ``_FillValue`` -1. A particle not yet
+- Every field is float32 with ``_FillValue`` -1, and the table keeps it
+  float32, as FLEXPART computed it. A particle not yet
   released, released in that same step, or gone for more than one output
   step has -1 in every field at that time.
 - ``z`` is height above ground in meters, ``prs`` pressure in Pa.
@@ -174,7 +175,7 @@ def _read_one(path: str, release_time: dt.datetime) -> pd.DataFrame:
         "age": np.round(age[rows_time]).astype(np.int32),
     }
     for name, values in fields.items():
-        out = values[kept].astype(np.float64)
+        out = values[kept]
         if name not in ("lon", "lat", "z"):
             out[out == _FILL] = np.nan
         columns[PARTICLE_COLUMNS.get(name, name)] = out * _SCALE.get(name, 1.0)

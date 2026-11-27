@@ -106,6 +106,9 @@ def test_reads_backward_run_as_particle_table(tmp_path):
     assert particles["age"].tolist() == [-60, -60, -120, -120, -180, -180]
     assert particles["particle"].dtype == np.int32
     assert particles["age"].dtype == np.int32
+    # FLEXPART's fields are float32 and stay so, with NaN for the fill value.
+    floats = particles.drop(columns=["particle", "age"])
+    assert (floats.dtypes == np.float32).all()
 
 
 def test_longitude_of_minus_one_is_kept(tmp_path):
