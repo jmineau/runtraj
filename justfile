@@ -3,7 +3,7 @@
 set positional-arguments
 
 # The HYSPLIT version the docs build replays (its runs are recorded beside the tests')
-docs_version := "5.1.0"
+docs_version := "5.4.2"
 
 # Unit tests only: the integration tests need met files and HYSPLIT, or its recorded runs (AGENTS.md, Tests).
 unit := "not integration"
@@ -64,7 +64,7 @@ test-real *versions:
         PATH="$build/exec:$PATH" uv run pytest tests -m integration -n auto --maxprocesses=8 --dist loadgroup
     done 3<<< "$builds"
 
-# Record the integration tests' runs, and for 5.1.0 the docs build's, on each build in hysplit-builds.toml (or the VERSIONS given), replacing tests/recorded/hysplit/<version>/
+# Record the integration tests' runs, and for 5.4.2 the docs build's, on each build in hysplit-builds.toml (or the VERSIONS given), replacing tests/recorded/hysplit/<version>/
 record *versions:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -87,7 +87,7 @@ record *versions:
     done 3<<< "$builds"
 
 # Record the HYSPLIT runs of the Kubernetes test (tests/kubernetes/demo) on the build of VERSION, replacing tests/recorded/kubernetes/<version>/
-record-kubernetes version="5.1.0":
+record-kubernetes version="5.4.2":
     #!/usr/bin/env bash
     set -euo pipefail
     read -r _ build <<< "$(uv run python tests/fixtures/replay.py builds "$1")"
