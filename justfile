@@ -2,7 +2,7 @@
 
 set positional-arguments
 
-# The HYSPLIT version the docs build replays (the oldest recorded)
+# The HYSPLIT version the docs build replays (its runs are recorded beside the tests')
 docs_version := "5.1.0"
 
 # Unit tests only: the integration tests need met files and HYSPLIT, or its recorded runs (AGENTS.md, Tests).
