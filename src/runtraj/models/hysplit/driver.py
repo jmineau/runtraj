@@ -72,6 +72,10 @@ ZICONTROL_FILE = "ZICONTROL"
 #: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once
 #: it has read ``ZICONTROL`` (:func:`winderrtf`).
 ZICONTROL_ADDS_TWO = (5, 3, 0)
+#: The first HYSPLIT version whose ``hycs_std`` checks ``WINDERRTF`` against
+#: ``IDSP`` before the run, and sets ``WINDERRTF`` to 0 (the wind errors off)
+#: unless ``IDSP`` is 2 (:func:`check_wind_error`).
+WINDERR_NEEDS_IDSP = (5, 3, 0)
 #: The first HYSPLIT version with ``KRAND`` 10 to 13 (``hymodelc.F:979-980`` in
 #: 5.1.0). Before it ``hycs_std`` draws them as ``KRAND=4`` without saying so
 #: (:func:`check_krand`).
@@ -677,7 +681,18 @@ def winderrtf(params: HysplitConfig, version: str | None = None) -> int:
 
 
 def version_at_least(version: str | None, minimum: tuple[int, int, int]) -> bool:
-    """Return whether *version*, as ``hycs_std`` prints it, is *minimum* or later; a version without a number is older."""
+    """
+    Return whether *version*, as ``hycs_std`` prints it, is *minimum* or later.
+
+    A *version* without a number, or ``None``, is taken to be the oldest.
+
+    Examples
+    --------
+    >>> version_at_least("hysplit.v5.4.2", (5, 3, 0))
+    True
+    >>> version_at_least("hysplit.v5.2.3", (5, 3, 0)), version_at_least(None, (5, 3, 0))
+    (False, False)
+    """
     found = _VERSION_NUMBER.search(version or "")
     return found is not None and tuple(map(int, found.groups())) >= minimum
 
@@ -716,6 +731,56 @@ def check_krand(params: HysplitConfig, version: str | None) -> None:
         )
 
 
+def check_wind_error(params: HysplitConfig, version: str | None) -> None:
+    """
+    Refuse the wind error settings in the concentration mode on a ``hycs_std`` that prints *version* and ignores them.
+
+    From HYSPLIT 5.3.0 (:data:`WINDERR_NEEDS_IDSP`), ``hycs_std`` applies the
+    wind error only with ``IDSP=2``, which the concentration mode does not
+    set, and otherwise prints ``IDSP must be set to 2 to use WINDERRTF=1``
+    and runs without it, so the settings would do nothing. Earlier versions
+    apply it, and the particles mode sets ``IDSP=2``. A *version* runtraj
+    cannot read, or none, is taken to be older.
+
+    Raises
+    ------
+    ValueError
+        If *params* set the wind error in the concentration mode and
+        *version* is 5.3.0 or later.
+
+    Examples
+    --------
+    >>> grid = {"name": "g", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0]}
+    >>> config = HysplitConfig(
+    ...     n_hours=-24,
+    ...     mode="concentration",
+    ...     pollutants=[{"name": "TRCA"}],
+    ...     grids=[grid],
+    ...     siguverr=1.5,
+    ...     tluverr=60.0,
+    ...     zcoruverr=500.0,
+    ...     horcoruverr=40.0,
+    ... )
+    >>> check_wind_error(config, "hysplit.v5.2.3")
+    >>> check_wind_error(config, "hysplit.v5.4.2")
+    Traceback (most recent call last):
+        ...
+    ValueError: The wind error settings (siguverr, ... on hysplit.v5.4.2: ...
+    """
+    if (
+        params.mode == "concentration"
+        and winderr(params) is not None
+        and version_at_least(version, WINDERR_NEEDS_IDSP)
+    ):
+        raise ValueError(
+            f"The wind error settings ({', '.join(WIND_ERROR_SETTINGS)}) do "
+            f"nothing in the concentration mode on {version}: HYSPLIT 5.3.0 "
+            "and later apply the wind error only with IDSP=2, which this "
+            "mode does not set, so the run would go on without it. Remove "
+            "them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."
+        )
+
+
 def _write_values(path: Path, values: list[float] | None) -> None:
     """Write one value per line to ``path``; nothing is written when ``values`` is ``None``."""
     if values is not None:
@@ -741,8 +806,9 @@ def write_inputs(
     ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for
     them. *workdir* is created if needed, and should be empty. With
     ``ziscale`` set, ``WINDERRTF`` depends on the version the program
-    prints (:func:`winderrtf`), and so does the refusal of ``krand`` 10 to
-    13 (:func:`check_krand`); it is read once per program.
+    prints (:func:`winderrtf`), which is read once per program, and so
+    does the refusal of the wind error settings (:func:`check_wind_error`)
+    and of ``krand`` 10 to 13 (:func:`check_krand`).
 
     Parameters
     ----------
@@ -766,8 +832,10 @@ def write_inputs(
     HYSPLITNotFoundError
         If there is no program to link (:func:`find_program`).
     ValueError
-        If ``krand`` is 10 to 13 and the program is older than HYSPLIT
-        5.1.0 (:func:`check_krand`).
+        If the settings set the wind error in the concentration mode and
+        the program is HYSPLIT 5.3.0 or later, which would ignore it
+        (:func:`check_wind_error`), or ``krand`` is 10 to 13 and the program
+        is older than HYSPLIT 5.1.0 (:func:`check_krand`).
     """
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
@@ -777,6 +845,15 @@ def write_inputs(
     program = program_name(config)
     trajectory = config.mode == "trajectory"
     found = find_program(program, config.directory)
+    # Read only where a setting depends on it: the program is run for it.
+    needs_version = not trajectory and (
+        ziscale_factors(config) is not None
+        or (config.mode == "concentration" and winderr(config) is not None)
+        or config.krand in (10, 11, 12, 13)
+    )
+    version = _printed_version(*_stamp(found)) if needs_version else None
+    check_wind_error(config, version)  # before anything is written
+    check_krand(config, version)
     # On Windows the link keeps the program's extension, which finds it again.
     linked = program + found.suffix.lower() if sys.platform == "win32" else program
     links = {linked: found}
@@ -811,16 +888,12 @@ def write_inputs(
     entries["maxpar"] = config.maxpar_for(release_locations(locations))
     if config.mode == "particle":
         entries["ivmax"] = len(config.varsiwant)  # number of output variables
-    factors = ziscale_factors(config)
-    # Read only where a setting depends on it: the program is run for it.
-    needs_version = factors is not None or config.krand in (10, 11, 12, 13)
-    version = _printed_version(*_stamp(found)) if needs_version else None
-    check_krand(config, version)
     entries["winderrtf"] = winderrtf(config, version)
     setup = NameList("SETUP")
     setup.update(entries)
     setup.write(workdir / SETUP_FILE)
 
+    factors = ziscale_factors(config)
     if factors is not None:
         (workdir / ZICONTROL_FILE).write_text(
             "\n".join([str(len(factors)), *(str(v) for v in factors)]) + "\n",

@@ -30,6 +30,7 @@ from runtraj.models.hysplit.driver import (
     check_met_stop,
     setup_entries,
     setup_seed,
+    version_at_least,
     winderrtf,
     zicontroltf,
     ziscale_factors,
@@ -1015,6 +1016,61 @@ def test_setup_cfg_winderrtf_follows_the_version_the_program_prints(
     build = make_hysplit_dir(tmp_path / "hysplit", version)
     config = _config(directory=build, ziscale=0.8)
     assert f"winderrtf={written}" in _setup_cfg(tmp_path, point_release, config)
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [
+        ("hysplit.v5.2.3", False),
+        ("hysplit.v5.3.0", True),
+        ("hysplit.v5.4.2", True),
+        ("hysplit.v6.0.0", True),
+        ("unknown", False),
+        (None, False),
+    ],
+)
+def test_version_at_least_takes_a_version_without_a_number_as_the_oldest(
+    version, expected
+):
+    assert version_at_least(version, (5, 3, 0)) is expected
+
+
+CONCENTRATION = {
+    "mode": "concentration",
+    "pollutants": [{"name": "TRCA"}],
+    "grids": [{"name": "g", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0]}],
+}
+
+
+@pytest.mark.parametrize("extra", [{}, {"ziscale": 0.8}])
+def test_wind_error_in_the_concentration_mode_is_refused_from_hysplit_5_3_0(
+    tmp_path, point_release, extra
+):
+    # With ziscale, WINDERRTF is -1 on 5.3+, which gets past HYSPLIT's check.
+    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.4.2")
+    config = _config(directory=build, **CONCENTRATION, **WIND, **extra)
+    with pytest.raises(ValueError, match="IDSP=2") as error:
+        _inputs(tmp_path, point_release, config)
+    assert "hysplit.v5.4.2" in str(error.value)
+    assert not (tmp_path / "run" / "SETUP.CFG").exists()
+
+
+@pytest.mark.parametrize(
+    ("version", "settings"),
+    [
+        ("hysplit.v5.2.3", CONCENTRATION | WIND),  # applies it with IDSP=1
+        ("hysplit.v5.4.2", CONCENTRATION),  # no wind error to drop
+        ("hysplit.v5.4.2", CONCENTRATION | ZI),
+        ("hysplit.v5.4.2", {"mode": "particle"} | WIND),  # IDSP=2
+        (None, CONCENTRATION | WIND),  # no version: taken to be older
+    ],
+)
+def test_wind_error_is_not_refused_elsewhere(
+    tmp_path, point_release, version, settings
+):
+    build = make_hysplit_dir(tmp_path / "hysplit", version)
+    config = _config(directory=build, **settings)
+    assert "winderrtf" in _setup_cfg(tmp_path, point_release, config)
 
 
 @pytest.mark.parametrize("krand", [10, 11, 12, 13])
