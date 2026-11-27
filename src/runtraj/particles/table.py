@@ -467,9 +467,13 @@ def add_release_heights(
     at. For a column release it is the center of the particle's slab: the
     column is split into slabs of equal depth, one per release row, and the
     slab is what the particle stands for, not the random height inside it.
-    So the release rows must hold every particle released, including any
-    missing from *particles*, such as one that left the met's domain before
-    its first row.
+    A column's rows come from *release_rows* whenever it is given, even when
+    the particles have rows at ``age = 0``: a particle does not start at the
+    height its row at ``age = 0`` reports, so near a slab's edge that row can
+    fall in the next slab, which then holds two particles while its own
+    holds none. So the release rows must hold every particle released,
+    including any missing from *particles*, such as one that left the met's
+    domain before its first row.
 
     A point release's particles are returned as they are.
 
@@ -484,9 +488,10 @@ def add_release_heights(
         :data:`RELEASE_ROW_COLUMNS`, one row per particle released: where it
         started, its ``height`` in the release's vertical reference. It
         holds each particle of *particles* once, and may hold particles
-        released but not in *particles*. Used when the particles have no
-        row at ``age = 0``, or their heights above sea level cannot be known
-        without ``zsfc``. It returns ``None`` when it does not know, as
+        released but not in *particles*. Used for a column always, and for
+        a multipoint release when the particles have no row at ``age = 0``,
+        or their heights above sea level cannot be known without ``zsfc``.
+        It returns ``None`` when it does not know, as
         :meth:`runtraj.models.TransportModel.release_rows` does by default.
 
     Raises
@@ -518,6 +523,12 @@ def _started(
     release_rows: Callable[[pd.DataFrame, Release], pd.DataFrame | None] | None,
 ) -> pd.DataFrame:
     """Return each particle's release row, with :data:`RELEASE_ROW_COLUMNS`."""
+    # A column's slab is its particle's number, which the model's release_rows
+    # knows; a row at age = 0 is only near the height the model chose.
+    if isinstance(release, ColumnRelease) and release_rows is not None:
+        given = release_rows(p, release)
+        if given is not None:
+            return _checked_rows(given, p, release_rows)
     released = p.loc[p["age"] == 0].drop_duplicates(subset="particle")
     rows = None
     if not released.empty and len(released) == p["particle"].nunique():
