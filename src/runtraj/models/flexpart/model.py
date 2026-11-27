@@ -15,9 +15,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
-from runtraj._process import ended_if_this_process_dies, own_group, terminate
+from runtraj._process import read_log, run_program
 from runtraj.exceptions import SimulationError
 from runtraj.models import ModelRun, TransportModel
+from runtraj.particles.table import column_release_rows
 from runtraj.releases import ColumnRelease, MultiPointRelease
 
 from .config import FlexpartConfig, FlexpartMetConfig, flexpart_version
@@ -104,17 +105,8 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
             If *release* is not a column or multipoint release.
         """
         numpar = int(particles["particle"].max())
-        particle = np.arange(1, numpar + 1)
         if isinstance(release, ColumnRelease):
-            step = (release.top - release.bottom) / numpar
-            return pd.DataFrame(
-                {
-                    "particle": particle,
-                    "lon": release.longitude,
-                    "lat": release.latitude,
-                    "height": (particle - 0.5) * step + release.bottom,
-                }
-            )
+            return column_release_rows(release, numpar, numpar)
         if isinstance(release, MultiPointRelease):
             point = np.repeat(
                 np.arange(len(release.longitudes)),
@@ -122,7 +114,7 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
             )
             return pd.DataFrame(
                 {
-                    "particle": particle,
+                    "particle": np.arange(1, numpar + 1),
                     "lon": np.asarray(release.longitudes, dtype=float)[point],
                     "lat": np.asarray(release.latitudes, dtype=float)[point],
                     "height": np.asarray(release.altitudes, dtype=float)[point],
@@ -167,11 +159,11 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
                 )
             particles = read_partoutput(outputs, release.time)
         except SimulationError as error:
-            error.log = _read_log(workdir)
+            error.log = read_log(workdir / LOG_FILE)
             raise
         return ModelRun(
             result=particles,
-            log=_read_log(workdir),
+            log=read_log(workdir / LOG_FILE),
             met_files=list(met_files.values()),
         )
 
@@ -204,37 +196,24 @@ def run_flexpart(
             "FLEXPART runs on Linux and macOS: runtraj does not run it on Windows."
         )
     log_path = workdir / LOG_FILE
-    env = {**os.environ, "OMP_NUM_THREADS": str(config.threads)}
-    with (
-        log_path.open("w", encoding="utf-8") as handle,
-        ended_if_this_process_dies() as watch,
-        subprocess.Popen(
+    try:
+        status = run_program(
             [str(config.executable), "pathnames"],
             cwd=workdir,
-            stdout=handle,
-            stderr=subprocess.STDOUT,
-            env=env,
+            log_path=log_path,
+            timeout=timeout,
+            env={**os.environ, "OMP_NUM_THREADS": str(config.threads)},
             preexec_fn=_raise_stack_limit,
-            **own_group(),
-        ) as proc,
-    ):
-        watch(proc)
-        try:
-            proc.wait(timeout=timeout)
-        except subprocess.TimeoutExpired as e:
-            terminate(proc)
-            raise SimulationError(
-                f"FLEXPART ran longer than the {timeout} s timeout.", reason="TIMEOUT"
-            ) from e
-        except BaseException:
-            # FLEXPART runs in a session of its own, so no signal reached it.
-            terminate(proc)
-            raise
-    output = log_path.read_text(encoding="utf-8", errors="replace")
-    if proc.returncode != 0 or SUCCESS not in output:
+        )
+    except subprocess.TimeoutExpired as e:
+        raise SimulationError(
+            f"FLEXPART ran longer than the {timeout} s timeout.", reason="TIMEOUT"
+        ) from e
+    output = read_log(log_path)
+    if status != 0 or SUCCESS not in output:
         tail = "\n".join(output.strip().splitlines()[-TAIL_LINES:])
         raise SimulationError(
-            f"FLEXPART stopped with exit status {proc.returncode}:\n{tail}",
+            f"FLEXPART stopped with exit status {status}:\n{tail}",
             reason="EXIT_STATUS",
         )
 
@@ -251,12 +230,6 @@ def _raise_stack_limit() -> None:
     _, hard = resource.getrlimit(resource.RLIMIT_STACK)
     with contextlib.suppress(ValueError, OSError):
         resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
-
-
-def _read_log(workdir: Path) -> str:
-    """Return FLEXPART's output in *workdir*, or an empty string when there is none."""
-    path = workdir / LOG_FILE
-    return path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
 
 
 __all__ = ["FlexpartModel", "run_flexpart"]

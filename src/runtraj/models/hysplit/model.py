@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import xarray as xr
 
+from runtraj._process import read_log
 from runtraj.concentration import require_netcdf4
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
 from runtraj.models import ModelRun, TransportModel
@@ -284,7 +285,9 @@ class HysplitModel(TransportModel[HysplitConfig]):
             if config.mode == "trajectory":
                 run_hycs_std(workdir, timeout, program=program_name(config))
                 result = _read_trajectories(workdir, len(release.coords()))
-                return ModelRun(result=result, log=_read_log(workdir), met_files=source)
+                return ModelRun(
+                    result=result, log=read_log(workdir / LOG_FILE), met_files=source
+                )
             run_hycs_std(workdir, timeout)
             check_release(workdir, release.coords(), config)
             if config.mode == "concentration":
@@ -292,11 +295,13 @@ class HysplitModel(TransportModel[HysplitConfig]):
             else:
                 result = _read_particles(workdir, config, readable[0])
         except SimulationError as error:
-            error.log = _read_log(workdir)
+            error.log = read_log(workdir / LOG_FILE)
             raise
         # The record names the files found for the run: the archive's, or a
         # crop that served it; the crop settings are in the run's settings.
-        return ModelRun(result=result, log=_read_log(workdir), met_files=source)
+        return ModelRun(
+            result=result, log=read_log(workdir / LOG_FILE), met_files=source
+        )
 
 
 def _read_particles(
@@ -447,12 +452,6 @@ def _met_grid(path: Path) -> Grid:
 
     with File(path) as met:
         return met.grid
-
-
-def _read_log(workdir: Path) -> str:
-    """Return HYSPLIT's log in *workdir*, or an empty string when it wrote none."""
-    path = workdir / LOG_FILE
-    return path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
 
 
 __all__ = ["HysplitModel", "hysplit_version"]

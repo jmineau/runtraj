@@ -412,6 +412,32 @@ def needs_height_to_match(
 RELEASE_ROW_COLUMNS = ("particle", "lon", "lat", "height")
 
 
+def column_release_rows(
+    release: ColumnRelease, n_particles: int, n_slabs: int
+) -> pd.DataFrame:
+    """
+    Return the release rows of a column's particles ``1`` to *n_particles*, released bottom to top.
+
+    The column is split into *n_slabs* slabs of equal depth, and particle
+    *k* starts at the center of slab ``(k - 1) % n_slabs`` (counted from
+    the bottom): a transport model that releases the slabs once, as
+    FLEXPART does, has *n_slabs* equal to *n_particles*, and one that
+    releases them at every time step, as HYSPLIT does, fewer.
+    """
+    particle = np.arange(1, n_particles + 1)
+    slab = (particle - 1) % n_slabs
+    depth = (release.top - release.bottom) / n_slabs
+    return pd.DataFrame(
+        {
+            "particle": particle,
+            "lon": release.longitude,
+            "lat": release.latitude,
+            "height": release.bottom + (slab + 0.5) * depth,
+        },
+        columns=list(RELEASE_ROW_COLUMNS),
+    )
+
+
 def add_release_heights(
     particles: pd.DataFrame,
     release: Release,
