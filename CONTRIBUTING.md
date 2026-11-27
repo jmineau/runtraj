@@ -27,7 +27,9 @@ relies on.
    `bdyfiles/` beside it) or the runs recorded in this repository:
    `just test-replay 5.4.2` needs no HYSPLIT
    ([Testing against real HYSPLIT](#testing-against-real-hysplit)). Without
-   either, those tests are skipped. The docs build needs a HYSPLIT folder
+   either, those tests are skipped. The FLEXPART ones need a FLEXPART
+   build and ERA5 ([Testing against real FLEXPART](#testing-against-real-flexpart)).
+   The docs build needs a HYSPLIT folder
    on `PATH` too: `just replay-folder 5.1.0 DEST` makes one that replays the
    recorded runs.
 
@@ -123,6 +125,36 @@ compressed with xz. Commit the cases with the
 change that made them. HYSPLIT's random numbers make the particles differ from
 run to run unless a run sets a seed, so a new recording changes every case's
 output: record only when the inputs changed or a version is added.
+
+## Testing against real FLEXPART
+
+The unit tests run FLEXPART's part of runtraj on a stand-in program and a
+slice of one real run. The tests in `tests/models/flexpart/test_real_flexpart.py`
+(marked `integration`) run a real FLEXPART 11 on ERA5, and skip unless two
+environment variables name a build and its met:
+
+- `RUNTRAJ_TEST_FLEXPART_DIR`, a FLEXPART 11 checkout built with `numpf = 3`
+  in `src/par_mod.f90`, because flex_extract writes three precipitation
+  fields. `make eta=no` builds `src/FLEXPART`, which every test runs;
+  `make clean` and then `make eta=yes` adds `src/FLEXPART_ETA`, which the eta
+  test runs (it skips without it). The rest of the build is in FLEXPART's own
+  documentation.
+- `RUNTRAJ_TEST_FLEXPART_MET_DIR`, a folder of hourly ERA5 on model levels
+  from flex_extract, from 04:00 to 18:00 UTC on 1 June 2023, over a domain
+  around Salt Lake City (the tests were written on 125 to 100° W, 30 to 50° N
+  at 0.25°, 21 MB a file).
+
+```bash
+RUNTRAJ_TEST_FLEXPART_DIR=/path/to/flexpart RUNTRAJ_TEST_FLEXPART_MET_DIR=/path/to/era5 \
+  uv run pytest tests/models/flexpart -m integration
+```
+
+Each test is one or two FLEXPART runs of 1000 particles for 6 hours: a point,
+a column and a multipoint release, one thread twice (the particles must be the
+same), four threads, the eta build, and a run FLEXPART stops with a Fortran
+`STOP`, which exits with status 0 and must still fail. On 8 cores of a
+cluster node the seven take about 90 s, each run 6 to 12 s, and a build of
+either program takes about 20 s on 4 cores. CI runs none of them.
 
 ## Writing documentation
 
