@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=7fd9aa46"></script>
+    <script src="../../_static/documentation_options.js?v=28cecdaf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev26+g1119276f6" />
+  <meta name="docsearch:version" content="0.1.0a6.dev27+g6830b0d80" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -917,6 +917,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.particles_per_step.html">runtraj.models.hysplit.releases.particles_per_step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
 </ul>
 </details></li>
@@ -1016,7 +1017,7 @@
 <h1>runtraj.models.flexpart.FlexpartModel.release_rows<a class="headerlink" href="#runtraj-models-flexpart-flexpartmodel-release-rows" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="runtraj.models.flexpart.FlexpartModel.release_rows">
-<span class="sig-prename descclassname"><span class="pre">FlexpartModel.</span></span><span class="sig-name descname"><span class="pre">release_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/flexpart/model.html#FlexpartModel.release_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.flexpart.FlexpartModel.release_rows" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">FlexpartModel.</span></span><span class="sig-name descname"><span class="pre">release_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/flexpart/model.html#FlexpartModel.release_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.flexpart.FlexpartModel.release_rows" title="Link to this definition">#</a></dt>
 <dd><p>Return where each particle of a column or multipoint release started, which FLEXPART writes no row for.</p>
 <p>FLEXPART numbers particles from 1 in the order they are released,
 and <code class="docutils literal notranslate"><span class="pre">RELEASES</span></code> (<code class="xref py py-func docutils literal notranslate"><span class="pre">releases()</span></code>)
@@ -1037,6 +1038,7 @@ and the slabs or points of the others shift.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>particles</strong> (<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><em>DataFrame</em></a>)</p></li>
 <li><p><strong>release</strong> (<em>runtraj.releases.Release</em>)</p></li>
+<li><p><strong>config</strong> (<em>FlexpartConfig</em>)</p></li>
 </ul>
 </dd>
 </dl>

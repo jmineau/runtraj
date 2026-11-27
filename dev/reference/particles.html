@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7fd9aa46"></script>
+    <script src="../_static/documentation_options.js?v=28cecdaf"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev26+g1119276f6" />
+  <meta name="docsearch:version" content="0.1.0a6.dev27+g6830b0d80" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -917,6 +917,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.particles_per_step.html">runtraj.models.hysplit.releases.particles_per_step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
 </ul>
 </details></li>
@@ -1063,10 +1064,11 @@ release (<a class="reference internal" href="_api/runtraj.particles.add_release_
 says where each particle started through its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code>
 (<a class="reference internal" href="_api/runtraj.models.TransportModel.html#runtraj.models.TransportModel" title="runtraj.models.TransportModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransportModel</span></code></a>); without either, a column or
 multipoint release fails with the reason <code class="docutils literal notranslate"><span class="pre">NO_RELEASE_ROWS</span></code>.</p>
-<p>HYSPLIT 5.1.0 writes no release row: its first row is one time step after
-release. Its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code> matches each particle to a release point from
+<p>HYSPLIT 5.1.0 to 5.4.2 write no release row: their first row is one time step after
+release. Their <code class="docutils literal notranslate"><span class="pre">release_rows</span></code> matches each particle to a release point from
 its first position, and takes a column’s particles to be released bottom to
-top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order. A HYSPLIT build that writes the release rows
+top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order, a column for each minute of <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code>
+(<a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html#runtraj.models.hysplit.releases.release_rows" title="runtraj.models.hysplit.releases.release_rows"><code class="xref py py-func docutils literal notranslate"><span class="pre">release_rows()</span></code></a>). A HYSPLIT build that writes the release rows
 (<code class="docutils literal notranslate"><span class="pre">directory</span></code>) makes the matching exact.
 FLEXPART writes no release row either: its first row is one output step
 after release. Its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code> reads where each particle started from

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=7fd9aa46"></script>
+    <script src="../../_static/documentation_options.js?v=28cecdaf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,13 +60,13 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="runtraj.models.hysplit.FailureReason" href="runtraj.models.hysplit.FailureReason.html" />
+    <link rel="next" title="runtraj.models.hysplit.releases.particles_per_step" href="runtraj.models.hysplit.releases.particles_per_step.html" />
     <link rel="prev" title="runtraj.models.hysplit.releases.check_releases" href="runtraj.models.hysplit.releases.check_releases.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev26+g1119276f6" />
+  <meta name="docsearch:version" content="0.1.0a6.dev27+g6830b0d80" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -917,6 +917,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.models.hysplit.releases.release_rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.particles_per_step.html">runtraj.models.hysplit.releases.particles_per_step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
 </ul>
 </details></li>
@@ -1013,23 +1014,29 @@
 <h1>runtraj.models.hysplit.releases.release_rows<a class="headerlink" href="#runtraj-models-hysplit-releases-release-rows" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.models.hysplit.releases.release_rows">
-<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.releases.</span></span><span class="sig-name descname"><span class="pre">release_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/releases.html#release_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.releases.release_rows" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.releases.</span></span><span class="sig-name descname"><span class="pre">release_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/releases.html#release_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.releases.release_rows" title="Link to this definition">#</a></dt>
 <dd><p>Return where each particle of a HYSPLIT run started, for a run that wrote no row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
 <p>The columns are <code class="xref py py-data docutils literal notranslate"><span class="pre">runtraj.particles.table.RELEASE_ROW_COLUMNS</span></code>. A
 column’s particles are released bottom to top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order,
-particle <code class="docutils literal notranslate"><span class="pre">k</span></code> of <code class="docutils literal notranslate"><span class="pre">numpar</span></code> in slab <code class="docutils literal notranslate"><span class="pre">k</span></code>. A multipoint release’s
-particles are matched to a point from their first row: by height when
-every point has its own altitude, since height drifts about 30 times
-less than horizontal position over the first step, and otherwise by
-position, with a warning when the points are too close for that.</p>
+<a class="reference internal" href="runtraj.models.hysplit.releases.particles_per_step.html#runtraj.models.hysplit.releases.particles_per_step" title="runtraj.models.hysplit.releases.particles_per_step"><code class="xref py py-func docutils literal notranslate"><span class="pre">particles_per_step()</span></code></a> of them at each one-minute time step of the
+release (<code class="docutils literal notranslate"><span class="pre">emisshrs</span></code>), each a column of its own: particle <code class="docutils literal notranslate"><span class="pre">k</span></code> starts
+in slab <code class="docutils literal notranslate"><span class="pre">(k</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">%</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">1</span></code> of the <code class="docutils literal notranslate"><span class="pre">n</span></code> released with it. So a start
+height is known to the depth of those slabs, <code class="docutils literal notranslate"><span class="pre">(top</span> <span class="pre">-</span> <span class="pre">bottom)</span> <span class="pre">/</span> <span class="pre">n</span></code>:
+a long release of few particles knows it less well than a short one. A
+multipoint release’s particles are matched to a point from their first
+row: by height when every point has its own altitude, since height
+drifts about 30 times less than horizontal position over the first
+step, and otherwise by position, with a warning when the points are too
+close for that.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>particles</strong> (<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><em>DataFrame</em></a>)</p></li>
-<li><p><strong>release</strong> (<em>runtraj.releases.Release</em>)</p></li>
+<li><p><strong>particles</strong> (<em>pd.DataFrame</em>)</p></li>
+<li><p><strong>release</strong> (<a class="reference internal" href="runtraj.Release.html#runtraj.Release" title="runtraj.Release"><em>Release</em></a>)</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><em>HysplitConfig</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1057,11 +1064,11 @@ position, with a warning when the points are too close for that.</p>
       </div>
     </a>
     <a class="right-next"
-       href="runtraj.models.hysplit.FailureReason.html"
+       href="runtraj.models.hysplit.releases.particles_per_step.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">runtraj.models.hysplit.FailureReason</p>
+        <p class="prev-next-title">runtraj.models.hysplit.releases.particles_per_step</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

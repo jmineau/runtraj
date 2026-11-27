@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=7fd9aa46"></script>
+    <script src="../../_static/documentation_options.js?v=28cecdaf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev26+g1119276f6" />
+  <meta name="docsearch:version" content="0.1.0a6.dev27+g6830b0d80" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -917,6 +917,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.particles_per_step.html">runtraj.models.hysplit.releases.particles_per_step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
 </ul>
 </details></li>
@@ -1048,7 +1049,7 @@ is staged per run.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.data_files.html#runtraj.models.hysplit.HysplitModel.data_files" title="runtraj.models.hysplit.HysplitModel.data_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_files</span></code></a>(config)</p></td>
 <td><p>Return the SHA-256 of each data table a run uses, by name.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.release_rows.html#runtraj.models.hysplit.HysplitModel.release_rows" title="runtraj.models.hysplit.HysplitModel.release_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">release_rows</span></code></a>(particles, release)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.release_rows.html#runtraj.models.hysplit.HysplitModel.release_rows" title="runtraj.models.hysplit.HysplitModel.release_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">release_rows</span></code></a>(particles, release, config)</p></td>
 <td><p>Return where each particle started, for a HYSPLIT build that writes no row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.result.html#runtraj.models.hysplit.HysplitModel.result" title="runtraj.models.hysplit.HysplitModel.result"><code class="xref py py-obj docutils literal notranslate"><span class="pre">result</span></code></a>(config)</p></td>

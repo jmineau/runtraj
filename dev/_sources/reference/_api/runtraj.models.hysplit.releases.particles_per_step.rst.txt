@@ -1,0 +1,6 @@
+﻿runtraj.models.hysplit.releases.particles\_per\_step
+====================================================
+
+.. currentmodule:: runtraj.models.hysplit.releases
+
+.. autofunction:: particles_per_step
