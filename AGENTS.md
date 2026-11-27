@@ -98,13 +98,13 @@ src/runtraj/
   simulation.py   Simulation: a frozen (release, variant, output) value
   config.py       ProjectConfig and Variant;  identity.py  settings records, hashes
   stages.py       the Stage base class, get_stage, check_stage;  _plugins.py  a class by import path
-  testing.py      run_stage: a stage end to end in a project, on the replay transport model
+  testing.py      run_stage: a stage end to end in a project, on the replay transport model; check_model: a model's promises
   releases/       release classes, releases.csv, shared validation
   results.py      the result types (particles, concentration, trajectories): suffix, check, write, read
   particles/      the particle table and files, release heights, the particles.runtraj accessor
   concentration.py  the concentration result: a DataTree of grids, its NetCDF file
   trajectories.py   the trajectory table and its Parquet file
-  models/         TransportModel/TransportConfig base classes, MODELS (hysplit, flexpart), get_model, run_model, check_model
+  models/         base (TransportModel/TransportConfig, the contract), registry (MODELS: hysplit, flexpart; get_model), run (run_model)
     hysplit/      config (and its mode), met, driver, CONTROL and SETUP.CFG writers, cdump and tdump readers, failures
     flexpart/     config, GRIB met catalog, COMMAND/RELEASES/... writers, driver, partoutput reader
   execution/      ExecutionConfig (a block per backend), backends (Backend, get_backend: a backend by name or import path),

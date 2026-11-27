@@ -17,6 +17,7 @@ from runtraj.config import ProjectConfig
 from runtraj.identity import read_run_settings, settings_hash
 from runtraj.models import MetConfig, ModelInfo, TransportConfig, TransportModel
 from runtraj.spatial import Bounds
+from runtraj.testing import check_model
 
 from ..fixtures.factories import make_met_config
 from ..fixtures.models import TOY, ToyConfig, ToyMet, ToyModel
@@ -369,7 +370,7 @@ def test_check_model_reports_a_name_spelled_almost_like_a_hook():
             return None
 
     with pytest.raises(AssertionError, match="Typo.release_row is spelled almost"):
-        models.check_model(Typo(), ToyConfig(n_hours=-1))
+        check_model(Typo(), ToyConfig(n_hours=-1))
 
 
 def test_get_model_refuses_a_class_that_is_not_a_transport_model():

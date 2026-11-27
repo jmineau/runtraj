@@ -235,7 +235,7 @@ def test_inputs_link_hyts_std_and_write_none_of_the_dispersion_files(tmp_path):
 
 
 def _points(*releases) -> pd.DataFrame:
-    from runtraj.models import _release_points
+    from runtraj.models.run import _release_points
 
     return _release_points(releases)
 

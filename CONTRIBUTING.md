@@ -332,7 +332,8 @@ driver; a test fails if it would land in `SETUP.CFG` unknown to HYSPLIT.
 A transport model is three classes: its config, its met config and the
 model. Each subclasses a runtraj base class that has a default for all but
 one or two members, so you write only what your model does differently.
-This one leaves every particle where it was released:
+The base classes are in `src/runtraj/models/base.py`, and `runtraj.models`
+re-exports them. This one leaves every particle where it was released:
 
 ```python
 import numpy as np
@@ -472,7 +473,7 @@ core on it (run, status, check, fetch, a stage, transforms), so a change
 that makes the core depend on something only HYSPLIT does fails there.
 Test a change to the core on the toy as well as on HYSPLIT.
 
-`runtraj.models.check_model(model, config, met, release)` checks the
+`runtraj.testing.check_model(model, config, met, release)` checks the
 promises a model keeps: its config uses no key runtraj records beside it
 (`RESERVED_SETTINGS`) and its record reads back, also for its realizations;
 its build makes a `ModelInfo`; and, given a release, the release is run

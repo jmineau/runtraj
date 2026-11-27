@@ -12,7 +12,6 @@ from pydantic import ValidationError
 
 from runtraj.concentration import CONCENTRATION_DIMS, check_concentration
 from runtraj.identity import settings_hash
-from runtraj.models import check_model
 from runtraj.models.hysplit import (
     Conversion,
     HysplitConfig,
@@ -25,6 +24,7 @@ from runtraj.models.hysplit.control import cdump_name
 from runtraj.models.hysplit.driver import chemrate, setup_entries
 from runtraj.models.hysplit.model import _read_grids
 from runtraj.releases import ColumnRelease, MultiPointRelease
+from runtraj.testing import check_model
 
 HERE = Path(__file__).parent / "cdump"
 GRID = {"name": "g", "levels": [0, 100]}
@@ -233,7 +233,7 @@ def test_whole_cycles_are_accepted():
 
 
 def test_a_column_release_is_no_two_sources():
-    from runtraj.models import _release_points
+    from runtraj.models.run import _release_points
 
     time = dt.datetime(2021, 7, 15, 1, 30)
     column = ColumnRelease(
