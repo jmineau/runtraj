@@ -74,6 +74,14 @@ looks at share its rows. The command exits with 0 when it finds nothing and
        ``RELEASE_REFUSED``.
      - For HYSPLIT, use a ``ColumnRelease`` for a vertical column, or one
        ``PointRelease`` per height (:doc:`releases`).
+   * - ``setting_refused``
+     - A setting the HYSPLIT build here would ignore or change without a
+       word, which refuses every release (``release`` is empty): ``krand``
+       10 to 13 before HYSPLIT 5.1.0, and the wind error settings in the
+       concentration mode from 5.3.0. A build that prints no version is
+       taken to be the oldest. Such a run fails as ``RELEASE_REFUSED``.
+     - Change the setting, or use another HYSPLIT build
+       (:ref:`hysplit-versions`).
    * - ``met_directory``
      - A met's ``directory`` does not exist or holds no ARL file.
      - Correct ``directory`` under ``mets:``. A met with ``download`` makes

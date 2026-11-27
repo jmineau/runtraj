@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from runtraj import _process
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
+from runtraj.models import run_model
 from runtraj.models.hysplit import (
     FailureReason,
     HysplitConfig,
@@ -35,6 +36,7 @@ from runtraj.models.hysplit.driver import (
     zicontroltf,
     ziscale_factors,
 )
+from runtraj.models.run import _release_points
 from tests.fixtures.platform import not_on_windows
 
 from ...fixtures.factories import (
@@ -1042,17 +1044,32 @@ CONCENTRATION = {
 }
 
 
+def _points(*releases):
+    return _release_points(releases)
+
+
+def _refusals(tmp_path, release, version, **settings) -> list[str]:
+    """Return the messages of the settings ``check_releases`` refuses on a build that prints *version*."""
+    config = _config(
+        directory=make_hysplit_dir(tmp_path / "hysplit", version), **settings
+    )
+    table = HysplitModel().check_releases(_release_points([release]), config)
+    assert table["check"].eq("setting_refused").all()
+    assert table["release"].isna().all()  # about the settings, not a release
+    return table["message"].tolist()
+
+
 @pytest.mark.parametrize("extra", [{}, {"ziscale": 0.8}])
 def test_wind_error_in_the_concentration_mode_is_refused_from_hysplit_5_3_0(
     tmp_path, point_release, extra
 ):
     # With ziscale, WINDERRTF is -1 on 5.3+, which gets past HYSPLIT's check.
-    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.4.2")
-    config = _config(directory=build, **CONCENTRATION, **WIND, **extra)
-    with pytest.raises(ValueError, match="IDSP=2") as error:
-        _inputs(tmp_path, point_release, config)
-    assert "hysplit.v5.4.2" in str(error.value)
-    assert not (tmp_path / "run" / "SETUP.CFG").exists()
+    found = _refusals(
+        tmp_path, point_release, "hysplit.v5.4.2", **CONCENTRATION, **WIND, **extra
+    )
+    assert len(found) == 1
+    assert "IDSP=2" in found[0]
+    assert "hysplit.v5.4.2" in found[0]
 
 
 @pytest.mark.parametrize(
@@ -1068,9 +1085,7 @@ def test_wind_error_in_the_concentration_mode_is_refused_from_hysplit_5_3_0(
 def test_wind_error_is_not_refused_elsewhere(
     tmp_path, point_release, version, settings
 ):
-    build = make_hysplit_dir(tmp_path / "hysplit", version)
-    config = _config(directory=build, **settings)
-    assert "winderrtf" in _setup_cfg(tmp_path, point_release, config)
+    assert _refusals(tmp_path, point_release, version, **settings) == []
 
 
 @pytest.mark.parametrize("krand", [10, 11, 12, 13])
@@ -1079,26 +1094,57 @@ def test_krand_10_to_13_are_refused_before_hysplit_5_1_0(
     tmp_path, point_release, krand, version
 ):
     # 5.0.x runs them as krand=4; an unreadable version is taken to be older.
-    build = make_hysplit_dir(tmp_path / "hysplit", version)
-    config = _config(directory=build, krand=krand)
-    with pytest.raises(ValueError, match=f"krand={krand} is new in HYSPLIT 5.1.0") as e:
-        _inputs(tmp_path, point_release, config)
-    assert str(version) in str(e.value) or "no version" in str(e.value)
-    assert not (tmp_path / "run" / "SETUP.CFG").exists()
+    (found,) = _refusals(tmp_path, point_release, version, krand=krand)
+    assert f"krand={krand} is new in HYSPLIT 5.1.0" in found
+    assert str(version) in found or "no version" in found
 
 
 @pytest.mark.parametrize("version", ["hysplit.v5.1.0", "hysplit.v5.4.2"])
 def test_krand_10_to_13_run_from_hysplit_5_1_0(tmp_path, point_release, version):
-    build = make_hysplit_dir(tmp_path / "hysplit", version)
-    config = _config(directory=build, krand=10)
-    assert "krand=10" in _setup_cfg(tmp_path, point_release, config)
+    assert _refusals(tmp_path, point_release, version, krand=10) == []
 
 
 @pytest.mark.parametrize("krand", [None, 0, 1, 2, 3, 4])
 def test_the_other_krand_values_run_on_hysplit_5_0(tmp_path, point_release, krand):
-    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.0.2")
-    config = _config(directory=build, krand=krand)
-    assert "winderrtf=0" in _setup_cfg(tmp_path, point_release, config)
+    assert _refusals(tmp_path, point_release, "hysplit.v5.0.2", krand=krand) == []
+
+
+def test_the_version_is_asked_only_for_a_setting_that_needs_it(tmp_path, point_release):
+    asked = tmp_path / "asked"
+    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.0.2", f"touch {asked}\n")
+    HysplitModel().check_releases(_points(point_release), _config(directory=build))
+    assert not asked.exists()
+
+
+def test_the_check_has_nothing_to_refuse_with_no_program_to_ask(
+    tmp_path, point_release
+):
+    config = _config(directory=tmp_path / "nothing", krand=10)
+    assert HysplitModel().check_releases(_points(point_release), config).empty
+
+
+@not_on_windows("the stand-in HYSPLIT is a shell script")
+@pytest.mark.parametrize(
+    "settings", [{"krand": 10}, CONCENTRATION | WIND], ids=["krand", "wind error"]
+)
+def test_a_refused_setting_fails_a_run_before_hycs_std_is_run_for_it(
+    tmp_path, point_release, settings
+):
+    # The run asks for the version in an empty folder, where there is no CONTROL.
+    ran = tmp_path / "ran"
+    body = f"test -f CONTROL && touch {ran}\nexit 2\n"
+    version = "hysplit.v5.0.2" if "krand" in settings else "hysplit.v5.4.2"
+    build = make_hysplit_dir(tmp_path / "hysplit", version, body)
+    with pytest.raises(SimulationError, match="HYSPLIT") as raised:
+        run_model(
+            "hysplit",
+            point_release,
+            _config(directory=build, **settings),
+            make_met_config(tmp_path / "met"),
+        )
+    assert raised.value.reason == "RELEASE_REFUSED"
+    assert not (tmp_path / "run").exists()
+    assert not ran.exists()
 
 
 def test_setup_cfg_takes_kmsl_from_an_msl_release(tmp_path, point_release):

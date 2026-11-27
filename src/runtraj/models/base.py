@@ -453,13 +453,16 @@ class TransportModel(ABC, Generic[C]):
         ``kind``, ``time``, ``longitude``, ``latitude``, ``altitude``,
         ``altitude_ref``). It returns a DataFrame with ``check``,
         ``release`` and ``message`` columns, in that order, one row for each
-        release it cannot run. ``runtraj check`` lists them, and
+        release it cannot run; a row whose ``release`` is ``NA`` is about the
+        settings, and refuses every release. ``runtraj check`` lists them, and
         :func:`run_model` and :func:`run_model_many` fail them with the
         reason ``RELEASE_REFUSED`` before the model runs, so :meth:`run`
         and :meth:`run_many` never get such a release. HYSPLIT refuses a
         multipoint release whose points share a horizontal location, which
-        it would join into a line source, and, in its trajectory mode with
-        a ``hyts_std`` before 5.4.0, a release not on the hour.
+        it would join into a line source, in its trajectory mode with
+        a ``hyts_std`` before 5.4.0 a release not on the hour, and a setting
+        its ``hycs_std`` would ignore (HYSPLIT's ``krand`` 10 to 13 before
+        5.1.0, the wind error in the concentration mode from 5.3.0).
         """
         return pd.DataFrame(columns=list(CHECK_COLUMNS))
 

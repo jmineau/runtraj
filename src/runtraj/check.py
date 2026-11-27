@@ -5,7 +5,8 @@ The check before a run: what would stop a project's simulations, found without r
 that it has releases, that the transport model's
 executable is there (HYSPLIT's ``hycs_std``), that the model can run each
 release (HYSPLIT refuses a multipoint release whose points share a
-location), the met files each release needs,
+location) and its settings (HYSPLIT refuses ``krand`` 10 to 13 on a build
+older than 5.1.0), the met files each release needs,
 whether each release is inside the met's domain (or its crop, when it has
 one), whether HYSPLIT's ``varsiwant`` holds ``zsfc`` where the run needs it, what each stage of a variant finds
 wrong with its own inputs (:meth:`runtraj.stages.Stage.check`), and
@@ -168,7 +169,7 @@ def _met_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
 
 
 def _release_checks(variant: Variant, rows: pd.DataFrame) -> Iterator[_Check]:
-    """Yield the releases the variant's transport model cannot run, from its ``check_releases``."""
+    """Yield the releases, and the settings, the variant's transport model cannot run, from its ``check_releases``."""
     model = get_model(variant.model)
 
     def make() -> list[_Finding]:

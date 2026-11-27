@@ -212,14 +212,15 @@ def _release_points(releases: Iterable[Release]) -> pd.DataFrame:
 def _refused(
     model: TransportModel, releases: list[Release], config: TransportConfig
 ) -> dict[str, SimulationError]:
-    """Return the error of each of *releases* the model's ``check_releases`` refuses, by release id."""
+    """Return the error of each of *releases* the model's ``check_releases`` refuses, by release id, every one for a row with no release."""
     ids = {str(r.id) for r in releases}
     table = model.check_releases(_release_points(releases), config)
-    return {
-        str(release): SimulationError(str(message), reason="RELEASE_REFUSED")
-        for _check, release, message in table.itertuples(index=False)
-        if str(release) in ids
-    }
+    refused = {}
+    for _check, release, message in table.itertuples(index=False):
+        # A row with no release is about the settings: no release can run.
+        for each in ids if pd.isna(release) else ids & {str(release)}:
+            refused[each] = SimulationError(str(message), reason="RELEASE_REFUSED")
+    return refused
 
 
 def _finish(

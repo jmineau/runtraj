@@ -104,6 +104,38 @@ def test_an_off_hour_trajectory_release_is_found_before_hyts_std_5_4_0(tmp_path)
     assert "Release on the hour" in found["message"].iloc[0]
 
 
+CONCENTRATION = {
+    "mode": "concentration",
+    "pollutants": [{"name": "TRCA"}],
+    "grids": [{"name": "g", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0]}],
+}
+WIND = {"siguverr": 1.0, "tluverr": 60.0, "zcoruverr": 500.0, "horcoruverr": 40.0}
+
+
+def test_the_settings_a_hysplit_build_would_ignore_are_found(tmp_path):
+    old = make_hysplit_dir(tmp_path / "old", "hysplit.v5.0.2")
+    new = make_hysplit_dir(tmp_path / "new", "hysplit.v5.4.2")
+    variants = {
+        # krand 10 to 13 are new in 5.1.0; the wind error needs IDSP=2 from 5.3.0.
+        "krand-old": {"directory": str(old), "krand": 10},
+        "krand-new": {"directory": str(new), "krand": 10},
+        "wind-new": {"directory": str(new)} | CONCENTRATION | WIND,
+        "wind-old": {"directory": str(old)} | CONCENTRATION | WIND,
+        "wind-particles": {"directory": str(new)} | WIND,
+    }
+    project = _project(tmp_path, [_release(12), _release(13)], variants=variants)
+
+    found = _found(project.check(), "setting_refused")
+
+    assert found["variant"].tolist() == ["krand-old", "wind-new"]  # one row each
+    assert found["release"].isna().all()
+    assert "krand=10 is new in HYSPLIT 5.1.0" in found["message"].iloc[0]
+    assert "hysplit.v5.0.2" in found["message"].iloc[0]
+    assert "IDSP=2" in found["message"].iloc[1]
+    assert "hysplit.v5.4.2" in found["message"].iloc[1]
+    assert len(_found(project.check(), "release_refused")) == 0
+
+
 def test_a_project_with_no_releases_is_listed_once(tmp_path):
     """An empty project ran nothing, with no warning."""
     project = _project(tmp_path, variants={"hrrr": {}, "hrrr-zi": {"ziscale": 0.8}})

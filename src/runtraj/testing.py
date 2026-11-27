@@ -57,7 +57,7 @@ from runtraj.models import (
     TransportConfig,
     TransportModel,
 )
-from runtraj.models.run import _release_points, _run_many, _run_one
+from runtraj.models.run import _refused, _release_points, _run_many, _run_one
 from runtraj.particles import read_particles, write_particles
 from runtraj.project import Project
 from runtraj.results import model_result, result_type
@@ -397,7 +397,7 @@ def _check_refusal(
         "release",
         "message",
     ], f"{name}.check_releases must return a table of check, release and message"
-    if str(release.id) not in set(table["release"].astype(str)):
+    if str(release.id) not in _refused(model, [release], config):
         return False
     try:
         _run_one(model, release, config, met, None, None)
