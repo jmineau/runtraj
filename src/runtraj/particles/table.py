@@ -31,8 +31,10 @@ if TYPE_CHECKING:
 #: what a transport model's run must return. ``particle`` is the number the
 #: transport model gives the particle, ``age`` the minutes since release (negative for a
 #: backward run), ``lon`` and ``lat`` the position in degrees, and ``zagl``
-#: the height above ground in meters. The reference page on the particle
-#: table says what the other columns are.
+#: the height above ground in meters. ``particle`` and ``age`` are int32; the
+#: float columns are float32 or float64, as the transport model computed
+#: them (float64 here, which is what a read gives back). The reference page
+#: on the particle table says what the other columns are.
 PARTICLE_SCHEMA = pa.schema(
     [
         ("particle", pa.int32()),
@@ -45,6 +47,17 @@ PARTICLE_SCHEMA = pa.schema(
 
 #: Particle columns stored as int32 rather than float64.
 _INT_COLUMNS = ("age", "particle")
+
+
+def float64_schema(schema: pa.Schema) -> pa.Schema:
+    """Return *schema* with each float32 column float64, as a read gives it."""
+    return pa.schema(
+        [
+            f.with_type(pa.float64()) if pa.types.is_float32(f.type) else f
+            for f in schema
+        ]
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -197,9 +210,9 @@ def read_particles(
     Read a particle file.
 
     It needs nothing but the file: the release time in its metadata gives
-    the ``time`` column (UTC) back, from ``age``. ``age`` and ``particle`` come back as
-    float64, as HYSPLIT writes them. :func:`particles_metadata` reads the
-    release and settings.
+    the ``time`` column (UTC) back, from ``age``. ``age``, ``particle``, and any
+    float32 column come back as float64, whatever the model stored.
+    :func:`particles_metadata` reads the release and settings.
 
     Parameters
     ----------
@@ -228,7 +241,8 @@ def read_particles(
         read = [c for c in wanted if c in stored]
         if want_time and "age" in stored and "age" not in read:
             read.append("age")  # time is built from it
-        data = pf.read(columns=read).to_pandas()
+        stored_table = pf.read(columns=read)
+        data = stored_table.cast(float64_schema(stored_table.schema)).to_pandas()
     for name in _INT_COLUMNS:
         if name in data.columns:
             data[name] = data[name].astype("float64")
@@ -321,7 +335,8 @@ def write_particles(
     Write a particle table to a Parquet file that :func:`read_particles` reads alone.
 
     ``age`` and ``particle`` are stored as int32, and ``time`` is left out
-    since it is the release time plus ``age``. A ``release`` column holds
+    since it is the release time plus ``age``. Float columns are stored as
+    the model computed them, float32 or float64. A ``release`` column holds
     the release id, so a scan of many files can tell releases apart. The
     release, the run's settings, and the met files go in the file's
     metadata, so the file reads alone.

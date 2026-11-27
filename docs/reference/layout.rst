@@ -215,8 +215,10 @@ column means.
      - Minutes since release, negative for a backward run. Read back as
        float64.
    * - ``lon``, ``lat``, ``zagl``, and the rest
-     - float64
-     - The columns ``varsiwant`` asked HYSPLIT for, plus ``release_height``
+     - float32 or float64
+     - As the model computed them: HYSPLIT's are float64, FLEXPART's
+       float32. :func:`runtraj.read_particles` gives them back as float64.
+       The columns ``varsiwant`` asked HYSPLIT for, plus ``release_height``
        for a column or multipoint release.
 
 ``time`` is not stored: it is the release time plus ``age``.

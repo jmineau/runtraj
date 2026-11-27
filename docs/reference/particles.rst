@@ -38,6 +38,18 @@ Every table has five columns, :data:`PARTICLE_SCHEMA`:
      - m
      - Height of the particle above ground.
 
+The float columns, ``lon``, ``lat``, ``zagl``, and any others a model adds, are
+float32 or float64, as the transport model computed them, and a particle
+file stores them that way: HYSPLIT's are float64 (rounding positions
+to float32 can move a particle across a grid-cell edge), FLEXPART's float32.
+:func:`~runtraj.particles.read_particles` and
+:meth:`~runtraj.output.Output.table` give every float column back as
+float64, whatever a file stores, so a table does not depend on which
+file was read first. ``age`` is whole minutes: a model whose output steps
+are not whole minutes cannot write particles
+(:func:`~runtraj.particles.write_particles` raises, and
+:doc:`flexpart`'s reader refuses such times).
+
 The release row
 ---------------
 

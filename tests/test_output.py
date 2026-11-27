@@ -154,6 +154,35 @@ def test_particles_table_is_every_file_in_date_order(tmp_path):
     assert [i[:10] for i in ids] == ["2024071506", "2024071518", "2024071600"]
 
 
+@pytest.mark.parametrize("float32_first", [True, False])
+def test_a_folder_of_float32_and_float64_files_reads_as_float64(
+    tmp_path, float32_first
+):
+    """The first file's types must not decide the table: both orders give the same one."""
+    from runtraj.particles import read_particles
+
+    out = Output(tmp_path / "output")
+    small, big = release_at(hour=6), release_at(hour=18)
+    narrow = fake_particles(small, n=10).astype(
+        {c: "float32" for c in ("lon", "lat", "zagl", "foot")}
+    )
+    wide = fake_particles(big, n=10)
+    out.write_particles(VARIANT, small, narrow, [])
+    out.write_particles(VARIANT, big, wide, [])
+    order = [small.id, big.id] if float32_first else [big.id, small.id]
+
+    table = out.table("particles", VARIANT, release_ids=order).to_pandas()
+
+    assert (table[["lon", "lat", "zagl", "foot"]].dtypes == "float64").all()
+    path = out.path("particles", VARIANT, small.id)
+    assert (
+        read_particles(path)[["lon", "lat", "zagl", "foot"]].dtypes == "float64"
+    ).all()
+    # The float64 file's values are not cast down on the way.
+    got = table[table["release"] == str(big.id)]["lon"].to_numpy()
+    np.testing.assert_array_equal(got, wide["lon"].to_numpy())
+
+
 # ---------------------------------------------------------------------------
 # Files written before a receptor was renamed a release
 # ---------------------------------------------------------------------------
