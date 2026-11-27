@@ -746,15 +746,6 @@ def _did_you_mean(key: str, blocks: dict[str, type[BackendConfig]]) -> str:
     return f" Did you mean {close[0]!r}{names[close[0]]}?" if close else ""
 
 
-#: The blocks of the backends built in, by the name ``backend`` gives them.
-BUILT_IN_BLOCKS: dict[str, type[BackendConfig]] = {
-    "local": LocalConfig,
-    "slurm": SlurmConfig,
-    "pbs": PbsConfig,
-    "kubernetes": KubernetesConfig,
-}
-
-
 def block_name(backend: str) -> str:
     """
     Return the name of the block under ``execution`` that holds *backend*'s settings.
@@ -774,8 +765,6 @@ def block_name(backend: str) -> str:
     MissingClass
         If *backend* is an import path that cannot be imported here.
     """
-    if backend in BUILT_IN_BLOCKS:
-        return backend
     from runtraj.execution.backends import get_backend
 
     return get_backend(backend).name
@@ -879,11 +868,11 @@ class ExecutionConfig(BaseModel):
         """
         if not isinstance(data, dict):
             return data
-        blocks = dict(BUILT_IN_BLOCKS)
-        backend = data.get("backend", "local")
-        if isinstance(backend, str) and backend not in BUILT_IN_BLOCKS:
-            from runtraj.execution.backends import get_backend
+        from runtraj.execution.backends import BACKENDS, get_backend
 
+        blocks = {name: get_backend(name).config_class for name in BACKENDS}
+        backend = data.get("backend", "local")
+        if isinstance(backend, str) and backend not in BACKENDS:
             found = get_backend(backend)
             if found.name in cls.model_fields:
                 raise ValueError(
@@ -927,7 +916,7 @@ class ExecutionConfig(BaseModel):
     def block(self) -> BackendConfig:
         """The block of the backend ``backend`` names, the one a run reads."""
         name = block_name(self.backend)
-        if name in BUILT_IN_BLOCKS:
+        if name in ExecutionConfig.model_fields:
             return getattr(self, name)
         return (self.model_extra or {})[name]
 
@@ -991,7 +980,6 @@ def slurm_minutes(time: str | int) -> int:
 
 
 __all__ = [
-    "BUILT_IN_BLOCKS",
     "BackendConfig",
     "ExecutionConfig",
     "FetchConfig",
