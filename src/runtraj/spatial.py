@@ -192,15 +192,13 @@ def is_longlat(crs: str) -> bool:
     Return whether ``crs`` is geographic (longitude/latitude degrees).
 
     This is the one test runtraj uses, for grids, meshes, and plots alike.
-    PROJ strings are read by eye; other forms, such as ``EPSG:4326``, by
-    pyproj.
+    ``+proj=longlat`` and the common names are read by eye; every other form,
+    such as ``+proj=latlong`` or ``EPSG:4326``, is left to pyproj.
     """
     if "+proj=longlat" in crs:
         return True
     if crs.upper() in {"EPSG:4326", "WGS84", "OGC:CRS84"}:
         return True
-    if crs.startswith("+"):
-        return False
     try:
         from pyproj import CRS
 
