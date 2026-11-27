@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=e2943cab"></script>
+    <script src="../_static/documentation_options.js?v=f5818081"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
+  <meta name="docsearch:version" content="0.1.0a6.dev51+g287cfa1af" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1054,6 +1054,17 @@ int32, and read back as float64.</p></td>
 </tbody>
 </table>
 </div>
+<p>The float columns, <code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, and any others a model adds, are
+float32 or float64, as the transport model computed them, and a particle
+file stores them that way: HYSPLIT’s are float64 (rounding positions
+to float32 can move a particle across a grid-cell edge), FLEXPART’s float32.
+<code class="xref py py-func docutils literal notranslate"><span class="pre">read_particles()</span></code> and
+<a class="reference internal" href="_api/runtraj.output.Output.table.html#runtraj.output.Output.table" title="runtraj.output.Output.table"><code class="xref py py-meth docutils literal notranslate"><span class="pre">table()</span></code></a> give every float column back as
+float64, whatever a file stores, so a table does not depend on which
+file was read first. <code class="docutils literal notranslate"><span class="pre">age</span></code> is whole minutes: a model whose output steps
+are not whole minutes cannot write particles
+(<a class="reference internal" href="_api/runtraj.particles.write_particles.html#runtraj.particles.write_particles" title="runtraj.particles.write_particles"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_particles()</span></code></a> raises, and
+<a class="reference internal" href="flexpart.html"><span class="doc">FLEXPART Integration</span></a>’s reader refuses such times).</p>
 <section id="the-release-row">
 <h2>The release row<a class="headerlink" href="#the-release-row" title="Link to this heading">#</a></h2>
 <p>A model should write each particle’s release as a row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>. That

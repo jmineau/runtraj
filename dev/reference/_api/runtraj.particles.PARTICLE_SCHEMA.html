@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=e2943cab"></script>
+    <script src="../../_static/documentation_options.js?v=f5818081"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
+  <meta name="docsearch:version" content="0.1.0a6.dev51+g287cfa1af" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1018,8 +1018,10 @@
 what a transport model’s run must return. <code class="docutils literal notranslate"><span class="pre">particle</span></code> is the number the
 transport model gives the particle, <code class="docutils literal notranslate"><span class="pre">age</span></code> the minutes since release (negative for a
 backward run), <code class="docutils literal notranslate"><span class="pre">lon</span></code> and <code class="docutils literal notranslate"><span class="pre">lat</span></code> the position in degrees, and <code class="docutils literal notranslate"><span class="pre">zagl</span></code>
-the height above ground in meters. The reference page on the particle
-table says what the other columns are.</p>
+the height above ground in meters. <code class="docutils literal notranslate"><span class="pre">particle</span></code> and <code class="docutils literal notranslate"><span class="pre">age</span></code> are int32; the
+float columns are float32 or float64, as the transport model computed
+them (float64 here, which is what a read gives back). The reference page
+on the particle table says what the other columns are.</p>
 </dd></dl>
 
 </section>

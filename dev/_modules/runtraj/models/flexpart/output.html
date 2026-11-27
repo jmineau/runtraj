@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=e2943cab"></script>
+    <script src="../../../../_static/documentation_options.js?v=f5818081"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
+  <meta name="docsearch:version" content="0.1.0a6.dev51+g287cfa1af" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -466,7 +466,8 @@
 <span class="sd">  ``IETIME`` for a backward run, so its values are zero or negative there.</span>
 <span class="sd">- ``particle`` numbers the particles from 1 in the order they were released,</span>
 <span class="sd">  across all the files of a run.</span>
-<span class="sd">- Every field is float32 with ``_FillValue`` -1. A particle not yet</span>
+<span class="sd">- Every field is float32 with ``_FillValue`` -1, and the table keeps it</span>
+<span class="sd">  float32, as FLEXPART computed it. A particle not yet</span>
 <span class="sd">  released, released in that same step, or gone for more than one output</span>
 <span class="sd">  step has -1 in every field at that time.</span>
 <span class="sd">- ``z`` is height above ground in meters, ``prs`` pressure in Pa.</span>
@@ -627,7 +628,7 @@
         <span class="s2">"age"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">age</span><span class="p">[</span><span class="n">rows_time</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">kept</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">kept</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">):</span>
             <span class="n">out</span><span class="p">[</span><span class="n">out</span> <span class="o">==</span> <span class="n">_FILL</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
         <span class="n">columns</span><span class="p">[</span><span class="n">PARTICLE_COLUMNS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">out</span> <span class="o">*</span> <span class="n">_SCALE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>

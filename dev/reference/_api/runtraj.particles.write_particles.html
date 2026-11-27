@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=e2943cab"></script>
+    <script src="../../_static/documentation_options.js?v=f5818081"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
+  <meta name="docsearch:version" content="0.1.0a6.dev51+g287cfa1af" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1016,7 +1016,8 @@
 <span class="sig-prename descclassname"><span class="pre">runtraj.particles.</span></span><span class="sig-name descname"><span class="pre">write_particles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/particles/table.html#write_particles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.particles.write_particles" title="Link to this definition">#</a></dt>
 <dd><p>Write a particle table to a Parquet file that <code class="xref py py-func docutils literal notranslate"><span class="pre">read_particles()</span></code> reads alone.</p>
 <p><code class="docutils literal notranslate"><span class="pre">age</span></code> and <code class="docutils literal notranslate"><span class="pre">particle</span></code> are stored as int32, and <code class="docutils literal notranslate"><span class="pre">time</span></code> is left out
-since it is the release time plus <code class="docutils literal notranslate"><span class="pre">age</span></code>. A <code class="docutils literal notranslate"><span class="pre">release</span></code> column holds
+since it is the release time plus <code class="docutils literal notranslate"><span class="pre">age</span></code>. Float columns are stored as
+the model computed them, float32 or float64. A <code class="docutils literal notranslate"><span class="pre">release</span></code> column holds
 the release id, so a scan of many files can tell releases apart. The
 release, the run’s settings, and the met files go in the file’s
 metadata, so the file reads alone, and so does <code class="docutils literal notranslate"><span class="pre">particles.attrs[&quot;internal_grid&quot;]</span></code>

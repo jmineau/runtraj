@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=e2943cab"></script>
+    <script src="../../../_static/documentation_options.js?v=f5818081"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
+  <meta name="docsearch:version" content="0.1.0a6.dev51+g287cfa1af" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -481,8 +481,10 @@
 <span class="c1">#: what a transport model's run must return. ``particle`` is the number the</span>
 <span class="c1">#: transport model gives the particle, ``age`` the minutes since release (negative for a</span>
 <span class="c1">#: backward run), ``lon`` and ``lat`` the position in degrees, and ``zagl``</span>
-<span class="c1">#: the height above ground in meters. The reference page on the particle</span>
-<span class="c1">#: table says what the other columns are.</span>
+<span class="c1">#: the height above ground in meters. ``particle`` and ``age`` are int32; the</span>
+<span class="c1">#: float columns are float32 or float64, as the transport model computed</span>
+<span class="c1">#: them (float64 here, which is what a read gives back). The reference page</span>
+<span class="c1">#: on the particle table says what the other columns are.</span>
 <span class="n">PARTICLE_SCHEMA</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span>
     <span class="p">[</span>
         <span class="p">(</span><span class="s2">"particle"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">()),</span>
@@ -495,6 +497,17 @@
 
 <span class="c1">#: Particle columns stored as int32 rather than float64.</span>
 <span class="n">_INT_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"age"</span><span class="p">,</span> <span class="s2">"particle"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">float64_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Schema</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return *schema* with each float32 column float64, as a read gives it."""</span>
+    <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">with_type</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">float64</span><span class="p">())</span> <span class="k">if</span> <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_float32</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">type</span><span class="p">)</span> <span class="k">else</span> <span class="n">f</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">schema</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -661,12 +674,12 @@
 <span class="sd">    Read a particle file.</span>
 
 <span class="sd">    It needs nothing but the file: the release time in its metadata gives</span>
-<span class="sd">    the ``time`` column (UTC) back, from ``age``. ``age`` and ``particle`` come back as</span>
-<span class="sd">    float64, as HYSPLIT writes them. :func:`particles_metadata` reads the</span>
-<span class="sd">    release and settings. A HYSPLIT run's internal grid, which the file</span>
-<span class="sd">    records, comes back in ``attrs["internal_grid"]``</span>
-<span class="sd">    (``(nlvl, aa, bb, cc)``), where :func:`runtraj.sampling.sample_met` reads</span>
-<span class="sd">    it.</span>
+<span class="sd">    the ``time`` column (UTC) back, from ``age``. ``age``, ``particle``, and any</span>
+<span class="sd">    float32 column come back as float64, whatever the model stored.</span>
+<span class="sd">    :func:`particles_metadata` reads the release and settings. A HYSPLIT</span>
+<span class="sd">    run's internal grid, which the file records, comes back in</span>
+<span class="sd">    ``attrs["internal_grid"]`` (``(nlvl, aa, bb, cc)``), where</span>
+<span class="sd">    :func:`runtraj.sampling.sample_met` reads it.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -696,7 +709,8 @@
         <span class="n">read</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">stored</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">want_time</span> <span class="ow">and</span> <span class="s2">"age"</span> <span class="ow">in</span> <span class="n">stored</span> <span class="ow">and</span> <span class="s2">"age"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">read</span><span class="p">:</span>
             <span class="n">read</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span>  <span class="c1"># time is built from it</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">read</span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+        <span class="n">stored_table</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">read</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">stored_table</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">float64_schema</span><span class="p">(</span><span class="n">stored_table</span><span class="o">.</span><span class="n">schema</span><span class="p">))</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_INT_COLUMNS</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"float64"</span><span class="p">)</span>
@@ -793,7 +807,8 @@
 <span class="sd">    Write a particle table to a Parquet file that :func:`read_particles` reads alone.</span>
 
 <span class="sd">    ``age`` and ``particle`` are stored as int32, and ``time`` is left out</span>
-<span class="sd">    since it is the release time plus ``age``. A ``release`` column holds</span>
+<span class="sd">    since it is the release time plus ``age``. Float columns are stored as</span>
+<span class="sd">    the model computed them, float32 or float64. A ``release`` column holds</span>
 <span class="sd">    the release id, so a scan of many files can tell releases apart. The</span>
 <span class="sd">    release, the run's settings, and the met files go in the file's</span>
 <span class="sd">    metadata, so the file reads alone, and so does ``particles.attrs["internal_grid"]``</span>

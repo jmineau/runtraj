@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=e2943cab"></script>
+    <script src="../_static/documentation_options.js?v=f5818081"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
+  <meta name="docsearch:version" content="0.1.0a6.dev51+g287cfa1af" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1217,8 +1217,10 @@ column means.</p>
 float64.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">zagl</span></code>, and the rest</p></td>
-<td><p>float64</p></td>
-<td><p>The columns <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> asked HYSPLIT for, plus <code class="docutils literal notranslate"><span class="pre">release_height</span></code>
+<td><p>float32 or float64</p></td>
+<td><p>As the model computed them: HYSPLIT’s are float64, FLEXPART’s
+float32. <a class="reference internal" href="_api/runtraj.read_particles.html#runtraj.read_particles" title="runtraj.read_particles"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.read_particles()</span></code></a> gives them back as float64.
+The columns <code class="docutils literal notranslate"><span class="pre">varsiwant</span></code> asked HYSPLIT for, plus <code class="docutils literal notranslate"><span class="pre">release_height</span></code>
 for a column or multipoint release.</p></td>
 </tr>
 </tbody>
