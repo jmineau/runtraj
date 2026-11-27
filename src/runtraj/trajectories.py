@@ -31,7 +31,6 @@ release.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -41,8 +40,8 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from runtraj._paths import location, readable, write_parquet
-from runtraj.particles import release_metadata
+from runtraj._paths import location, readable
+from runtraj.particles.table import write_release_file
 
 if TYPE_CHECKING:
     from upath import UPath
@@ -135,22 +134,7 @@ def write_trajectories(
     data = data.assign(
         **{name: data[name].to_numpy().astype(np.int32) for name in _INT_COLUMNS}
     )
-    table = pa.Table.from_pandas(data, preserve_index=False)
-    table = table.add_column(
-        0,
-        pa.field("release", pa.dictionary(pa.int32(), pa.string())),
-        pa.DictionaryArray.from_arrays(
-            pa.array(np.zeros(table.num_rows, dtype=np.int32)),
-            pa.array([str(release.id)]),
-        ),
-    )
-    meta = {
-        **release_metadata(release),
-        b"runtraj:settings": json.dumps(dict(settings)).encode(),
-        b"runtraj:met_files": json.dumps([str(p) for p in met_files]).encode(),
-        **(metadata or {}),
-    }
-    return write_parquet(table.replace_schema_metadata(meta), location(path))
+    return write_release_file(path, data, release, settings, met_files, metadata)
 
 
 def read_trajectories(path: str | Path | UPath) -> pd.DataFrame:

@@ -10,7 +10,6 @@ from runtraj.cli import app
 from runtraj.exceptions import MissingClass
 from runtraj.execution import Backend, ExecutionConfig, get_backend, run, submit
 from runtraj.execution.backends import BACKENDS
-from runtraj.execution.config import BUILT_IN_BLOCKS
 
 from ..fixtures import backends as toy
 from ..fixtures.slurm import hourly_project
@@ -30,7 +29,6 @@ def test_a_built_in_backend_reads_the_block_of_its_name(name):
     backend = get_backend(name)
     assert isinstance(backend, Backend)
     assert backend.name == name
-    assert backend.config_class is BUILT_IN_BLOCKS[name]
     assert ExecutionConfig.model_fields[name].annotation is backend.config_class
 
 

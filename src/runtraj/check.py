@@ -7,18 +7,21 @@ executable is there (HYSPLIT's ``hycs_std``), that the model can run each
 release (HYSPLIT refuses a multipoint release whose points share a
 location), the met files each release needs,
 whether each release is inside the met's domain (or its crop, when it has
-one), whether HYSPLIT's ``varsiwant`` holds ``zsfc`` where the run needs it, and what each stage of a variant finds
-wrong with its own inputs (:meth:`runtraj.stages.Stage.check`).
+one), whether HYSPLIT's ``varsiwant`` holds ``zsfc`` where the run needs it, what each stage of a variant finds
+wrong with its own inputs (:meth:`runtraj.stages.Stage.check`), and
+whether two mets of one transport model record the same settings
+(:func:`look_alike_mets`), which a run refuses too.
 ``Project.check`` and ``runtraj check`` call it.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
+from runtraj.identity import canonical
 from runtraj.models import get_model
 from runtraj.particles.table import needs_height_to_match
 
@@ -72,11 +75,54 @@ def check_project(project: Project) -> pd.DataFrame:
                 names = found.setdefault(finding, [])
                 if name not in names:
                     names.append(name)
+    for names, message in look_alike_mets(project.variants.values()):
+        found[("met_label", None, message)] = names
     table = [
         (check, ", ".join(names), release, message)
         for (check, release, message), names in found.items()
     ]
     return pd.DataFrame(table, columns=list(CHECK_COLUMNS)).astype("string")
+
+
+def look_alike_mets(variants: Iterable[Variant]) -> list[tuple[list[str], str]]:
+    """
+    Return the mets of one transport model that record the same settings, with the variants that use them.
+
+    Two such mets, such as two WRF runs whose ARL files carry one source id,
+    look like one met to a run, so variants that differ only in which of
+    them they use would share one run per release: all but the first would
+    get its results. Each item is the names of the variants that use one
+    group of look-alike mets, and a message that names the mets and says to
+    give each a ``label``. A met whose files cannot be read is left out:
+    ``runtraj check`` and the run say so on their own.
+    """
+    # The variants of each met, by its model and what it records.
+    groups: dict[str, dict[str, list[str]]] = {}
+    recorded: dict[str, tuple[str, dict[str, Any]]] = {}
+    for variant in variants:
+        try:
+            settings = canonical(variant.met_settings)
+        except (FileNotFoundError, ValueError):
+            continue
+        key = repr((variant.model, settings))
+        recorded.setdefault(key, (variant.model, settings))
+        groups.setdefault(key, {}).setdefault(variant.met, []).append(variant.name)
+    found = []
+    for key, by_met in groups.items():
+        if len(by_met) < 2:
+            continue
+        model, settings = recorded[key]
+        mets = ", ".join(repr(m) for m in by_met)
+        first = next(iter(by_met))
+        message = (
+            f"Mets {mets} of the transport model {model} record the same "
+            f"settings, {settings}, so variants that differ only in which of "
+            "them they use would share one run, and all but the first would "
+            "get its results. Give each met a label of its own under mets: in "
+            f"config.yaml, such as label: {first}."
+        )
+        found.append(([v for names in by_met.values() for v in names], message))
+    return found
 
 
 #: The finding of a project with no releases, which has nothing to run.

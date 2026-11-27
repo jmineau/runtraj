@@ -199,7 +199,25 @@ class MetConfig(BaseModel):
     model's built-in weather: nothing to check or fetch, nothing
     downloaded, and ARL files when the met is read at the particles. A met
     of files overrides the ones its files need.
+
+    Every met has :attr:`label`, which a run records beside :meth:`settings`
+    when it is set (:attr:`runtraj.config.Variant.met_settings`).
     """
+
+    label: str | None = Field(
+        None,
+        description=(
+            "A name that tells this met's runs apart from those of another met "
+            "of the same weather product, such as ``mynn`` and ``ysu`` for two "
+            "WRF runs with different boundary-layer schemes, whose ARL files "
+            "carry the same source id. A run records it only when it is set, so "
+            "a met without one keeps its settings folders, and setting one "
+            "moves its runs to a new folder. ``runtraj check`` and a run refuse "
+            "two mets of one transport model that record the same settings and "
+            "no label to tell them apart, since their variants would share one "
+            "run."
+        ),
+    )
 
     @abstractmethod
     def settings(self) -> dict[str, Any]:
@@ -209,7 +227,8 @@ class MetConfig(BaseModel):
         Never where its files are kept or how they are named, so that moving
         them changes no settings folder. Plain values (mappings, lists,
         strings, numbers). HYSPLIT's are the source id in the ARL headers
-        and the crop.
+        and the crop. The run adds :attr:`label` when it is set, so a
+        subclass leaves it out.
         """
 
     def check(self, releases: pd.DataFrame, n_hours: int) -> pd.DataFrame:

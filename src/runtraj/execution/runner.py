@@ -15,6 +15,8 @@ import logging
 import math
 import os
 import re
+import shlex
+import sys
 import tempfile
 import time
 from collections.abc import Iterable
@@ -25,6 +27,7 @@ from uuid import uuid4
 
 from runtraj._paths import absolute
 from runtraj._transient import is_transient
+from runtraj.check import look_alike_mets
 from runtraj.execution.backends import Backend, get_backend, not_waited
 from runtraj.execution.config import ExecutionConfig, LocalConfig, PbsConfig
 from runtraj.execution.inputs import (
@@ -331,6 +334,63 @@ def write_submission(
     return folder
 
 
+def task_command(
+    project: Project,
+    folder: Path,
+    n_tasks: int,
+    *,
+    index: str,
+    cpus: int,
+    compute_root: str | Path | None,
+    skip_existing: bool,
+    restarted: str,
+    on_first_start: Iterable[str] = (),
+) -> tuple[list[str], str]:
+    """
+    Return the lines and the command of a job script's task, for ``runtraj run --task``.
+
+    The command is ``runtraj run <project> --releases <folder>/releases.parquet
+    --task <index>/<n_tasks> --execution <folder>/execution.yaml --cpus <cpus>
+    --output <output>`` with the Python that called this, and
+    ``--compute-root`` when given. *index* is a shell variable of the scheduler
+    (``$SLURM_ARRAY_TASK_ID``), left to expand when the script runs.
+
+    With ``skip_existing=False`` the task's first start runs again what
+    exists and a start after that skips it: the lines, which go before the
+    command, set ``skip`` to ``--no-skip`` unless the shell command
+    *restarted* succeeds, then run *on_first_start*; the command ends with
+    ``$skip``. With ``skip_existing=True`` there are no lines.
+    """
+    words = [
+        sys.executable,
+        "-m",
+        "runtraj",
+        "run",
+        str(project.directory),
+        "--releases",
+        str(folder / "releases.parquet"),
+        "--task",
+        f"{index}/{n_tasks}",
+        "--execution",
+        str(folder / "execution.yaml"),
+        # A task runs its share here, so it is told the array's cpus.
+        "--cpus",
+        str(cpus),
+        # The output the submitting process uses, which may not be config.yaml's.
+        "--output",
+        str(project.output.directory),
+    ]
+    if compute_root is not None:
+        words += ["--compute-root", str(resolve_compute_root(project, compute_root))]
+    # The index must expand, so that word is quoted with "".
+    quoted = [f'"{w}"' if w.startswith("$") else shlex.quote(w) for w in words]
+    lines: list[str] = []
+    if not skip_existing:
+        lines = ['skip="--no-skip"', f'{restarted} && skip=""', *on_first_start]
+        quoted.append("$skip")
+    return lines, " ".join(quoted)
+
+
 def array_size(block: SlurmConfig | PbsConfig, n_releases: int, limit: int) -> int:
     """
     Return the number of tasks of a job array for *n_releases*: ``n_tasks``, or ten per worker.
@@ -456,7 +516,9 @@ def run(
     ------
     ValueError
         If a release id is not in the project, *task* is not from 0 to
-        ``n - 1``, or the backend is not waited for.
+        ``n - 1``, the backend is not waited for, or two mets of one
+        transport model record the same settings, so that their variants
+        would share one run (:func:`runtraj.check.look_alike_mets`).
 
     Notes
     -----
@@ -471,6 +533,7 @@ def run(
     backend = get_backend(execution.backend)
     if task is None and not backend.waits:
         raise ValueError(not_waited(backend))
+    _refuse_look_alike_mets(project)
     todo = pending(project, releases=releases, task=task, skip_existing=skip_existing)
     if not todo:
         logger.info("run: every simulation is complete; nothing to do")
@@ -488,6 +551,13 @@ def run(
         skip_existing=skip_existing,
         compute_root=compute_root,
     )
+
+
+def _refuse_look_alike_mets(project: Project) -> None:
+    """Raise ``ValueError`` when two mets of one transport model record the same settings, before the completed runs are listed."""
+    alike = look_alike_mets(project.variants.values())
+    if alike:
+        raise ValueError("\n".join(message for _, message in alike))
 
 
 def run_here(
@@ -639,7 +709,8 @@ def submit(
     ------
     ValueError
         If the execution backend is ``local``, or one that takes no list
-        of releases (Kubernetes) with *releases* or ``skip_existing=False``.
+        of releases (Kubernetes) with *releases* or ``skip_existing=False``,
+        or two mets look alike, as for :func:`run`.
     """
     execution = execution if execution is not None else project.config.execution
     backend = get_backend(execution.backend)
@@ -651,6 +722,7 @@ def submit(
             "and skips the complete ones, as a retried task must: it takes no "
             "list of releases and no --no-skip."
         )
+    _refuse_look_alike_mets(project)
     todo = pending(project, releases=releases, skip_existing=skip_existing)
     if not todo:
         logger.info("submit: every simulation is complete; nothing to do")
@@ -676,6 +748,7 @@ __all__ = [
     "run_here",
     "status_after_job",
     "submit",
+    "task_command",
     "task_share",
     "write_submission",
 ]

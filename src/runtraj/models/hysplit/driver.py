@@ -11,12 +11,15 @@ input files of a run, or to read a particle file from elsewhere.
 """
 
 import datetime as dt
+import functools
 import logging
 import os
+import re
 import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -66,6 +69,9 @@ PARTICLE_FILE = "PARTICLE_STILT.DAT"
 WINDERR_FILE = "WINDERR"
 ZIERR_FILE = "ZIERR"
 ZICONTROL_FILE = "ZICONTROL"
+#: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once
+#: it has read ``ZICONTROL`` (:func:`winderrtf`).
+ZICONTROL_ADDS_TWO = (5, 3, 0)
 #: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.
 CHEMRATE_FILE = "CHEMRATE.TXT"
 LOG_FILE = "hysplit.log"
@@ -175,6 +181,80 @@ def find_program(name: str, directory: str | Path | None = None) -> Path:
             f"folder that holds an executable {name} on PATH."
         )
     return Path(found)
+
+
+#: What ``hycs_std`` prints on its first lines: ``HYSPLIT version: hysplit.v5.1.0``.
+_VERSION_LINE = re.compile(r"HYSPLIT version:\s*(\S+)")
+
+#: Seconds ``hycs_std`` gets to print its version; it stops at once without ``CONTROL``.
+_VERSION_TIMEOUT = 30
+
+#: The release number in a version ``hycs_std`` prints, such as ``5.1.0`` in ``hysplit.v5.1.0``.
+_VERSION_NUMBER = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+
+
+def hysplit_version(
+    directory: str | Path | None = None, program: str = "hycs_std"
+) -> str | None:
+    """
+    Return the version the ``hycs_std`` of *directory*, or else on ``PATH``, prints when it starts.
+
+    *program* names another HYSPLIT program to ask, such as ``hyts_std``,
+    which prints the same line.
+
+    ``hycs_std`` prints a line such as ``HYSPLIT version: hysplit.v5.1.0``
+    before it reads its input; this returns ``hysplit.v5.1.0``. It runs the
+    binary for a moment in an empty temporary directory, where it stops for
+    want of a ``CONTROL`` file. The version is recorded with a run's
+    settings, but it is not what tells two builds apart: the SHA-256 of
+    ``hycs_std`` is (:meth:`~runtraj.models.hysplit.HysplitModel.sha256`). Two builds of one
+    release print the same version, and CHPC's ``hysplit/5.2.3`` module
+    prints ``hysplit.v5.2.2``.
+
+    Returns
+    -------
+    str or None
+        The version, or ``None`` when ``hycs_std`` printed none or could
+        not be run here.
+
+    Raises
+    ------
+    HYSPLITNotFoundError
+        If there is no such program (:func:`find_program`).
+    """
+    return _printed_version(*_stamp(find_program(program, directory)))
+
+
+def _stamp(path: Path) -> tuple[str, int, int]:
+    """Return *path*, resolved, with its modification time and size, the key of the caches that read a program once."""
+    path = path.resolve()
+    stat = path.stat()
+    return str(path), stat.st_mtime_ns, stat.st_size
+
+
+@functools.lru_cache(maxsize=16)
+def _printed_version(path: str, mtime_ns: int, size: int) -> str | None:
+    """Return the version the ``hycs_std`` at *path* prints, read once per file."""
+    with tempfile.TemporaryDirectory(prefix="runtraj-version-") as tmp:
+        try:
+            proc = subprocess.Popen(
+                [path],
+                cwd=tmp,
+                env=hysplit_environment(),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except OSError:  # not executable here, such as another platform's build
+            return None
+        try:
+            out, _ = proc.communicate(timeout=_VERSION_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.communicate()
+            return None
+    found = _VERSION_LINE.search(out.decode(errors="replace"))
+    return found.group(1) if found else None
 
 
 def find_hycs_std(directory: str | Path | None = None) -> Path:
@@ -310,12 +390,13 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
     """
     Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.
 
-    In the particles mode the entries of :data:`FIXED_SETUP` come first.
+    In the particle mode the entries of :data:`FIXED_SETUP` come first.
     Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,
-    under their own names; the concentration mode leaves out the particle
+    under their own names (``DSWF`` in ``VARSIWANT`` in upper case, which
+    ``hycs_std`` 5.2 and later needs to fill it); the concentration mode leaves out the particle
     file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the
     config's ``ichem``, 0 unless set. The driver adds
-    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
+    ``KMSL``, ``IVMAX`` (in the particle mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
     is unset, which depend on the release locations or follow from other
     settings.
 
@@ -332,7 +413,7 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
             if getattr(params, name) is not None
         )
         return entries
-    particles = params.mode == "particles"
+    particles = params.mode == "particle"
     entries = dict(FIXED_SETUP) if particles else {}
     skip = NOT_IN_SETUP if particles else NOT_IN_SETUP | set(PARTICLES_SETTINGS)
     entries.update(
@@ -341,6 +422,13 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
         if name not in skip and getattr(params, name) is not None
     )
     entries["zicontroltf"] = zicontroltf(params)
+    if "varsiwant" in entries:
+        # From 5.2.0 hycs_std turns the shortwave flux on by a case-sensitive
+        # comparison to 'DSWF': in lower case the column is written as 0. Every
+        # other name stays lower case, which 'zcfx' needs ('ZCFX' is unknown).
+        entries["varsiwant"] = [
+            "DSWF" if name == "dswf" else name for name in params.varsiwant
+        ]
     if params.seed is not None:
         entries["seed"] = setup_seed(params.seed)
     return entries
@@ -560,9 +648,32 @@ def zierr(params: HysplitConfig) -> list[float] | None:
     return None if values[0] is None else values
 
 
-def winderrtf(params: HysplitConfig) -> int:
-    """Return HYSPLIT's ``WINDERRTF`` flag: 1 for wind errors, 2 for mixed-layer errors, 3 for both."""
-    return (winderr(params) is not None) + 2 * (zierr(params) is not None)
+def winderrtf(params: HysplitConfig, version: str | None = None) -> int:
+    """
+    Return the ``WINDERRTF`` to write for *params* to a ``hycs_std`` that prints *version*.
+
+    HYSPLIT applies wind errors at 1, mixed-layer errors at 2, and both at
+    3. From HYSPLIT 5.3.0 (:data:`ZICONTROL_ADDS_TWO`), ``hycs_std`` adds 2
+    to the value it read once it has read ``ZICONTROL``, so with
+    ``ziscale`` set the value written is 2 less, and the run gets the
+    errors its settings ask for: -2 for none, -1 for wind errors alone. A
+    *version* runtraj cannot read, or none, is taken to be older.
+
+    Examples
+    --------
+    >>> zi = {"ziscale": 0.8, "sigzierr": 20.0, "tlzierr": 60.0, "horcorzierr": 40.0}
+    >>> config = HysplitConfig(n_hours=-24, **zi)
+    >>> winderrtf(config, "hysplit.v5.2.3"), winderrtf(config, "hysplit.v5.4.2")
+    (2, 0)
+    """
+    flag = (winderr(params) is not None) + 2 * (zierr(params) is not None)
+    found = _VERSION_NUMBER.search(version or "")
+    adds_two = (
+        found is not None and tuple(map(int, found.groups())) >= ZICONTROL_ADDS_TWO
+    )
+    if zicontroltf(params) and adds_two:
+        flag -= 2
+    return flag
 
 
 def _write_values(path: Path, values: list[float] | None) -> None:
@@ -588,7 +699,9 @@ def write_inputs(
     :func:`find_program`) and HYSPLIT's data tables
     (:func:`data_tables`), and writes ``CONTROL`` and ``SETUP.CFG``, plus
     ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for
-    them. *workdir* is created if needed, and should be empty.
+    them. *workdir* is created if needed, and should be empty. With
+    ``ziscale`` set, ``WINDERRTF`` depends on the version the program
+    prints (:func:`winderrtf`), which is read once per program.
 
     Parameters
     ----------
@@ -652,14 +765,16 @@ def write_inputs(
         setup.write(workdir / SETUP_FILE)
         return
     entries["maxpar"] = config.maxpar_for(release_locations(locations))
-    if config.mode == "particles":
+    if config.mode == "particle":
         entries["ivmax"] = len(config.varsiwant)  # number of output variables
-    entries["winderrtf"] = winderrtf(config)
+    factors = ziscale_factors(config)
+    # Read only with ziscale, the one setting whose WINDERRTF depends on it.
+    version = None if factors is None else _printed_version(*_stamp(found))
+    entries["winderrtf"] = winderrtf(config, version)
     setup = NameList("SETUP")
     setup.update(entries)
     setup.write(workdir / SETUP_FILE)
 
-    factors = ziscale_factors(config)
     if factors is not None:
         (workdir / ZICONTROL_FILE).write_text(
             "\n".join([str(len(factors)), *(str(v) for v in factors)]) + "\n",
@@ -696,6 +811,18 @@ def _link(path: Path, target: Path) -> None:
         shutil.copy2(target, path)
 
 
+def hysplit_environment() -> dict[str, str]:
+    """
+    Return this process's environment without the ``HYSF_*`` variables.
+
+    HYSPLIT 5.4 reads ``HYSF_CONTROL``, ``HYSF_PARTICLE_STILT`` and others to
+    rename its input and output files, which would move them out of the
+    working directory runtraj reads them from. The programs get this
+    environment.
+    """
+    return {k: v for k, v in os.environ.items() if not k.startswith("HYSF_")}
+
+
 def run_hycs_std(
     workdir: Path, timeout: int | None = None, program: str = HYCS_STD_FILE
 ) -> None:
@@ -730,6 +857,7 @@ def run_hycs_std(
             cwd=workdir,
             stdout=handle,
             stderr=subprocess.STDOUT,
+            env=hysplit_environment(),
             **own_group(),
         ) as proc,
     ):

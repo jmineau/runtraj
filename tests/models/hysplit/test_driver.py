@@ -209,6 +209,11 @@ def test_control_file_read_missing_raises(tmp_path):
 VARS = ["time", "indx", "long", "lati", "zagl", "foot"]
 
 
+def _upper_dswf(name):
+    """The name as SETUP.CFG gets it: hycs_std 5.2+ fills dswf only as DSWF."""
+    return "DSWF" if name == "dswf" else name
+
+
 def _config(**overrides) -> HysplitConfig:
     """A small config whose particle rows are the six columns of VARS."""
     return HysplitConfig(
@@ -395,6 +400,20 @@ def test_particles_that_left_the_met_domain_are_not_a_failure(tmp_path):
     )
 
     driver.run_hycs_std(tmp_path, timeout=5)  # does not raise
+
+
+def test_run_drops_the_hysf_variables_and_keeps_the_rest(tmp_path, monkeypatch):
+    """HYSPLIT 5.4 moves its files to where ``HYSF_*`` names; every other variable stays."""
+    monkeypatch.setenv("HYSF_PARTICLE_STILT", str(tmp_path / "elsewhere.dat"))
+    monkeypatch.setenv("HYSF_CONTROL", "elsewhere")
+    monkeypatch.setenv("RUNTRAJ_TEST_KEPT", "yes")
+    _script(tmp_path, "env > seen_env\n")
+
+    driver.run_hycs_std(tmp_path, timeout=5)
+
+    seen = (tmp_path / "seen_env").read_text().splitlines()
+    assert "RUNTRAJ_TEST_KEPT=yes" in seen
+    assert not [line for line in seen if line.startswith("HYSF_")]
 
 
 def test_run_times_out_and_keeps_log_output(tmp_path):
@@ -679,6 +698,15 @@ def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
     assert entries["varsiwant"][-1] == "zcfx"
 
 
+def test_setup_cfg_writes_dswf_in_upper_case_and_the_other_names_as_they_are(
+    tmp_path, point_release
+):
+    config = HysplitConfig(n_hours=-24, varsiwant=["time", "dswf", "zcfx"])
+    text = (_inputs(tmp_path, point_release, config) / "SETUP.CFG").read_text()
+    assert "VARSIWANT='time', 'DSWF', 'zcfx'," in text
+    assert config.varsiwant == ["time", "dswf", "zcfx"]
+
+
 def test_run_without_a_particle_file_fails(tmp_path, point_release, monkeypatch):
     _fake_hysplit(monkeypatch, log="", rows=None)
 
@@ -948,6 +976,47 @@ def test_setup_cfg_sets_winderrtf_from_error_settings(tmp_path, point_release):
     assert "winderrtf=1" in _setup_cfg(tmp_path, point_release, config)
 
 
+WIND = {"siguverr": 1.0, "tluverr": 60.0, "zcoruverr": 500.0, "horcoruverr": 40.0}
+ZI = {"sigzierr": 20.0, "tlzierr": 60.0, "horcorzierr": 40.0}
+
+
+@pytest.mark.parametrize(
+    ("settings", "before", "after"),
+    [
+        ({}, 0, 0),
+        (WIND, 1, 1),
+        (ZI, 2, 2),
+        (WIND | ZI, 3, 3),
+        ({"ziscale": 0.8}, 0, -2),
+        ({"ziscale": 0.8} | WIND, 1, -1),
+        ({"ziscale": 0.8} | ZI, 2, 0),
+        ({"ziscale": 0.8} | WIND | ZI, 3, 1),
+    ],
+)
+def test_winderrtf_is_2_less_with_ziscale_from_hysplit_5_3_0(settings, before, after):
+    # hycs_std 5.3.0 and later add 2 to WINDERRTF once they read ZICONTROL.
+    config = _config(**settings)
+    assert winderrtf(config, "hysplit.v5.2.3") == before
+    assert winderrtf(config, "hysplit.v5.3.0") == after
+    assert winderrtf(config, "hysplit.v5.4.2") == after
+
+
+@pytest.mark.parametrize("version", [None, "unknown"])
+def test_winderrtf_takes_a_version_without_a_number_as_older(version):
+    assert winderrtf(_config(ziscale=0.8, **ZI), version) == 2
+
+
+@pytest.mark.parametrize(
+    ("version", "written"), [("hysplit.v5.2.3", 0), ("hysplit.v5.4.2", -2)]
+)
+def test_setup_cfg_winderrtf_follows_the_version_the_program_prints(
+    tmp_path, point_release, version, written
+):
+    build = make_hysplit_dir(tmp_path / "hysplit", version)
+    config = _config(directory=build, ziscale=0.8)
+    assert f"winderrtf={written}" in _setup_cfg(tmp_path, point_release, config)
+
+
 def test_setup_cfg_takes_kmsl_from_an_msl_release(tmp_path, point_release):
     release = point_release.model_copy(
         update={"altitude": 1500.0, "altitude_ref": "msl"}
@@ -964,7 +1033,7 @@ def test_read_namelist_reads_the_setup_cfg_written(tmp_path, point_release):
     assert entries["dzf"] == 0.01
     assert entries["wvert"] is True
     assert entries["efile"] == ""
-    assert entries["varsiwant"] == config.varsiwant
+    assert entries["varsiwant"] == [_upper_dswf(v) for v in config.varsiwant]
     assert entries["kmsl"] == 0
 
 
@@ -1287,7 +1356,7 @@ def test_setup_entries_route_transport_params_to_setup_cfg():
     entries = setup_entries(p)
 
     assert entries["numpar"] == p.numpar
-    assert entries["varsiwant"] == p.varsiwant
+    assert entries["varsiwant"] == [_upper_dswf(v) for v in p.varsiwant]
     assert entries["ichem"] == 8
     assert entries["idsp"] == 2
     # CONTROL / ZICONTROL / WINDERR fields never appear in SETUP.CFG
@@ -1348,7 +1417,7 @@ def test_settings_hysplit_chooses_are_unset_and_left_out_of_setup_cfg():
 
     assert not {"capemin", "cpack", "kblt", "kmixd", "krand", "vscales"} & set(entries)
     assert (entries["numpar"], entries["wvert"]) == (2500, True)
-    assert entries["varsiwant"] == list(HYSPLIT_VARSIWANT)
+    assert entries["varsiwant"] == [_upper_dswf(v) for v in HYSPLIT_VARSIWANT]
 
 
 @pytest.mark.parametrize(

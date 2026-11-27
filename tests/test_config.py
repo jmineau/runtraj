@@ -473,6 +473,15 @@ def test_several_realizations_accept_krand_4_or_seeded_krand_2(tmp_path):
         _variant_config(tmp_path, variants={"e": {"realizations": 0}})
 
 
+def test_krand_4_realizations_each_get_their_own_seed(tmp_path):
+    # HYSPLIT's development branch reseeds from SEED outside ichem=8, so
+    # realizations that share a SEED would repeat one another.
+    config = _variant_config(tmp_path, krand=4, variants={"e": {"realizations": 3}})
+    e = config.resolve()["e"]
+    assert e.transport.seed is None  # the folder's settings are unchanged
+    assert [e.transport_for(k).seed for k in range(3)] == [0, 1, 2]
+
+
 def test_an_ensemble_keeps_its_folder_when_its_realizations_grow(tmp_path):
     """An ensemble of one is an ensemble, so raising the count later only adds runs."""
     cfg = _variant_config(tmp_path, variants={"e": {"realizations": 1}, "single": {}})
@@ -574,6 +583,38 @@ def test_a_met_may_be_a_path_in_python(tmp_path):
     )
 
     assert config.mets == {"hrrr": str(tmp_path / "met")}
+
+
+def test_a_met_label_is_read_from_config_yaml_and_written_back(tmp_path):
+    text = textwrap.dedent(
+        f"""
+        mets:
+          wrf-mynn:
+            directory: {tmp_path / "met"}
+            label: mynn
+        models:
+          hysplit:
+            n_hours: -24
+        variants:
+          wrf-mynn: {{}}
+        """
+    )
+    path = tmp_path / "config.yaml"
+    path.write_text(text)
+
+    config = ProjectConfig.from_yaml(path)
+
+    assert config.met_config("wrf-mynn").label == "mynn"
+    assert yaml.safe_load(config.to_yaml())["mets"]["wrf-mynn"]["label"] == "mynn"
+
+
+def test_a_met_label_is_not_an_archive_option(tmp_path):
+    from runtraj.models.hysplit import HysplitMetConfig
+
+    met = HysplitMetConfig(directory=tmp_path, download="hrrr", label="mine")
+
+    assert met.label == "mine"
+    assert met.download_options == {}
 
 
 def test_a_relative_met_folder_starts_from_the_project(tmp_path):

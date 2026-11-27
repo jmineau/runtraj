@@ -30,8 +30,8 @@ from runtraj.execution.runner import (
     _project_slug,
     _to_fetch,
     array_size,
-    resolve_compute_root,
     status_after_job,
+    task_command,
     write_submission,
 )
 
@@ -149,29 +149,17 @@ def job_script(
     for key, value in slurm.options.items():
         options[str(key).replace("_", "-")] = value
 
-    command = [
-        sys.executable,
-        "-m",
-        "runtraj",
-        "run",
-        str(project.directory),
-        "--releases",
-        str(folder / "releases.parquet"),
-        "--task",
-        f"$SLURM_ARRAY_TASK_ID/{n_tasks}",
-        "--execution",
-        str(folder / "execution.yaml"),
-        # A task runs its share here, so it is told the array's cpus.
-        "--cpus",
-        str(slurm.cpus),
-        # The output the submitting process uses, which may not be config.yaml's.
-        "--output",
-        str(project.output.directory),
-    ]
-    if compute_root is not None:
-        command += ["--compute-root", str(resolve_compute_root(project, compute_root))]
-    # $SLURM_ARRAY_TASK_ID must expand, so that word is quoted with "".
-    words = [f'"{w}"' if w.startswith("$") else shlex.quote(w) for w in command]
+    skip_lines, command = task_command(
+        project,
+        folder,
+        n_tasks,
+        index="$SLURM_ARRAY_TASK_ID",
+        cpus=slurm.cpus,
+        compute_root=compute_root,
+        skip_existing=skip_existing,
+        # A requeued task keeps what it finished before.
+        restarted='[ "${SLURM_RESTART_COUNT:-0}" -gt 0 ]',
+    )
     # A task's log starts with where and when it ran, again after a requeue,
     # so a task on a bad node can be found from its log.
     header = (
@@ -190,13 +178,7 @@ def job_script(
         threads,
         *slurm.setup,
     ]
-    if not skip_existing:
-        # A requeued task keeps what it finished before.
-        lines += [
-            'skip="--no-skip"',
-            '[ "${SLURM_RESTART_COUNT:-0}" -gt 0 ] && skip=""',
-        ]
-        words.append("$skip")
+    lines += skip_lines
     lines += [
         "# The task runs as a child, so this script can requeue it. Slurm sends",
         f"# this script USR1 {NOTICE_SECONDS} s before the time limit, which it passes",
@@ -205,7 +187,7 @@ def job_script(
         "on_cluster=${SLURM_CLUSTER_NAME:+-M $SLURM_CLUSTER_NAME}",
         "trap 'notice=1; trapped=1; kill -TERM \"$pid\" 2>/dev/null' USR1",
         "trap 'trapped=1; kill -TERM \"$pid\" 2>/dev/null' TERM INT",
-        " ".join(words) + " &",
+        command + " &",
         "pid=$!",
         "# wait returns early when a trapped signal arrives; wait again then.",
         "while :; do",

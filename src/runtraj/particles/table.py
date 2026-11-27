@@ -275,6 +275,40 @@ def particles_from_table(table: pa.Table, time: bool = True) -> pd.DataFrame:
     return data
 
 
+def write_release_file(
+    path: str | Path | UPath,
+    data: pd.DataFrame,
+    release: Release,
+    settings: Mapping[str, Any],
+    met_files: list[Path],
+    metadata: Mapping[bytes, bytes] | None = None,
+) -> Path | UPath:
+    """
+    Write *data*, one release's rows, to a Parquet file that holds the release, the settings and the met files.
+
+    A ``release`` column, first, holds the release id, so a scan of many
+    files can tell releases apart. The release, the run's *settings* and
+    the *met_files* go in the file's metadata, with *metadata*. The path
+    written to is returned.
+    """
+    table = pa.Table.from_pandas(data, preserve_index=False)
+    table = table.add_column(
+        0,
+        pa.field("release", pa.dictionary(pa.int32(), pa.string())),
+        pa.DictionaryArray.from_arrays(
+            pa.array(np.zeros(table.num_rows, dtype=np.int32)),
+            pa.array([str(release.id)]),
+        ),
+    )
+    meta = {
+        **release_metadata(release),
+        b"runtraj:settings": json.dumps(dict(settings)).encode(),
+        b"runtraj:met_files": json.dumps([str(p) for p in met_files]).encode(),
+        **(metadata or {}),
+    }
+    return write_parquet(table.replace_schema_metadata(meta), location(path))
+
+
 def write_particles(
     path: str | Path | UPath,
     particles: pd.DataFrame,
@@ -325,23 +359,7 @@ def write_particles(
             if not np.array_equal(values, np.round(values)):
                 raise ValueError(f"Particle column {name!r} is not whole numbers.")
             data = data.assign(**{name: values.astype(np.int32)})
-    table = pa.Table.from_pandas(data, preserve_index=False)
-    table = table.add_column(
-        0,
-        pa.field("release", pa.dictionary(pa.int32(), pa.string())),
-        pa.DictionaryArray.from_arrays(
-            pa.array(np.zeros(table.num_rows, dtype=np.int32)),
-            pa.array([str(release.id)]),
-        ),
-    )
-    meta = {
-        **release_metadata(release),
-        b"runtraj:settings": json.dumps(dict(settings)).encode(),
-        b"runtraj:met_files": json.dumps([str(p) for p in met_files]).encode(),
-        **(metadata or {}),
-    }
-    table = table.replace_schema_metadata(meta)
-    return write_parquet(table, location(path))
+    return write_release_file(path, data, release, settings, met_files, metadata)
 
 
 # -- after a model run: release heights ------------------------------------

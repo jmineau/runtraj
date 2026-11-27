@@ -108,6 +108,12 @@ looks at share its rows. The command exits with 0 when it finds nothing and
      - A file the releases need ends partway through a time step, so it is
        damaged.
      - Download or crop the file again.
+   * - ``met_label``
+     - Two mets of one transport model record the same settings, such as
+       two folders of WRF files with one source id, so variants that differ
+       only in their met would share one run. A run refuses them too.
+     - Give each met a ``label`` of its own under ``mets:``
+       (:doc:`meteorology`).
    * - ``zsfc``
      - ``varsiwant`` lacks ``zsfc``, the terrain height, and a release
        given above sea level needs it. The message says why.

@@ -694,7 +694,7 @@ description; only a setting that applies wherever a run happens goes on
 checked in its block's `check`, which runs only when that backend is
 used. A new built-in backend gets a block of its own, a field of
 `ExecutionConfig` named as `backend:` names it, and a line in
-`BACKENDS` and `BUILT_IN_BLOCKS`. Settings that
+`BACKENDS`. Settings that
 only `sbatch` understands do not need a field: users write them in the
 `slurm:` block by `sbatch`'s own names.
 

@@ -506,20 +506,19 @@ def test_completion_is_the_same_rule_from_listings_and_for_one_simulation(
     project = _project(tmp_path, release)
     sim = project.simulation(str(release.id), "hrrr")
     rid, variant, output = str(release.id), sim.variant, project.output
-    assert output.complete(variant) == frozenset() and not sim.is_complete
+    assert project.status()["state"].tolist() == ["pending"] and not sim.is_complete
 
     _run(project, release)
-    assert output.complete(variant) == {rid} and sim.is_complete
-    assert output.complete(variant) == completed(
+    assert project.status()["state"].tolist() == ["complete"] and sim.is_complete
+    assert completed(
         output.present("particles", variant),
         output.present("count", variant),
         output.present("double", variant),
-    )
+    ) == {rid}
 
     sim.path("double").unlink()
-    assert output.complete(variant) == frozenset() and not sim.is_complete
+    assert project.status()["state"].tolist() == ["pending"] and not sim.is_complete
     assert output.present("count", variant) == {rid}
-    assert project.status()["state"].tolist() == ["pending"]
 
 
 def test_the_folders_table_lists_each_stage_tree(tmp_path, release, model_runs):

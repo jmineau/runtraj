@@ -14,7 +14,7 @@ makes a type follows its one schema (:mod:`runtraj.results`):
      - What it is
      - File per release
    * - ``particles``
-     - The particle table (:doc:`particles`), from HYSPLIT's particles mode
+     - The particle table (:doc:`particles`), from HYSPLIT's particle mode
        or another model that follows particles.
      - Parquet, under ``particles/``
    * - ``concentration``

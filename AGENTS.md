@@ -236,7 +236,8 @@ log, met files or `age = 0` row; particles numbered 10, 20, ...):
   submit needs `inputs` on a bucket (`_pods_open` refuses it otherwise).
   Windows refuses a rename onto a file another process has open, so a file
   that workers write once and then read (`_settings.yaml`) is written with
-  `atomic_path(path, replace=False)`, which keeps the file already there.
+  `atomic_path(path, replace=False)`, which keeps the file already there; a
+  short met crop that cannot be replaced gets a hidden sibling (`met._spare`).
 - Python 3.11+ (use `typing.Self`, `enum.StrEnum`, `datetime.UTC`, not
   backports). Ruff rules are in `pyproject.toml`; **NumPy-style docstrings**
   with the summary on the line after the opening quotes (`D213`). Keep a

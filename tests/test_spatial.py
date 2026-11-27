@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from runtraj import Bounds
+from runtraj.spatial import is_longlat, same_crs
 
 # ---------------------------------------------------------------------------
 # Bounds.contains: longitudes count modulo 360
@@ -102,3 +103,42 @@ def test_bounds_take_a_narrow_box_across_the_dateline_and_a_wide_one_past_180():
     assert Bounds(xmin=170, xmax=-170, ymin=-10, ymax=10).contains(180, 0)
     wide = Bounds(xmin=-109, xmax=246, ymin=37, ymax=42)
     assert wide.contains(116.4, 40.0) and not wide.contains(-111.9, 40.8)
+
+
+# ---------------------------------------------------------------------------
+# is_longlat and same_crs: the spellings of a geographic CRS
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "crs",
+    [
+        "+proj=longlat +datum=WGS84",
+        "+proj=latlong +datum=WGS84",
+        "+proj=lonlat +datum=WGS84",
+        "EPSG:4326",
+        "WGS84",
+    ],
+)
+def test_is_longlat_holds_each_spelling_of_a_geographic_crs(crs):
+    assert is_longlat(crs)
+
+
+@pytest.mark.parametrize(
+    "crs",
+    ["EPSG:32612", "+proj=utm +zone=12 +datum=WGS84", "+proj=lcc +lat_1=33 +lat_2=45"],
+)
+def test_is_longlat_refuses_a_projected_crs(crs):
+    assert not is_longlat(crs)
+
+
+def test_is_longlat_refuses_a_string_pyproj_cannot_read():
+    assert not is_longlat("+proj=bogus")
+
+
+def test_same_crs_matches_geographic_spellings_and_refuses_others():
+    assert same_crs("+proj=latlong +datum=WGS84", "+proj=lonlat +datum=WGS84")
+    assert same_crs("+proj=longlat +datum=WGS84", "EPSG:4326")
+    assert same_crs("EPSG:32612", "EPSG:32612")
+    assert not same_crs("EPSG:32612", "EPSG:32613")
+    assert not same_crs("EPSG:32612", "+proj=latlong +datum=WGS84")
