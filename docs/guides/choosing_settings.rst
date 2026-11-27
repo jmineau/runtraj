@@ -115,6 +115,13 @@ its negative the same. ``krand: 4`` seeds each run from the clock instead, so ev
 differs and cannot be made again. ``krand`` in
 :doc:`../reference/configuration` lists every mode.
 
+.. note::
+
+   HYSPLIT 5.0.x never seeds the random numbers of a column release or of
+   an ``ichem: 5`` run, so on it those runs differ every time whatever
+   ``seed`` is. Use HYSPLIT 5.1.0 or later to repeat them
+   (:ref:`hysplit-versions`).
+
 What HYSPLIT chooses for you
 ----------------------------
 

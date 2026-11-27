@@ -72,6 +72,10 @@ ZICONTROL_FILE = "ZICONTROL"
 #: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once
 #: it has read ``ZICONTROL`` (:func:`winderrtf`).
 ZICONTROL_ADDS_TWO = (5, 3, 0)
+#: The first HYSPLIT version with ``KRAND`` 10 to 13 (``hymodelc.F:979-980`` in
+#: 5.1.0). Before it ``hycs_std`` draws them as ``KRAND=4`` without saying so
+#: (:func:`check_krand`).
+KRAND_10_TO_13 = (5, 1, 0)
 #: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.
 CHEMRATE_FILE = "CHEMRATE.TXT"
 LOG_FILE = "hysplit.log"
@@ -659,13 +663,47 @@ def winderrtf(params: HysplitConfig, version: str | None = None) -> int:
     (2, 0)
     """
     flag = (winderr(params) is not None) + 2 * (zierr(params) is not None)
-    found = _VERSION_NUMBER.search(version or "")
-    adds_two = (
-        found is not None and tuple(map(int, found.groups())) >= ZICONTROL_ADDS_TWO
-    )
-    if zicontroltf(params) and adds_two:
+    if zicontroltf(params) and _since(version, ZICONTROL_ADDS_TWO):
         flag -= 2
     return flag
+
+
+def _since(version: str | None, first: tuple[int, int, int]) -> bool:
+    """Return whether *version*, as ``hycs_std`` prints it, is *first* or later; a version without a number is older."""
+    found = _VERSION_NUMBER.search(version or "")
+    return found is not None and tuple(map(int, found.groups())) >= first
+
+
+def check_krand(params: HysplitConfig, version: str | None) -> None:
+    """
+    Refuse ``krand`` 10 to 13 on a ``hycs_std`` that prints *version* and does not know them.
+
+    They are new in HYSPLIT 5.1.0 (:data:`KRAND_10_TO_13`). Before it,
+    ``hycs_std`` takes them for ``KRAND=4`` without a word, so a run asked
+    for one of the random-seeded modes 0 to 3 would get the clock-seeded
+    draw of 4. A *version* runtraj cannot read, or none, is taken to be older.
+
+    Raises
+    ------
+    ValueError
+        If ``krand`` is 10 to 13 and *version* is older than 5.1.0.
+
+    Examples
+    --------
+    >>> config = HysplitConfig(n_hours=-24, krand=10)
+    >>> check_krand(config, "hysplit.v5.1.0")
+    >>> check_krand(config, "hysplit.v5.0.2")
+    Traceback (most recent call last):
+        ...
+    ValueError: krand=10 is new in HYSPLIT 5.1.0: ... hysplit.v5.0.2 ...
+    """
+    if params.krand in (10, 11, 12, 13) and not _since(version, KRAND_10_TO_13):
+        raise ValueError(
+            f"krand={params.krand} is new in HYSPLIT 5.1.0: the hycs_std here "
+            f"prints {version or 'no version'} and would run it as krand=4, "
+            "with a seed drawn from the clock. Use krand 0 to 4, or HYSPLIT "
+            "5.1.0 or later."
+        )
 
 
 def _write_values(path: Path, values: list[float] | None) -> None:
@@ -693,7 +731,8 @@ def write_inputs(
     ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for
     them. *workdir* is created if needed, and should be empty. With
     ``ziscale`` set, ``WINDERRTF`` depends on the version the program
-    prints (:func:`winderrtf`), which is read once per program.
+    prints (:func:`winderrtf`), and so does the refusal of ``krand`` 10 to
+    13 (:func:`check_krand`); it is read once per program.
 
     Parameters
     ----------
@@ -716,6 +755,9 @@ def write_inputs(
     ------
     HYSPLITNotFoundError
         If there is no program to link (:func:`find_program`).
+    ValueError
+        If ``krand`` is 10 to 13 and the program is older than HYSPLIT
+        5.1.0 (:func:`check_krand`).
     """
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
@@ -760,8 +802,10 @@ def write_inputs(
     if config.mode == "particles":
         entries["ivmax"] = len(config.varsiwant)  # number of output variables
     factors = ziscale_factors(config)
-    # Read only with ziscale, the one setting whose WINDERRTF depends on it.
-    version = None if factors is None else _printed_version(*_stamp(found))
+    # Read only where a setting depends on it: the program is run for it.
+    needs_version = factors is not None or config.krand in (10, 11, 12, 13)
+    version = _printed_version(*_stamp(found)) if needs_version else None
+    check_krand(config, version)
     entries["winderrtf"] = winderrtf(config, version)
     setup = NameList("SETUP")
     setup.update(entries)

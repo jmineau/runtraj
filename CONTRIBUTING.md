@@ -61,11 +61,12 @@ with a `recorded.yaml` naming the build's SHA-256, its printed version, the
 date and the met files. No HYSPLIT program and no met file is committed:
 HYSPLIT's results from archived met may be shared, its programs may not.
 
-We record the oldest HYSPLIT runtraj supports and the newest:
+runtraj supports HYSPLIT 5.0 and later. We record the oldest version we have a
+set for and the newest (5.0.x is run by hand, not recorded):
 
 | Version | Build | Programs |
 |---|---|---|
-| 5.1.0 | the oldest supported (it writes no `age = 0` row) | `hycs_std` |
+| 5.1.0 | the oldest recorded (it writes no `age = 0` row) | `hycs_std` |
 | 5.4.2 | NOAA ARL's public build, from [ARL's download page](https://www.ready.noaa.gov/HYSPLIT_linux.php) | `hycs_std`, `hyts_std` |
 
 A version in between is recorded only when it changes something runtraj reads.

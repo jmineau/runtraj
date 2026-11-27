@@ -194,7 +194,7 @@ Transport model
 ----------------
 
 The worker runs a simulation through the transport model its settings name.
-runtraj supports HYSPLIT (:doc:`hysplit`) and FLEXPART 11 (:doc:`flexpart`),
+runtraj supports HYSPLIT 5.0 and later (:doc:`hysplit`) and FLEXPART 11 (:doc:`flexpart`),
 and has no default: ``config.yaml`` names the model in its
 ``models`` block. CONTRIBUTING describes how to add another, named by its import path.
 A model fails a run that its meteorology does not cover, as
