@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=eb9f1517"></script>
+    <script src="../../_static/documentation_options.js?v=154e9ddf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev36+g184ca2c56" />
+  <meta name="docsearch:version" content="0.1.0a6.dev37+g98d9805c0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1013,9 +1013,10 @@
 <h1>runtraj.models.hysplit.releases.particles_per_step<a class="headerlink" href="#runtraj-models-hysplit-releases-particles-per-step" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.models.hysplit.releases.particles_per_step">
-<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.releases.</span></span><span class="sig-name descname"><span class="pre">particles_per_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/releases.html#particles_per_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.releases.particles_per_step" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.releases.</span></span><span class="sig-name descname"><span class="pre">particles_per_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/releases.html#particles_per_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.releases.particles_per_step" title="Link to this definition">#</a></dt>
 <dd><p>Return how many particles HYSPLIT releases from one location in one block of a time step of a particle run.</p>
-<p>HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">EMSPNT</span></code> spreads <code class="docutils literal notranslate"><span class="pre">numpar</span></code> over the <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> of the
+<p>HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">EMSPNT</span></code> spreads <code class="docutils literal notranslate"><span class="pre">numpar</span></code>, divided among the <em>locations</em>
+horizontal locations of the release, over the <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> of the
 release, rounding up the particles of an hour and then of a step, in
 single precision. A particle run (<code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>) steps one minute, so a
 release of a minute or less is one step of <code class="docutils literal notranslate"><span class="pre">numpar</span></code> or <code class="docutils literal notranslate"><span class="pre">numpar</span> <span class="pre">+</span> <span class="pre">1</span></code>
@@ -1031,6 +1032,8 @@ puff a step, at the middle of the column. HYSPLIT 5.1.0 to 5.4.2 count the same 
 <span class="go">1001</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">particles_per_step</span><span class="p">(</span><span class="n">HysplitConfig</span><span class="p">(</span><span class="n">n_hours</span><span class="o">=-</span><span class="mi">24</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">emisshrs</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
 <span class="go">34</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">particles_per_step</span><span class="p">(</span><span class="n">HysplitConfig</span><span class="p">(</span><span class="n">n_hours</span><span class="o">=-</span><span class="mi">24</span><span class="p">,</span> <span class="n">numpar</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">emisshrs</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">12</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -1038,7 +1041,10 @@ puff a step, at the middle of the column. HYSPLIT 5.1.0 to 5.4.2 count the same 
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span></p>
 </dd>
 <dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>config</strong> (<a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><em>HysplitConfig</em></a>)</p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>config</strong> (<a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><em>HysplitConfig</em></a>)</p></li>
+<li><p><strong>locations</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=eb9f1517"></script>
+    <script src="../../../../_static/documentation_options.js?v=154e9ddf"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev36+g184ca2c56" />
+  <meta name="docsearch:version" content="0.1.0a6.dev37+g98d9805c0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -1352,7 +1352,8 @@
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Maximum number of particles in a simulation. Unset gives every "</span>
             <span class="s2">"release location its full share: ``numpar`` for one location, "</span>
-            <span class="s2">"``n * (numpar // n + 1)`` for n; and a concentration run, which "</span>
+            <span class="s2">"``n * (numpar // n + 1)`` for n, more when ``emisshrs`` spans "</span>
+            <span class="s2">"several time steps; and a concentration run, which "</span>
             <span class="s2">"releases over many time steps, ``numpar`` and HYSPLIT's rounding "</span>
             <span class="s2">"for each emission cycle. A set value that stops a "</span>
             <span class="s2">"multipoint release before its last location fails the run."</span>
@@ -1986,8 +1987,9 @@
 <span class="sd">        its rounding often raises by one, and stops releasing when it reaches</span>
 <span class="sd">        ``MAXPAR``. A set ``maxpar`` is used as given. Unset, one location</span>
 <span class="sd">        gets ``numpar`` (HYSPLIT may ask for one more and keeps ``numpar``),</span>
-<span class="sd">        and several get ``locations * (numpar // locations + 1)``, so the</span>
-<span class="sd">        last locations are not left short.</span>
+<span class="sd">        and several get what each releases over the ``emisshrs`` of the</span>
+<span class="sd">        release, every one-minute time step of it (at least</span>
+<span class="sd">        ``numpar // locations + 1``), so the last locations are not left short.</span>
 
 <span class="sd">        A concentration run releases over many time steps, each pollutant</span>
 <span class="sd">        for its ``hours``, and again every ``qcycle`` hours. HYSPLIT</span>
@@ -2023,7 +2025,11 @@
             <span class="k">return</span> <span class="n">cycles</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">locations</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">rounding</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">locations</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">numpar</span>
-        <span class="k">return</span> <span class="n">locations</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">//</span> <span class="n">locations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">particles_per_step</span>
+
+        <span class="n">steps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emisshrs</span> <span class="o">*</span> <span class="mi">60</span><span class="p">))</span>
+        <span class="n">each</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbptyp</span> <span class="o">*</span> <span class="n">particles_per_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">locations</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">locations</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">//</span> <span class="n">locations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">each</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HysplitConfig.hourly_ziscale">

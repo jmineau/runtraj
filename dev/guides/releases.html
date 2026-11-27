@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=eb9f1517"></script>
+    <script src="../_static/documentation_options.js?v=154e9ddf"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev36+g184ca2c56" />
+  <meta name="docsearch:version" content="0.1.0a6.dev37+g98d9805c0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -709,7 +709,10 @@ each gets 26, 1040 in all; over 56 locations, each gets 17, 952 in all.</p></li>
 <p>HYSPLIT stops releasing when it reaches <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> and fills the locations
 in order, so a <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> set too low would leave the last locations with
 fewer particles or none. Leave <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> unset: runtraj then gives HYSPLIT
-room for every location (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">(numpar</span> <span class="pre">//</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">1)</span></code>). A run whose <code class="docutils literal notranslate"><span class="pre">maxpar</span></code>
+room for every location (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">(numpar</span> <span class="pre">//</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">1)</span></code> for a release of one time
+step; a longer <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> releases a share at every one-minute step, and
+HYSPLIT rounds each one up: 1000 particles over 3 locations and half an hour
+give 12 x 3 x 30 = 1080). A run whose <code class="docutils literal notranslate"><span class="pre">maxpar</span></code>
 cuts a multipoint release short fails as <code class="docutils literal notranslate"><span class="pre">PARTICLE_LIMIT</span></code>.</p>
 <p>A release happens at one time, but HYSPLIT releases its particles over
 <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> hours, starting at that time. The default,

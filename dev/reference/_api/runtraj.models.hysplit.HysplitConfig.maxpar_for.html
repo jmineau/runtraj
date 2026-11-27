@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=eb9f1517"></script>
+    <script src="../../_static/documentation_options.js?v=154e9ddf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev36+g184ca2c56" />
+  <meta name="docsearch:version" content="0.1.0a6.dev37+g98d9805c0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1022,8 +1022,9 @@
 its rounding often raises by one, and stops releasing when it reaches
 <code class="docutils literal notranslate"><span class="pre">MAXPAR</span></code>. A set <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> is used as given. Unset, one location
 gets <code class="docutils literal notranslate"><span class="pre">numpar</span></code> (HYSPLIT may ask for one more and keeps <code class="docutils literal notranslate"><span class="pre">numpar</span></code>),
-and several get <code class="docutils literal notranslate"><span class="pre">locations</span> <span class="pre">*</span> <span class="pre">(numpar</span> <span class="pre">//</span> <span class="pre">locations</span> <span class="pre">+</span> <span class="pre">1)</span></code>, so the
-last locations are not left short.</p>
+and several get what each releases over the <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> of the
+release, every one-minute time step of it (at least
+<code class="docutils literal notranslate"><span class="pre">numpar</span> <span class="pre">//</span> <span class="pre">locations</span> <span class="pre">+</span> <span class="pre">1</span></code>), so the last locations are not left short.</p>
 <p>A concentration run releases over many time steps, each pollutant
 for its <code class="docutils literal notranslate"><span class="pre">hours</span></code>, and again every <code class="docutils literal notranslate"><span class="pre">qcycle</span></code> hours. HYSPLIT
 rounds the particles of an hour and of a time step up, for each
