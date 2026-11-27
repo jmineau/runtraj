@@ -201,6 +201,10 @@ in `tests.yml`:
   (`just test-replay 5.0.2`, `5.4.2`; `tests/fixtures/replay.py`). A change to what
   runtraj gives HYSPLIT fails there until someone with the builds runs `just record`
   (CONTRIBUTING.md, "Testing against real HYSPLIT").
+  FLEXPART's (`tests/models/flexpart/test_real_flexpart.py`) need instead a FLEXPART 11
+  checkout built with `numpf = 3` (`RUNTRAJ_TEST_FLEXPART_DIR`) and flex_extract's ERA5
+  (`RUNTRAJ_TEST_FLEXPART_MET_DIR`), skip without them, and run in no CI job
+  (CONTRIBUTING.md, "Testing against real FLEXPART").
 - `tests/kubernetes/`: the end-to-end test on a kind cluster, run by `kubernetes.yml`
   only (it needs Docker); its README says what it checks. Its HYSPLIT replays the
   runs in `tests/recorded/kubernetes/5.4.2/` (`just record-kubernetes`).
