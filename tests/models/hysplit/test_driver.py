@@ -1061,7 +1061,7 @@ def test_wind_error_in_the_concentration_mode_is_refused_from_hysplit_5_3_0(
         ("hysplit.v5.2.3", CONCENTRATION | WIND),  # applies it with IDSP=1
         ("hysplit.v5.4.2", CONCENTRATION),  # no wind error to drop
         ("hysplit.v5.4.2", CONCENTRATION | ZI),
-        ("hysplit.v5.4.2", {"mode": "particles"} | WIND),  # IDSP=2
+        ("hysplit.v5.4.2", {"mode": "particle"} | WIND),  # IDSP=2
         (None, CONCENTRATION | WIND),  # no version: taken to be older
     ],
 )
