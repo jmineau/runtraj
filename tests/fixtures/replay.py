@@ -91,7 +91,7 @@ BUILDS_EXAMPLE = """\
 # Where this machine's HYSPLIT builds are: a folder with exec/ and bdyfiles/
 # for each version that has recorded runs (tests/recorded/hysplit/).
 [builds]
-"5.1.0" = "/path/to/hysplit-5.1.0"
+"5.0.2" = "/path/to/hysplit-5.0.2"
 "5.4.2" = "/path/to/hysplit.v5.4.2_RHEL8.10_public"
 """
 

@@ -28,7 +28,7 @@ relies on.
    `just test-replay 5.4.2` needs no HYSPLIT
    ([Testing against real HYSPLIT](#testing-against-real-hysplit)). Without
    either, those tests are skipped. The docs build needs a HYSPLIT folder
-   on `PATH` too: `just replay-folder 5.1.0 DEST` makes one that replays the
+   on `PATH` too: `just replay-folder 5.4.2 DEST` makes one that replays the
    recorded runs.
 
 ## Making a change
@@ -62,13 +62,11 @@ date and the met files. No HYSPLIT program and no met file is committed:
 HYSPLIT's results from archived met may be shared, its programs may not.
 
 runtraj supports HYSPLIT 5.0 and later. We record the oldest version
-(5.0.2, the last 5.0 release), 5.1.0, which writes no `age = 0` row, and the
-newest:
+(5.0.2, the last 5.0 release) and the newest:
 
 | Version | Build | Programs |
 |---|---|---|
 | 5.0.2 | the oldest supported, built from NOAA's repository | `hycs_std`, `hyts_std` |
-| 5.1.0 | the oldest that writes no `age = 0` row | `hycs_std`, `hyts_std` |
 | 5.4.2 | NOAA ARL's public build, from [ARL's download page](https://www.ready.noaa.gov/HYSPLIT_linux.php) | `hycs_std`, `hyts_std` |
 
 A version in between is recorded only when it changes something runtraj reads.
@@ -79,8 +77,8 @@ same inputs, writes its files and exits as it did. A met folder in `CONTROL`
 is compared as `<met>/`, so cases replay on any machine with the test met
 files. CI runs it for each version, on Linux, macOS and Windows. `just replay-folder VERSION DEST` makes
 such a folder for anything else; put the `exec/` it prints first on `PATH`.
-The Kubernetes test replays its own cases, `tests/recorded/kubernetes/5.1.0/`
-(`tests/kubernetes/README.md`). The docs build replays 5.1.0 the same way,
+The Kubernetes test replays its own cases, `tests/recorded/kubernetes/5.4.2/`
+(`tests/kubernetes/README.md`). The docs build replays 5.4.2 the same way,
 with the runs of its pages recorded beside the tests'.
 
 **When a replay fails.** Inputs no case has fail the run, and the test session
@@ -96,7 +94,7 @@ and `bdyfiles/`) per version:
 
 ```toml
 [builds]
-"5.1.0" = "/path/to/hysplit-5.1.0"
+"5.0.2" = "/path/to/hysplit-5.0.2"
 "5.4.2" = "/path/to/hysplit.v5.4.2_RHEL8.10_public"
 ```
 
@@ -111,11 +109,11 @@ met files in `tests/met_cache/`):
 just test-real        # the integration tests on each real build
 just record           # replace tests/recorded/hysplit/<version>/ for each build
 just record 5.4.2     # one version only
-just record-kubernetes  # the Kubernetes test's runs, on 5.1.0, in tests/recorded/kubernetes/
+just record-kubernetes  # the Kubernetes test's runs, on 5.4.2, in tests/recorded/kubernetes/
 ```
 
 `just record` runs the integration tests on the build with a folder whose
-programs run the real one and save each call (for 5.1.0, the docs build too),
+programs run the real one and save each call (for 5.4.2, the docs build too),
 then writes `recorded.yaml`. A
 case leaves out the files runtraj never reads (`NOT_RECORDED` in
 `tests/fixtures/replay.py`, `PARTICLE.DAT` the largest), and the rest are
