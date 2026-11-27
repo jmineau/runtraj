@@ -92,7 +92,7 @@ jobs:
         run: uv run just test
 
   # The integration tests replay real HYSPLIT runs recorded on the oldest
-  # supported version and the newest (tests/recorded/hysplit/; CONTRIBUTING.md,
+  # supported version (5.0.2), 5.1.0 and the newest (tests/recorded/hysplit/; CONTRIBUTING.md,
   # "Testing against real HYSPLIT"). No HYSPLIT program is on the runner, so
   # the replay runs wherever HYSPLIT does: Linux, macOS and Windows.
   integration:
@@ -102,7 +102,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        hysplit: ["5.1.0", "5.4.2"]
+        hysplit: ["5.0.2", "5.1.0", "5.4.2"]
     env:
       UV_NO_SYNC: "1"
     defaults:
