@@ -40,7 +40,8 @@ Glossary
    HYSPLIT
       `NOAA's particle dispersion model <https://www.ready.noaa.gov/HYSPLIT.php>`_,
       written in Fortran, one of the :term:`transport models <transport model>`
-      runtraj supports (:doc:`../reference/hysplit`). runtraj runs its
+      runtraj supports (:doc:`../reference/hysplit`), in versions 5.0 and
+      later. runtraj runs its
       ``hycs_std`` executable, and ``hyts_std`` for single trajectories, and
       includes neither (:doc:`installation`).
 

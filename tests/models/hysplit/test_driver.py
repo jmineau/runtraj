@@ -1061,7 +1061,7 @@ def test_wind_error_in_the_concentration_mode_is_refused_from_hysplit_5_3_0(
         ("hysplit.v5.2.3", CONCENTRATION | WIND),  # applies it with IDSP=1
         ("hysplit.v5.4.2", CONCENTRATION),  # no wind error to drop
         ("hysplit.v5.4.2", CONCENTRATION | ZI),
-        ("hysplit.v5.4.2", {"mode": "particles"} | WIND),  # IDSP=2
+        ("hysplit.v5.4.2", {"mode": "particle"} | WIND),  # IDSP=2
         (None, CONCENTRATION | WIND),  # no version: taken to be older
     ],
 )
@@ -1071,6 +1071,34 @@ def test_wind_error_is_not_refused_elsewhere(
     build = make_hysplit_dir(tmp_path / "hysplit", version)
     config = _config(directory=build, **settings)
     assert "winderrtf" in _setup_cfg(tmp_path, point_release, config)
+
+
+@pytest.mark.parametrize("krand", [10, 11, 12, 13])
+@pytest.mark.parametrize("version", ["hysplit.v5.0.2", None])
+def test_krand_10_to_13_are_refused_before_hysplit_5_1_0(
+    tmp_path, point_release, krand, version
+):
+    # 5.0.x runs them as krand=4; an unreadable version is taken to be older.
+    build = make_hysplit_dir(tmp_path / "hysplit", version)
+    config = _config(directory=build, krand=krand)
+    with pytest.raises(ValueError, match=f"krand={krand} is new in HYSPLIT 5.1.0") as e:
+        _inputs(tmp_path, point_release, config)
+    assert str(version) in str(e.value) or "no version" in str(e.value)
+    assert not (tmp_path / "run" / "SETUP.CFG").exists()
+
+
+@pytest.mark.parametrize("version", ["hysplit.v5.1.0", "hysplit.v5.4.2"])
+def test_krand_10_to_13_run_from_hysplit_5_1_0(tmp_path, point_release, version):
+    build = make_hysplit_dir(tmp_path / "hysplit", version)
+    config = _config(directory=build, krand=10)
+    assert "krand=10" in _setup_cfg(tmp_path, point_release, config)
+
+
+@pytest.mark.parametrize("krand", [None, 0, 1, 2, 3, 4])
+def test_the_other_krand_values_run_on_hysplit_5_0(tmp_path, point_release, krand):
+    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.0.2")
+    config = _config(directory=build, krand=krand)
+    assert "winderrtf=0" in _setup_cfg(tmp_path, point_release, config)
 
 
 def test_setup_cfg_takes_kmsl_from_an_msl_release(tmp_path, point_release):

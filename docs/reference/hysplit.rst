@@ -44,6 +44,34 @@ run uses, from the ``bdyfiles/`` folder of ``directory`` or beside the
    runtraj.models.hysplit.find_program
    runtraj.models.hysplit.data_tables
 
+.. _hysplit-versions:
+
+HYSPLIT versions
+----------------
+
+runtraj supports HYSPLIT 5.0 and later. It runs the ``hycs_std`` you give
+it and reads the version it prints (:meth:`HysplitModel.version
+<runtraj.models.hysplit.HysplitModel.version>`); a version it cannot read is
+taken to be the oldest. Between versions:
+
+* ``krand`` 10 to 13 are new in HYSPLIT 5.1.0. Before it, ``hycs_std`` runs
+  them as ``krand: 4`` without a word, so a run with one of them on an older
+  ``hycs_std`` is refused (:func:`~runtraj.models.hysplit.write_inputs` raises
+  a ``ValueError``, and the simulation fails) instead of getting the
+  clock-seeded draw.
+* HYSPLIT 5.0.x never seeds the random numbers behind a column release and
+  an ``ichem: 5`` run (the generator of Fortran's ``RANDOM_NUMBER``;
+  HYSPLIT 5.1.0 seeds it from ``seed``). On 5.0.x those runs differ from one
+  run to the next, whatever ``seed`` is, and runtraj cannot change that. A
+  point release with ``krand: 2`` and a ``seed`` repeats on 5.0.x as on every
+  later version, and 5.0.2 gave the same files as 5.1.0 in 48 of
+  runtraj's 50 recorded cases, the two others being a column release
+  and an ``ichem: 5`` run. runtraj does not warn about it when it runs: use
+  HYSPLIT 5.1.0 or later for a column release or ``ichem: 5`` run you need
+  to repeat.
+* From HYSPLIT 5.3.0, ``hycs_std`` adds 2 to ``WINDERRTF`` once it has read
+  ``ZICONTROL`` (below).
+
 Running HYSPLIT
 ---------------
 
