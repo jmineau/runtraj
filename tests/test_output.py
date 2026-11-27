@@ -5,9 +5,11 @@ import pandas as pd
 import pytest
 import yaml
 
+from runtraj.config import ProjectConfig
 from runtraj.output import Output
 from runtraj.particles import particles_metadata, write_particles
 
+from .fixtures.factories import blocks, make_hysplit_dir, make_met_config
 from .fixtures.output import (
     VARIANT,
     as_written_before_the_rename,
@@ -17,6 +19,7 @@ from .fixtures.output import (
     write_one,
 )
 from .fixtures.platform import not_on_windows
+from .fixtures.stages import COUNT
 
 # ---------------------------------------------------------------------------
 # Folders
@@ -565,3 +568,85 @@ def test_a_kept_workdir_can_leave_out_named_files(tmp_path):
     kept = out.keep_workdir(VARIANT, rid, workdir, leave_out={"PARTICLES"})
     assert sorted(p.name for p in kept.iterdir()) == ["CONTROL", "sub"]
     assert (kept / "sub" / "PARTICLES").exists()
+
+
+# ---------------------------------------------------------------------------
+# Status on a machine without hycs_std
+# ---------------------------------------------------------------------------
+
+
+def _counted(tmp_path, name="hrrr", **model):
+    """Return a freshly resolved variant of one met with the ``count`` stage; its build is read when asked."""
+    config = ProjectConfig(
+        **blocks(
+            mets={"hrrr": make_met_config(tmp_path / "met")},
+            stages={"count": {"class": COUNT}},
+            variants={name: {}},
+            **model,
+        )
+    )
+    return config.resolve()[name]
+
+
+def _write_run(out, variant, release):
+    """Write *release*'s particles and its ``count`` file, as a run does."""
+    out.write_particles(variant, release, fake_particles(release), [])
+    path = out.make_path("count", variant, release.id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("1")
+
+
+def test_status_without_hycs_std_finds_the_folders_a_variant_made(
+    tmp_path, monkeypatch
+):
+    out = Output(tmp_path / "output")
+    release = release_at()
+    _write_run(out, _counted(tmp_path), release)
+
+    monkeypatch.setenv("PATH", "")
+    variant = _counted(tmp_path)
+    with pytest.raises(FileNotFoundError, match="hycs_std"):
+        _ = variant.build
+    assert out.present("particles", variant) == {release.id}
+    assert out.present("count", variant) == {release.id}
+    assert out.complete(variant) == {release.id}
+    # Another name has no folder of its own to be found without the build.
+    assert out.complete(_counted(tmp_path, "other")) == frozenset()
+
+
+def test_status_without_hycs_std_is_not_fooled_by_other_settings(tmp_path, monkeypatch):
+    out = Output(tmp_path / "output")
+    _write_run(out, _counted(tmp_path), release_at())
+
+    monkeypatch.setenv("PATH", "")
+    changed = _counted(tmp_path, numpar=7)
+    assert out.complete(changed) == frozenset()
+
+
+def test_status_without_hycs_std_says_when_a_variant_made_folders_with_two_builds(
+    tmp_path, monkeypatch
+):
+    out = Output(tmp_path / "output")
+    for version in ("hysplit.v5.1.0", "hysplit.v5.4.2"):
+        build = make_hysplit_dir(tmp_path / version, version, f"# {version}\nexit 2\n")
+        _write_run(out, _counted(tmp_path, directory=build), release_at())
+    assert len(out.hashes("particles")) == 2
+
+    monkeypatch.setenv("PATH", "")
+    with pytest.raises(FileNotFoundError, match="hycs_std"):
+        out.present("particles", _counted(tmp_path))
+
+
+def test_read_returns_one_releases_stored_columns(tmp_path):
+    out = Output(tmp_path / "output")
+    release = release_at()
+    particles = fake_particles(release)
+    write_one(out, VARIANT, release)
+
+    table = out.read("particles", VARIANT, release.id, columns=["particle", "lon"])
+    assert table.column_names == ["particle", "lon"]
+    assert table.column("lon").to_pylist() == particles["lon"].tolist()
+    assert "date" not in out.read("particles", VARIANT, release.id).column_names
+
+    with pytest.raises(FileNotFoundError, match="No particles folder"):
+        out.read("particles", output_variant(numpar=7), release.id)
