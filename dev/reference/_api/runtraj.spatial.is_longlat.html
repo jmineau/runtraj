@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=7be29e4a"></script>
+    <script src="../../_static/documentation_options.js?v=7935fc64"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev19+gf1ae0821b" />
+  <meta name="docsearch:version" content="0.1.0a6.dev20+gc2b359084" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1016,8 +1016,8 @@
 <span class="sig-prename descclassname"><span class="pre">runtraj.spatial.</span></span><span class="sig-name descname"><span class="pre">is_longlat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/spatial.html#is_longlat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.spatial.is_longlat" title="Link to this definition">#</a></dt>
 <dd><p>Return whether <code class="docutils literal notranslate"><span class="pre">crs</span></code> is geographic (longitude/latitude degrees).</p>
 <p>This is the one test runtraj uses, for grids, meshes, and plots alike.
-PROJ strings are read by eye; other forms, such as <code class="docutils literal notranslate"><span class="pre">EPSG:4326</span></code>, by
-pyproj.</p>
+<code class="docutils literal notranslate"><span class="pre">+proj=longlat</span></code> and the common names are read by eye; every other form,
+such as <code class="docutils literal notranslate"><span class="pre">+proj=latlong</span></code> or <code class="docutils literal notranslate"><span class="pre">EPSG:4326</span></code>, is left to pyproj.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span></p>
