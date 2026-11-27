@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=13bb1de1"></script>
+    <script src="../../../../_static/documentation_options.js?v=0e3388d3"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev32+gc40159291" />
+  <meta name="docsearch:version" content="0.1.0a6.dev33+g8879bfcbd" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -525,6 +525,10 @@
 <span class="c1">#: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once</span>
 <span class="c1">#: it has read ``ZICONTROL`` (:func:`winderrtf`).</span>
 <span class="n">ZICONTROL_ADDS_TWO</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="c1">#: The first HYSPLIT version whose ``hycs_std`` checks ``WINDERRTF`` against</span>
+<span class="c1">#: ``IDSP`` before the run, and sets ``WINDERRTF`` to 0 (the wind errors off)</span>
+<span class="c1">#: unless ``IDSP`` is 2 (:func:`check_wind_error`).</span>
+<span class="n">WINDERR_NEEDS_IDSP</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="c1">#: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.</span>
 <span class="n">CHEMRATE_FILE</span> <span class="o">=</span> <span class="s2">"CHEMRATE.TXT"</span>
 <span class="n">LOG_FILE</span> <span class="o">=</span> <span class="s2">"hysplit.log"</span>
@@ -1132,13 +1136,76 @@
 <span class="sd">    (2, 0)</span>
 <span class="sd">    """</span>
     <span class="n">flag</span> <span class="o">=</span> <span class="p">(</span><span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">zierr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="n">found</span> <span class="o">=</span> <span class="n">_VERSION_NUMBER</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">version</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
-    <span class="n">adds_two</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">groups</span><span class="p">()))</span> <span class="o">&gt;=</span> <span class="n">ZICONTROL_ADDS_TWO</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="n">zicontroltf</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">and</span> <span class="n">adds_two</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">zicontroltf</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">and</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">ZICONTROL_ADDS_TWO</span><span class="p">):</span>
         <span class="n">flag</span> <span class="o">-=</span> <span class="mi">2</span>
     <span class="k">return</span> <span class="n">flag</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">version_at_least</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">minimum</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return whether *version*, as ``hycs_std`` prints it, is *minimum* or later.</span>
+
+<span class="sd">    A *version* without a number, or ``None``, is taken to be the oldest.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; version_at_least("hysplit.v5.4.2", (5, 3, 0))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; version_at_least("hysplit.v5.2.3", (5, 3, 0)), version_at_least(None, (5, 3, 0))</span>
+<span class="sd">    (False, False)</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_VERSION_NUMBER</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">version</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">groups</span><span class="p">()))</span> <span class="o">&gt;=</span> <span class="n">minimum</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_wind_error</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Refuse the wind error settings in the concentration mode on a ``hycs_std`` that prints *version* and ignores them.</span>
+
+<span class="sd">    From HYSPLIT 5.3.0 (:data:`WINDERR_NEEDS_IDSP`), ``hycs_std`` applies the</span>
+<span class="sd">    wind error only with ``IDSP=2``, which the concentration mode does not</span>
+<span class="sd">    set, and otherwise prints ``IDSP must be set to 2 to use WINDERRTF=1``</span>
+<span class="sd">    and runs without it, so the settings would do nothing. Earlier versions</span>
+<span class="sd">    apply it, and the particles mode sets ``IDSP=2``. A *version* runtraj</span>
+<span class="sd">    cannot read, or none, is taken to be older.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If *params* set the wind error in the concentration mode and</span>
+<span class="sd">        *version* is 5.3.0 or later.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; grid = {"name": "g", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0]}</span>
+<span class="sd">    &gt;&gt;&gt; config = HysplitConfig(</span>
+<span class="sd">    ...     n_hours=-24,</span>
+<span class="sd">    ...     mode="concentration",</span>
+<span class="sd">    ...     pollutants=[{"name": "TRCA"}],</span>
+<span class="sd">    ...     grids=[grid],</span>
+<span class="sd">    ...     siguverr=1.5,</span>
+<span class="sd">    ...     tluverr=60.0,</span>
+<span class="sd">    ...     zcoruverr=500.0,</span>
+<span class="sd">    ...     horcoruverr=40.0,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; check_wind_error(config, "hysplit.v5.2.3")</span>
+<span class="sd">    &gt;&gt;&gt; check_wind_error(config, "hysplit.v5.4.2")</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">    ValueError: The wind error settings (siguverr, ... on hysplit.v5.4.2: ...</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span>
+        <span class="ow">and</span> <span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">WINDERR_NEEDS_IDSP</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The wind error settings (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">WIND_ERROR_SETTINGS</span><span class="p">)</span><span class="si">}</span><span class="s2">) do "</span>
+            <span class="sa">f</span><span class="s2">"nothing in the concentration mode on </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">: HYSPLIT 5.3.0 "</span>
+            <span class="s2">"and later apply the wind error only with IDSP=2, which this "</span>
+            <span class="s2">"mode does not set, so the run would go on without it. Remove "</span>
+            <span class="s2">"them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_values</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1168,7 +1235,8 @@
 <span class="sd">    ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for</span>
 <span class="sd">    them. *workdir* is created if needed, and should be empty. With</span>
 <span class="sd">    ``ziscale`` set, ``WINDERRTF`` depends on the version the program</span>
-<span class="sd">    prints (:func:`winderrtf`), which is read once per program.</span>
+<span class="sd">    prints (:func:`winderrtf`), which is read once per program, and so</span>
+<span class="sd">    does the refusal of the wind error settings (:func:`check_wind_error`).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1191,6 +1259,10 @@
 <span class="sd">    ------</span>
 <span class="sd">    HYSPLITNotFoundError</span>
 <span class="sd">        If there is no program to link (:func:`find_program`).</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the settings set the wind error in the concentration mode and</span>
+<span class="sd">        the program is HYSPLIT 5.3.0 or later, which would ignore it</span>
+<span class="sd">        (:func:`check_wind_error`).</span>
 <span class="sd">    """</span>
     <span class="n">workdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
     <span class="n">workdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1200,6 +1272,13 @@
     <span class="n">program</span> <span class="o">=</span> <span class="n">program_name</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">trajectory</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+    <span class="c1"># Read only where a setting depends on it: the program is run for it.</span>
+    <span class="n">needs_version</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">trajectory</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">or</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span> <span class="ow">and</span> <span class="n">winderr</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">found</span><span class="p">))</span> <span class="k">if</span> <span class="n">needs_version</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">check_wind_error</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>  <span class="c1"># before anything is written</span>
     <span class="c1"># On Windows the link keeps the program's extension, which finds it again.</span>
     <span class="n">linked</span> <span class="o">=</span> <span class="n">program</span> <span class="o">+</span> <span class="n">found</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span> <span class="k">else</span> <span class="n">program</span>
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="n">linked</span><span class="p">:</span> <span class="n">found</span><span class="p">}</span>
@@ -1234,14 +1313,12 @@
     <span class="n">entries</span><span class="p">[</span><span class="s2">"maxpar"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">maxpar_for</span><span class="p">(</span><span class="n">release_locations</span><span class="p">(</span><span class="n">locations</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particle"</span><span class="p">:</span>
         <span class="n">entries</span><span class="p">[</span><span class="s2">"ivmax"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>  <span class="c1"># number of output variables</span>
-    <span class="n">factors</span> <span class="o">=</span> <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-    <span class="c1"># Read only with ziscale, the one setting whose WINDERRTF depends on it.</span>
-    <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">factors</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"winderrtf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">winderrtf</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="n">setup</span> <span class="o">=</span> <span class="n">NameList</span><span class="p">(</span><span class="s2">"SETUP"</span><span class="p">)</span>
     <span class="n">setup</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
     <span class="n">setup</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">SETUP_FILE</span><span class="p">)</span>
 
+    <span class="n">factors</span> <span class="o">=</span> <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">factors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">ZICONTROL_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
             <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">factors</span><span class="p">)),</span> <span class="o">*</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">)])</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span>

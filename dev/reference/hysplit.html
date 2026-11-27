@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=13bb1de1"></script>
+    <script src="../_static/documentation_options.js?v=0e3388d3"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev32+gc40159291" />
+  <meta name="docsearch:version" content="0.1.0a6.dev33+g8879bfcbd" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1065,7 +1065,11 @@ set it first asks <code class="docutils literal notranslate"><span class="pre">h
 <code class="docutils literal notranslate"><span class="pre">ZICONTROL</span></code>, so <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> is written 2 less there (-2 with no
 error settings), and each version applies the errors the settings ask
 for. A <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> that prints no version gets the value as HYSPLIT
-5.2 reads it. It takes what
+5.2 reads it. In the concentration mode the wind error settings need the
+version too: from HYSPLIT 5.3.0, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> applies the wind error only
+with <code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, which that mode does not set, so <code class="docutils literal notranslate"><span class="pre">write_inputs</span></code> raises a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> there instead of running without it (the particles mode sets
+<code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, and 5.2.3 and earlier apply the error). It takes what
 <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> starts from: a release time and release locations (longitude,
 latitude and height, like <code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>; the <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file lists
 each latitude first, and the writer swaps them), with <code class="docutils literal notranslate"><span class="pre">kmsl</span></code> 0 for heights

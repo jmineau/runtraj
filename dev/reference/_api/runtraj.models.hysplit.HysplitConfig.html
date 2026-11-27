@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=13bb1de1"></script>
+    <script src="../../_static/documentation_options.js?v=0e3388d3"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev32+gc40159291" />
+  <meta name="docsearch:version" content="0.1.0a6.dev33+g8879bfcbd" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1022,7 +1022,9 @@ each. The wind-error group (<code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">horcoruverr</span></code>) perturbs the particles’ winds, and the mixed-layer group
 (<code class="docutils literal notranslate"><span class="pre">sigzierr</span></code>, <code class="docutils literal notranslate"><span class="pre">tlzierr</span></code>, <code class="docutils literal notranslate"><span class="pre">horcorzierr</span></code>) perturbs each particle’s
 <code class="docutils literal notranslate"><span class="pre">foot</span></code> by a random mixed-layer height error. Each group is set in full
-or not at all.</p>
+or not at all. The wind-error group acts in the concentration mode
+only on HYSPLIT 5.2.3 and earlier: later versions apply it only with
+<code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, so a run there is refused.</p>
 <p>In the particle mode runtraj always writes <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code> and <code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>
 (<code class="xref py py-data docutils literal notranslate"><span class="pre">FIXED_SETUP</span></code>), the only values with which HYSPLIT writes
 particles: <code class="docutils literal notranslate"><span class="pre">idsp</span></code> is not a setting, and <code class="docutils literal notranslate"><span class="pre">ichem</span></code> may be 8 or left
