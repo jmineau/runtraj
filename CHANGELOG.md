@@ -7,6 +7,10 @@ All notable changes to runtraj are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- HYSPLIT no longer gets the `HYSF_*` environment variables, which HYSPLIT 5.4 uses to move its input and output files out of the working directory: a run with `HYSF_PARTICLE_STILT` set failed with "HYSPLIT wrote no PARTICLE_STILT.DAT".
+
 ## [0.1.0a5] - 2026-11-24
 
 ### Added

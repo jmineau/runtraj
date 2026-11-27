@@ -27,6 +27,7 @@ from .driver import (
     check_release,
     data_tables,
     find_program,
+    hysplit_environment,
     program_name,
     read_particle_dat,
     run_hycs_std,
@@ -98,6 +99,7 @@ def _printed_version(path: str, mtime_ns: int, size: int) -> str | None:
             proc = subprocess.Popen(
                 [path],
                 cwd=tmp,
+                env=hysplit_environment(),
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
