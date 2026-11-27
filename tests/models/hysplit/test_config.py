@@ -108,7 +108,7 @@ def test_krand_rejects_undocumented_values(krand):
 
 def test_varsiwant_takes_zcfx_the_name_hysplit_reads():
     config = HysplitConfig(
-        n_hours=-24, varsiwant=["time", "indx", "long", "lati", "zcfx"]
+        n_hours=-24, varsiwant=["time", "indx", "long", "lati", "zagl", "zcfx"]
     )
     assert config.varsiwant[-1] == "zcfx"
 
@@ -124,6 +124,37 @@ def test_varsiwant_refuses_zfx1_and_names_zcfx(name):
 def test_varsiwant_refuses_a_name_hysplit_does_not_read(name):
     with pytest.raises(ValidationError, match="varsiwant"):
         HysplitConfig(n_hours=-24, varsiwant=["time", "indx", "long", "lati", name])
+
+
+@pytest.mark.parametrize("code", ["time", "indx", "long", "lati", "zagl"])
+def test_varsiwant_refuses_a_particle_run_missing_a_column_of_the_table(code):
+    """HYSPLIT writes only the columns varsiwant names, and the particle table needs these five."""
+    names = [n for n in ("time", "indx", "long", "lati", "zagl", "mlht") if n != code]
+    with pytest.raises(ValidationError, match=f"varsiwant lacks '{code}'"):
+        HysplitConfig(n_hours=-6, varsiwant=names)
+
+
+def test_varsiwant_names_every_missing_code():
+    with pytest.raises(ValidationError, match="lacks 'indx', 'time', 'long', 'lati'"):
+        HysplitConfig(n_hours=-6, varsiwant=["zagl"])
+
+
+def test_varsiwant_is_not_checked_where_the_mode_ignores_it():
+    """The concentration and trajectory modes do not read it, so a block set for particle variants may serve them."""
+    short = ["time", "indx"]
+    conc = HysplitConfig(
+        n_hours=-6,
+        mode="concentration",
+        varsiwant=short,
+        pollutants=[{"name": "TRCA"}],
+        grids=[
+            {"name": "g", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0, 100]}
+        ],
+    )
+    assert conc.varsiwant == short
+    assert (
+        HysplitConfig(n_hours=-6, mode="trajectory", varsiwant=short).varsiwant == short
+    )
 
 
 @pytest.mark.parametrize("numpar", [0, -5])

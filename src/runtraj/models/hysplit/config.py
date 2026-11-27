@@ -19,6 +19,7 @@ from typing import Any, ClassVar, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from runtraj.models import TransportConfig
+from runtraj.particles import PARTICLE_SCHEMA
 
 #: Most hourly ZICONTROL factors HYSPLIT can hold (``ZIPRESC(150)`` in
 #: hymodelc.F); it reads more without a bounds check.
@@ -103,6 +104,19 @@ ICHEM_REFUSED: dict[int, str] = {
         "preprocessor writes"
     ),
 }
+
+
+#: HYSPLIT's names for the columns the particle table names otherwise
+#: (:data:`runtraj.particles.PARTICLE_SCHEMA`); the rest keep HYSPLIT's.
+PARTICLE_COLUMNS = {"indx": "particle", "time": "age", "long": "lon", "lati": "lat"}
+
+
+#: The ``varsiwant`` codes a particle run must write: the particle table's
+#: columns (:data:`runtraj.particles.PARTICLE_SCHEMA`) under HYSPLIT's names.
+PARTICLE_REQUIRED = [
+    {v: k for k, v in PARTICLE_COLUMNS.items()}.get(name, name)
+    for name in PARTICLE_SCHEMA.names
+]
 
 
 #: Settings only the particle mode reads: the particle file's variables
@@ -619,7 +633,9 @@ class HysplitConfig(TransportConfig):
             "Particle variables ``hycs_std`` writes to the trajectory output, "
             "by the lowercase four-letter names HYSPLIT reads. Each is a "
             "column of the particles under the same name, except ``indx``, "
-            "``time``, ``long``, and ``lati``. ``zcfx`` is the vertical "
+            "``time``, ``long``, and ``lati``. In ``mode: particle`` it must "
+            "hold ``time``, ``indx``, ``long``, ``lati``, and ``zagl``, which "
+            "the particle table needs; the other modes do not read it. ``zcfx`` is the vertical "
             "displacement by convective flux along the trajectory, in m. "
             "``SETUP.CFG`` gets ``dswf`` as ``DSWF``, as HYSPLIT 5.2 and later "
             "fills it only then. The default is HYSPLIT's own list of 20."
@@ -1280,6 +1296,16 @@ class HysplitConfig(TransportConfig):
                     f"concentration, and this config's mode is {self.mode}. Set "
                     "mode: concentration, or leave them out."
                 )
+        if self.mode == "particle":
+            lacking = [c for c in PARTICLE_REQUIRED if c not in self.varsiwant]
+            if lacking:
+                raise ValueError(
+                    f"varsiwant lacks {', '.join(map(repr, lacking))}, which the "
+                    f"particle table needs ({', '.join(PARTICLE_REQUIRED)}): "
+                    "HYSPLIT writes only the columns varsiwant names. Add "
+                    f"{'it' if len(lacking) == 1 else 'them'}, or leave varsiwant "
+                    "out for the default."
+                )
         if self.mode == "trajectory":
             self._validate_trajectory()
         if self.mode == "particle" and self.ichem not in (None, PARTICLES_ICHEM):
@@ -1623,6 +1649,8 @@ __all__ = [
     "TRAJECTORY_SETTINGS",
     "TRAJECTORY_SETUP_SETTINGS",
     "PARTICLES_SETTINGS",
+    "PARTICLE_COLUMNS",
+    "PARTICLE_REQUIRED",
     "SAMPLING_TYPES",
     "ConcentrationGrid",
     "Conversion",
