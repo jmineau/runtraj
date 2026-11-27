@@ -30,6 +30,7 @@ from .driver import (
     find_program,
     hysplit_version,
     program_name,
+    read_internal_grid,
     read_particle_dat,
     run_hycs_std,
     setting_refusals,
@@ -312,6 +313,9 @@ def _read_particles(
     particles = read_particle_dat(path, config.varsiwant)
     if config.outdt == 0:  # the check needs a row every time step
         check_met_stop(particles, config.n_hours, _met_grid(met_file))
+    grid = read_internal_grid(workdir)
+    if grid is not None:  # recorded with the particles (sample_met reads it)
+        particles.attrs["internal_grid"] = grid
     return particles
 
 

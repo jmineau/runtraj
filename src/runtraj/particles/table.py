@@ -199,7 +199,10 @@ def read_particles(
     It needs nothing but the file: the release time in its metadata gives
     the ``time`` column (UTC) back, from ``age``. ``age`` and ``particle`` come back as
     float64, as HYSPLIT writes them. :func:`particles_metadata` reads the
-    release and settings.
+    release and settings. A HYSPLIT run's internal grid, which the file
+    records, comes back in ``attrs["internal_grid"]``
+    (``(nlvl, aa, bb, cc)``), where :func:`runtraj.sampling.sample_met` reads
+    it.
 
     Parameters
     ----------
@@ -221,6 +224,7 @@ def read_particles(
     with readable(path) as source:
         pf = pq.ParquetFile(source)
         stored = pf.schema_arrow.names
+        meta = pf.schema_arrow.metadata or {}
         # The output directory adds a ``release`` column for scans of the
         # whole tree. One file is one release, so it is not read here.
         wanted = [c for c in (stored if columns is None else columns) if c != "release"]
@@ -232,8 +236,9 @@ def read_particles(
     for name in _INT_COLUMNS:
         if name in data.columns:
             data[name] = data[name].astype("float64")
+    if b"runtraj:internal_grid" in meta:
+        data.attrs["internal_grid"] = tuple(json.loads(meta[b"runtraj:internal_grid"]))
     if want_time and "age" in data.columns:
-        meta = pf.schema_arrow.metadata or {}
         release = stored_release(meta, path)
         data["time"] = pd.Timestamp(release.time) + pd.to_timedelta(
             data["age"].to_numpy(), unit="min"
@@ -324,7 +329,8 @@ def write_particles(
     since it is the release time plus ``age``. A ``release`` column holds
     the release id, so a scan of many files can tell releases apart. The
     release, the run's settings, and the met files go in the file's
-    metadata, so the file reads alone.
+    metadata, so the file reads alone, and so does ``particles.attrs["internal_grid"]``
+    when it is there (a HYSPLIT run's, :func:`read_particles`).
 
     Parameters
     ----------
@@ -353,6 +359,13 @@ def write_particles(
         If ``age`` or ``particle`` holds a value that is not a whole number.
     """
     data = particles.drop(columns=["time", "release"], errors="ignore")
+    if "internal_grid" in particles.attrs:
+        metadata = {
+            b"runtraj:internal_grid": json.dumps(
+                list(particles.attrs["internal_grid"])
+            ).encode(),
+            **(metadata or {}),
+        }
     for name in _INT_COLUMNS:
         if name in data.columns:
             values = data[name].to_numpy()
