@@ -181,7 +181,7 @@ each:
 .. code-block:: yaml
 
    variants:
-     by_hour:
+     by-hour:
        mode: concentration
        ichem: 10
        qcycle: 1

@@ -131,7 +131,7 @@ models:
   flexpart: {directory: /path/to/flexpart, eta: true, n_hours: -24, numpar: 100}
 variants:
   hrrr: {model: hysplit}
-  hrrr-long: {model: hysplit, n_hours: -72}
+  hrrr-long: {model: hysplit, met: hrrr, n_hours: -72}
   era5: {model: flexpart}
 ```
 
