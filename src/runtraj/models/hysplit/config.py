@@ -1560,7 +1560,11 @@ class HysplitConfig(TransportConfig):
         """
         Return *n* realizations of this config, realization ``k`` with ``seed + k``.
 
-        Realization 0 uses the configured seed.
+        Realization 0 uses the configured seed. Under ``krand=4``, which takes
+        no seed, realization ``k`` runs with seed ``k``: HYSPLIT 5.4.2 and
+        earlier ignore it and seed each run from the clock, and the
+        development branch (the coming 5.5), outside ``ichem=8``, reseeds
+        from ``SEED`` and would repeat a run with the same one.
 
         Raises
         ------
@@ -1585,7 +1589,10 @@ class HysplitConfig(TransportConfig):
                 "realization its own seed. Any other mode would repeat the same "
                 "perturbation."
             )
-        return super().realizations(n)
+        configs = super().realizations(n)
+        if self.krand == 4:
+            return [c.model_copy(update={"seed": k}) for k, c in enumerate(configs)]
+        return configs
 
 
 __all__ = [
