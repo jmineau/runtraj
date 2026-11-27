@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=93615c5b"></script>
+    <script src="../../_static/documentation_options.js?v=c64a8779"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev24+g5a79500df" />
+  <meta name="docsearch:version" content="0.1.0a6.dev25+g100ca7620" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1118,7 +1118,7 @@ refused, since nothing in a trajectory run is random.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">varsiwant</span></code></p></td>
-<td><p>Particle variables <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> writes to the trajectory output, by the lowercase four-letter names HYSPLIT reads. Each is a column of the particles under the same name, except <code class="docutils literal notranslate"><span class="pre">indx</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">long</span></code>, and <code class="docutils literal notranslate"><span class="pre">lati</span></code>. <code class="docutils literal notranslate"><span class="pre">zcfx</span></code> is the vertical displacement by convective flux along the trajectory, in m. The default is HYSPLIT’s own list of 20.</p></td>
+<td><p>Particle variables <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> writes to the trajectory output, by the lowercase four-letter names HYSPLIT reads. Each is a column of the particles under the same name, except <code class="docutils literal notranslate"><span class="pre">indx</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">long</span></code>, and <code class="docutils literal notranslate"><span class="pre">lati</span></code>. <code class="docutils literal notranslate"><span class="pre">zcfx</span></code> is the vertical displacement by convective flux along the trajectory, in m. <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code> gets <code class="docutils literal notranslate"><span class="pre">dswf</span></code> as <code class="docutils literal notranslate"><span class="pre">DSWF</span></code>, as HYSPLIT 5.2 and later fills it only then. The default is HYSPLIT’s own list of 20.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">['time',</span> <span class="pre">'indx',</span> <span class="pre">'long',</span> <span class="pre">'lati',</span> <span class="pre">'zagl',</span> <span class="pre">'sigw',</span> <span class="pre">'tlgr',</span> <span class="pre">'zsfc',</span> <span class="pre">'temp',</span> <span class="pre">'samt',</span> <span class="pre">'foo...</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">capemin</span></code></p></td>

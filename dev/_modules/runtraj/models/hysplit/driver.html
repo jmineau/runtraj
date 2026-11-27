@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=93615c5b"></script>
+    <script src="../../../../_static/documentation_options.js?v=c64a8779"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev24+g5a79500df" />
+  <meta name="docsearch:version" content="0.1.0a6.dev25+g100ca7620" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -777,7 +777,8 @@
 
 <span class="sd">    In the particles mode the entries of :data:`FIXED_SETUP` come first.</span>
 <span class="sd">    Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,</span>
-<span class="sd">    under their own names; the concentration mode leaves out the particle</span>
+<span class="sd">    under their own names (``DSWF`` in ``VARSIWANT`` in upper case, which</span>
+<span class="sd">    ``hycs_std`` 5.2 and later needs to fill it); the concentration mode leaves out the particle</span>
 <span class="sd">    file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the</span>
 <span class="sd">    config's ``ichem``, 0 unless set. The driver adds</span>
 <span class="sd">    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``</span>
@@ -806,6 +807,13 @@
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="p">)</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"zicontroltf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">zicontroltf</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"varsiwant"</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="c1"># From 5.2.0 hycs_std turns the shortwave flux on by a case-sensitive</span>
+        <span class="c1"># comparison to 'DSWF': in lower case the column is written as 0. Every</span>
+        <span class="c1"># other name stays lower case, which 'zcfx' needs ('ZCFX' is unknown).</span>
+        <span class="n">entries</span><span class="p">[</span><span class="s2">"varsiwant"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">"DSWF"</span> <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"dswf"</span> <span class="k">else</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">varsiwant</span>
+        <span class="p">]</span>
     <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">entries</span><span class="p">[</span><span class="s2">"seed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">setup_seed</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">entries</span>
