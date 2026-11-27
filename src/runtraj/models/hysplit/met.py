@@ -4,6 +4,7 @@ HYSPLIT's meteorology: the met config (:class:`HysplitMetConfig`), and finding, 
 
 from __future__ import annotations
 
+import contextlib
 import datetime as dt
 import functools
 import hashlib
@@ -837,7 +838,11 @@ class Met:
         Two workers cropping the same file at once both finish, and the
         first crop is kept: the second worker reads it, since on Windows a
         rename onto a crop that a run has open fails. A crop that holds
-        fewer time steps is replaced, as before.
+        fewer time steps is replaced. When the replace is refused, as on
+        Windows while a run reads the short crop, the new crop is kept
+        beside it under a hidden name (:func:`_spare`) that catalogs skip,
+        and is read in its place by every run that needs the hours it
+        lacks.
         """
         from arlmet import extract_subset
 
@@ -847,6 +852,10 @@ class Met:
         bbox = self._bbox()
         levels = self._level_indices()
 
+        def crop(src: Path, path: Path, replace: bool) -> None:
+            with atomic_path(path, replace=replace) as tmp:
+                extract_subset(src, tmp, bbox=bbox, levels=levels)
+
         subsetted: list[Path] = []
         for src in files:
             if src.resolve().is_relative_to(inside):
@@ -854,17 +863,26 @@ class Met:
                 continue
             cache_path = crop_dir / self._crop_name(src)
             if not _holds_as(cache_path, src):
+                spare = _spare(cache_path, src) if cache_path.exists() else None
+                if spare is not None and _holds_as(spare, src):
+                    subsetted.append(spare)  # made when the short crop was open
+                    continue
                 logger.info("Subsetting %s → %s", src.name, cache_path)
                 try:
-                    # A crop no worker has made yet is written once.
-                    with atomic_path(cache_path, replace=cache_path.exists()) as tmp:
-                        extract_subset(src, tmp, bbox=bbox, levels=levels)
-                except FileExistsError:
-                    # Another worker's crop landed first; it is used unless
-                    # it holds fewer time steps than the source.
-                    if not _holds_as(cache_path, src):
-                        with atomic_path(cache_path) as tmp:
-                            extract_subset(src, tmp, bbox=bbox, levels=levels)
+                    try:
+                        # A crop no worker has made yet is written once.
+                        crop(src, cache_path, replace=cache_path.exists())
+                    except FileExistsError:
+                        # Another worker's crop landed first; it is used
+                        # unless it holds fewer time steps than the source.
+                        if not _holds_as(cache_path, src):
+                            crop(src, cache_path, replace=True)
+                except PermissionError:
+                    # Windows refuses a rename onto a crop a run has open.
+                    cache_path = _spare(cache_path, src)
+                    # A spare another worker made holds the same time steps.
+                    with contextlib.suppress(FileExistsError):
+                        crop(src, cache_path, replace=False)
             subsetted.append(cache_path)
         return subsetted
 
@@ -1108,6 +1126,19 @@ def _holds_as(crop: Path, source: Path) -> bool:
         wanted.step,
         wanted.n_steps,
     )
+
+
+def _spare(crop: Path, source: Path) -> Path:
+    """
+    Return where a crop of *source* goes when its short *crop* cannot be replaced.
+
+    It is beside *crop*, hidden by a leading dot so that catalogs skip it,
+    and named by the number of time steps *source* holds, so one name always
+    holds the same time steps.
+    """
+    from arlmet import probe
+
+    return crop.with_name(f".{crop.name}.{probe(source).n_steps}")
 
 
 def _too_many_files_message(n_files: int) -> str:
