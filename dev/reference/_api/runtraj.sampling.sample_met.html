@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=47d7e9a7"></script>
+    <script src="../../_static/documentation_options.js?v=b5969313"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev42+g5b976476e" />
+  <meta name="docsearch:version" content="0.1.0a6.dev43+gfa2c9766a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1013,7 +1013,7 @@
 <h1>runtraj.sampling.sample_met<a class="headerlink" href="#runtraj-sampling-sample-met" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.sampling.sample_met">
-<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">sample_met</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('mlht',</span> <span class="pre">'dens',</span> <span class="pre">'pres',</span> <span class="pre">'zsfc')</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#sample_met"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.sample_met" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">sample_met</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('mlht',</span> <span class="pre">'dens',</span> <span class="pre">'pres',</span> <span class="pre">'zsfc')</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#sample_met"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.sample_met" title="Link to this definition">#</a></dt>
 <dd><p>Return the particles with met columns sampled at each particle’s position.</p>
 <p>A transport model that writes only positions can get the columns
 HYSPLIT writes from the met this way. Each row is sampled at its
@@ -1058,6 +1058,12 @@ internal levels depend on it. A stored run records it:
 <code class="docutils literal notranslate"><span class="pre">particles_metadata(path).settings[&quot;z_top&quot;]</span></code>. <code class="docutils literal notranslate"><span class="pre">None</span></code> reads the
 met’s own levels, for a transport model that is not HYSPLIT; a row
 below their lowest or above their top is then NaN.</p></li>
+<li><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code> file of the run (HYSPLIT writes it in the run’s
+working directory, which <code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> keeps). The internal levels
+are then the ones the run printed there, whatever its HYSPLIT
+version. Without it they are the ones HYSPLIT 5.4.0 and later pick
+for <em>z_top</em>; earlier versions pick a different grid when <em>z_top</em>
+is below about 1.1 km. Needs a <em>z_top</em>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1071,7 +1077,8 @@ grid is NaN.</p>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If a column is not one of the four or is in <em>particles</em> already
     (drop it first), <em>particles</em> has no <code class="docutils literal notranslate"><span class="pre">time</span></code> column, a row is outside
-    the files’ times, or <em>z_top</em> is not positive or is below a particle.</p></li>
+    the files’ times, <em>z_top</em> is not positive or is below a particle, or
+    <em>message</em> has no internal grid line or is given without a <em>z_top</em>.</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><strong>KeyError</strong></a> – If the met lacks a variable a column needs.</p></li>
 </ul>
 </dd>

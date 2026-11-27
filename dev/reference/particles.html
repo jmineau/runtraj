@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=47d7e9a7"></script>
+    <script src="../_static/documentation_options.js?v=b5969313"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev42+g5b976476e" />
+  <meta name="docsearch:version" content="0.1.0a6.dev43+gfa2c9766a" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1237,6 +1237,21 @@ way the run did; give it the run’s <code class="docutils literal notranslate">
 <span class="n">mlht</span> <span class="o">=</span> <span class="n">calc_pbl_height</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span><span class="p">)</span>  <span class="c1"># HYSPLIT, kmixd: 3</span>
 <span class="n">mlht</span> <span class="o">=</span> <span class="n">calc_pbl_height</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"hysplit_temperature"</span><span class="p">)</span>  <span class="c1"># kmixd: 1</span>
 <span class="n">mlht</span> <span class="o">=</span> <span class="n">calc_pbl_height</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"flexpart"</span><span class="p">)</span>  <span class="c1"># FLEXPART on ERA5</span>
+</pre></div>
+</div>
+<p>The internal levels HYSPLIT samples on depend on its version when the top
+is below about 1.1 km (5.4.0 changed them). Without more, both functions
+use the levels of 5.4.0 and later. A HYSPLIT run prints its own in its
+<code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code> file, in the working directory that <code class="docutils literal notranslate"><span class="pre">sim.kept_workdir</span></code> gives
+when the run kept it (<code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">execution:</span></code>):
+give that file as <code class="docutils literal notranslate"><span class="pre">message</span></code> and the sampling uses them, for any version.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sampled</span> <span class="o">=</span> <span class="n">sample_met</span><span class="p">(</span>
+    <span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"pres"</span><span class="p">]),</span>
+    <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"pres"</span><span class="p">],</span>
+    <span class="n">z_top</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"z_top"</span><span class="p">],</span>
+    <span class="n">message</span><span class="o">=</span><span class="n">sim</span><span class="o">.</span><span class="n">kept_workdir</span> <span class="o">/</span> <span class="s2">"MESSAGE"</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>Met files that are not ARL files, such as GRIB, are read as one Dataset in
