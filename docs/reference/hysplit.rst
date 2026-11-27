@@ -49,7 +49,13 @@ Running HYSPLIT
 
 :func:`~runtraj.models.hysplit.write_inputs` writes everything
 ``hycs_std`` reads into a folder: ``CONTROL``, ``SETUP.CFG``, and the error
-and mixed-layer files when the settings call for them. It takes what
+and mixed-layer files when the settings call for them. With ``ziscale``
+set it first asks ``hycs_std`` for its version: from HYSPLIT 5.3.0,
+``hycs_std`` adds 2 to ``SETUP.CFG``'s ``WINDERRTF`` once it has read
+``ZICONTROL``, so ``WINDERRTF`` is written 2 less there (-2 with no
+error settings), and each version applies the errors the settings ask
+for. A ``hycs_std`` that prints no version gets the value as HYSPLIT
+5.2 reads it. It takes what
 ``CONTROL`` starts from: a release time and release locations (longitude,
 latitude and height, like ``release.coords()``; the ``CONTROL`` file lists
 each latitude first, and the writer swaps them), with ``kmsl`` 0 for heights
