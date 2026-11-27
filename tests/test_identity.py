@@ -73,9 +73,9 @@ def test_hysplit_version_is_none_for_a_hycs_std_that_cannot_run_here(tmp_path):
 def test_hysplit_version_is_none_for_a_hycs_std_that_does_not_stop(
     tmp_path, monkeypatch
 ):
-    from runtraj.models.hysplit import model
+    from runtraj.models.hysplit import driver
 
-    monkeypatch.setattr(model, "_VERSION_TIMEOUT", 0.5)
+    monkeypatch.setattr(driver, "_VERSION_TIMEOUT", 0.5)
     folder = make_hysplit_dir(tmp_path / "b", version=None, body="exec sleep 30\n")
     assert hysplit_version(folder) is None
 

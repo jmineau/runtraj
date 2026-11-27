@@ -976,6 +976,47 @@ def test_setup_cfg_sets_winderrtf_from_error_settings(tmp_path, point_release):
     assert "winderrtf=1" in _setup_cfg(tmp_path, point_release, config)
 
 
+WIND = {"siguverr": 1.0, "tluverr": 60.0, "zcoruverr": 500.0, "horcoruverr": 40.0}
+ZI = {"sigzierr": 20.0, "tlzierr": 60.0, "horcorzierr": 40.0}
+
+
+@pytest.mark.parametrize(
+    ("settings", "before", "after"),
+    [
+        ({}, 0, 0),
+        (WIND, 1, 1),
+        (ZI, 2, 2),
+        (WIND | ZI, 3, 3),
+        ({"ziscale": 0.8}, 0, -2),
+        ({"ziscale": 0.8} | WIND, 1, -1),
+        ({"ziscale": 0.8} | ZI, 2, 0),
+        ({"ziscale": 0.8} | WIND | ZI, 3, 1),
+    ],
+)
+def test_winderrtf_is_2_less_with_ziscale_from_hysplit_5_3_0(settings, before, after):
+    # hycs_std 5.3.0 and later add 2 to WINDERRTF once they read ZICONTROL.
+    config = _config(**settings)
+    assert winderrtf(config, "hysplit.v5.2.3") == before
+    assert winderrtf(config, "hysplit.v5.3.0") == after
+    assert winderrtf(config, "hysplit.v5.4.2") == after
+
+
+@pytest.mark.parametrize("version", [None, "unknown"])
+def test_winderrtf_takes_a_version_without_a_number_as_older(version):
+    assert winderrtf(_config(ziscale=0.8, **ZI), version) == 2
+
+
+@pytest.mark.parametrize(
+    ("version", "written"), [("hysplit.v5.2.3", 0), ("hysplit.v5.4.2", -2)]
+)
+def test_setup_cfg_winderrtf_follows_the_version_the_program_prints(
+    tmp_path, point_release, version, written
+):
+    build = make_hysplit_dir(tmp_path / "hysplit", version)
+    config = _config(directory=build, ziscale=0.8)
+    assert f"winderrtf={written}" in _setup_cfg(tmp_path, point_release, config)
+
+
 def test_setup_cfg_takes_kmsl_from_an_msl_release(tmp_path, point_release):
     release = point_release.model_copy(
         update={"altitude": 1500.0, "altitude_ref": "msl"}

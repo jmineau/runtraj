@@ -5,8 +5,6 @@ from __future__ import annotations
 import datetime as dt
 import functools
 import hashlib
-import re
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -23,11 +21,12 @@ from .control import TDUMP_FILE, cdump_name
 from .driver import (
     LOG_FILE,
     PARTICLE_FILE,
+    _stamp,
     check_met_stop,
     check_release,
     data_tables,
     find_program,
-    hysplit_environment,
+    hysplit_version,
     program_name,
     read_particle_dat,
     run_hycs_std,
@@ -43,77 +42,6 @@ if TYPE_CHECKING:
     from arlmet import Grid
 
     from runtraj.releases import Release
-
-
-#: What ``hycs_std`` prints on its first lines: ``HYSPLIT version: hysplit.v5.1.0``.
-_VERSION_LINE = re.compile(r"HYSPLIT version:\s*(\S+)")
-
-#: Seconds ``hycs_std`` gets to print its version; it stops at once without ``CONTROL``.
-_VERSION_TIMEOUT = 30
-
-
-def hysplit_version(
-    directory: str | Path | None = None, program: str = "hycs_std"
-) -> str | None:
-    """
-    Return the version the ``hycs_std`` of *directory*, or else on ``PATH``, prints when it starts.
-
-    *program* names another HYSPLIT program to ask, such as ``hyts_std``,
-    which prints the same line.
-
-    ``hycs_std`` prints a line such as ``HYSPLIT version: hysplit.v5.1.0``
-    before it reads its input; this returns ``hysplit.v5.1.0``. It runs the
-    binary for a moment in an empty temporary directory, where it stops for
-    want of a ``CONTROL`` file. The version is recorded with a run's
-    settings, but it is not what tells two builds apart: the SHA-256 of
-    ``hycs_std`` is (:meth:`HysplitModel.sha256`). Two builds of one
-    release print the same version, and CHPC's ``hysplit/5.2.3`` module
-    prints ``hysplit.v5.2.2``.
-
-    Returns
-    -------
-    str or None
-        The version, or ``None`` when ``hycs_std`` printed none or could
-        not be run here.
-
-    Raises
-    ------
-    HYSPLITNotFoundError
-        If there is no such program (:func:`find_program`).
-    """
-    return _printed_version(*_stamp(find_program(program, directory)))
-
-
-def _stamp(path: Path) -> tuple[str, int, int]:
-    """Return *path*, resolved, with its modification time and size, the key of the caches below."""
-    path = path.resolve()
-    stat = path.stat()
-    return str(path), stat.st_mtime_ns, stat.st_size
-
-
-@functools.lru_cache(maxsize=16)
-def _printed_version(path: str, mtime_ns: int, size: int) -> str | None:
-    """Return the version the ``hycs_std`` at *path* prints, read once per file."""
-    with tempfile.TemporaryDirectory(prefix="runtraj-version-") as tmp:
-        try:
-            proc = subprocess.Popen(
-                [path],
-                cwd=tmp,
-                env=hysplit_environment(),
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
-        except OSError:  # not executable here, such as another platform's build
-            return None
-        try:
-            out, _ = proc.communicate(timeout=_VERSION_TIMEOUT)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.communicate()
-            return None
-    found = _VERSION_LINE.search(out.decode(errors="replace"))
-    return found.group(1) if found else None
 
 
 @functools.lru_cache(maxsize=16)
