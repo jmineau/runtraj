@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=47c3b703"></script>
+    <script src="../../../../_static/documentation_options.js?v=a71d42c7"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev45+ge6f6387b3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -462,6 +462,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._process</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_log</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.concentration</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_netcdf4</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HYSPLITNotFoundError</span><span class="p">,</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelRun</span><span class="p">,</span> <span class="n">TransportModel</span>
@@ -759,7 +760,9 @@
             <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
                 <span class="n">run_hycs_std</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">program</span><span class="o">=</span><span class="n">program_name</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">_read_trajectories</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">coords</span><span class="p">()))</span>
-                <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span><span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span>
+                    <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">read_log</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span>
+                <span class="p">)</span>
             <span class="n">run_hycs_std</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
             <span class="n">check_release</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">release</span><span class="o">.</span><span class="n">coords</span><span class="p">(),</span> <span class="n">config</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span><span class="p">:</span>
@@ -767,11 +770,13 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">_read_particles</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">readable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">except</span> <span class="n">SimulationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-            <span class="n">error</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+            <span class="n">error</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">read_log</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">)</span>
             <span class="k">raise</span>
         <span class="c1"># The record names the files found for the run: the archive's, or a</span>
         <span class="c1"># crop that served it; the crop settings are in the run's settings.</span>
-        <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span><span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span>
+            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">read_log</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span>
+        <span class="p">)</span></div>
 </div>
 
 
@@ -924,12 +929,6 @@
 
     <span class="k">with</span> <span class="n">File</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">met</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">met</span><span class="o">.</span><span class="n">grid</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return HYSPLIT's log in *workdir*, or an empty string when it wrote none."""</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span>
-    <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"HysplitModel"</span><span class="p">,</span> <span class="s2">"hysplit_version"</span><span class="p">]</span>

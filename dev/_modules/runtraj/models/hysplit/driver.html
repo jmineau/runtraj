@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=47c3b703"></script>
+    <script src="../../../../_static/documentation_options.js?v=a71d42c7"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev45+ge6f6387b3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -477,7 +477,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._process</span><span class="w"> </span><span class="kn">import</span> <span class="n">ended_if_this_process_dies</span><span class="p">,</span> <span class="n">own_group</span><span class="p">,</span> <span class="n">terminate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._process</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_log</span><span class="p">,</span> <span class="n">run_program</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HYSPLITNotFoundError</span><span class="p">,</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CONCENTRATION_ONLY_SETTINGS</span><span class="p">,</span>
@@ -1452,34 +1452,20 @@
 <span class="sd">        domain are not a failure.</span>
 <span class="sd">    """</span>
     <span class="n">log_path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span>
-    <span class="k">with</span> <span class="p">(</span>
-        <span class="n">log_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">,</span>
-        <span class="n">ended_if_this_process_dies</span><span class="p">()</span> <span class="k">as</span> <span class="n">watch</span><span class="p">,</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">run_program</span><span class="p">(</span>
             <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">program_file</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">program</span><span class="p">))],</span>
             <span class="n">cwd</span><span class="o">=</span><span class="n">workdir</span><span class="p">,</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">handle</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
+            <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
             <span class="n">env</span><span class="o">=</span><span class="n">hysplit_environment</span><span class="p">(),</span>
-            <span class="o">**</span><span class="n">own_group</span><span class="p">(),</span>
-        <span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="n">watch</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"HYSPLIT ran longer than the </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> s timeout."</span><span class="p">,</span>
-                <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">,</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-            <span class="c1"># Ctrl-C, or a worker told to stop: HYSPLIT runs in a session of</span>
-            <span class="c1"># its own (a process group on Windows), so no signal reached it and</span>
-            <span class="c1"># it would run on, unseen.</span>
-            <span class="n">terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
-            <span class="k">raise</span>
-    <span class="n">messages</span> <span class="o">=</span> <span class="n">log_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"HYSPLIT ran longer than the </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> s timeout."</span><span class="p">,</span>
+            <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">,</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="n">messages</span> <span class="o">=</span> <span class="n">read_log</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span>
     <span class="n">warnings</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">WARNING_FILE</span>
     <span class="k">if</span> <span class="n">warnings</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="n">messages</span> <span class="o">+=</span> <span class="n">warnings</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
@@ -1487,8 +1473,8 @@
     <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">reason</span><span class="p">,</span> <span class="n">line</span> <span class="o">=</span> <span class="n">found</span>
         <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"HYSPLIT: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">_exit_status_error</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">_exit_status_error</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span></div>
 
 
 
