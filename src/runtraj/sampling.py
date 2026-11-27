@@ -23,6 +23,7 @@ run's met files the way its transport model reads them).
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -284,6 +285,29 @@ def _check_z_top(particles: pd.DataFrame, z_top: float | None) -> None:
             )
 
 
+#: The line HYSPLIT prints in ``MESSAGE`` for its internal levels, in the
+#: same form from 5.0.2 to 5.4.2: ``nlvl, aa, bb, cc``.
+_INTERNAL_GRID_LINE = re.compile(
+    r"Internal grid parameters \(nlvl,aa,bb,cc\):\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)"
+)
+
+
+def _read_internal_grid(
+    message: str | os.PathLike[str] | None,
+) -> tuple[int, float, float, float] | None:
+    """Return ``(nlvl, aa, bb, cc)`` from a run's ``MESSAGE`` file (level ``k`` is ``aa k**2 + bb k + cc`` m), or None for no file."""
+    if message is None:
+        return None
+    found = _INTERNAL_GRID_LINE.search(Path(message).read_text(errors="replace"))
+    if found is None:
+        raise ValueError(
+            f"{message} has no 'Internal grid parameters (nlvl,aa,bb,cc)' line: "
+            "message is the MESSAGE file HYSPLIT wrote in the run's working directory."
+        )
+    nlvl, aa, bb, cc = found.groups()
+    return int(nlvl), float(aa), float(bb), float(cc)
+
+
 def _nearest_level(levels: xr.DataArray, z: np.ndarray) -> np.ndarray:
     """Return the index of the level nearest each ``z``."""
     coords = levels.to_numpy().astype(float)
@@ -417,6 +441,7 @@ def sample_met(
     columns: Iterable[str] = ("mlht", "dens", "pres", "zsfc"),
     *,
     z_top: float | None = _DEFAULT_Z_TOP,
+    message: str | os.PathLike[str] | None = None,
 ) -> pd.DataFrame:
     """
     Return the particles with met columns sampled at each particle's position.
@@ -468,6 +493,13 @@ def sample_met(
         ``particles_metadata(path).settings["z_top"]``. ``None`` reads the
         met's own levels, for a transport model that is not HYSPLIT; a row
         below their lowest or above their top is then NaN.
+    message : path-like, optional
+        The ``MESSAGE`` file of the run (HYSPLIT writes it in the run's
+        working directory, which ``keep_workdir: true`` keeps). The internal levels
+        are then the ones the run printed there, whatever its HYSPLIT
+        version. Without it they are the ones HYSPLIT 5.4.0 and later pick
+        for *z_top*; earlier versions pick a different grid when *z_top*
+        is below about 1.1 km. Needs a *z_top*.
 
     Returns
     -------
@@ -480,7 +512,8 @@ def sample_met(
     ValueError
         If a column is not one of the four or is in *particles* already
         (drop it first), *particles* has no ``time`` column, a row is outside
-        the files' times, or *z_top* is not positive or is below a particle.
+        the files' times, *z_top* is not positive or is below a particle, or
+        *message* has no internal grid line or is given without a *z_top*.
     KeyError
         If the met lacks a variable a column needs.
 
@@ -521,6 +554,7 @@ def sample_met(
             f"sample_met cannot sample {unknown}; it samples {list(_MET_VARIABLES)}."
         )
     _check_z_top(particles, z_top)
+    internal_grid = _read_internal_grid(message)
     present = [c for c in columns if c in particles.columns]
     if present:
         raise ValueError(
@@ -559,7 +593,12 @@ def sample_met(
         )
         points["time"] = np.concatenate([before, after[later]])
         sampled = arlmet.sample_points(
-            sources, points, names, z_kind="agl", model_top=z_top
+            sources,
+            points,
+            names,
+            z_kind="agl",
+            model_top=z_top,
+            internal_grid=internal_grid,
         )
 
     n = len(particles)
@@ -664,6 +703,7 @@ def calc_pbl_height(
     *,
     method: str = "hysplit",
     z_top: float = _DEFAULT_Z_TOP,
+    message: str | os.PathLike[str] | None = None,
 ) -> np.ndarray:
     """
     Return the mixed-layer height at each particle, found from the met as a transport model finds it.
@@ -755,6 +795,11 @@ def calc_pbl_height(
         The top of the domain in meters, which sets HYSPLIT's internal
         levels (``z_top`` of :class:`runtraj.models.hysplit.HysplitConfig`).
         ``"flexpart"`` reads the met's own levels and ignores it.
+    message : path-like, optional
+        The ``MESSAGE`` file of the HYSPLIT run: the internal levels are
+        then the ones it printed, whatever its version, as in
+        :func:`sample_met`. Without it they are the ones HYSPLIT 5.4.0 and
+        later pick. ``"flexpart"`` ignores it.
 
     Returns
     -------
@@ -773,7 +818,8 @@ def calc_pbl_height(
     ------
     ValueError
         If *method* is not one of the four, *particles* has no ``time``
-        column, or a row is outside the files' times.
+        column, a row is outside the files' times, or *message* has no
+        internal grid line.
     KeyError
         If the met lacks a variable the method needs.
 
@@ -827,6 +873,7 @@ def calc_pbl_height(
             "calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."
         )
     _check_z_top(particles, z_top)
+    internal_grid = _read_internal_grid(message)
     with _opened(met) as sources:
         names = _met_variables(sources)
         pressure = _pressure_variable(sources, names)
@@ -862,7 +909,14 @@ def calc_pbl_height(
             zmix = _flexpart_columns(sources, columns, header, str(pressure))
         else:
             zmix = _hysplit_columns(
-                sources, columns, header, names, pressure, method, z_top
+                sources,
+                columns,
+                header,
+                names,
+                pressure,
+                method,
+                z_top,
+                internal_grid,
             )
     columns["zmix"] = zmix
     reads = reads.merge(columns[[*key, "zmix"]], on=key, how="left")
@@ -966,6 +1020,7 @@ def _hysplit_columns(
     pressure: str | None,
     method: str,
     z_top: float,
+    internal_grid: tuple[int, float, float, float] | None,
 ) -> np.ndarray:
     """Return the mixed-layer height of each grid point and met time in *columns*, as HYSPLIT's *method* finds it."""
     import arlmet
@@ -976,7 +1031,9 @@ def _hysplit_columns(
         "hysplit_temperature": ["SHGT"],
         "met": ["SHGT", "PBLH"],
     }[method]
-    levels = arlmet.internal_levels(sources[0], model_top=z_top)
+    levels = arlmet.internal_levels(
+        sources[0], model_top=z_top, internal_grid=internal_grid
+    )
     ground = arlmet.sample_points(
         sources,
         columns[["lon", "lat", "time"]].assign(z=0.0),
@@ -984,6 +1041,7 @@ def _hysplit_columns(
         z_kind="agl",
         method="nearest",
         model_top=z_top,
+        internal_grid=internal_grid,
     )
     # The internal levels above each column's ground, (columns, levels).
     zz = levels.heights_at(ground["SHGT"].to_numpy(dtype=float))
@@ -1013,6 +1071,7 @@ def _hysplit_columns(
         z_kind="agl",
         method="nearest",
         model_top=z_top,
+        internal_grid=internal_grid,
     )
 
     def grid(name: str) -> np.ndarray:

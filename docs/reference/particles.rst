@@ -210,6 +210,23 @@ way the run did; give it the run's ``method``:
    mlht = calc_pbl_height(sim.particles, meta.met_files, method="hysplit_temperature")  # kmixd: 1
    mlht = calc_pbl_height(particles, met, method="flexpart")  # FLEXPART on ERA5
 
+The internal levels HYSPLIT samples on depend on its version when the top
+is below about 1.1 km (5.4.0 changed them). Without more, both functions
+use the levels of 5.4.0 and later. A HYSPLIT run prints its own in its
+``MESSAGE`` file, in the working directory that ``sim.kept_workdir`` gives
+when the run kept it (``keep_workdir: true`` under ``execution:``):
+give that file as ``message`` and the sampling uses them, for any version.
+
+.. code-block:: python
+
+   sampled = sample_met(
+       sim.particles.drop(columns=["pres"]),
+       meta.met_files,
+       columns=["pres"],
+       z_top=meta.settings["z_top"],
+       message=sim.kept_workdir / "MESSAGE",
+   )
+
 Met files that are not ARL files, such as GRIB, are read as one Dataset in
 :func:`arlmet.open_dataset`'s layout, the way a converter in
 :mod:`arlmet.converters` writes it. Both functions take that Dataset in
