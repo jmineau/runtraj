@@ -54,7 +54,12 @@ release. Their ``release_rows`` matches each particle to a release point from
 its first position, and takes a column's particles to be released bottom to
 top in ``particle`` order, a column for each minute of ``emisshrs``
 (:func:`~runtraj.models.hysplit.releases.release_rows`). A HYSPLIT build that writes the release rows
-(``directory``) makes the matching exact.
+(``directory``) makes the matching of a multipoint release exact. A column's slab
+is still the one its ``release_rows`` gives, from the particle's number: a
+particle does not start at the height its release row reports (HYSPLIT scales
+it by the terrain a minute downwind of the source), so near a slab's edge the
+row can fall in the next slab, which would hold two particles while its own
+holds none.
 FLEXPART writes no release row either: its first row is one output step
 after release. Its ``release_rows`` reads where each particle started from
 its number, in the order FLEXPART released them (:doc:`flexpart`).

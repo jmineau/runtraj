@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1a53dbf9"></script>
+    <script src="../../_static/documentation_options.js?v=e2943cab"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev48+gf00cba6fe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1014,7 +1014,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.models.hysplit.releases.release_rows">
 <span class="sig-prename descclassname"><span class="pre">runtraj.models.hysplit.releases.</span></span><span class="sig-name descname"><span class="pre">release_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/releases.html#release_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.releases.release_rows" title="Link to this definition">#</a></dt>
-<dd><p>Return where each particle of a HYSPLIT run started, for a run that wrote no row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
+<dd><p>Return where each particle of a HYSPLIT run started, from its number and its first row.</p>
 <p>The columns are <code class="xref py py-data docutils literal notranslate"><span class="pre">runtraj.particles.table.RELEASE_ROW_COLUMNS</span></code>. A
 column’s particles are released bottom to top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order,
 <a class="reference internal" href="runtraj.models.hysplit.releases.particles_per_step.html#runtraj.models.hysplit.releases.particles_per_step" title="runtraj.models.hysplit.releases.particles_per_step"><code class="xref py py-func docutils literal notranslate"><span class="pre">particles_per_step()</span></code></a> of them at each one-minute time step of the
@@ -1022,7 +1022,10 @@ release (<code class="docutils literal notranslate"><span class="pre">emisshrs</
 in slab <code class="docutils literal notranslate"><span class="pre">(k</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">%</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">1</span></code> of the <code class="docutils literal notranslate"><span class="pre">n</span></code> released with it. So a start
 height is known to the depth of those slabs, <code class="docutils literal notranslate"><span class="pre">(top</span> <span class="pre">-</span> <span class="pre">bottom)</span> <span class="pre">/</span> <span class="pre">n</span></code>:
 a long release of few particles knows it less well than a short one. A
-multipoint release’s particles are matched to a point from their first
+build that writes a row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code> gets the same slabs for a column,
+because that row’s height is not exactly where the particle started
+(HYSPLIT scales it by the terrain a minute downwind of the source).
+A multipoint release’s particles are matched to a point from their first
 row: by height when every point has its own altitude, since height
 drifts about 30 times less than horizontal position over the first
 step, and otherwise by position, with a warning when the points are too

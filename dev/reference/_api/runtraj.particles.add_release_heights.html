@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1a53dbf9"></script>
+    <script src="../../_static/documentation_options.js?v=e2943cab"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev48+gf00cba6fe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1023,9 +1023,13 @@
 at. For a column release it is the center of the particle’s slab: the
 column is split into slabs of equal depth, one per release row, and the
 slab is what the particle stands for, not the random height inside it.
-So the release rows must hold every particle released, including any
-missing from <em>particles</em>, such as one that left the met’s domain before
-its first row.</p>
+A column’s rows come from <em>release_rows</em> whenever it is given, even when
+the particles have rows at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>: a particle does not start at the
+height its row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code> reports, so near a slab’s edge that row can
+fall in the next slab, which then holds two particles while its own
+holds none. So the release rows must hold every particle released,
+including any missing from <em>particles</em>, such as one that left the met’s
+domain before its first row.</p>
 <p>A point release’s particles are returned as they are.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1036,9 +1040,10 @@ its first row.</p>
 <code class="xref py py-data docutils literal notranslate"><span class="pre">RELEASE_ROW_COLUMNS</span></code>, one row per particle released: where it
 started, its <code class="docutils literal notranslate"><span class="pre">height</span></code> in the release’s vertical reference. It
 holds each particle of <em>particles</em> once, and may hold particles
-released but not in <em>particles</em>. Used when the particles have no
-row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>, or their heights above sea level cannot be known
-without <code class="docutils literal notranslate"><span class="pre">zsfc</span></code>. It returns <code class="docutils literal notranslate"><span class="pre">None</span></code> when it does not know, as
+released but not in <em>particles</em>. Used for a column always, and for
+a multipoint release when the particles have no row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>,
+or their heights above sea level cannot be known without <code class="docutils literal notranslate"><span class="pre">zsfc</span></code>.
+It returns <code class="docutils literal notranslate"><span class="pre">None</span></code> when it does not know, as
 <a class="reference internal" href="runtraj.models.TransportModel.release_rows.html#runtraj.models.TransportModel.release_rows" title="runtraj.models.TransportModel.release_rows"><code class="xref py py-meth docutils literal notranslate"><span class="pre">runtraj.models.TransportModel.release_rows()</span></code></a> does by default.</p></li>
 </ul>
 </dd>

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=1a53dbf9"></script>
+    <script src="../../../_static/documentation_options.js?v=e2943cab"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev48+gf00cba6fe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -937,9 +937,13 @@
 <span class="sd">    at. For a column release it is the center of the particle's slab: the</span>
 <span class="sd">    column is split into slabs of equal depth, one per release row, and the</span>
 <span class="sd">    slab is what the particle stands for, not the random height inside it.</span>
-<span class="sd">    So the release rows must hold every particle released, including any</span>
-<span class="sd">    missing from *particles*, such as one that left the met's domain before</span>
-<span class="sd">    its first row.</span>
+<span class="sd">    A column's rows come from *release_rows* whenever it is given, even when</span>
+<span class="sd">    the particles have rows at ``age = 0``: a particle does not start at the</span>
+<span class="sd">    height its row at ``age = 0`` reports, so near a slab's edge that row can</span>
+<span class="sd">    fall in the next slab, which then holds two particles while its own</span>
+<span class="sd">    holds none. So the release rows must hold every particle released,</span>
+<span class="sd">    including any missing from *particles*, such as one that left the met's</span>
+<span class="sd">    domain before its first row.</span>
 
 <span class="sd">    A point release's particles are returned as they are.</span>
 
@@ -954,9 +958,10 @@
 <span class="sd">        :data:`RELEASE_ROW_COLUMNS`, one row per particle released: where it</span>
 <span class="sd">        started, its ``height`` in the release's vertical reference. It</span>
 <span class="sd">        holds each particle of *particles* once, and may hold particles</span>
-<span class="sd">        released but not in *particles*. Used when the particles have no</span>
-<span class="sd">        row at ``age = 0``, or their heights above sea level cannot be known</span>
-<span class="sd">        without ``zsfc``. It returns ``None`` when it does not know, as</span>
+<span class="sd">        released but not in *particles*. Used for a column always, and for</span>
+<span class="sd">        a multipoint release when the particles have no row at ``age = 0``,</span>
+<span class="sd">        or their heights above sea level cannot be known without ``zsfc``.</span>
+<span class="sd">        It returns ``None`` when it does not know, as</span>
 <span class="sd">        :meth:`runtraj.models.TransportModel.release_rows` does by default.</span>
 
 <span class="sd">    Raises</span>
@@ -989,6 +994,12 @@
     <span class="n">release_rows</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">Release</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return each particle's release row, with :data:`RELEASE_ROW_COLUMNS`."""</span>
+    <span class="c1"># A column's slab is its particle's number, which the model's release_rows</span>
+    <span class="c1"># knows; a row at age = 0 is only near the height the model chose.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">ColumnRelease</span><span class="p">)</span> <span class="ow">and</span> <span class="n">release_rows</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">given</span> <span class="o">=</span> <span class="n">release_rows</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">release</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">given</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_checked_rows</span><span class="p">(</span><span class="n">given</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">release_rows</span><span class="p">)</span>
     <span class="n">released</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s2">"particle"</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">released</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">released</span><span class="p">)</span> <span class="o">==</span> <span class="n">p</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">():</span>

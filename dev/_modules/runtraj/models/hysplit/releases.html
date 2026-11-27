@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=1a53dbf9"></script>
+    <script src="../../../../_static/documentation_options.js?v=e2943cab"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev48+gf00cba6fe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -453,7 +453,8 @@
 
 <span class="sd">:func:`check_releases` lists the multipoint releases HYSPLIT would turn</span>
 <span class="sd">into a line source, and :func:`release_rows` says where each particle</span>
-<span class="sd">started when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to</span>
+<span class="sd">started: from the particle's number for a column, and, for a multipoint</span>
+<span class="sd">release, when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to</span>
 <span class="sd">5.4.2 do not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's</span>
 <span class="sd">core (:class:`runtraj.models.TransportModel`), which refuses such a release</span>
 <span class="sd">before HYSPLIT runs; :func:`off_the_hour` lists the releases that</span>
@@ -614,7 +615,7 @@
     <span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return where each particle of a HYSPLIT run started, for a run that wrote no row at ``age = 0``.</span>
+<span class="sd">    Return where each particle of a HYSPLIT run started, from its number and its first row.</span>
 
 <span class="sd">    The columns are :data:`runtraj.particles.table.RELEASE_ROW_COLUMNS`. A</span>
 <span class="sd">    column's particles are released bottom to top in ``particle`` order,</span>
@@ -623,7 +624,10 @@
 <span class="sd">    in slab ``(k - 1) % n + 1`` of the ``n`` released with it. So a start</span>
 <span class="sd">    height is known to the depth of those slabs, ``(top - bottom) / n``:</span>
 <span class="sd">    a long release of few particles knows it less well than a short one. A</span>
-<span class="sd">    multipoint release's particles are matched to a point from their first</span>
+<span class="sd">    build that writes a row at ``age = 0`` gets the same slabs for a column,</span>
+<span class="sd">    because that row's height is not exactly where the particle started</span>
+<span class="sd">    (HYSPLIT scales it by the terrain a minute downwind of the source).</span>
+<span class="sd">    A multipoint release's particles are matched to a point from their first</span>
 <span class="sd">    row: by height when every point has its own altitude, since height</span>
 <span class="sd">    drifts about 30 times less than horizontal position over the first</span>
 <span class="sd">    step, and otherwise by position, with a warning when the points are too</span>
@@ -631,9 +635,12 @@
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">ColumnRelease</span><span class="p">):</span>
         <span class="c1"># A column's particle numbers run to the highest in *particles*, even</span>
-        <span class="c1"># when a particle left the domain before its first row.</span>
+        <span class="c1"># when a particle left the domain before its first row; a step has all</span>
+        <span class="c1"># its slabs even when MAXPAR cut its last particle (numpar + 1 of a</span>
+        <span class="c1"># step, so numpar remain), so that the slabs are as many as HYSPLIT's.</span>
+        <span class="n">per_step</span> <span class="o">=</span> <span class="n">particles_per_step</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">column_release_rows</span><span class="p">(</span>
-            <span class="n">release</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">particles</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">particles_per_step</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+            <span class="n">release</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">particles</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">per_step</span><span class="p">),</span> <span class="n">per_step</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">MultiPointRelease</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_multipoint_rows</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">)</span>

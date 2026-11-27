@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1a53dbf9"></script>
+    <script src="../_static/documentation_options.js?v=e2943cab"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev48+gf00cba6fe" />
+  <meta name="docsearch:version" content="0.1.0a6.dev49+g1c2f4efce" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1068,7 +1068,12 @@ release. Their <code class="docutils literal notranslate"><span class="pre">rele
 its first position, and takes a column’s particles to be released bottom to
 top in <code class="docutils literal notranslate"><span class="pre">particle</span></code> order, a column for each minute of <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code>
 (<a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html#runtraj.models.hysplit.releases.release_rows" title="runtraj.models.hysplit.releases.release_rows"><code class="xref py py-func docutils literal notranslate"><span class="pre">release_rows()</span></code></a>). A HYSPLIT build that writes the release rows
-(<code class="docutils literal notranslate"><span class="pre">directory</span></code>) makes the matching exact.
+(<code class="docutils literal notranslate"><span class="pre">directory</span></code>) makes the matching of a multipoint release exact. A column’s slab
+is still the one its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code> gives, from the particle’s number: a
+particle does not start at the height its release row reports (HYSPLIT scales
+it by the terrain a minute downwind of the source), so near a slab’s edge the
+row can fall in the next slab, which would hold two particles while its own
+holds none.
 FLEXPART writes no release row either: its first row is one output step
 after release. Its <code class="docutils literal notranslate"><span class="pre">release_rows</span></code> reads where each particle started from
 its number, in the order FLEXPART released them (<a class="reference internal" href="flexpart.html"><span class="doc">FLEXPART Integration</span></a>).</p>
