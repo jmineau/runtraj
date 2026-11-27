@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=187f2ed1"></script>
+    <script src="../../../../_static/documentation_options.js?v=a984d146"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev29+g0e17cec8e" />
+  <meta name="docsearch:version" content="0.1.0a6.dev30+g949d6c393" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -457,6 +457,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
@@ -1328,7 +1329,11 @@
 <span class="sd">        Two workers cropping the same file at once both finish, and the</span>
 <span class="sd">        first crop is kept: the second worker reads it, since on Windows a</span>
 <span class="sd">        rename onto a crop that a run has open fails. A crop that holds</span>
-<span class="sd">        fewer time steps is replaced, as before.</span>
+<span class="sd">        fewer time steps is replaced. When the replace is refused, as on</span>
+<span class="sd">        Windows while a run reads the short crop, the new crop is kept</span>
+<span class="sd">        beside it under a hidden name (:func:`_spare`) that catalogs skip,</span>
+<span class="sd">        and is read in its place by every run that needs the hours it</span>
+<span class="sd">        lacks.</span>
 <span class="sd">        """</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">arlmet</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_subset</span>
 
@@ -1338,6 +1343,10 @@
         <span class="n">bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bbox</span><span class="p">()</span>
         <span class="n">levels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_level_indices</span><span class="p">()</span>
 
+        <span class="k">def</span><span class="w"> </span><span class="nf">crop</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">atomic_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+                <span class="n">extract_subset</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+
         <span class="n">subsetted</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">src</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">inside</span><span class="p">):</span>
@@ -1345,17 +1354,26 @@
                 <span class="k">continue</span>
             <span class="n">cache_path</span> <span class="o">=</span> <span class="n">crop_dir</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crop_name</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">_holds_as</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+                <span class="n">spare</span> <span class="o">=</span> <span class="n">_spare</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span> <span class="k">if</span> <span class="n">cache_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">spare</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_holds_as</span><span class="p">(</span><span class="n">spare</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+                    <span class="n">subsetted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spare</span><span class="p">)</span>  <span class="c1"># made when the short crop was open</span>
+                    <span class="k">continue</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Subsetting </span><span class="si">%s</span><span class="s2"> → </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">)</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="c1"># A crop no worker has made yet is written once.</span>
-                    <span class="k">with</span> <span class="n">atomic_path</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">cache_path</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
-                        <span class="n">extract_subset</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
-                    <span class="c1"># Another worker's crop landed first; it is used unless</span>
-                    <span class="c1"># it holds fewer time steps than the source.</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">_holds_as</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
-                        <span class="k">with</span> <span class="n">atomic_path</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
-                            <span class="n">extract_subset</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="n">bbox</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># A crop no worker has made yet is written once.</span>
+                        <span class="n">crop</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">cache_path</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
+                    <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+                        <span class="c1"># Another worker's crop landed first; it is used</span>
+                        <span class="c1"># unless it holds fewer time steps than the source.</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">_holds_as</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+                            <span class="n">crop</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">PermissionError</span><span class="p">:</span>
+                    <span class="c1"># Windows refuses a rename onto a crop a run has open.</span>
+                    <span class="n">cache_path</span> <span class="o">=</span> <span class="n">_spare</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="n">src</span><span class="p">)</span>
+                    <span class="c1"># A spare another worker made holds the same time steps.</span>
+                    <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">FileExistsError</span><span class="p">):</span>
+                        <span class="n">crop</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">subsetted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cache_path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">subsetted</span>
 
@@ -1603,6 +1621,19 @@
         <span class="n">wanted</span><span class="o">.</span><span class="n">step</span><span class="p">,</span>
         <span class="n">wanted</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spare</span><span class="p">(</span><span class="n">crop</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return where a crop of *source* goes when its short *crop* cannot be replaced.</span>
+
+<span class="sd">    It is beside *crop*, hidden by a leading dot so that catalogs skip it,</span>
+<span class="sd">    and named by the number of time steps *source* holds, so one name always</span>
+<span class="sd">    holds the same time steps.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">arlmet</span><span class="w"> </span><span class="kn">import</span> <span class="n">probe</span>
+
+    <span class="k">return</span> <span class="n">crop</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="n">crop</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">probe</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">n_steps</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_too_many_files_message</span><span class="p">(</span><span class="n">n_files</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
