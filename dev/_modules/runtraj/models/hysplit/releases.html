@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=154e9ddf"></script>
+    <script src="../../../../_static/documentation_options.js?v=7cc3a503"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev37+g98d9805c0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev38+g5f1306f33" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -459,7 +459,8 @@
 <span class="sd">started when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to</span>
 <span class="sd">5.4.2 do not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's</span>
 <span class="sd">core (:class:`runtraj.models.TransportModel`), which refuses such a release</span>
-<span class="sd">before HYSPLIT runs.</span>
+<span class="sd">before HYSPLIT runs; :func:`off_the_hour` lists the releases that</span>
+<span class="sd">``hyts_std`` before 5.4.0 cannot run.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -498,6 +499,15 @@
     <span class="s2">"line source of particles, and hyts_std follows one trajectory from "</span>
     <span class="s2">"each location. Use a PointRelease at each height (distinct group), or "</span>
     <span class="s2">"a MultiPointRelease."</span>
+<span class="p">)</span>
+
+
+<span class="c1">#: Why a trajectory release off the hour is refused before HYSPLIT 5.4.0.</span>
+<span class="n">TRAJECTORY_OFF_HOUR</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"Before HYSPLIT 5.4.0, hyts_std ends the first hour of a run that starts "</span>
+    <span class="s2">"off the hour at the next clock hour, so the run comes up short of "</span>
+    <span class="s2">"n_hours and its rows fall on clock times instead of every tout from the "</span>
+    <span class="s2">"release. Release on the hour, or use HYSPLIT 5.4.0 or later."</span>
 <span class="p">)</span>
 
 
@@ -569,6 +579,24 @@
         <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">off_the_hour</span><span class="p">(</span><span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the releases of *releases* whose time is not on the hour, one row each, with ``check``, ``release`` and ``message``.</span>
+
+<span class="sd">    *releases* has a ``release`` and a ``time`` column. The message says why</span>
+<span class="sd">    ``hyts_std`` before HYSPLIT 5.4.0 cannot run them (:data:`TRAJECTORY_OFF_HOUR`).</span>
+<span class="sd">    """</span>
+    <span class="n">off</span> <span class="o">=</span> <span class="n">releases</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">releases</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">minute</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"release_refused"</span><span class="p">,</span>
+            <span class="s2">"release"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">off</span><span class="p">),</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="n">TRAJECTORY_OFF_HOUR</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">],</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_repeated</span><span class="p">(</span><span class="n">release</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">lon</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
