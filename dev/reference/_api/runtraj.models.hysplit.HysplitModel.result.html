@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=70cd4126"></script>
+    <script src="../../_static/documentation_options.js?v=13bb1de1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev31+g2e4a2f1e9" />
+  <meta name="docsearch:version" content="0.1.0a6.dev32+gc40159291" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1018,8 +1018,8 @@
 <dt class="sig sig-object py" id="runtraj.models.hysplit.HysplitModel.result">
 <span class="sig-prename descclassname"><span class="pre">HysplitModel.</span></span><span class="sig-name descname"><span class="pre">result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/model.html#HysplitModel.result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.HysplitModel.result" title="Link to this definition">#</a></dt>
 <dd><p>Return the type of result a run with <em>config</em> makes, which its <code class="docutils literal notranslate"><span class="pre">mode</span></code> says.</p>
-<p><code class="docutils literal notranslate"><span class="pre">particles</span></code>, <code class="docutils literal notranslate"><span class="pre">concentration</span></code>, or <code class="docutils literal notranslate"><span class="pre">trajectories</span></code> in <code class="docutils literal notranslate"><span class="pre">mode:</span>
-<span class="pre">trajectory</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">particles</span></code> in <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">particle</span></code>, <code class="docutils literal notranslate"><span class="pre">concentration</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">trajectories</span></code> in <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">trajectory</span></code>.</p>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">HysplitModel</span><span class="p">()</span><span class="o">.</span><span class="n">result</span><span class="p">(</span><span class="n">HysplitConfig</span><span class="p">(</span><span class="n">n_hours</span><span class="o">=-</span><span class="mi">24</span><span class="p">))</span>
 <span class="go">'particles'</span>

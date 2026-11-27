@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=70cd4126"></script>
+    <script src="../_static/documentation_options.js?v=13bb1de1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev31+g2e4a2f1e9" />
+  <meta name="docsearch:version" content="0.1.0a6.dev32+gc40159291" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1134,8 +1134,8 @@ it runs.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
-<td><p>What HYSPLIT makes: <code class="docutils literal notranslate"><span class="pre">particles</span></code>, the particle table; <code class="docutils literal notranslate"><span class="pre">concentration</span></code>, grids of each pollutant’s concentration (<code class="docutils literal notranslate"><span class="pre">grids</span></code> and <code class="docutils literal notranslate"><span class="pre">pollutants</span></code>); or <code class="docutils literal notranslate"><span class="pre">trajectory</span></code>, the trajectory table, from HYSPLIT’s trajectory program <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">'particles'</span></code></p></td>
+<td><p>What HYSPLIT makes: <code class="docutils literal notranslate"><span class="pre">particle</span></code>, the particle table; <code class="docutils literal notranslate"><span class="pre">concentration</span></code>, grids of each pollutant’s concentration (<code class="docutils literal notranslate"><span class="pre">grids</span></code> and <code class="docutils literal notranslate"><span class="pre">pollutants</span></code>); or <code class="docutils literal notranslate"><span class="pre">trajectory</span></code>, the trajectory table, from HYSPLIT’s trajectory program <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'particle'</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pollutants</span></code></p></td>
 <td><p>The pollutants of a concentration run, each released at every release location and counted on every grid. At least one in <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code>; none otherwise.</p></td>
@@ -1150,7 +1150,7 @@ it runs.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ichem</span></code></p></td>
-<td><p>HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code>, which in <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code> changes what a run counts: 0 concentration (the default); 1 a grid for each release location; 2 pollutants that convert (<code class="docutils literal notranslate"><span class="pre">conversions</span></code>); 5 deposition of whole particles by probability; 6 mass divided by air density; 9 a lowest level that follows the mixed layer; 10 a grid for each emission cycle (<code class="docutils literal notranslate"><span class="pre">qcycle</span></code>). The particles mode is <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>, the only value it takes, and a trajectory run reads none.</p></td>
+<td><p>HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">ICHEM</span></code>, which in <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code> changes what a run counts: 0 concentration (the default); 1 a grid for each release location; 2 pollutants that convert (<code class="docutils literal notranslate"><span class="pre">conversions</span></code>); 5 deposition of whole particles by probability; 6 mass divided by air density; 9 a lowest level that follows the mixed layer; 10 a grid for each emission cycle (<code class="docutils literal notranslate"><span class="pre">qcycle</span></code>). The particle mode is <code class="docutils literal notranslate"><span class="pre">ICHEM=8</span></code>, the only value it takes, and a trajectory run reads none.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">numpar</span></code></p></td>

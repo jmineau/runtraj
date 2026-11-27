@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=70cd4126"></script>
+    <script src="../_static/documentation_options.js?v=13bb1de1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev31+g2e4a2f1e9" />
+  <meta name="docsearch:version" content="0.1.0a6.dev32+gc40159291" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -629,7 +629,7 @@ concentration from the same releases. They never share a settings folder.</p>
 <section id="what-a-concentration-run-does-not-have">
 <h2>What a concentration run does not have<a class="headerlink" href="#what-a-concentration-run-does-not-have" title="Link to this heading">#</a></h2>
 <p>The particle file’s settings (<code class="docutils literal notranslate"><span class="pre">varsiwant</span></code>, <code class="docutils literal notranslate"><span class="pre">outdt</span></code>, <code class="docutils literal notranslate"><span class="pre">veght</span></code>) and
-<code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> belong to the particles mode. A concentration run leaves them
+<code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> belong to the particle mode. A concentration run leaves them
 out, so a <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> block that sets them for its particle variants serves
 a concentration variant too; each pollutant has its own <code class="docutils literal notranslate"><span class="pre">hours</span></code>. A
 <code class="docutils literal notranslate"><span class="pre">pollutants</span></code>, <code class="docutils literal notranslate"><span class="pre">grids</span></code> or <code class="docutils literal notranslate"><span class="pre">conversions</span></code> without <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code> is refused. A stage reads
@@ -744,7 +744,7 @@ from 1 in their order, with <code class="docutils literal notranslate"><span cla
 of the product per mass converted (1.5 for SO2 to SO4).</p>
 <p>The other values are refused, each with its reason
 (<a class="reference internal" href="../reference/hysplit.html#hysplit-concentration"><span class="std std-ref">The concentration mode</span></a>). <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">8</span></code> is HYSPLIT’s particle output,
-which is <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">particles</span></code>: there <code class="docutils literal notranslate"><span class="pre">ichem</span></code> may be 8 or left out, and a
+which is <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">particle</span></code>: there <code class="docutils literal notranslate"><span class="pre">ichem</span></code> may be 8 or left out, and a
 trajectory run reads none.</p>
 </section>
 <section id="in-a-project">
