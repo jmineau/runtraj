@@ -17,8 +17,8 @@ Docker, so it runs in CI only.
 - `Dockerfile`: the pods' image, built in the workflow from this commit's
   wheel and a HYSPLIT folder whose programs replay recorded runs. It is loaded
   into the cluster and never pushed: runtraj publishes no image and no HYSPLIT.
-- `tests/recorded/kubernetes/5.1.0/`: the two runs of `demo/` (and HYSPLIT's
-  version call), recorded on HYSPLIT 5.1.0 (`tests/fixtures/replay.py`).
+- `tests/recorded/kubernetes/5.4.2/`: the two runs of `demo/` (and HYSPLIT's
+  version call), recorded on HYSPLIT 5.4.2 (`tests/fixtures/replay.py`).
 
 The workflow submits `demo/`, waits for the Job, and checks that
 `runtraj status` counts 2 complete simulations and one complete Job. Then it

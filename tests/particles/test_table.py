@@ -190,6 +190,47 @@ def test_write_and_read_particles_round_trip(point_release, tmp_path):
     assert meta.met_files == [Path("/tmp/met1")]
 
 
+def test_the_internal_grid_of_a_run_is_recorded_with_its_particles(
+    point_release, tmp_path
+):
+    params = _params(tmp_path)
+    traj = finished(_particles_basic(), point_release)
+    traj.attrs["internal_grid"] = (11, 2.5, 2.5, 0.0)
+    path = tmp_path / "traj.parquet"
+    write_particles(path, traj, point_release, _settings(params), [])
+
+    assert read_particles(path).attrs["internal_grid"] == (11, 2.5, 2.5, 0.0)
+    assert read_particles(path, columns=["lon"]).attrs["internal_grid"] == (
+        11,
+        2.5,
+        2.5,
+        0.0,
+    )
+
+
+def test_a_float32_file_reads_as_float64_and_keeps_its_attrs(point_release, tmp_path):
+    params = _params(tmp_path)
+    traj = finished(_particles_basic(), point_release)
+    traj = traj.astype({"lon": "float32", "lat": "float32", "zagl": "float32"})
+    traj.attrs["internal_grid"] = (11, 2.5, 2.5, 0.0)
+    path = tmp_path / "traj.parquet"
+    write_particles(path, traj, point_release, _settings(params), [])
+
+    assert pq.read_schema(path).field("lon").type == pa.float32()
+    back = read_particles(path)
+    assert (back[["lon", "lat", "zagl"]].dtypes == "float64").all()
+    assert back.attrs["internal_grid"] == (11, 2.5, 2.5, 0.0)
+
+
+def test_particles_without_a_grid_come_back_without_one(point_release, tmp_path):
+    params = _params(tmp_path)
+    traj = finished(_particles_basic(), point_release)
+    path = tmp_path / "traj.parquet"
+    write_particles(path, traj, point_release, _settings(params), [])
+
+    assert "internal_grid" not in read_particles(path).attrs
+
+
 def test_a_file_without_settings_is_refused_for_its_metadata(point_release, tmp_path):
     """A particle file written before files recorded settings still reads, but has no metadata."""
     params = _params(tmp_path)

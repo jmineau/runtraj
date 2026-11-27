@@ -141,20 +141,20 @@ def test_a_run_with_another_top_is_sampled_with_that_top(met_dir, tmp_path):
     particles = hysplit.drop(columns=["pres", "dens"])
 
     same = sample_met(particles, met_files, ["pres", "dens"], z_top=z_top)
-    default = sample_met(particles, met_files, ["pres", "dens"])
     own_levels = sample_met(particles, met_files, ["pres", "dens"], z_top=None)
-    message = tmp_path / "run" / "MESSAGE"
-    printed = sample_met(
-        particles, met_files, ["pres", "dens"], z_top=z_top, message=message
-    )
+    bare = particles.copy()
+    bare.attrs = {}  # the grid the run recorded is left out
+    unrecorded = sample_met(bare, met_files, ["pres", "dens"], z_top=z_top)
+    default = sample_met(bare, met_files, ["pres", "dens"])
 
     for name, sampled in (("z_top", same), ("default", default), ("None", own_levels)):
         s = _spread(hysplit["pres"], sampled["pres"])
         print(f"\npres minus HYSPLIT with a 10 km top, {name}: {s}")
     spread = _spread(hysplit["pres"], same["pres"])
     assert spread["nan"] == 0
-    # The grid the run printed is the one arlmet picks for its top.
-    pd.testing.assert_frame_equal(printed, same)
+    # The run recorded the grid it printed, which is the one arlmet picks for its top.
+    assert particles.attrs["internal_grid"] == (33, 10.0, -10.0, 10.0)
+    pd.testing.assert_frame_equal(unrecorded, same)
     assert (
         spread["median_abs"] < _spread(hysplit["pres"], default["pres"])["median_abs"]
     )

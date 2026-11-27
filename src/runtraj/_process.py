@@ -4,8 +4,9 @@ Starting a transport model's program so that it never outlives the process that 
 A model runs in a session of its own (:func:`own_group`), so that a Ctrl-C
 meant for runtraj does not reach it half way; runtraj then stops it itself
 (:func:`terminate`), and a watchdog ends it when the process that started it
-dies outright (:func:`ended_if_this_process_dies`). HYSPLIT and FLEXPART
-both start theirs this way.
+dies outright (:func:`ended_if_this_process_dies`). :func:`run_program`
+does all three for a program that writes its output to a log; HYSPLIT and
+FLEXPART both start theirs with it.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ import subprocess
 import sys
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,52 @@ def own_group() -> dict[str, Any]:
 #: process that started it ends however it ends, and kills the group. ``kill
 #: -9 -PGID`` is the form both bash and dash read as a group.
 _WATCHDOG = 'read group && read line; kill -9 -"$group" 2>/dev/null'
+
+
+def run_program(
+    args: list[str],
+    *,
+    cwd: Path,
+    log_path: Path,
+    timeout: int | None = None,
+    env: dict[str, str] | None = None,
+    **popen_kwargs: Any,
+) -> int:
+    """
+    Run a transport model's program in *cwd*, writing its output to *log_path*, and return its exit status.
+
+    The program runs in a session of its own (:func:`own_group`) with the
+    watchdog of :func:`ended_if_this_process_dies`, and *popen_kwargs* go
+    to ``subprocess.Popen``. If it runs longer than *timeout* seconds, or this
+    process is interrupted while it waits (``KeyboardInterrupt`` or
+    ``SystemExit``), it is stopped (:func:`terminate`) and the exception is
+    raised: ``subprocess.TimeoutExpired`` for the timeout. No signal reached
+    a program in a session of its own, so it would otherwise run on, unseen.
+    """
+    with (
+        log_path.open("w", encoding="utf-8") as handle,
+        ended_if_this_process_dies() as watch,
+        subprocess.Popen(
+            args,
+            cwd=cwd,
+            stdout=handle,
+            stderr=subprocess.STDOUT,
+            env=env,
+            **own_group(),
+            **popen_kwargs,
+        ) as proc,
+    ):
+        watch(proc)
+        try:
+            return proc.wait(timeout=timeout)
+        except BaseException:
+            terminate(proc)
+            raise
+
+
+def read_log(path: Path) -> str:
+    """Return the log at *path*, or an empty string when the program wrote none."""
+    return path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
 
 
 @contextmanager

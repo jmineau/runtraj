@@ -212,7 +212,10 @@ def read_particles(
     It needs nothing but the file: the release time in its metadata gives
     the ``time`` column (UTC) back, from ``age``. ``age``, ``particle``, and any
     float32 column come back as float64, whatever the model stored.
-    :func:`particles_metadata` reads the release and settings.
+    :func:`particles_metadata` reads the release and settings. A HYSPLIT
+    run's internal grid, which the file records, comes back in
+    ``attrs["internal_grid"]`` (``(nlvl, aa, bb, cc)``), where
+    :func:`runtraj.sampling.sample_met` reads it.
 
     Parameters
     ----------
@@ -234,6 +237,7 @@ def read_particles(
     with readable(path) as source:
         pf = pq.ParquetFile(source)
         stored = pf.schema_arrow.names
+        meta = pf.schema_arrow.metadata or {}
         # The output directory adds a ``release`` column for scans of the
         # whole tree. One file is one release, so it is not read here.
         wanted = [c for c in (stored if columns is None else columns) if c != "release"]
@@ -246,8 +250,9 @@ def read_particles(
     for name in _INT_COLUMNS:
         if name in data.columns:
             data[name] = data[name].astype("float64")
+    if b"runtraj:internal_grid" in meta:
+        data.attrs["internal_grid"] = tuple(json.loads(meta[b"runtraj:internal_grid"]))
     if want_time and "age" in data.columns:
-        meta = pf.schema_arrow.metadata or {}
         release = stored_release(meta, path)
         data["time"] = pd.Timestamp(release.time) + pd.to_timedelta(
             data["age"].to_numpy(), unit="min"
@@ -339,7 +344,8 @@ def write_particles(
     the model computed them, float32 or float64. A ``release`` column holds
     the release id, so a scan of many files can tell releases apart. The
     release, the run's settings, and the met files go in the file's
-    metadata, so the file reads alone.
+    metadata, so the file reads alone, and so does ``particles.attrs["internal_grid"]``
+    when it is there (a HYSPLIT run's, :func:`read_particles`).
 
     Parameters
     ----------
@@ -368,6 +374,13 @@ def write_particles(
         If ``age`` or ``particle`` holds a value that is not a whole number.
     """
     data = particles.drop(columns=["time", "release"], errors="ignore")
+    if "internal_grid" in particles.attrs:
+        metadata = {
+            b"runtraj:internal_grid": json.dumps(
+                list(particles.attrs["internal_grid"])
+            ).encode(),
+            **(metadata or {}),
+        }
     for name in _INT_COLUMNS:
         if name in data.columns:
             values = data[name].to_numpy()
@@ -425,6 +438,32 @@ def needs_height_to_match(
 
 #: Columns of a table of release rows: where each particle started.
 RELEASE_ROW_COLUMNS = ("particle", "lon", "lat", "height")
+
+
+def column_release_rows(
+    release: ColumnRelease, n_particles: int, n_slabs: int
+) -> pd.DataFrame:
+    """
+    Return the release rows of a column's particles ``1`` to *n_particles*, released bottom to top.
+
+    The column is split into *n_slabs* slabs of equal depth, and particle
+    *k* starts at the center of slab ``(k - 1) % n_slabs`` (counted from
+    the bottom): a transport model that releases the slabs once, as
+    FLEXPART does, has *n_slabs* equal to *n_particles*, and one that
+    releases them at every time step, as HYSPLIT does, fewer.
+    """
+    particle = np.arange(1, n_particles + 1)
+    slab = (particle - 1) % n_slabs
+    depth = (release.top - release.bottom) / n_slabs
+    return pd.DataFrame(
+        {
+            "particle": particle,
+            "lon": release.longitude,
+            "lat": release.latitude,
+            "height": release.bottom + (slab + 0.5) * depth,
+        },
+        columns=list(RELEASE_ROW_COLUMNS),
+    )
 
 
 def add_release_heights(

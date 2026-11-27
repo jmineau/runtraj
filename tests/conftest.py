@@ -168,6 +168,8 @@ def _hycs_std_on_path(request, monkeypatch):
     skipped when there is none.
     """
     if any(request.node.get_closest_marker(m) for m in _REAL_HYSPLIT):
+        if "flexpart_checkout" in request.fixturenames:
+            return  # it runs FLEXPART, and skips without one (tests/models/flexpart/)
         if shutil.which("hycs_std") is None:
             pytest.skip(
                 "No hycs_std on PATH. Put the exec/ folder of a HYSPLIT build on PATH."

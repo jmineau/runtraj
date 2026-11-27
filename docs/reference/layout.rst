@@ -238,6 +238,11 @@ The file's metadata (Parquet key-value metadata):
        ``_settings.yaml``.
    * - ``runtraj:met_files``
      - The met files the run read, a JSON list of paths.
+   * - ``runtraj:internal_grid``
+     - HYSPLIT's internal levels as the run printed them in ``MESSAGE``, a
+       JSON list ``[nlvl, aa, bb, cc]``; level ``k`` is ``aa k**2 + bb k +
+       cc`` meters. Only a HYSPLIT run that printed it. It is read back
+       into ``attrs["internal_grid"]``.
    * - ``runtraj:hash``
      - The folder's settings hash.
    * - ``runtraj:version``

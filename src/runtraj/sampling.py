@@ -23,7 +23,6 @@ run's met files the way its transport model reads them).
 from __future__ import annotations
 
 import os
-import re
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -285,27 +284,11 @@ def _check_z_top(particles: pd.DataFrame, z_top: float | None) -> None:
             )
 
 
-#: The line HYSPLIT prints in ``MESSAGE`` for its internal levels, in the
-#: same form from 5.0.2 to 5.4.2: ``nlvl, aa, bb, cc``.
-_INTERNAL_GRID_LINE = re.compile(
-    r"Internal grid parameters \(nlvl,aa,bb,cc\):\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)"
-)
-
-
-def _read_internal_grid(
-    message: str | os.PathLike[str] | None,
+def _recorded_internal_grid(
+    particles: pd.DataFrame, z_top: float | None
 ) -> tuple[int, float, float, float] | None:
-    """Return ``(nlvl, aa, bb, cc)`` from a run's ``MESSAGE`` file (level ``k`` is ``aa k**2 + bb k + cc`` m), or None for no file."""
-    if message is None:
-        return None
-    found = _INTERNAL_GRID_LINE.search(Path(message).read_text(errors="replace"))
-    if found is None:
-        raise ValueError(
-            f"{message} has no 'Internal grid parameters (nlvl,aa,bb,cc)' line: "
-            "message is the MESSAGE file HYSPLIT wrote in the run's working directory."
-        )
-    nlvl, aa, bb, cc = found.groups()
-    return int(nlvl), float(aa), float(bb), float(cc)
+    """Return the internal grid the run of *particles* printed (``attrs["internal_grid"]``), or None when it has none or *z_top* is None (the met's own levels)."""
+    return None if z_top is None else particles.attrs.get("internal_grid")
 
 
 def _nearest_level(levels: xr.DataArray, z: np.ndarray) -> np.ndarray:
@@ -441,7 +424,6 @@ def sample_met(
     columns: Iterable[str] = ("mlht", "dens", "pres", "zsfc"),
     *,
     z_top: float | None = _DEFAULT_Z_TOP,
-    message: str | os.PathLike[str] | None = None,
 ) -> pd.DataFrame:
     """
     Return the particles with met columns sampled at each particle's position.
@@ -451,8 +433,13 @@ def sample_met(
     ``lon``, ``lat``, ``zagl``, and ``time``: bilinear across the met's
     grid and linear in height between the internal levels of a HYSPLIT run
     with the top *z_top* (:func:`arlmet.sample_points`), then linear in time
-    between the two met times around the particle's, as HYSPLIT does. Each column comes
-    from these ARL variables:
+    between the two met times around the particle's, as HYSPLIT does. The
+    internal levels are the ones the run printed in its ``MESSAGE`` file when
+    *particles* record them (``particles.attrs["internal_grid"]``, as the
+    particles of a HYSPLIT run do, whatever its version); without them they
+    are the ones HYSPLIT 5.4.0 and later pick for *z_top*, and earlier
+    versions pick a different grid for a *z_top* below about 1.1 km. Each
+    column comes from these ARL variables:
 
     - ``mlht`` is ``PBLH``, the met model's boundary-layer height, in m
       above ground.
@@ -491,15 +478,9 @@ def sample_met(
         :class:`runtraj.models.hysplit.HysplitConfig`), since HYSPLIT's
         internal levels depend on it. A stored run records it:
         ``particles_metadata(path).settings["z_top"]``. ``None`` reads the
-        met's own levels, for a transport model that is not HYSPLIT; a row
-        below their lowest or above their top is then NaN.
-    message : path-like, optional
-        The ``MESSAGE`` file of the run (HYSPLIT writes it in the run's
-        working directory, which ``keep_workdir: true`` keeps). The internal levels
-        are then the ones the run printed there, whatever its HYSPLIT
-        version. Without it they are the ones HYSPLIT 5.4.0 and later pick
-        for *z_top*; earlier versions pick a different grid when *z_top*
-        is below about 1.1 km. Needs a *z_top*.
+        met's own levels, for a transport model that is not HYSPLIT (a recorded
+        internal grid is then not used); a row below their lowest or above
+        their top is then NaN.
 
     Returns
     -------
@@ -512,8 +493,7 @@ def sample_met(
     ValueError
         If a column is not one of the four or is in *particles* already
         (drop it first), *particles* has no ``time`` column, a row is outside
-        the files' times, *z_top* is not positive or is below a particle, or
-        *message* has no internal grid line or is given without a *z_top*.
+        the files' times, or *z_top* is not positive or is below a particle.
     KeyError
         If the met lacks a variable a column needs.
 
@@ -554,7 +534,7 @@ def sample_met(
             f"sample_met cannot sample {unknown}; it samples {list(_MET_VARIABLES)}."
         )
     _check_z_top(particles, z_top)
-    internal_grid = _read_internal_grid(message)
+    internal_grid = _recorded_internal_grid(particles, z_top)
     present = [c for c in columns if c in particles.columns]
     if present:
         raise ValueError(
@@ -703,7 +683,6 @@ def calc_pbl_height(
     *,
     method: str = "hysplit",
     z_top: float = _DEFAULT_Z_TOP,
-    message: str | os.PathLike[str] | None = None,
 ) -> np.ndarray:
     """
     Return the mixed-layer height at each particle, found from the met as a transport model finds it.
@@ -727,7 +706,8 @@ def calc_pbl_height(
     HYSPLIT finds the height at each met grid point and met time, and a
     particle takes the nearest grid point's height at the met times before
     and after it, linear in time. The three HYSPLIT methods do the same, on
-    HYSPLIT's internal levels for a run with the top *z_top*. They apply
+    HYSPLIT's internal levels for a run with the top *z_top* (the ones the
+    run printed when *particles* record them, as in :func:`sample_met`). They apply
     no minimum, as HYSPLIT's ``kmix0`` does: take ``numpy.maximum`` with
     yours. Each height is at least a little above the lowest internal
     level, as in HYSPLIT.
@@ -795,11 +775,6 @@ def calc_pbl_height(
         The top of the domain in meters, which sets HYSPLIT's internal
         levels (``z_top`` of :class:`runtraj.models.hysplit.HysplitConfig`).
         ``"flexpart"`` reads the met's own levels and ignores it.
-    message : path-like, optional
-        The ``MESSAGE`` file of the HYSPLIT run: the internal levels are
-        then the ones it printed, whatever its version, as in
-        :func:`sample_met`. Without it they are the ones HYSPLIT 5.4.0 and
-        later pick. ``"flexpart"`` ignores it.
 
     Returns
     -------
@@ -818,8 +793,7 @@ def calc_pbl_height(
     ------
     ValueError
         If *method* is not one of the four, *particles* has no ``time``
-        column, a row is outside the files' times, or *message* has no
-        internal grid line.
+        column, or a row is outside the files' times.
     KeyError
         If the met lacks a variable the method needs.
 
@@ -873,7 +847,7 @@ def calc_pbl_height(
             "calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."
         )
     _check_z_top(particles, z_top)
-    internal_grid = _read_internal_grid(message)
+    internal_grid = _recorded_internal_grid(particles, z_top)
     with _opened(met) as sources:
         names = _met_variables(sources)
         pressure = _pressure_variable(sources, names)
