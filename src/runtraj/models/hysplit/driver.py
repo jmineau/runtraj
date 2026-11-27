@@ -92,6 +92,11 @@ LOG_FILE = "hysplit.log"
 WARNING_FILE = "WARNING"
 #: HYSPLIT's own file of progress and error messages.
 MESSAGE_FILE = "MESSAGE"
+#: The line ``MESSAGE`` holds for the run's internal levels, in the same form
+#: from HYSPLIT 5.0.2 to 5.4.2: ``nlvl, aa, bb, cc``.
+_INTERNAL_GRID_LINE = re.compile(
+    r"Internal grid parameters \(nlvl,aa,bb,cc\):\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)"
+)
 #: How many lines of ``MESSAGE`` a run that ended badly adds to its log.
 MESSAGE_TAIL_LINES = 20
 
@@ -341,6 +346,35 @@ def _tables_here(path: Path) -> bytes:
 #: HYSPLIT's names for the columns the particle table names otherwise
 #: (:data:`runtraj.particles.PARTICLE_SCHEMA`); the rest keep HYSPLIT's.
 PARTICLE_COLUMNS = {"indx": "particle", "time": "age", "long": "lon", "lati": "lat"}
+
+
+def read_internal_grid(workdir: str | Path) -> tuple[int, float, float, float] | None:
+    r"""
+    Return ``(nlvl, aa, bb, cc)``, the internal grid a run in *workdir* printed in ``MESSAGE``, or ``None``.
+
+    Level ``k`` of ``nlvl`` is ``aa k**2 + bb k + cc`` meters above the
+    ground. The grid depends on the HYSPLIT version for a model top below
+    about 1.1 km, so the run's own is the one to sample the met on. ``None``
+    when there is no ``MESSAGE`` or it has no such line.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     _ = (Path(tmp) / "MESSAGE").write_text(
+    ...         " Internal grid parameters (nlvl,aa,bb,cc):  11  2.5  2.5  0.0\n"
+    ...     )
+    ...     read_internal_grid(tmp)
+    (11, 2.5, 2.5, 0.0)
+    """
+    path = Path(workdir) / MESSAGE_FILE
+    if not path.exists():
+        return None
+    found = _INTERNAL_GRID_LINE.search(path.read_text(errors="replace"))
+    if found is None:
+        return None
+    nlvl, aa, bb, cc = found.groups()
+    return int(nlvl), float(aa), float(bb), float(cc)
 
 
 def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
