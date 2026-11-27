@@ -20,7 +20,7 @@ import signal
 import subprocess
 import sys
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -79,11 +79,11 @@ ZICONTROL_ADDS_TWO = (5, 3, 0)
 TRAJECTORY_FULL_HOURS = (5, 4, 0)
 #: The first HYSPLIT version whose ``hycs_std`` checks ``WINDERRTF`` against
 #: ``IDSP`` before the run, and sets ``WINDERRTF`` to 0 (the wind errors off)
-#: unless ``IDSP`` is 2 (:func:`check_wind_error`).
+#: unless ``IDSP`` is 2 (:func:`wind_error_refusal`).
 WINDERR_NEEDS_IDSP = (5, 3, 0)
 #: The first HYSPLIT version with ``KRAND`` 10 to 13 (``hymodelc.F:979-980`` in
 #: 5.1.0). Before it ``hycs_std`` draws them as ``KRAND=4`` without saying so
-#: (:func:`check_krand`).
+#: (:func:`krand_refusal`).
 KRAND_10_TO_13 = (5, 1, 0)
 #: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.
 CHEMRATE_FILE = "CHEMRATE.TXT"
@@ -702,56 +702,78 @@ def version_at_least(version: str | None, minimum: tuple[int, int, int]) -> bool
     return found is not None and tuple(map(int, found.groups())) >= minimum
 
 
-def check_krand(params: HysplitConfig, version: str | None) -> None:
+def setting_refusals(
+    params: HysplitConfig, version: Callable[[], str | None]
+) -> list[str]:
     """
-    Refuse ``krand`` 10 to 13 on a ``hycs_std`` that prints *version* and does not know them.
+    Return why a ``hycs_std`` cannot run *params*, one message for each setting it would ignore or change without a word.
 
-    They are new in HYSPLIT 5.1.0 (:data:`KRAND_10_TO_13`). Before it,
-    ``hycs_std`` takes them for ``KRAND=4`` without a word, so a run asked
-    for one of the random-seeded modes 0 to 3 would get the clock-seeded
-    draw of 4. A *version* runtraj cannot read, or none, is taken to be older.
-
-    Raises
-    ------
-    ValueError
-        If ``krand`` is 10 to 13 and *version* is older than 5.1.0.
+    The settings are ``krand`` 10 to 13 and the wind error in the concentration
+    mode (:func:`krand_refusal`, :func:`wind_error_refusal`). *version* returns
+    the version the program prints; it is called only when a setting depends
+    on it, and at most once for each of them (the program is asked once per
+    file). The trajectory mode has neither setting.
 
     Examples
     --------
     >>> config = HysplitConfig(n_hours=-24, krand=10)
-    >>> check_krand(config, "hysplit.v5.1.0")
-    >>> check_krand(config, "hysplit.v5.0.2")
-    Traceback (most recent call last):
-        ...
-    ValueError: krand=10 is new in HYSPLIT 5.1.0: ... hysplit.v5.0.2 ...
+    >>> setting_refusals(config, lambda: "hysplit.v5.1.0")
+    []
+    >>> setting_refusals(config, lambda: "hysplit.v5.0.2")
+    ['krand=10 is new in HYSPLIT 5.1.0: ...']
     """
-    if params.krand in (10, 11, 12, 13) and not version_at_least(
-        version, KRAND_10_TO_13
-    ):
-        raise ValueError(
-            f"krand={params.krand} is new in HYSPLIT 5.1.0: the hycs_std here "
-            f"prints {version or 'no version'} and would run it as krand=4, "
-            "with a seed drawn from the clock. Use krand 0 to 4, or HYSPLIT "
-            "5.1.0 or later."
-        )
+    if params.mode == "trajectory":
+        return []
+    found = (krand_refusal(params, version), wind_error_refusal(params, version))
+    return [message for message in found if message]
 
 
-def check_wind_error(params: HysplitConfig, version: str | None) -> None:
+def krand_refusal(
+    params: HysplitConfig, version: Callable[[], str | None]
+) -> str | None:
     """
-    Refuse the wind error settings in the concentration mode on a ``hycs_std`` that prints *version* and ignores them.
+    Return why a ``hycs_std`` that prints *version* cannot run ``krand`` 10 to 13, or ``None``.
+
+    They are new in HYSPLIT 5.1.0 (:data:`KRAND_10_TO_13`). Before it,
+    ``hycs_std`` takes them for ``KRAND=4`` without a word, so a run asked
+    for one of the random-seeded modes 0 to 3 would get the clock-seeded
+    draw of 4. A version runtraj cannot read, or none, is taken to be older.
+    *version* is called only when ``krand`` is 10 to 13.
+
+    Examples
+    --------
+    >>> config = HysplitConfig(n_hours=-24, krand=10)
+    >>> krand_refusal(config, lambda: "hysplit.v5.1.0") is None
+    True
+    >>> krand_refusal(config, lambda: "hysplit.v5.0.2")
+    'krand=10 is new in HYSPLIT 5.1.0: ... hysplit.v5.0.2 ...'
+    """
+    if params.krand not in (10, 11, 12, 13):
+        return None
+    found = version()
+    if version_at_least(found, KRAND_10_TO_13):
+        return None
+    return (
+        f"krand={params.krand} is new in HYSPLIT 5.1.0: the hycs_std here "
+        f"prints {found or 'no version'} and would run it as krand=4, "
+        "with a seed drawn from the clock. Use krand 0 to 4, or HYSPLIT "
+        "5.1.0 or later."
+    )
+
+
+def wind_error_refusal(
+    params: HysplitConfig, version: Callable[[], str | None]
+) -> str | None:
+    """
+    Return why a ``hycs_std`` that prints *version* cannot run the wind error settings in the concentration mode, or ``None``.
 
     From HYSPLIT 5.3.0 (:data:`WINDERR_NEEDS_IDSP`), ``hycs_std`` applies the
     wind error only with ``IDSP=2``, which the concentration mode does not
     set, and otherwise prints ``IDSP must be set to 2 to use WINDERRTF=1``
     and runs without it, so the settings would do nothing. Earlier versions
-    apply it, and the particles mode sets ``IDSP=2``. A *version* runtraj
-    cannot read, or none, is taken to be older.
-
-    Raises
-    ------
-    ValueError
-        If *params* set the wind error in the concentration mode and
-        *version* is 5.3.0 or later.
+    apply it, and the particles mode sets ``IDSP=2``. A version runtraj
+    cannot read, or none, is taken to be older. *version* is called only
+    when *params* set the wind error in the concentration mode.
 
     Examples
     --------
@@ -766,24 +788,23 @@ def check_wind_error(params: HysplitConfig, version: str | None) -> None:
     ...     zcoruverr=500.0,
     ...     horcoruverr=40.0,
     ... )
-    >>> check_wind_error(config, "hysplit.v5.2.3")
-    >>> check_wind_error(config, "hysplit.v5.4.2")
-    Traceback (most recent call last):
-        ...
-    ValueError: The wind error settings (siguverr, ... on hysplit.v5.4.2: ...
+    >>> wind_error_refusal(config, lambda: "hysplit.v5.2.3") is None
+    True
+    >>> wind_error_refusal(config, lambda: "hysplit.v5.4.2")
+    'The wind error settings (siguverr, ... on hysplit.v5.4.2: ...'
     """
-    if (
-        params.mode == "concentration"
-        and winderr(params) is not None
-        and version_at_least(version, WINDERR_NEEDS_IDSP)
-    ):
-        raise ValueError(
-            f"The wind error settings ({', '.join(WIND_ERROR_SETTINGS)}) do "
-            f"nothing in the concentration mode on {version}: HYSPLIT 5.3.0 "
-            "and later apply the wind error only with IDSP=2, which this "
-            "mode does not set, so the run would go on without it. Remove "
-            "them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."
-        )
+    if params.mode != "concentration" or winderr(params) is None:
+        return None
+    found = version()
+    if not version_at_least(found, WINDERR_NEEDS_IDSP):
+        return None
+    return (
+        f"The wind error settings ({', '.join(WIND_ERROR_SETTINGS)}) do "
+        f"nothing in the concentration mode on {found}: HYSPLIT 5.3.0 "
+        "and later apply the wind error only with IDSP=2, which this "
+        "mode does not set, so the run would go on without it. Remove "
+        "them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."
+    )
 
 
 def _write_values(path: Path, values: list[float] | None) -> None:
@@ -811,9 +832,11 @@ def write_inputs(
     ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for
     them. *workdir* is created if needed, and should be empty. With
     ``ziscale`` set, ``WINDERRTF`` depends on the version the program
-    prints (:func:`winderrtf`), which is read once per program, and so
-    does the refusal of the wind error settings (:func:`check_wind_error`)
-    and of ``krand`` 10 to 13 (:func:`check_krand`).
+    prints (:func:`winderrtf`), which is read once per program. It does
+    not check the settings a version refuses (:func:`setting_refusals`):
+    :meth:`HysplitModel.check_releases
+    <runtraj.models.hysplit.HysplitModel.check_releases>` does, before a
+    run gets here.
 
     Parameters
     ----------
@@ -836,11 +859,6 @@ def write_inputs(
     ------
     HYSPLITNotFoundError
         If there is no program to link (:func:`find_program`).
-    ValueError
-        If the settings set the wind error in the concentration mode and
-        the program is HYSPLIT 5.3.0 or later, which would ignore it
-        (:func:`check_wind_error`), or ``krand`` is 10 to 13 and the program
-        is older than HYSPLIT 5.1.0 (:func:`check_krand`).
     """
     workdir = Path(workdir)
     workdir.mkdir(parents=True, exist_ok=True)
@@ -851,14 +869,8 @@ def write_inputs(
     trajectory = config.mode == "trajectory"
     found = find_program(program, config.directory)
     # Read only where a setting depends on it: the program is run for it.
-    needs_version = not trajectory and (
-        ziscale_factors(config) is not None
-        or (config.mode == "concentration" and winderr(config) is not None)
-        or config.krand in (10, 11, 12, 13)
-    )
+    needs_version = not trajectory and ziscale_factors(config) is not None
     version = _printed_version(*_stamp(found)) if needs_version else None
-    check_wind_error(config, version)  # before anything is written
-    check_krand(config, version)
     # On Windows the link keeps the program's extension, which finds it again.
     linked = program + found.suffix.lower() if sys.platform == "win32" else program
     links = {linked: found}

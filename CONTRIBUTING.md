@@ -444,7 +444,9 @@ it.
   result to that type.
 - **`check_releases(releases, config)`** lists the releases the model
   cannot run, as HYSPLIT does for a multipoint release whose points share
-  a location. `runtraj check` shows them, and `run_model` and
+  a location. A row whose `release` is `NA` is about the settings and
+  refuses every release (HYSPLIT's `krand` 10 to 13 on a build before 5.1.0).
+  `runtraj check` shows them, and `run_model` and
   `run_model_many` fail them as `RELEASE_REFUSED` before `run` or
   `run_many` is called, so a batched model never has to refuse one release
   of a call.

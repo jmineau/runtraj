@@ -56,9 +56,9 @@ taken to be the oldest. Between versions:
 
 * ``krand`` 10 to 13 are new in HYSPLIT 5.1.0. Before it, ``hycs_std`` runs
   them as ``krand: 4`` without a word, so a run with one of them on an older
-  ``hycs_std`` is refused (:func:`~runtraj.models.hysplit.write_inputs` raises
-  a ``ValueError``, and the simulation fails) instead of getting the
-  clock-seeded draw.
+  ``hycs_std`` is refused (``runtraj check`` lists it as ``setting_refused``,
+  and a run fails as ``RELEASE_REFUSED`` before ``hycs_std`` starts) instead of
+  getting the clock-seeded draw.
 * HYSPLIT 5.0.x never seeds the random numbers behind a column release and
   an ``ichem: 5`` run (the generator of Fortran's ``RANDOM_NUMBER``;
   HYSPLIT 5.1.0 seeds it from ``seed``). On 5.0.x those runs differ from one
@@ -85,9 +85,10 @@ error settings), and each version applies the errors the settings ask
 for. A ``hycs_std`` that prints no version gets the value as HYSPLIT
 5.2 reads it. In the concentration mode the wind error settings need the
 version too: from HYSPLIT 5.3.0, ``hycs_std`` applies the wind error only
-with ``IDSP=2``, which that mode does not set, so ``write_inputs`` raises a
-``ValueError`` there instead of running without it (the particles mode sets
-``IDSP=2``, and 5.2.3 and earlier apply the error). It takes what
+with ``IDSP=2``, which that mode does not set, so the settings are refused
+there (``setting_refused`` in ``runtraj check``, and ``RELEASE_REFUSED`` in a
+run) instead of running without it (the particles mode sets ``IDSP=2``, and
+5.2.3 and earlier apply the error). It takes what
 ``CONTROL`` starts from: a release time and release locations (longitude,
 latitude and height, like ``release.coords()``; the ``CONTROL`` file lists
 each latitude first, and the writer swaps them), with ``kmsl`` 0 for heights

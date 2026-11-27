@@ -32,6 +32,7 @@ from .driver import (
     program_name,
     read_particle_dat,
     run_hycs_std,
+    setting_refusals,
     version_at_least,
     write_inputs,
 )
@@ -161,7 +162,7 @@ class HysplitModel(TransportModel[HysplitConfig]):
         self, releases: pd.DataFrame, config: HysplitConfig
     ) -> pd.DataFrame:
         """
-        Return the releases HYSPLIT cannot run with *config*.
+        Return the releases HYSPLIT cannot run with *config*, and the settings it cannot.
 
         Multipoint releases whose points share a location, which
         ``hycs_std`` joins into a line source; in the trajectory mode,
@@ -171,6 +172,11 @@ class HysplitModel(TransportModel[HysplitConfig]):
         concentration run with ``ichem: 1``, column releases too, which
         are one source at two locations. See
         :func:`runtraj.models.hysplit.releases.check_releases`.
+
+        A setting the program would ignore or change without a word is
+        one row with no release (``setting_refused``), which refuses every
+        release: ``krand`` 10 to 13 before HYSPLIT 5.1.0, and the wind error
+        in the concentration mode from 5.3.0 (:func:`setting_refusals`).
         """
         trajectory = config.mode == "trajectory"
         refused = check_releases(
@@ -178,17 +184,30 @@ class HysplitModel(TransportModel[HysplitConfig]):
             trajectory=trajectory,
             sources=config.mode == "concentration" and config.ichem == 1,
         )
-        # The version is read only when a release needs it. Without a
-        # hyts_std there is nothing to refuse here: the model check says so.
-        if trajectory and not (off := off_the_hour(releases)).empty:
-            try:
-                full_hours = version_at_least(
+        # The version is read only when a release or a setting needs it.
+        # Without a program there is nothing to refuse here: the model check
+        # says so.
+        try:
+            if trajectory:
+                off = off_the_hour(releases)
+                if not off.empty and not version_at_least(
                     self.version(config), TRAJECTORY_FULL_HOURS
-                )
-            except HYSPLITNotFoundError:
-                full_hours = True
-            if not full_hours:
-                refused = pd.concat([refused, off], ignore_index=True)
+                ):
+                    refused = pd.concat([refused, off], ignore_index=True)
+            else:
+                if messages := setting_refusals(config, lambda: self.version(config)):
+                    # No release: the settings refuse every release.
+                    both = pd.DataFrame(
+                        {
+                            "check": "setting_refused",
+                            "release": pd.NA,
+                            "message": messages,
+                        },
+                        columns=["check", "release", "message"],
+                    )
+                    refused = pd.concat([refused, both], ignore_index=True)
+        except HYSPLITNotFoundError:
+            pass
         return refused
 
     def release_rows(

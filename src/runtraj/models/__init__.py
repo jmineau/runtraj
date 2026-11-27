@@ -470,13 +470,16 @@ class TransportModel(ABC, Generic[C]):
         ``kind``, ``time``, ``longitude``, ``latitude``, ``altitude``,
         ``altitude_ref``). It returns a DataFrame with ``check``,
         ``release`` and ``message`` columns, in that order, one row for each
-        release it cannot run. ``runtraj check`` lists them, and
+        release it cannot run; a row whose ``release`` is ``NA`` is about the
+        settings, and refuses every release. ``runtraj check`` lists them, and
         :func:`run_model` and :func:`run_model_many` fail them with the
         reason ``RELEASE_REFUSED`` before the model runs, so :meth:`run`
         and :meth:`run_many` never get such a release. HYSPLIT refuses a
         multipoint release whose points share a horizontal location, which
-        it would join into a line source, and, in its trajectory mode with
-        a ``hyts_std`` before 5.4.0, a release not on the hour.
+        it would join into a line source, in its trajectory mode with
+        a ``hyts_std`` before 5.4.0 a release not on the hour, and, with a
+        ``hycs_std`` that would ignore the setting, ``krand`` 10 to 13 or the
+        wind error in the concentration mode.
         """
         return pd.DataFrame(columns=list(CHECK_COLUMNS))
 
@@ -766,14 +769,15 @@ def _release_points(releases: Iterable[Release]) -> pd.DataFrame:
 def _refused(
     model: TransportModel, releases: list[Release], config: TransportConfig
 ) -> dict[str, SimulationError]:
-    """Return the error of each of *releases* the model's ``check_releases`` refuses, by release id."""
+    """Return the error of each of *releases* the model's ``check_releases`` refuses, by release id, every one for a row with no release."""
     ids = {str(r.id) for r in releases}
     table = model.check_releases(_release_points(releases), config)
-    return {
-        str(release): SimulationError(str(message), reason="RELEASE_REFUSED")
-        for _check, release, message in table.itertuples(index=False)
-        if str(release) in ids
-    }
+    refused = {}
+    for _check, release, message in table.itertuples(index=False):
+        # A row with no release is about the settings: no release can run.
+        for each in ids if pd.isna(release) else ids & {str(release)}:
+            refused[each] = SimulationError(str(message), reason="RELEASE_REFUSED")
+    return refused
 
 
 def _finish(
@@ -1096,7 +1100,7 @@ def _check_refusal(
         "release",
         "message",
     ], f"{name}.check_releases must return a table of check, release and message"
-    if str(release.id) not in set(table["release"].astype(str)):
+    if str(release.id) not in _refused(model, [release], config):
         return False
     try:
         _run_one(model, release, config, met, None, None)
