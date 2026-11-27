@@ -345,7 +345,7 @@ def test_a_model_keeps_the_defaults_it_does_not_override():
         None,
         None,
     )
-    assert model.release_rows(None, None) is None
+    assert model.release_rows(None, None, None) is None
     table = model.check_releases(None, None)
     assert table.empty and list(table.columns) == ["check", "release", "message"]
     with pytest.raises(NotImplementedError, match="sets batched but has no run_many"):

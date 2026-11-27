@@ -3,15 +3,17 @@ What HYSPLIT does with a release that another transport model may not: its line 
 
 :func:`check_releases` lists the multipoint releases HYSPLIT would turn
 into a line source, and :func:`release_rows` says where each particle
-started when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 does
-not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's
+started when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to
+5.4.2 do not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's
 core (:class:`runtraj.models.TransportModel`), which refuses such a release
 before HYSPLIT runs.
 """
 
 from __future__ import annotations
 
+import math
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -23,6 +25,9 @@ from runtraj.particles.table import (
     _height,
 )
 from runtraj.releases import ColumnRelease, MultiPointRelease, Release
+
+if TYPE_CHECKING:
+    from .config import HysplitConfig
 
 #: Why HYSPLIT cannot run a multipoint release whose points share a horizontal location.
 REPEATED_LOCATION = (
@@ -122,42 +127,89 @@ def _repeated(release: object, lon: object, lat: object) -> np.ndarray:
     return points.duplicated().to_numpy()
 
 
-def release_rows(particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+def release_rows(
+    particles: pd.DataFrame, release: Release, config: HysplitConfig
+) -> pd.DataFrame:
     """
     Return where each particle of a HYSPLIT run started, for a run that wrote no row at ``age = 0``.
 
     The columns are :data:`runtraj.particles.table.RELEASE_ROW_COLUMNS`. A
     column's particles are released bottom to top in ``particle`` order,
-    particle ``k`` of ``numpar`` in slab ``k``. A multipoint release's
-    particles are matched to a point from their first row: by height when
-    every point has its own altitude, since height drifts about 30 times
-    less than horizontal position over the first step, and otherwise by
-    position, with a warning when the points are too close for that.
+    :func:`particles_per_step` of them at each one-minute time step of the
+    release (``emisshrs``), each a column of its own: particle ``k`` starts
+    in slab ``(k - 1) % n + 1`` of the ``n`` released with it. So a start
+    height is known to the depth of those slabs, ``(top - bottom) / n``:
+    a long release of few particles knows it less well than a short one. A
+    multipoint release's particles are matched to a point from their first
+    row: by height when every point has its own altitude, since height
+    drifts about 30 times less than horizontal position over the first
+    step, and otherwise by position, with a warning when the points are too
+    close for that.
     """
     if isinstance(release, ColumnRelease):
-        return _column_rows(particles, release)
+        return _column_rows(particles, release, config)
     if isinstance(release, MultiPointRelease):
         return _multipoint_rows(particles, release)
     raise ValueError(f"A {release.kind} release needs no release rows.")
 
 
-def _column_rows(p: pd.DataFrame, release: ColumnRelease) -> pd.DataFrame:
+def particles_per_step(config: HysplitConfig) -> int:
     """
-    Return each particle's start: the center of slab ``particle`` of ``numpar``.
+    Return how many particles HYSPLIT releases from one location in one block of a time step of a particle run.
 
-    HYSPLIT numbers a column's particles 1 to ``numpar``, so there is a row
-    for each of them, even one missing from *p*, such as a particle that
-    left the domain before its first row: the slabs stay ``numpar``.
+    HYSPLIT's ``EMSPNT`` spreads ``numpar`` over the ``emisshrs`` of the
+    release, rounding up the particles of an hour and then of a step, in
+    single precision. A particle run (``ICHEM=8``) steps one minute, so a
+    release of a minute or less is one step of ``numpar`` or ``numpar + 1``
+    particles; a longer one is a step every minute until ``MAXPAR``
+    particles are out, the last step cut short. Each step releases a block
+    of this many particles for each of the ``nbptyp`` size bins, and with
+    ``maxdim: 1`` the bins share ``numpar``. A puff run (``initd`` 1 or
+    2, or a three-digit ``initd`` whose tens digit is 1 or 2) releases one
+    puff a step, at the middle of the column. HYSPLIT 5.1.0 to 5.4.2 count the same way.
+
+    Examples
+    --------
+    >>> from runtraj.models.hysplit import HysplitConfig
+    >>> particles_per_step(HysplitConfig(n_hours=-24, numpar=1000))
+    1001
+    >>> particles_per_step(HysplitConfig(n_hours=-24, numpar=1000, emisshrs=0.5))
+    34
     """
-    numpar = int(p["particle"].max())
-    particle = np.arange(1, numpar + 1)
-    step = (release.top - release.bottom) / numpar
+    initial = config.initd if config.initd < 100 else config.initd // 10 % 10
+    if initial in (1, 2):
+        return 1
+    minute = np.float32(1.0) / np.float32(60.0)  # ABS(DT/60.0)
+    hours = max(minute, np.float32(config.emisshrs))
+    qsum = hours
+    if config.maxdim == 1:  # HYSPLIT sums the hours of the bins
+        for _ in range(config.nbptyp - 1):
+            qsum = qsum + hours
+    per_hour = math.ceil(np.float32(config.numpar) / qsum)
+    return max(1, math.ceil(np.float32(per_hour) * minute))
+
+
+def _column_rows(
+    p: pd.DataFrame, release: ColumnRelease, config: HysplitConfig
+) -> pd.DataFrame:
+    """
+    Return each particle's start: the center of its slab in the column of its time step.
+
+    HYSPLIT numbers a column's particles from 1 in the order it releases
+    them, so there is a row for each up to the highest in *p*, even one
+    missing from *p*, such as a particle that left the domain before its
+    first row.
+    """
+    per_step = particles_per_step(config)
+    particle = np.arange(1, int(p["particle"].max()) + 1)
+    slab = (particle - 1) % per_step
+    depth = (release.top - release.bottom) / per_step
     return pd.DataFrame(
         {
             "particle": particle,
             "lon": release.longitude,
             "lat": release.latitude,
-            "height": (particle - 0.5) * step + release.bottom,
+            "height": release.bottom + (slab + 0.5) * depth,
         },
         columns=list(RELEASE_ROW_COLUMNS),
     )

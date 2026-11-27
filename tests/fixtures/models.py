@@ -153,7 +153,9 @@ class ToyModel(TransportModel[ToyConfig]):
             return ModelRun(result=_counted(particles, release))
         return ModelRun(result=particles)
 
-    def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+    def release_rows(
+        self, particles: pd.DataFrame, release: Release, config: ToyConfig
+    ) -> pd.DataFrame:
         """Return where each particle started: its first row, with the drift taken back."""
         first = particles.loc[
             particles["age"].abs().groupby(particles["particle"]).idxmin()

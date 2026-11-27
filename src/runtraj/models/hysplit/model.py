@@ -243,13 +243,15 @@ class HysplitModel(TransportModel[HysplitConfig]):
             sources=config.mode == "concentration" and config.ichem == 1,
         )
 
-    def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+    def release_rows(
+        self, particles: pd.DataFrame, release: Release, config: HysplitConfig
+    ) -> pd.DataFrame:
         """
         Return where each particle started, for a HYSPLIT build that writes no row at ``age = 0``.
 
         See :func:`runtraj.models.hysplit.releases.release_rows`.
         """
-        return release_rows(particles, release)
+        return release_rows(particles, release, config)
 
     def run(
         self,

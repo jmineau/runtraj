@@ -248,6 +248,14 @@ that averages over one, set ``emisshrs`` to that period in hours:
 The particles are then spread evenly over the hour. :doc:`choosing_settings`
 lists the other settings HYSPLIT chooses for you.
 
+A :class:`ColumnRelease` released over more than a minute is a column of
+particles every minute. With ``numpar: 1000`` and ``emisshrs: 0.5``, HYSPLIT
+releases 34 particles a minute, each in one of 34 slabs from ``bottom`` to
+``top``. A HYSPLIT build that writes no rows at release time (5.4.2 and
+earlier) then tells runtraj a particle's start height only to within its
+slab, about 29 m in a 1000 m column, against about 1 m for the default
+instant release. A build that writes them makes it exact.
+
 
 Advanced: release heights for multipoint and slant releases
 ------------------------------------------------------------
