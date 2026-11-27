@@ -1,0 +1,6 @@
+﻿runtraj.testing.check\_model
+============================
+
+.. currentmodule:: runtraj.testing
+
+.. autofunction:: check_model

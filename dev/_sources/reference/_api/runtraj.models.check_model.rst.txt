@@ -1,6 +1,0 @@
-﻿runtraj.models.check\_model
-===========================
-
-.. currentmodule:: runtraj.models
-
-.. autofunction:: check_model

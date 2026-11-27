@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>runtraj.models.base &#8212; runtraj dev</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=a2d71c7f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../../../_static/documentation_options.js?v=e68f9857"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/runtraj/models/base';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.0a6.dev39+g17ebeb7c5" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="runtraj">
+  <meta property="og:title" content="runtraj.models.base">
+  <meta property="og:description" content="Run particle dispersion models at scale.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">runtraj is in alpha: names and options may change between releases.</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.svg" class="logo__image only-light" alt="runtraj"/>
+    <img src="../../../_static/logo_dark.svg" class="logo__image only-dark pst-js-only" alt="runtraj"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../guides/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.base</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for runtraj.models.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">The transport model contract: what a model in another package subclasses.</span>
+
+<span class="sd">:class:`TransportModel` is the model, typed by its :class:`TransportConfig`;</span>
+<span class="sd">:class:`MetConfig` checks one entry under ``mets:`` and owns what is done with</span>
+<span class="sd">its files; :class:`ModelRun` is what a run returns. Running a model and</span>
+<span class="sd">finding it by name are in :mod:`runtraj.models.run` and</span>
+<span class="sd">:mod:`runtraj.models.registry`; :func:`runtraj.testing.check_model` checks a</span>
+<span class="sd">model against this contract.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">Release</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span>
+
+
+<div class="viewcode-block" id="ModelRun">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.ModelRun.html#runtraj.models.ModelRun">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelRun</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    What one model run produced.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    result : pandas.DataFrame or xarray.DataTree</span>
+<span class="sd">        What the run made, of the type the model makes with the run's</span>
+<span class="sd">        config (:mod:`runtraj.results`): the particle table, one row per</span>
+<span class="sd">        particle per time step (:data:`runtraj.particles.PARTICLE_SCHEMA`),</span>
+<span class="sd">        or a concentration result (:mod:`runtraj.concentration`).</span>
+<span class="sd">    log : str</span>
+<span class="sd">        The model's log of the run, kept with the result</span>
+<span class="sd">        (:attr:`runtraj.Simulation.log`). Empty for a model that writes none.</span>
+<span class="sd">    met_files : list of Path</span>
+<span class="sd">        The meteorology files the run read, recorded in the result's file</span>
+<span class="sd">        (:func:`runtraj.particles.particles_metadata`). Empty for a model that reads</span>
+<span class="sd">        no files.</span>
+<span class="sd">    """</span>
+
+    <span class="n">result</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">log</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">met_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="ModelInfo">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.ModelInfo.html#runtraj.models.ModelInfo">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The transport model build a run was made with.</span>
+
+<span class="sd">    Its name, the SHA-256 of its executable, and the SHA-256 of each data</span>
+<span class="sd">    file it reads are part of the run's settings, so two builds</span>
+<span class="sd">    never share a settings folder. The version the build reports is</span>
+<span class="sd">    recorded beside the settings (``model_version`` in ``_settings.yaml``),</span>
+<span class="sd">    not in them: two builds of one release report the same version.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The model as its ``models`` block in ``config.yaml`` names it: "</span>
+            <span class="s2">"a supported model's name such as ``hysplit``, or the import path of a "</span>
+            <span class="s2">"model class (the block's ``class``)."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">sha256</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"SHA-256 of the executable the model runs, such as HYSPLIT's "</span>
+            <span class="s2">"``hycs_std``. ``None`` for a model that runs none."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">data_files</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"SHA-256 of each data file the run read, by file name, such as "</span>
+            <span class="s2">"HYSPLIT's tables. ``None`` for a model whose build fixes them."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">exclude</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The version the build reports, such as ``hysplit.v5.1.0``. "</span>
+            <span class="s2">"Recorded beside the run's settings and left out of them."</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="TransportConfig">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportConfig.html#runtraj.models.TransportConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransportConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The base of every transport model's config.</span>
+
+<span class="sd">    It holds the parameters runtraj's own code reads, whatever the model:</span>
+<span class="sd">    the run length and the seed, which set the run window and the</span>
+<span class="sd">    realizations. Everything else, the particle count included, is the</span>
+<span class="sd">    model's own. A model's config subclasses it with its own</span>
+<span class="sd">    parameters and is the model's ``config_class``. In ``config.yaml`` the</span>
+<span class="sd">    parameters are the keys of the model's block under ``models:``, and a</span>
+<span class="sd">    variant that runs the model may override any of them. A subclass overrides :meth:`settings` or</span>
+<span class="sd">    :meth:`realizations` only where its model differs.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+
+    <span class="c1">#: Fields that change no particle, such as where the build is, left out</span>
+    <span class="c1">#: of a run's recorded settings.</span>
+    <span class="n">UNRECORDED</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">()</span>
+
+    <span class="n">n_hours</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Length of each simulation, in hours. Negative runs backward in "</span>
+            <span class="s2">"time. It has no default: a config must say it."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"n_hours"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_n_hours_is_not_zero</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">n_hours</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a run of no hours, which releases particles and follows none."""</span>
+        <span class="k">if</span> <span class="n">n_hours</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"n_hours must not be 0: use a negative number of hours for a "</span>
+                <span class="s2">"backward run and a positive one for a forward run."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">n_hours</span>
+
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Seed of the model's random numbers, for a reproducible run. "</span>
+            <span class="s2">"Realization ``k`` of a variant runs with ``seed + k``."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="TransportConfig.settings">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportConfig.settings.html#runtraj.models.TransportConfig.settings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return what a run records of this config: every field but the :attr:`UNRECORDED` ones."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">UNRECORDED</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="TransportConfig.realizations">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportConfig.realizations.html#runtraj.models.TransportConfig.realizations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">realizations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Self</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return *n* realizations of this config, realization ``k`` with ``seed + k``.</span>
+
+<span class="sd">        Realization 0 uses the configured seed. Without a seed every</span>
+<span class="sd">        realization is the same config, and the model must draw its own</span>
+<span class="sd">        random numbers for them to differ.</span>
+<span class="sd">        """</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"seed"</span><span class="p">:</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">seed</span> <span class="o">+</span> <span class="n">k</span><span class="p">})</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="p">]</span></div>
+</div>
+
+
+
+<span class="c1">#: The config class a transport model takes, a subclass of :class:`TransportConfig`.</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"C"</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">TransportConfig</span><span class="p">)</span>
+
+<span class="c1">#: The columns of the table ``check_releases`` and :meth:`MetConfig.check` return.</span>
+<span class="n">CHECK_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MetConfig">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.MetConfig.html#runtraj.models.MetConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The base of every transport model's met config: one entry under ``mets:`` and what is done with its files.</span>
+
+<span class="sd">    A model names its subclass as ``met_config_class``; HYSPLIT's is</span>
+<span class="sd">    :class:`runtraj.models.hysplit.HysplitMetConfig`. The subclass's fields</span>
+<span class="sd">    are the keys of the entry, and it implements :meth:`settings`. The</span>
+<span class="sd">    other methods have defaults for a met that names no files, such as a</span>
+<span class="sd">    model's built-in weather: nothing to check or fetch, nothing</span>
+<span class="sd">    downloaded, and ARL files when the met is read at the particles. A met</span>
+<span class="sd">    of files overrides the ones its files need.</span>
+
+<span class="sd">    Every met has :attr:`label`, which a run records beside :meth:`settings`</span>
+<span class="sd">    when it is set (:attr:`runtraj.config.Variant.met_settings`).</span>
+<span class="sd">    """</span>
+
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"A name that tells this met's runs apart from those of another met "</span>
+            <span class="s2">"of the same weather product, such as ``mynn`` and ``ysu`` for two "</span>
+            <span class="s2">"WRF runs with different boundary-layer schemes, whose ARL files "</span>
+            <span class="s2">"carry the same source id. A run records it only when it is set, so "</span>
+            <span class="s2">"a met without one keeps its settings folders, and setting one "</span>
+            <span class="s2">"moves its runs to a new folder. ``runtraj check`` and a run refuse "</span>
+            <span class="s2">"two mets of one transport model that record the same settings and "</span>
+            <span class="s2">"no label to tell them apart, since their variants would share one "</span>
+            <span class="s2">"run."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="MetConfig.settings">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.MetConfig.settings.html#runtraj.models.MetConfig.settings">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return what a run records of this met: which weather it is, and anything else that changes the result.</span>
+
+<span class="sd">        Never where its files are kept or how they are named, so that moving</span>
+<span class="sd">        them changes no settings folder. Plain values (mappings, lists,</span>
+<span class="sd">        strings, numbers). HYSPLIT's are the source id in the ARL headers</span>
+<span class="sd">        and the crop. The run adds :attr:`label` when it is set, so a</span>
+<span class="sd">        subclass leaves it out.</span>
+<span class="sd">        """</span></div>
+
+
+<div class="viewcode-block" id="MetConfig.check">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.MetConfig.check.html#runtraj.models.MetConfig.check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">n_hours</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return what would stop the runs of *releases* on this met, found before any starts; nothing here.</span>
+
+<span class="sd">        ``runtraj check`` calls it. *releases* is a table with one row per</span>
+<span class="sd">        release point (``release``, ``time``, ``longitude``, ``latitude``),</span>
+<span class="sd">        and *n_hours* the length of the runs. It returns a DataFrame with</span>
+<span class="sd">        ``check`` (a short name, such as ``met_files``), ``release`` (the id,</span>
+<span class="sd">        or ``NA`` for a problem of the met itself), and ``message`` columns,</span>
+<span class="sd">        one row for each problem. It runs and downloads nothing.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">CHECK_COLUMNS</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MetConfig.fetch">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.MetConfig.fetch.html#runtraj.models.MetConfig.fetch">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Get the files runs of *windows* need before any starts, and return what was got; nothing here.</span>
+
+<span class="sd">        ``runtraj fetch`` calls it, with the time each run covers</span>
+<span class="sd">        (:func:`runtraj.meteorology.run_window`). It gets the files a run of</span>
+<span class="sd">        those windows would ask for, downloading what the met downloads, and</span>
+<span class="sd">        returns a DataFrame with ``file`` and ``message`` columns: a row for</span>
+<span class="sd">        each file, then a row for each window whose files could not be had.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"file"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="MetConfig.downloads">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.MetConfig.downloads.html#runtraj.models.MetConfig.downloads">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">downloads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return whether this met downloads its files, False here.</span>
+
+<span class="sd">        Getting the files once before the runs then saves each run from</span>
+<span class="sd">        downloading its own, so ``runtraj submit`` submits a fetch job before</span>
+<span class="sd">        the job array when it is true for a met the unfinished simulations</span>
+<span class="sd">        use. Reads no file.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="MetConfig.open">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.MetConfig.open.html#runtraj.models.MetConfig.open">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">files</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">bounds</span><span class="p">:</span> <span class="n">Bounds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return *files*, the met files a run read, as :mod:`runtraj.sampling` reads them: as ARL file paths here.</span>
+
+<span class="sd">        A met whose files are not ARL files returns them as one</span>
+<span class="sd">        :class:`xarray.Dataset` in :func:`arlmet.open_dataset`'s layout,</span>
+<span class="sd">        such as an arlmet converter's output, cropped to *bounds* (a</span>
+<span class="sd">        :class:`runtraj.Bounds`, or ``None`` for the whole grid). Either can</span>
+<span class="sd">        be passed to :func:`runtraj.sampling.sample_met` and</span>
+<span class="sd">        :func:`runtraj.sampling.calc_pbl_height`. The files are a run's</span>
+<span class="sd">        ``met_files`` (:class:`ModelRun`, or</span>
+<span class="sd">        :func:`runtraj.particles.particles_metadata`).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; meta = runtraj.particles.particles_metadata(</span>
+<span class="sd">        ...     sim.particles_path</span>
+<span class="sd">        ... )  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; met = variant.met_config.open(meta.met_files)  # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; runtraj.sampling.sample_met(sim.particles, met)  # doctest: +SKIP</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TransportModel">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.html#runtraj.models.TransportModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransportModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">C</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A transport model that follows particles from a release: the class a model subclasses.</span>
+
+<span class="sd">    A model sets :attr:`name`, :attr:`config_class` and</span>
+<span class="sd">    :attr:`met_config_class`, and implements :meth:`run`. Every other</span>
+<span class="sd">    member has a default here that suits a model which runs one release at</span>
+<span class="sd">    a time and makes particles, so a model overrides only what it does</span>
+<span class="sd">    differently: HYSPLIT (:class:`runtraj.models.hysplit.HysplitModel`)</span>
+<span class="sd">    overrides most, a model in Python that reads no files few. runtraj calls</span>
+<span class="sd">    each member directly, so a misspelled one (``release_row``) is never</span>
+<span class="sd">    called; :func:`check_model` reports it.</span>
+
+<span class="sd">    It is generic in its config: ``class MyModel(TransportModel[MyConfig])``</span>
+<span class="sd">    gives :meth:`run` and the other members a ``MyConfig``. It is made with</span>
+<span class="sd">    no arguments and holds no state.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from runtraj.models import MetConfig, ModelRun, TransportConfig, TransportModel</span>
+<span class="sd">    &gt;&gt;&gt; class StillConfig(TransportConfig):</span>
+<span class="sd">    ...     pass</span>
+<span class="sd">    &gt;&gt;&gt; class StillMet(MetConfig):</span>
+<span class="sd">    ...     def settings(self):</span>
+<span class="sd">    ...         return {}</span>
+<span class="sd">    &gt;&gt;&gt; class StillModel(TransportModel[StillConfig]):</span>
+<span class="sd">    ...     name = "still"</span>
+<span class="sd">    ...     config_class = StillConfig</span>
+<span class="sd">    ...     met_config_class = StillMet</span>
+<span class="sd">    ...</span>
+<span class="sd">    ...     def run(self, release, config, met, window, workdir=None, timeout=None):</span>
+<span class="sd">    ...         return ModelRun(result=...)</span>
+<span class="sd">    &gt;&gt;&gt; StillModel().result(StillConfig(n_hours=-24))</span>
+<span class="sd">    'particles'</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: The model's short name, such as ``"hysplit"``.</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="c1">#: The model's config, a :class:`TransportConfig`, which validates its parameters.</span>
+    <span class="n">config_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">C</span><span class="p">]</span>
+    <span class="c1">#: The model's met config, a :class:`MetConfig`, which validates an entry</span>
+    <span class="c1">#: under ``mets:`` and checks, gets and opens its files. HYSPLIT's is</span>
+    <span class="c1">#: :class:`runtraj.models.hysplit.HysplitMetConfig`.</span>
+    <span class="n">met_config_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">MetConfig</span><span class="p">]</span>
+    <span class="c1">#: Whether :meth:`run` is handed an empty directory for its files. A</span>
+    <span class="c1">#: model that writes no files sets it False, and gets ``None``.</span>
+    <span class="n">needs_workdir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1">#: Whether the model runs many releases in one call (:meth:`run_many`),</span>
+    <span class="c1">#: such as an emulator on a GPU. The worker then hands it every release</span>
+    <span class="c1">#: of a variant that needs particles at once, where it otherwise calls</span>
+    <span class="c1">#: :meth:`run` for one at a time.</span>
+    <span class="n">batched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="TransportModel.run">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.run.html#runtraj.models.TransportModel.run">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">,</span>
+        <span class="n">met</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">window</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">],</span>
+        <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Run one release and return what it made.</span>
+
+<span class="sd">        The result is the model's own: runtraj checks it afterwards, and</span>
+<span class="sd">        adds the release heights to particles (:func:`run_model`).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        release : Release</span>
+<span class="sd">            Where and when particles are released.</span>
+<span class="sd">        config : TransportConfig</span>
+<span class="sd">            The model's config, of its ``config_class``.</span>
+<span class="sd">        met : BaseModel</span>
+<span class="sd">            The meteorology, of the model's ``met_config_class``. In a</span>
+<span class="sd">            project its directories are absolute.</span>
+<span class="sd">        window : tuple of datetime</span>
+<span class="sd">            The time the run covers, ``(start, end)`` in time order</span>
+<span class="sd">            (:func:`runtraj.meteorology.run_window`).</span>
+<span class="sd">        workdir : Path, optional</span>
+<span class="sd">            An empty directory for the run's files, kept when the run fails.</span>
+<span class="sd">            ``None`` for a model that does not need one (:attr:`needs_workdir`).</span>
+<span class="sd">        timeout : int, optional</span>
+<span class="sd">            Time limit in seconds, for a model that runs a program.</span>
+<span class="sd">            ``None`` waits indefinitely.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        SimulationError</span>
+<span class="sd">            When the run fails, with the model's log in ``log``.</span>
+<span class="sd">        """</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.run_many">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.run_many.html#runtraj.models.TransportModel.run_many">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_many</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Release</span><span class="p">],</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">,</span>
+        <span class="n">met</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">windows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]],</span>
+        <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Run many releases with one config, and return their particles as one table, for a model with :attr:`batched` set.</span>
+
+<span class="sd">        The table has a ``release`` column holding each row's release id,</span>
+<span class="sd">        beside the particle columns :meth:`run` returns. ``windows[i]`` is</span>
+<span class="sd">        the time ``releases[i]`` covers. A release with no rows failed;</span>
+<span class="sd">        the others are written. The log and met files are shared by all.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        SimulationError</span>
+<span class="sd">            When the whole call fails, with the model's log in ``log``.</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            Here, for a model that is not batched.</span>
+<span class="sd">        """</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Transport model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> sets batched but has no run_many."</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.result">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.result.html#runtraj.models.TransportModel.result">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the type of result the model makes with *config*: ``particles`` here.</span>
+
+<span class="sd">        A name in :data:`runtraj.results.RESULT_TYPES`, such as</span>
+<span class="sd">        ``"concentration"``. A variant's stages read particles, so a variant</span>
+<span class="sd">        whose model makes another type has none.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="s2">"particles"</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.result_files">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.result_files.html#runtraj.models.TransportModel.result_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">result_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the names of the files in a workdir that hold a run's result, none here.</span>
+
+<span class="sd">        Such as HYSPLIT's particle file or its ``cdump_&lt;grid&gt;`` files. A</span>
+<span class="sd">        failed run's workdir is kept without them, since they can be large</span>
+<span class="sd">        and are read into the result anyway; ``keep_workdir: true`` keeps</span>
+<span class="sd">        them. With none, every file is kept.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.sha256">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.sha256.html#runtraj.models.TransportModel.sha256">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sha256</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the SHA-256 of the executable *config* would run, ``None`` here, for a model that runs none.</span>
+
+<span class="sd">        Part of the run's identity: another build gives another settings</span>
+<span class="sd">        folder. Raises ``FileNotFoundError`` when the executable cannot be</span>
+<span class="sd">        found here; a project still opens, and its status compares stored</span>
+<span class="sd">        folders without the build.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.version">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.version.html#runtraj.models.TransportModel.version">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the version the build *config* would run reports, recorded with the run but not part of its identity; ``None`` here."""</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.data_files">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.data_files.html#runtraj.models.TransportModel.data_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">data_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the checksum of each data file a run with *config* reads, by file name; ``None`` here.</span>
+
+<span class="sd">        ``None`` for a model whose build fixes its data. These are part of</span>
+<span class="sd">        the run's identity, since the data change the particles.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.check_releases">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.check_releases.html#runtraj.models.TransportModel.check_releases">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_releases</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the releases the model cannot run with *config*, one row each; none here.</span>
+
+<span class="sd">        *releases* is a table with one row per release point (``release``,</span>
+<span class="sd">        ``kind``, ``time``, ``longitude``, ``latitude``, ``altitude``,</span>
+<span class="sd">        ``altitude_ref``). It returns a DataFrame with ``check``,</span>
+<span class="sd">        ``release`` and ``message`` columns, in that order, one row for each</span>
+<span class="sd">        release it cannot run. ``runtraj check`` lists them, and</span>
+<span class="sd">        :func:`run_model` and :func:`run_model_many` fail them with the</span>
+<span class="sd">        reason ``RELEASE_REFUSED`` before the model runs, so :meth:`run`</span>
+<span class="sd">        and :meth:`run_many` never get such a release. HYSPLIT refuses a</span>
+<span class="sd">        multipoint release whose points share a horizontal location, which</span>
+<span class="sd">        it would join into a line source, and, in its trajectory mode with</span>
+<span class="sd">        a ``hyts_std`` before 5.4.0, a release not on the hour.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">CHECK_COLUMNS</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="TransportModel.release_rows">
+<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.release_rows.html#runtraj.models.TransportModel.release_rows">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">release_rows</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">C</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return where each particle of a column or multipoint release started, ``None`` here.</span>
+
+<span class="sd">        For a model that writes no row at ``age = 0``: one row per particle</span>
+<span class="sd">        with ``particle``, ``lon``, ``lat``, and ``height`` in the release's</span>
+<span class="sd">        vertical reference (:func:`runtraj.particles.add_release_heights`),</span>
+<span class="sd">        from the particles and the *config* of the run that made them.</span>
+<span class="sd">        A model that writes release rows needs none; one that writes</span>
+<span class="sd">        neither cannot run a column or multipoint release.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<span class="c1">#: Keys a run's settings record holds beside the transport model's own</span>
+<span class="c1">#: settings (:func:`runtraj.identity.run_settings`), or a variant reads as its</span>
+<span class="c1">#: own (:class:`runtraj.config.Variant`): a model's config may not use them.</span>
+<span class="n">RESERVED_SETTINGS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">"met"</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="s2">"realization"</span><span class="p">,</span> <span class="s2">"realizations"</span><span class="p">,</span> <span class="s2">"stages"</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
