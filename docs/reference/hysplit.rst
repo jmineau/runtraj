@@ -55,7 +55,11 @@ set it first asks ``hycs_std`` for its version: from HYSPLIT 5.3.0,
 ``ZICONTROL``, so ``WINDERRTF`` is written 2 less there (-2 with no
 error settings), and each version applies the errors the settings ask
 for. A ``hycs_std`` that prints no version gets the value as HYSPLIT
-5.2 reads it. It takes what
+5.2 reads it. In the concentration mode the wind error settings need the
+version too: from HYSPLIT 5.3.0, ``hycs_std`` applies the wind error only
+with ``IDSP=2``, which that mode does not set, so ``write_inputs`` raises a
+``ValueError`` there instead of running without it (the particles mode sets
+``IDSP=2``, and 5.2.3 and earlier apply the error). It takes what
 ``CONTROL`` starts from: a release time and release locations (longitude,
 latitude and height, like ``release.coords()``; the ``CONTROL`` file lists
 each latitude first, and the writer swaps them), with ``kmsl`` 0 for heights
