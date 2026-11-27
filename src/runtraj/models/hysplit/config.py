@@ -457,7 +457,9 @@ class HysplitConfig(TransportConfig):
     ``horcoruverr``) perturbs the particles' winds, and the mixed-layer group
     (``sigzierr``, ``tlzierr``, ``horcorzierr``) perturbs each particle's
     ``foot`` by a random mixed-layer height error. Each group is set in full
-    or not at all.
+    or not at all. The wind-error group acts in the concentration mode
+    only on HYSPLIT 5.2.3 and earlier: later versions apply it only with
+    ``IDSP=2``, so a run there is refused.
 
     In the particles mode runtraj always writes ``ICHEM=8`` and ``IDSP=2``
     (:data:`FIXED_SETUP`), the only values with which HYSPLIT writes

@@ -1017,6 +1017,44 @@ def test_setup_cfg_winderrtf_follows_the_version_the_program_prints(
     assert f"winderrtf={written}" in _setup_cfg(tmp_path, point_release, config)
 
 
+CONCENTRATION = {
+    "mode": "concentration",
+    "pollutants": [{"name": "TRCA"}],
+    "grids": [{"name": "g", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0]}],
+}
+
+
+@pytest.mark.parametrize("extra", [{}, {"ziscale": 0.8}])
+def test_wind_error_in_the_concentration_mode_is_refused_from_hysplit_5_3_0(
+    tmp_path, point_release, extra
+):
+    # With ziscale, WINDERRTF is -1 on 5.3+, which gets past HYSPLIT's check.
+    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.4.2")
+    config = _config(directory=build, **CONCENTRATION, **WIND, **extra)
+    with pytest.raises(ValueError, match="IDSP=2") as error:
+        _inputs(tmp_path, point_release, config)
+    assert "hysplit.v5.4.2" in str(error.value)
+    assert not (tmp_path / "run" / "SETUP.CFG").exists()
+
+
+@pytest.mark.parametrize(
+    ("version", "settings"),
+    [
+        ("hysplit.v5.2.3", CONCENTRATION | WIND),  # applies it with IDSP=1
+        ("hysplit.v5.4.2", CONCENTRATION),  # no wind error to drop
+        ("hysplit.v5.4.2", CONCENTRATION | ZI),
+        ("hysplit.v5.4.2", {"mode": "particles"} | WIND),  # IDSP=2
+        (None, CONCENTRATION | WIND),  # no version: taken to be older
+    ],
+)
+def test_wind_error_is_not_refused_elsewhere(
+    tmp_path, point_release, version, settings
+):
+    build = make_hysplit_dir(tmp_path / "hysplit", version)
+    config = _config(directory=build, **settings)
+    assert "winderrtf" in _setup_cfg(tmp_path, point_release, config)
+
+
 def test_setup_cfg_takes_kmsl_from_an_msl_release(tmp_path, point_release):
     release = point_release.model_copy(
         update={"altitude": 1500.0, "altitude_ref": "msl"}
