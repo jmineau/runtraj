@@ -6,7 +6,8 @@ into a line source, and :func:`release_rows` says where each particle
 started when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 does
 not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's
 core (:class:`runtraj.models.TransportModel`), which refuses such a release
-before HYSPLIT runs.
+before HYSPLIT runs; :func:`off_the_hour` lists the releases that
+``hyts_std`` before 5.4.0 cannot run.
 """
 
 from __future__ import annotations
@@ -40,6 +41,15 @@ COLUMN_TRAJECTORY = (
     "line source of particles, and hyts_std follows one trajectory from "
     "each location. Use a PointRelease at each height (distinct group), or "
     "a MultiPointRelease."
+)
+
+
+#: Why a trajectory release off the hour is refused before HYSPLIT 5.4.0.
+TRAJECTORY_OFF_HOUR = (
+    "Before HYSPLIT 5.4.0, hyts_std ends the first hour of a run that starts "
+    "off the hour at the next clock hour, so the run comes up short of "
+    "n_hours and its rows fall on clock times instead of every tout from the "
+    "release. Release on the hour, or use HYSPLIT 5.4.0 or later."
 )
 
 
@@ -107,6 +117,24 @@ def check_releases(
             ),
         ],
         ignore_index=True,
+    )
+
+
+def off_the_hour(releases: pd.DataFrame) -> pd.DataFrame:
+    """
+    Return the releases of *releases* whose time is not on the hour, one row each, with ``check``, ``release`` and ``message``.
+
+    *releases* has a ``release`` and a ``time`` column. The message says why
+    ``hyts_std`` before HYSPLIT 5.4.0 cannot run them (:data:`TRAJECTORY_OFF_HOUR`).
+    """
+    off = releases.loc[releases["time"].dt.minute != 0, "release"]
+    return pd.DataFrame(
+        {
+            "check": "release_refused",
+            "release": pd.unique(off),
+            "message": TRAJECTORY_OFF_HOUR,
+        },
+        columns=["check", "release", "message"],
     )
 
 

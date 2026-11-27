@@ -9,10 +9,11 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import pandas as pd
 import xarray as xr
 
 from runtraj.concentration import require_netcdf4
-from runtraj.exceptions import SimulationError
+from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
 from runtraj.models import ModelRun, TransportModel
 
 from .cdump import read_cdump
@@ -21,6 +22,7 @@ from .control import TDUMP_FILE, cdump_name
 from .driver import (
     LOG_FILE,
     PARTICLE_FILE,
+    TRAJECTORY_FULL_HOURS,
     _stamp,
     check_met_stop,
     check_release,
@@ -30,15 +32,15 @@ from .driver import (
     program_name,
     read_particle_dat,
     run_hycs_std,
+    version_at_least,
     write_inputs,
 )
 from .failures import FailureReason
 from .met import HysplitMetConfig, Met
-from .releases import check_releases, release_rows
+from .releases import check_releases, off_the_hour, release_rows
 from .tdump import read_tdump
 
 if TYPE_CHECKING:
-    import pandas as pd
     from arlmet import Grid
 
     from runtraj.releases import Release
@@ -162,16 +164,31 @@ class HysplitModel(TransportModel[HysplitConfig]):
 
         Multipoint releases whose points share a location, which
         ``hycs_std`` joins into a line source; in the trajectory mode,
-        column releases, since ``hyts_std`` has no line source; and in a
+        column releases, since ``hyts_std`` has no line source, and, when
+        ``hyts_std`` is older than HYSPLIT 5.4.0, releases whose time is not
+        on the hour, whose run would come up short; and in a
         concentration run with ``ichem: 1``, column releases too, which
         are one source at two locations. See
         :func:`runtraj.models.hysplit.releases.check_releases`.
         """
-        return check_releases(
+        trajectory = config.mode == "trajectory"
+        refused = check_releases(
             releases,
-            trajectory=config.mode == "trajectory",
+            trajectory=trajectory,
             sources=config.mode == "concentration" and config.ichem == 1,
         )
+        # The version is read only when a release needs it. Without a
+        # hyts_std there is nothing to refuse here: the model check says so.
+        if trajectory and not (off := off_the_hour(releases)).empty:
+            try:
+                full_hours = version_at_least(
+                    self.version(config), TRAJECTORY_FULL_HOURS
+                )
+            except HYSPLITNotFoundError:
+                full_hours = True
+            if not full_hours:
+                refused = pd.concat([refused, off], ignore_index=True)
+        return refused
 
     def release_rows(self, particles: pd.DataFrame, release: Release) -> pd.DataFrame:
         """

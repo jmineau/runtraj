@@ -466,7 +466,7 @@ class TransportModel(ABC, Generic[C]):
         Return the releases the model cannot run with *config*, one row each; none here.
 
         *releases* is a table with one row per release point (``release``,
-        ``kind``, ``longitude``, ``latitude``, ``altitude``,
+        ``kind``, ``time``, ``longitude``, ``latitude``, ``altitude``,
         ``altitude_ref``). It returns a DataFrame with ``check``,
         ``release`` and ``message`` columns, in that order, one row for each
         release it cannot run. ``runtraj check`` lists them, and
@@ -474,7 +474,8 @@ class TransportModel(ABC, Generic[C]):
         reason ``RELEASE_REFUSED`` before the model runs, so :meth:`run`
         and :meth:`run_many` never get such a release. HYSPLIT refuses a
         multipoint release whose points share a horizontal location, which
-        it would join into a line source.
+        it would join into a line source, and, in its trajectory mode with
+        a ``hyts_std`` before 5.4.0, a release not on the hour.
         """
         return pd.DataFrame(columns=list(CHECK_COLUMNS))
 
@@ -738,9 +739,9 @@ def _release_points(releases: Iterable[Release]) -> pd.DataFrame:
     """
     Return *releases* as a model's ``check_releases`` gets them: one row per release point.
 
-    The columns are ``release`` (the release id), ``kind``, ``longitude``,
-    ``latitude``, ``altitude`` and ``altitude_ref``, the columns of a
-    project's release rows that a model reads.
+    The columns are ``release`` (the release id), ``kind``, ``time``,
+    ``longitude``, ``latitude``, ``altitude`` and ``altitude_ref``, the
+    columns of a project's release rows that a model reads.
     """
     releases = list(releases)
     rows = releases_to_frame(releases)
@@ -748,7 +749,15 @@ def _release_points(releases: Iterable[Release]) -> pd.DataFrame:
     rows["release"] = [str(r.id) for r in each]
     rows["kind"] = [r.kind for r in each]
     return rows[
-        ["release", "kind", "longitude", "latitude", "altitude", "altitude_ref"]
+        [
+            "release",
+            "kind",
+            "time",
+            "longitude",
+            "latitude",
+            "altitude",
+            "altitude_ref",
+        ]
     ]
 
 

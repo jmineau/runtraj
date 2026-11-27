@@ -72,6 +72,11 @@ ZICONTROL_FILE = "ZICONTROL"
 #: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once
 #: it has read ``ZICONTROL`` (:func:`winderrtf`).
 ZICONTROL_ADDS_TWO = (5, 3, 0)
+#: The first HYSPLIT version whose ``hyts_std`` makes every hour of a run a full
+#: hour and writes every ``TOUT`` minutes from the start. Before it, a run that
+#: starts off the hour ends its first hour at the next clock hour (5.4.0 changed
+#: ``hymodelt.F``).
+TRAJECTORY_FULL_HOURS = (5, 4, 0)
 #: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.
 CHEMRATE_FILE = "CHEMRATE.TXT"
 LOG_FILE = "hysplit.log"
@@ -223,6 +228,23 @@ def hysplit_version(
         If there is no such program (:func:`find_program`).
     """
     return _printed_version(*_stamp(find_program(program, directory)))
+
+
+def version_at_least(version: str | None, minimum: tuple[int, int, int]) -> bool:
+    """
+    Return whether the *version* a HYSPLIT program prints is *minimum* or later.
+
+    A *version* runtraj cannot read, or none, is taken to be older.
+
+    Examples
+    --------
+    >>> version_at_least("hysplit.v5.4.2", (5, 4, 0))
+    True
+    >>> version_at_least("hysplit.v5.3.4", (5, 4, 0)), version_at_least(None, (5, 4, 0))
+    (False, False)
+    """
+    found = _VERSION_NUMBER.search(version or "")
+    return found is not None and tuple(map(int, found.groups())) >= minimum
 
 
 def _stamp(path: Path) -> tuple[str, int, int]:
@@ -659,11 +681,7 @@ def winderrtf(params: HysplitConfig, version: str | None = None) -> int:
     (2, 0)
     """
     flag = (winderr(params) is not None) + 2 * (zierr(params) is not None)
-    found = _VERSION_NUMBER.search(version or "")
-    adds_two = (
-        found is not None and tuple(map(int, found.groups())) >= ZICONTROL_ADDS_TWO
-    )
-    if zicontroltf(params) and adds_two:
+    if zicontroltf(params) and version_at_least(version, ZICONTROL_ADDS_TWO):
         flag -= 2
     return flag
 

@@ -279,6 +279,18 @@ multipoint release may hold two points at one place, which ``hycs_std``
 would join into a line source. A column release is refused
 (``RELEASE_REFUSED``), since there is no line source to make of it.
 
+Before HYSPLIT 5.4.0, ``hyts_std`` ends the first hour of a run that
+starts off the hour at the next clock hour, then runs the other hours in
+full, so the run comes up short of ``n_hours`` (a backward run from 10:30
+with ``n_hours: -3`` and ``tout: 30`` reaches -2.5 hours, not -3) and it
+writes where the clock minutes are a multiple of ``tout``, not every
+``tout`` from the release. 5.4.0 made every hour a full hour. So with a
+``hyts_std`` older than 5.4.0, or one that prints no version, a release
+whose time is not on the hour is refused before the run
+(``RELEASE_REFUSED``, and ``runtraj check``): release on the hour, or use
+HYSPLIT 5.4.0 or later. Releases on the hour, and every release from
+5.4.0, are unchanged.
+
 :func:`~runtraj.models.hysplit.read_tdump` reads the file by the widths of
 its fields. A run fails as ``NO_TRAJECTORIES_DATA`` when there is no file
 or no row in it, and as ``MET_COVERAGE`` when it holds fewer trajectories

@@ -16,6 +16,7 @@ from runtraj.spatial import Bounds
 from tests.fixtures.factories import blocks
 
 from .fixtures.factories import (
+    make_hysplit_dir,
     make_met_config,
     make_met_files,
     make_release,
@@ -80,6 +81,27 @@ def test_a_project_with_everything_in_place_has_nothing_to_check(tmp_path):
 
     assert table.empty
     assert list(table.columns) == ["check", "variant", "release", "message"]
+
+
+def test_an_off_hour_trajectory_release_is_found_before_hyts_std_5_4_0(tmp_path):
+    old = make_hysplit_dir(tmp_path / "old", "hysplit.v5.3.4")
+    new = make_hysplit_dir(tmp_path / "new", "hysplit.v5.4.2")
+    traj = {"mode": "trajectory"}
+    off = _release(12.5)
+    project = _project(
+        tmp_path,
+        [off, _release(12)],
+        variants={
+            "old": {**traj, "directory": str(old)},
+            "new": {**traj, "directory": str(new)},
+        },
+    )
+
+    found = _found(project.check(), "release_refused")
+
+    assert found["variant"].tolist() == ["old"]
+    assert found["release"].tolist() == [off.id]
+    assert "Release on the hour" in found["message"].iloc[0]
 
 
 def test_a_project_with_no_releases_is_listed_once(tmp_path):

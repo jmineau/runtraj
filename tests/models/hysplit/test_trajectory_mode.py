@@ -26,7 +26,12 @@ from runtraj.models.hysplit.config import (
 )
 from runtraj.models.hysplit.driver import find_program, setup_entries
 from runtraj.models.hysplit.model import _read_trajectories
-from tests.fixtures.factories import blocks, make_met_config, program_path
+from tests.fixtures.factories import (
+    blocks,
+    make_hysplit_dir,
+    make_met_config,
+    program_path,
+)
 
 TDUMP = Path(__file__).parent / "tdump"
 
@@ -253,6 +258,61 @@ def test_a_column_release_is_refused_and_a_repeated_location_is_not():
     # The dispersion model's rule is the other way around.
     refused = model.check_releases(_points(column, stacked), HysplitConfig(n_hours=6))
     assert refused["release"].tolist() == [stacked.id]
+
+
+def _point(minute: int) -> PointRelease:
+    return PointRelease(
+        time=dt.datetime(2021, 7, 15, 10, minute),
+        longitude=-112.0,
+        latitude=40.5,
+        altitude=10.0,
+    )
+
+
+@pytest.mark.parametrize(
+    ("version", "refused"),
+    [
+        ("hysplit.v5.1.0", True),
+        ("hysplit.v5.3.4", True),
+        (None, True),  # a version runtraj cannot read is taken to be older
+        ("hysplit.v5.4.0", False),
+        ("hysplit.v5.4.2", False),
+    ],
+)
+def test_an_off_hour_release_is_refused_before_hyts_std_5_4_0(
+    tmp_path, version, refused
+):
+    config = _trajectory(directory=make_hysplit_dir(tmp_path / "hysplit", version))
+    found = HysplitModel().check_releases(_points(_point(30), _point(0)), config)
+    assert found["release"].tolist() == ([_point(30).id] if refused else [])
+    if refused:
+        message = found["message"].iloc[0]
+        assert "first hour" in message
+        assert "Release on the hour, or use HYSPLIT 5.4.0 or later" in message
+
+
+def test_an_off_hour_release_is_refused_in_a_run_before_hyts_runs(tmp_path):
+    ran = tmp_path / "ran"
+    # Asked for its version, in an empty folder, hyts_std has no CONTROL.
+    body = f"test -f CONTROL && touch {ran}\nexit 2\n"
+    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.3.4", body)
+    config = _trajectory(directory=build)
+    with pytest.raises(SimulationError, match="Release on the hour") as raised:
+        run_model("hysplit", _point(30), config, make_met_config(tmp_path / "met"))
+    assert raised.value.reason == "RELEASE_REFUSED"
+    assert not ran.exists()
+
+
+def test_the_particle_mode_takes_a_release_off_the_hour(tmp_path):
+    build = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.3.4")
+    config = HysplitConfig(n_hours=-6, directory=build)
+    assert HysplitModel().check_releases(_points(_point(30)), config).empty
+
+
+def test_an_off_hour_release_is_refused_with_no_hyts_std_to_ask(tmp_path):
+    # The model check reports a missing build; this one has nothing to say.
+    config = _trajectory(directory=tmp_path / "nothing")
+    assert HysplitModel().check_releases(_points(_point(30)), config).empty
 
 
 def test_a_column_release_fails_before_hyts_std_runs(tmp_path):
