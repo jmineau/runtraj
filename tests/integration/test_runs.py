@@ -60,6 +60,8 @@ def test_particles(tmp_path, wbb_release, traj_only_config):
     assert sim.particles_path.parent.parent.name.startswith("settings=hrrr-")
     assert len(pd.read_parquet(sim.particles_path)) > 0, "Particle file is empty"
     assert sim.particles is not None and len(sim.particles) > 0
+    # The run's internal grid is read from its MESSAGE, recorded in the file and read back.
+    assert sim.particles.attrs["internal_grid"] == (41, 15.0, -5.0, 0.0)
     assert not (resolve_compute_root(model) / sid[0] / sid[1]).exists(), (
         "the scratch working directory is removed"
     )

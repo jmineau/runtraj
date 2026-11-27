@@ -94,7 +94,7 @@ jobs:
             /opt/uv/uv sync --locked --python 3.13
           docker exec -w "$GITHUB_WORKSPACE" pbs \
             /home/runner/venv/bin/python tests/fixtures/replay.py folder /opt/hysplit \
-            --cases tests/recorded/kubernetes/5.1.0 --python /home/runner/venv/bin/python
+            --cases tests/recorded/kubernetes/5.4.2 --python /home/runner/venv/bin/python
 
       - name: Run the demo project as a job array, and count its results
         run: |

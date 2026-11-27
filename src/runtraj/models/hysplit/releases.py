@@ -21,9 +21,9 @@ import pandas as pd
 
 from runtraj.particles.table import (
     _MIN_RELIABLE_SPACING_M,
-    RELEASE_ROW_COLUMNS,
     _closest_points_m,
     _height,
+    column_release_rows,
 )
 from runtraj.releases import ColumnRelease, MultiPointRelease, Release
 
@@ -175,7 +175,11 @@ def release_rows(
     close for that.
     """
     if isinstance(release, ColumnRelease):
-        return _column_rows(particles, release, config)
+        # A column's particle numbers run to the highest in *particles*, even
+        # when a particle left the domain before its first row.
+        return column_release_rows(
+            release, int(particles["particle"].max()), particles_per_step(config)
+        )
     if isinstance(release, MultiPointRelease):
         return _multipoint_rows(particles, release)
     raise ValueError(f"A {release.kind} release needs no release rows.")
@@ -218,32 +222,6 @@ def particles_per_step(config: HysplitConfig, locations: int = 1) -> int:
             qsum = qsum + hours
     per_hour = math.ceil(np.float32(config.numpar // locations) / qsum)
     return max(1, math.ceil(np.float32(per_hour) * minute))
-
-
-def _column_rows(
-    p: pd.DataFrame, release: ColumnRelease, config: HysplitConfig
-) -> pd.DataFrame:
-    """
-    Return each particle's start: the center of its slab in the column of its time step.
-
-    HYSPLIT numbers a column's particles from 1 in the order it releases
-    them, so there is a row for each up to the highest in *p*, even one
-    missing from *p*, such as a particle that left the domain before its
-    first row.
-    """
-    per_step = particles_per_step(config)
-    particle = np.arange(1, int(p["particle"].max()) + 1)
-    slab = (particle - 1) % per_step
-    depth = (release.top - release.bottom) / per_step
-    return pd.DataFrame(
-        {
-            "particle": particle,
-            "lon": release.longitude,
-            "lat": release.latitude,
-            "height": release.bottom + (slab + 0.5) * depth,
-        },
-        columns=list(RELEASE_ROW_COLUMNS),
-    )
 
 
 def _multipoint_rows(p: pd.DataFrame, release: MultiPointRelease) -> pd.DataFrame:

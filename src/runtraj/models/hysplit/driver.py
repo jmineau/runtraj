@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pandas as pd
 
-from runtraj._process import ended_if_this_process_dies, own_group, terminate
+from runtraj._process import read_log, run_program
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
 from runtraj.models.hysplit.config import (
     CONCENTRATION_ONLY_SETTINGS,
@@ -93,6 +93,11 @@ LOG_FILE = "hysplit.log"
 WARNING_FILE = "WARNING"
 #: HYSPLIT's own file of progress and error messages.
 MESSAGE_FILE = "MESSAGE"
+#: The line ``MESSAGE`` holds for the run's internal levels, in the same form
+#: from HYSPLIT 5.0.2 to 5.4.2: ``nlvl, aa, bb, cc``.
+_INTERNAL_GRID_LINE = re.compile(
+    r"Internal grid parameters \(nlvl,aa,bb,cc\):\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)"
+)
 #: How many lines of ``MESSAGE`` a run that ended badly adds to its log.
 MESSAGE_TAIL_LINES = 20
 
@@ -337,6 +342,35 @@ def _tables_here(path: Path) -> bytes:
     if len(lines) >= 6:
         lines[5] = _TABLES_HERE
     return b"".join(lines)
+
+
+def read_internal_grid(workdir: str | Path) -> tuple[int, float, float, float] | None:
+    r"""
+    Return ``(nlvl, aa, bb, cc)``, the internal grid a run in *workdir* printed in ``MESSAGE``, or ``None``.
+
+    Level ``k`` of ``nlvl`` is ``aa k**2 + bb k + cc`` meters above the
+    ground. The grid depends on the HYSPLIT version for a model top below
+    about 1.1 km, so the run's own is the one to sample the met on. ``None``
+    when there is no ``MESSAGE`` or it has no such line.
+
+    Examples
+    --------
+    >>> import tempfile
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     _ = (Path(tmp) / "MESSAGE").write_text(
+    ...         " Internal grid parameters (nlvl,aa,bb,cc):  11  2.5  2.5  0.0\n"
+    ...     )
+    ...     read_internal_grid(tmp)
+    (11, 2.5, 2.5, 0.0)
+    """
+    path = Path(workdir) / MESSAGE_FILE
+    if not path.exists():
+        return None
+    found = _INTERNAL_GRID_LINE.search(path.read_text(errors="replace"))
+    if found is None:
+        return None
+    nlvl, aa, bb, cc = found.groups()
+    return int(nlvl), float(aa), float(bb), float(cc)
 
 
 def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
@@ -981,34 +1015,20 @@ def run_hycs_std(
         domain are not a failure.
     """
     log_path = workdir / LOG_FILE
-    with (
-        log_path.open("w", encoding="utf-8") as handle,
-        ended_if_this_process_dies() as watch,
-        subprocess.Popen(
+    try:
+        status = run_program(
             [str(program_file(workdir, program))],
             cwd=workdir,
-            stdout=handle,
-            stderr=subprocess.STDOUT,
+            log_path=log_path,
+            timeout=timeout,
             env=hysplit_environment(),
-            **own_group(),
-        ) as proc,
-    ):
-        watch(proc)
-        try:
-            proc.wait(timeout=timeout)
-        except subprocess.TimeoutExpired as e:
-            terminate(proc)
-            raise SimulationError(
-                f"HYSPLIT ran longer than the {timeout} s timeout.",
-                reason=FailureReason.TIMEOUT,
-            ) from e
-        except BaseException:
-            # Ctrl-C, or a worker told to stop: HYSPLIT runs in a session of
-            # its own (a process group on Windows), so no signal reached it and
-            # it would run on, unseen.
-            terminate(proc)
-            raise
-    messages = log_path.read_text(encoding="utf-8", errors="replace")
+        )
+    except subprocess.TimeoutExpired as e:
+        raise SimulationError(
+            f"HYSPLIT ran longer than the {timeout} s timeout.",
+            reason=FailureReason.TIMEOUT,
+        ) from e
+    messages = read_log(log_path)
     warnings = workdir / WARNING_FILE
     if warnings.exists():
         messages += warnings.read_text(encoding="utf-8", errors="replace")
@@ -1016,8 +1036,8 @@ def run_hycs_std(
     if found is not None:
         reason, line = found
         raise SimulationError(f"HYSPLIT: {line}", reason=reason)
-    if proc.returncode != 0:
-        raise _exit_status_error(workdir, proc.returncode)
+    if status != 0:
+        raise _exit_status_error(workdir, status)
 
 
 def _exit_status_error(workdir: Path, status: int) -> SimulationError:
