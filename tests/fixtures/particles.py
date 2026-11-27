@@ -5,18 +5,27 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from runtraj.models.hysplit import HysplitConfig
 from runtraj.models.hysplit.releases import release_rows
 from runtraj.particles import add_release_heights
 from runtraj.releases import PointRelease, Release
 
 
-def finished(particles: pd.DataFrame, release: Release) -> pd.DataFrame:
+def finished(
+    particles: pd.DataFrame, release: Release, config: HysplitConfig | None = None
+) -> pd.DataFrame:
     """
     Return raw particles with the release heights runtraj adds after a HYSPLIT run.
 
-    HYSPLIT 5.1.0 writes no row at ``age = 0``, so its release rows give them.
+    HYSPLIT 5.1.0 writes no row at ``age = 0``, so its release rows give them,
+    for a run of *config*: by default one that released the particles in
+    one time step, ``numpar`` the highest ``particle``.
     """
-    return add_release_heights(particles, release, release_rows)
+    if config is None:
+        config = HysplitConfig(n_hours=-24, numpar=int(particles["particle"].max()))
+    return add_release_heights(
+        particles, release, lambda p, r: release_rows(p, r, config)
+    )
 
 
 def point_at(altitude: float) -> PointRelease:

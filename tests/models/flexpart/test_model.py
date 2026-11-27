@@ -274,7 +274,7 @@ def test_release_rows_of_a_column_put_particle_k_in_slab_k():
     )
     particles = pd.DataFrame({"particle": [3, 1, 4, 2], "age": -60})
 
-    rows = FlexpartModel().release_rows(particles, column)
+    rows = FlexpartModel().release_rows(particles, column, FlexpartConfig(n_hours=-1))
 
     assert rows["particle"].tolist() == [1, 2, 3, 4]
     assert rows["height"].tolist() == [12.5, 37.5, 62.5, 87.5]
@@ -290,7 +290,7 @@ def test_release_rows_of_a_multipoint_follow_the_releases_split():
     )
     particles = pd.DataFrame({"particle": range(1, 11), "age": -60})
 
-    rows = FlexpartModel().release_rows(particles, release)
+    rows = FlexpartModel().release_rows(particles, release, FlexpartConfig(n_hours=-1))
 
     # releases() gives the points 4, 3 and 3 particles, released in order.
     assert rows["height"].tolist() == [1000] * 4 + [2000] * 3 + [3000] * 3

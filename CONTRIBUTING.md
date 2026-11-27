@@ -431,9 +431,10 @@ it.
   `runtraj.particles.PARTICLE_SCHEMA`, `foot` if the model computes one,
   what a stage reads, and a release row at `age = 0` when the model can
   write one (`docs/reference/particles.rst`).
-- **`release_rows(particles, release)`** is for a model that writes no
+- **`release_rows(particles, release, config)`** is for a model that writes no
   row at `age = 0`: where each particle of a column or multipoint release
-  started. Without either, such a release fails.
+  started, from the particles and the run's config. Without either, such a
+  release fails.
 - **`result(config)`** is for a model that makes another type than
   particles: the type's name in `runtraj.results.RESULT_TYPES`
   (`concentration`, a `DataTree` of grids,
