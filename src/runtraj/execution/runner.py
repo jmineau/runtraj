@@ -15,6 +15,8 @@ import logging
 import math
 import os
 import re
+import shlex
+import sys
 import tempfile
 import time
 from collections.abc import Iterable
@@ -330,6 +332,63 @@ def write_submission(
         encoding="utf-8",
     )
     return folder
+
+
+def task_command(
+    project: Project,
+    folder: Path,
+    n_tasks: int,
+    *,
+    index: str,
+    cpus: int,
+    compute_root: str | Path | None,
+    skip_existing: bool,
+    restarted: str,
+    on_first_start: Iterable[str] = (),
+) -> tuple[list[str], str]:
+    """
+    Return the lines and the command of a job script's task, for ``runtraj run --task``.
+
+    The command is ``runtraj run <project> --releases <folder>/releases.parquet
+    --task <index>/<n_tasks> --execution <folder>/execution.yaml --cpus <cpus>
+    --output <output>`` with the Python that called this, and
+    ``--compute-root`` when given. *index* is a shell variable of the scheduler
+    (``$SLURM_ARRAY_TASK_ID``), left to expand when the script runs.
+
+    With ``skip_existing=False`` the task's first start runs again what
+    exists and a start after that skips it: the lines, which go before the
+    command, set ``skip`` to ``--no-skip`` unless the shell command
+    *restarted* succeeds, then run *on_first_start*; the command ends with
+    ``$skip``. With ``skip_existing=True`` there are no lines.
+    """
+    words = [
+        sys.executable,
+        "-m",
+        "runtraj",
+        "run",
+        str(project.directory),
+        "--releases",
+        str(folder / "releases.parquet"),
+        "--task",
+        f"{index}/{n_tasks}",
+        "--execution",
+        str(folder / "execution.yaml"),
+        # A task runs its share here, so it is told the array's cpus.
+        "--cpus",
+        str(cpus),
+        # The output the submitting process uses, which may not be config.yaml's.
+        "--output",
+        str(project.output.directory),
+    ]
+    if compute_root is not None:
+        words += ["--compute-root", str(resolve_compute_root(project, compute_root))]
+    # The index must expand, so that word is quoted with "".
+    quoted = [f'"{w}"' if w.startswith("$") else shlex.quote(w) for w in words]
+    lines: list[str] = []
+    if not skip_existing:
+        lines = ['skip="--no-skip"', f'{restarted} && skip=""', *on_first_start]
+        quoted.append("$skip")
+    return lines, " ".join(quoted)
 
 
 def array_size(block: SlurmConfig | PbsConfig, n_releases: int, limit: int) -> int:
@@ -689,6 +748,7 @@ __all__ = [
     "run_here",
     "status_after_job",
     "submit",
+    "task_command",
     "task_share",
     "write_submission",
 ]
