@@ -15,7 +15,7 @@ import pandas as pd
 import xarray as xr
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from runtraj.sampling import sample_field, vertical_dim
+from runtraj.sampling import _utc, sample_field, vertical_dim
 from runtraj.transforms._common import weigh
 from runtraj.transforms.lifetime import survival
 
@@ -24,6 +24,82 @@ if TYPE_CHECKING:
 
 # The specific gas constant of dry air, in J kg⁻¹ K⁻¹.
 _R_DRY_AIR = 287.05
+
+
+# Units a CF file gives a vertical coordinate, by the particle column it can
+# be matched to: that column's unit, and each CF unit as a multiple of it.
+_LEVEL_UNITS: dict[str, tuple[str, dict[str, float]]] = {
+    "pres": (
+        "hPa",
+        {
+            **dict.fromkeys(("pa", "pascal", "pascals"), 0.01),
+            **dict.fromkeys(("hpa", "hectopascal", "hectopascals"), 1.0),
+            **dict.fromkeys(("mb", "mbar", "mbars", "millibar", "millibars"), 1.0),
+            **dict.fromkeys(("kpa", "kilopascal", "kilopascals"), 10.0),
+            "bar": 1000.0,
+        },
+    ),
+    "zagl": (
+        "m",
+        {
+            **dict.fromkeys(("m", "meter", "meters", "metre", "metres"), 1.0),
+            **dict.fromkeys(
+                ("km", "kilometer", "kilometers", "kilometre", "kilometres"), 1000.0
+            ),
+        },
+    ),
+}
+
+
+def _level_scale(field: xr.DataArray, dim: str, coordinate: str) -> float:
+    """
+    Return what multiplies a particle's *coordinate* to give it in the units of the field's levels.
+
+    ``pres`` is in hPa and ``zagl`` in m. A level coordinate without a
+    ``units`` attribute, or a *coordinate* of another column, is taken to
+    be in the particles' units already (1). Units that cannot be matched
+    to the particles' raise ``ValueError``.
+    """
+    if coordinate not in _LEVEL_UNITS or "units" not in field[dim].attrs:
+        return 1.0
+    unit, factors = _LEVEL_UNITS[coordinate]
+    units = str(field[dim].attrs["units"])
+    in_unit = factors.get(units.strip().lower())
+    if in_unit is None:
+        raise ValueError(
+            f"The oxidant field's {dim!r} levels are in {units!r}, which cannot "
+            f"be matched to the particles' {coordinate!r} column ({unit}). Give "
+            f"the levels in {unit} or an equivalent unit, as the units "
+            "attribute of the coordinate."
+        )
+    return 1.0 / in_unit
+
+
+def _check_times(field: xr.DataArray, times: np.ndarray) -> None:
+    """
+    Refuse particle times more than a step outside the field's times.
+
+    The field is matched to the nearest time, so a time outside its span
+    would take the first or last step: December for every row of a monthly
+    climatology labeled with another year.
+    """
+    index = field.indexes["time"]
+    if not isinstance(index, pd.DatetimeIndex) or len(index) < 2:
+        return
+    stamps = _utc(pd.DatetimeIndex(pd.to_datetime(times)))
+    ordered = index.sort_values()
+    first, last = ordered[0], ordered[-1]
+    outside = (stamps < first - (ordered[1] - first)) | (
+        stamps > last + (last - ordered[-2])
+    )
+    if outside.any():
+        raise ValueError(
+            f"The oxidant field's times run from {first} to {last}, but "
+            f"{int(outside.sum())} of the particles' times, from {stamps.min()} "
+            f"to {stamps.max()}, are more than a step outside them, and would "
+            "take the field's first or last step. Give the field the dates of "
+            "the run: relabel a climatology's times with them."
+        )
 
 
 def _temperature(particles: pd.DataFrame) -> np.ndarray:
@@ -88,7 +164,16 @@ class Oxidation(BaseModel):
     ``e_over_r`` of 1775 K. Add ``temz`` to HYSPLIT's ``varsiwant`` when that matters.
 
     A field with a ``time`` dimension is matched to each row's nearest
-    time, so a climatology must carry the dates of the run.
+    time, so a climatology must carry the dates of the run: a row more than
+    one step before the field's first time or after its last is an error,
+    not a match to the end step.
+
+    The field's levels are read in their own units. A vertical coordinate
+    whose ``units`` attribute is Pa, hPa, mb or the like is converted to the
+    particles' ``pres`` (hPa), and one in m or km to ``zagl`` (m). Levels in
+    other units are an error, since they cannot be matched to the particles'
+    column. Levels with no ``units`` attribute are taken to be in the
+    particles' units already, hPa for ``pres``.
 
     Examples
     --------
@@ -146,8 +231,10 @@ class Oxidation(BaseModel):
     coordinate: str = Field(
         "pres",
         description=(
-            "Particle column matched to the field's vertical dimension, in its "
-            "units: ``pres`` (hPa) by default, or ``zagl`` (m above ground)."
+            "Particle column matched to the field's vertical dimension: "
+            "``pres`` (hPa) by default, or ``zagl`` (m above ground). The "
+            "field's levels may be in any equivalent unit, named by their "
+            "``units`` attribute; without one they must be in the column's."
         ),
     )
 
@@ -205,6 +292,13 @@ class Oxidation(BaseModel):
 
         A row outside the oxidant field, or in a missing cell, has no loss.
         A relative ``oxidant`` path starts from *directory*.
+
+        Raises
+        ------
+        ValueError
+            If the field's levels are in units that cannot be matched to
+            ``coordinate``, or a row's time is more than a step outside the
+            field's times.
         """
         temperature = _temperature(particles)
         k = self.a * np.exp(-self.e_over_r / temperature)
@@ -212,13 +306,14 @@ class Oxidation(BaseModel):
             return k * self.oxidant
         field = self.field(directory)
         z = None
-        if vertical_dim(field) is not None:
+        if (zdim := vertical_dim(field)) is not None:
             if self.coordinate not in particles.columns:
                 raise ValueError(
                     f"Particle DataFrame has no {self.coordinate!r} column, "
                     "which oxidation matches to the field's vertical dimension."
                 )
-            z = particles[self.coordinate].to_numpy(dtype=float)
+            scale = _level_scale(field, zdim, self.coordinate)
+            z = particles[self.coordinate].to_numpy(dtype=float) * scale
         times = None
         if "time" in field.dims:
             if "time" not in particles.columns:
@@ -227,6 +322,8 @@ class Oxidation(BaseModel):
                     "no 'time' column."
                 )
             times = particles["time"].to_numpy()
+            if times.dtype.kind not in "biufc":  # sample_field refuses numbers
+                _check_times(field, times)
         number_density = sample_field(
             field,
             particles["lon"].to_numpy(dtype=float),
@@ -244,14 +341,17 @@ class Oxidation(BaseModel):
         Return what is wrong with the oxidant file, for a stage's check to report.
 
         Each finding is ``(check, None, message)``: the file does not exist,
-        cannot be read, or has no such variable (``oxidant_file``). A
+        cannot be read, has no such variable, or has levels in units that
+        cannot be matched to ``coordinate`` (``oxidant_file``). A
         constant oxidant has nothing to check. A relative ``oxidant`` path
         starts from *directory*.
         """
         if not isinstance(self.oxidant, str):
             return []
         try:
-            self.field(directory)
+            field = self.field(directory)
+            if (zdim := vertical_dim(field)) is not None:
+                _level_scale(field, zdim, self.coordinate)
         except FileNotFoundError as error:
             return [
                 (

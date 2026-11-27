@@ -7,6 +7,11 @@ All notable changes to runtraj are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `oxidation` reads its oxidant field's levels in their own units: a field on pressure levels in Pa (or kPa, mb) is matched to a particle's `pres` in hPa, and levels in m or km to `zagl`, instead of picking the level nearest the number. Levels whose `units` cannot be matched to the particle column are an error; levels with no `units` are taken to be in the particles' units, as before.
+- `oxidation` refuses particle times more than one step outside its oxidant field's times, instead of giving them the first or last step, which gave every row of a monthly climatology labeled with another year its December value. Relabel a climatology with the dates of the run.
+
 ## [0.1.0a5] - 2026-11-24
 
 ### Added
