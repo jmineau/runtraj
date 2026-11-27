@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=8265e977"></script>
+    <script src="../_static/documentation_options.js?v=1a53dbf9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
+  <meta name="docsearch:version" content="0.1.0a6.dev48+gf00cba6fe" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -568,11 +568,11 @@ hour and are followed 6 hours forward:</p>
 <span class="gp">In [4]: </span><span class="n">cloud</span><span class="p">[[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"zagl"</span><span class="p">]]</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 <span class="gh">Out[4]: </span>
 <span class="go">                     time  particle       lon      lat       zagl</span>
-<span class="go">67095 2021-07-15 07:00:00     196.0 -111.0782  40.8776   921.6019</span>
-<span class="go">67096 2021-07-15 07:00:00     197.0 -111.2290  40.9385     2.0606</span>
-<span class="go">67097 2021-07-15 07:00:00     198.0 -111.1279  40.6213  2112.3625</span>
-<span class="go">67098 2021-07-15 07:00:00     199.0 -110.9901  40.8926   979.2964</span>
-<span class="go">67099 2021-07-15 07:00:00     200.0 -111.1695  40.6080  2601.3728</span>
+<span class="go">67095 2021-07-15 07:00:00     196.0 -111.2332  40.6751  2360.2810</span>
+<span class="go">67096 2021-07-15 07:00:00     197.0 -111.3924  40.8494     6.7115</span>
+<span class="go">67097 2021-07-15 07:00:00     198.0 -110.9400  40.7718  1623.7256</span>
+<span class="go">67098 2021-07-15 07:00:00     199.0 -111.1512  40.7913  1571.8075</span>
+<span class="go">67099 2021-07-15 07:00:00     200.0 -111.0936  40.7405  2034.2311</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">n_hours</span></code> is <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>’s total run time: positive runs forward, negative
@@ -598,10 +598,10 @@ particle with turbulence off follows the same path, so <code class="docutils lit
 <span class="gp">In [6]: </span><span class="n">path</span><span class="p">[[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"zagl"</span><span class="p">]]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">59</span><span class="p">,</span> <span class="mi">179</span><span class="p">,</span> <span class="mi">359</span><span class="p">]]</span>
 <span class="gh">Out[6]: </span>
 <span class="go">                   time       lon      lat       zagl</span>
-<span class="go">0   2021-07-15 01:01:00 -111.8484  40.7694   509.8996</span>
-<span class="go">59  2021-07-15 02:00:00 -111.7083  40.7672   772.1619</span>
-<span class="go">179 2021-07-15 04:00:00 -111.2853  40.7457   335.2930</span>
-<span class="go">359 2021-07-15 07:00:00 -110.7072  40.5359  1428.3129</span>
+<span class="go">0   2021-07-15 01:01:00 -111.8484  40.7694   510.3065</span>
+<span class="go">59  2021-07-15 02:00:00 -111.7083  40.7693   720.6769</span>
+<span class="go">179 2021-07-15 04:00:00 -111.3640  40.7899   108.7261</span>
+<span class="go">359 2021-07-15 07:00:00 -110.8568  40.7811  1160.2821</span>
 </pre></div>
 </div>
 <p>We compared this run with <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> (NOAA’s public 5.4.2) on the same
