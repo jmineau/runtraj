@@ -115,7 +115,7 @@ def _groups(frame: pd.DataFrame) -> Iterator[tuple[str, int | None, pd.DataFrame
 def _is_mask(sel: Any) -> bool:
     """Return whether *sel* is a boolean mask (a Series, an array, or a list of booleans)."""
     if isinstance(sel, (pd.Series, np.ndarray)):
-        return sel.dtype == bool or str(sel.dtype) == "boolean"
+        return pd.api.types.is_bool_dtype(sel.dtype)
     return isinstance(sel, list) and bool(sel) and all(isinstance(v, bool) for v in sel)
 
 
@@ -631,8 +631,8 @@ class Project:
 
         *sel* is ``None`` (every simulation), a pandas table with
         ``release`` and ``variant`` columns (returned as it is, extra
-        columns and all), a boolean mask over :attr:`simulations`, or a
-        polars or pyarrow table with those two columns. A table without a
+        columns and all), a boolean mask over :attr:`simulations` (a missing
+        value in it selects nothing), or a polars or pyarrow table with those two columns. A table without a
         ``realization`` column selects every realization of an ensemble.
 
         Raises
@@ -647,7 +647,9 @@ class Project:
         if isinstance(sel, pd.DataFrame):
             frame = sel
         elif _is_mask(sel):
-            frame = self.simulations.loc[np.asarray(sel, dtype=bool)]
+            # A missing value selects nothing: the nullable and pyarrow masks have them.
+            mask = pd.Series(sel).fillna(False).to_numpy(dtype=bool)
+            frame = self.simulations.loc[mask]
         else:
             try:
                 frame = pd.DataFrame(
