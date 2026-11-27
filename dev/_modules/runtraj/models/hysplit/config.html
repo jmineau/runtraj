@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=3e4488cf"></script>
+    <script src="../../../../_static/documentation_options.js?v=187f2ed1"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev28+g93d6411a6" />
+  <meta name="docsearch:version" content="0.1.0a6.dev29+g0e17cec8e" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -2036,7 +2036,11 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return *n* realizations of this config, realization ``k`` with ``seed + k``.</span>
 
-<span class="sd">        Realization 0 uses the configured seed.</span>
+<span class="sd">        Realization 0 uses the configured seed. Under ``krand=4``, which takes</span>
+<span class="sd">        no seed, realization ``k`` runs with seed ``k``: HYSPLIT 5.4.2 and</span>
+<span class="sd">        earlier ignore it and seed each run from the clock, and the</span>
+<span class="sd">        development branch (the coming 5.5), outside ``ichem=8``, reseeds</span>
+<span class="sd">        from ``SEED`` and would repeat a run with the same one.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -2061,7 +2065,10 @@
                 <span class="s2">"realization its own seed. Any other mode would repeat the same "</span>
                 <span class="s2">"perturbation."</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">realizations</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
+        <span class="n">configs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">realizations</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">krand</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"seed"</span><span class="p">:</span> <span class="n">k</span><span class="p">})</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">configs</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">configs</span></div>
 </div>
 
 

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=3e4488cf"></script>
+    <script src="../../_static/documentation_options.js?v=187f2ed1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev28+g93d6411a6" />
+  <meta name="docsearch:version" content="0.1.0a6.dev29+g0e17cec8e" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1019,7 +1019,11 @@
 <dt class="sig sig-object py" id="runtraj.models.hysplit.HysplitConfig.realizations">
 <span class="sig-prename descclassname"><span class="pre">HysplitConfig.</span></span><span class="sig-name descname"><span class="pre">realizations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/models/hysplit/config.html#HysplitConfig.realizations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.models.hysplit.HysplitConfig.realizations" title="Link to this definition">#</a></dt>
 <dd><p>Return <em>n</em> realizations of this config, realization <code class="docutils literal notranslate"><span class="pre">k</span></code> with <code class="docutils literal notranslate"><span class="pre">seed</span> <span class="pre">+</span> <span class="pre">k</span></code>.</p>
-<p>Realization 0 uses the configured seed.</p>
+<p>Realization 0 uses the configured seed. Under <code class="docutils literal notranslate"><span class="pre">krand=4</span></code>, which takes
+no seed, realization <code class="docutils literal notranslate"><span class="pre">k</span></code> runs with seed <code class="docutils literal notranslate"><span class="pre">k</span></code>: HYSPLIT 5.4.2 and
+earlier ignore it and seed each run from the clock, and the
+development branch (the coming 5.5), outside <code class="docutils literal notranslate"><span class="pre">ichem=8</span></code>, reseeds
+from <code class="docutils literal notranslate"><span class="pre">SEED</span></code> and would repeat a run with the same one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>n</em> is more than one and the runs would repeat one another:
