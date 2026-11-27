@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=0e3388d3"></script>
+    <script src="../../_static/documentation_options.js?v=dd86dbcf"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev33+g8879bfcbd" />
+  <meta name="docsearch:version" content="0.1.0a6.dev34+gcc2d64a2d" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -565,7 +565,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_mask</span><span class="p">(</span><span class="n">sel</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return whether *sel* is a boolean mask (a Series, an array, or a list of booleans)."""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">sel</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">bool</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">sel</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"boolean"</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_bool_dtype</span><span class="p">(</span><span class="n">sel</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">sel</span><span class="p">)</span>
 
 
@@ -1119,8 +1119,8 @@
 
 <span class="sd">        *sel* is ``None`` (every simulation), a pandas table with</span>
 <span class="sd">        ``release`` and ``variant`` columns (returned as it is, extra</span>
-<span class="sd">        columns and all), a boolean mask over :attr:`simulations`, or a</span>
-<span class="sd">        polars or pyarrow table with those two columns. A table without a</span>
+<span class="sd">        columns and all), a boolean mask over :attr:`simulations` (a missing</span>
+<span class="sd">        value in it selects nothing), or a polars or pyarrow table with those two columns. A table without a</span>
 <span class="sd">        ``realization`` column selects every realization of an ensemble.</span>
 
 <span class="sd">        Raises</span>
@@ -1135,7 +1135,9 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
             <span class="n">frame</span> <span class="o">=</span> <span class="n">sel</span>
         <span class="k">elif</span> <span class="n">_is_mask</span><span class="p">(</span><span class="n">sel</span><span class="p">):</span>
-            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sel</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)]</span>
+            <span class="c1"># A missing value selects nothing: the nullable and pyarrow masks have them.</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
