@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../_static/documentation_options.js?v=8265e977"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1239,21 +1239,16 @@ way the run did; give it the run’s <code class="docutils literal notranslate">
 <span class="n">mlht</span> <span class="o">=</span> <span class="n">calc_pbl_height</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"flexpart"</span><span class="p">)</span>  <span class="c1"># FLEXPART on ERA5</span>
 </pre></div>
 </div>
-<p>The internal levels HYSPLIT samples on depend on its version when the top
-is below about 1.1 km (5.4.0 changed them). Without more, both functions
-use the levels of 5.4.0 and later. A HYSPLIT run prints its own in its
-<code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code> file, in the working directory that <code class="docutils literal notranslate"><span class="pre">sim.kept_workdir</span></code> gives
-when the run kept it (<code class="docutils literal notranslate"><span class="pre">keep_workdir:</span> <span class="pre">true</span></code> under <code class="docutils literal notranslate"><span class="pre">execution:</span></code>):
-give that file as <code class="docutils literal notranslate"><span class="pre">message</span></code> and the sampling uses them, for any version.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sampled</span> <span class="o">=</span> <span class="n">sample_met</span><span class="p">(</span>
-    <span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"pres"</span><span class="p">]),</span>
-    <span class="n">meta</span><span class="o">.</span><span class="n">met_files</span><span class="p">,</span>
-    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"pres"</span><span class="p">],</span>
-    <span class="n">z_top</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"z_top"</span><span class="p">],</span>
-    <span class="n">message</span><span class="o">=</span><span class="n">sim</span><span class="o">.</span><span class="n">kept_workdir</span> <span class="o">/</span> <span class="s2">"MESSAGE"</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
+<p>HYSPLIT’s internal levels, which the sampling is done on, depend on its
+version when the top is below about 1.1 km (5.4.0 changed them). A HYSPLIT
+run prints the ones it used in its <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code> file, and runtraj records
+them with the particles: <code class="docutils literal notranslate"><span class="pre">sim.particles.attrs[&quot;internal_grid&quot;]</span></code> is
+<code class="docutils literal notranslate"><span class="pre">(nlvl,</span> <span class="pre">aa,</span> <span class="pre">bb,</span> <span class="pre">cc)</span></code>, where level <code class="docutils literal notranslate"><span class="pre">k</span></code> is <code class="docutils literal notranslate"><span class="pre">aa</span> <span class="pre">k**2</span> <span class="pre">+</span> <span class="pre">bb</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">cc</span></code> meters.
+Both functions use it when the particles have it, so a run is sampled on its
+own levels, whatever its version, and a filter or a dropped column keeps it.
+Particles with none (a file written before it was recorded, another
+transport model’s, or a table you made) get the levels of HYSPLIT 5.4.0 and
+later for <em>z_top</em>.</p>
 <p>Met files that are not ARL files, such as GRIB, are read as one Dataset in
 <a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.open_dataset.html#arlmet.open_dataset" title="(in arl-met v0.1.0b15)"><code class="xref py py-func docutils literal notranslate"><span class="pre">arlmet.open_dataset()</span></code></a>’s layout, the way a converter in
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">arlmet.converters</span></code> writes it. Both functions take that Dataset in

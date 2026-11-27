@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../_static/documentation_options.js?v=8265e977"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1247,13 +1247,19 @@ for a column or multipoint release.</p></td>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:met_files</span></code></p></td>
 <td><p>The met files the run read, a JSON list of paths.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:hash</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:internal_grid</span></code></p></td>
+<td><p>HYSPLIT’s internal levels as the run printed them in <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, a
+JSON list <code class="docutils literal notranslate"><span class="pre">[nlvl,</span> <span class="pre">aa,</span> <span class="pre">bb,</span> <span class="pre">cc]</span></code>; level <code class="docutils literal notranslate"><span class="pre">k</span></code> is <code class="docutils literal notranslate"><span class="pre">aa</span> <span class="pre">k**2</span> <span class="pre">+</span> <span class="pre">bb</span> <span class="pre">k</span> <span class="pre">+</span>
+<span class="pre">cc</span></code> meters. Only a HYSPLIT run that printed it. It is read back
+into <code class="docutils literal notranslate"><span class="pre">attrs[&quot;internal_grid&quot;]</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:hash</span></code></p></td>
 <td><p>The folder’s settings hash.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:version</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:version</span></code></p></td>
 <td><p>The runtraj version that wrote the file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:realization</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runtraj:realization</span></code></p></td>
 <td><p>The realization number, in an ensemble only.</p></td>
 </tr>
 </tbody>

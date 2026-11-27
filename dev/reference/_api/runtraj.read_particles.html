@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../../_static/documentation_options.js?v=8265e977"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1018,7 +1018,10 @@
 <p>It needs nothing but the file: the release time in its metadata gives
 the <code class="docutils literal notranslate"><span class="pre">time</span></code> column (UTC) back, from <code class="docutils literal notranslate"><span class="pre">age</span></code>. <code class="docutils literal notranslate"><span class="pre">age</span></code> and <code class="docutils literal notranslate"><span class="pre">particle</span></code> come back as
 float64, as HYSPLIT writes them. <code class="xref py py-func docutils literal notranslate"><span class="pre">particles_metadata()</span></code> reads the
-release and settings.</p>
+release and settings. A HYSPLIT run’s internal grid, which the file
+records, comes back in <code class="docutils literal notranslate"><span class="pre">attrs[&quot;internal_grid&quot;]</span></code>
+(<code class="docutils literal notranslate"><span class="pre">(nlvl,</span> <span class="pre">aa,</span> <span class="pre">bb,</span> <span class="pre">cc)</span></code>), where <a class="reference internal" href="runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.sampling.sample_met()</span></code></a> reads
+it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

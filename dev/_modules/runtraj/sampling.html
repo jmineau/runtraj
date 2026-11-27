@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../../_static/documentation_options.js?v=8265e977"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -473,7 +473,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
@@ -744,27 +743,11 @@
             <span class="p">)</span>
 
 
-<span class="c1">#: The line HYSPLIT prints in ``MESSAGE`` for its internal levels, in the</span>
-<span class="c1">#: same form from 5.0.2 to 5.4.2: ``nlvl, aa, bb, cc``.</span>
-<span class="n">_INTERNAL_GRID_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s2">"Internal grid parameters \(nlvl,aa,bb,cc\):\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)"</span>
-<span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_read_internal_grid</span><span class="p">(</span>
-    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_recorded_internal_grid</span><span class="p">(</span>
+    <span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">z_top</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return ``(nlvl, aa, bb, cc)`` from a run's ``MESSAGE`` file (level ``k`` is ``aa k**2 + bb k + cc`` m), or None for no file."""</span>
-    <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">None</span>
-    <span class="n">found</span> <span class="o">=</span> <span class="n">_INTERNAL_GRID_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2"> has no 'Internal grid parameters (nlvl,aa,bb,cc)' line: "</span>
-            <span class="s2">"message is the MESSAGE file HYSPLIT wrote in the run's working directory."</span>
-        <span class="p">)</span>
-    <span class="n">nlvl</span><span class="p">,</span> <span class="n">aa</span><span class="p">,</span> <span class="n">bb</span><span class="p">,</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">found</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
-    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">nlvl</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">aa</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">bb</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Return the internal grid the run of *particles* printed (``attrs["internal_grid"]``), or None when it has none or *z_top* is None (the met's own levels)."""</span>
+    <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">z_top</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"internal_grid"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_nearest_level</span><span class="p">(</span><span class="n">levels</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -902,7 +885,6 @@
     <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"mlht"</span><span class="p">,</span> <span class="s2">"dens"</span><span class="p">,</span> <span class="s2">"pres"</span><span class="p">,</span> <span class="s2">"zsfc"</span><span class="p">),</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">z_top</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">_DEFAULT_Z_TOP</span><span class="p">,</span>
-    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the particles with met columns sampled at each particle's position.</span>
@@ -912,8 +894,13 @@
 <span class="sd">    ``lon``, ``lat``, ``zagl``, and ``time``: bilinear across the met's</span>
 <span class="sd">    grid and linear in height between the internal levels of a HYSPLIT run</span>
 <span class="sd">    with the top *z_top* (:func:`arlmet.sample_points`), then linear in time</span>
-<span class="sd">    between the two met times around the particle's, as HYSPLIT does. Each column comes</span>
-<span class="sd">    from these ARL variables:</span>
+<span class="sd">    between the two met times around the particle's, as HYSPLIT does. The</span>
+<span class="sd">    internal levels are the ones the run printed in its ``MESSAGE`` file when</span>
+<span class="sd">    *particles* record them (``particles.attrs["internal_grid"]``, as the</span>
+<span class="sd">    particles of a HYSPLIT run do, whatever its version); without them they</span>
+<span class="sd">    are the ones HYSPLIT 5.4.0 and later pick for *z_top*, and earlier</span>
+<span class="sd">    versions pick a different grid for a *z_top* below about 1.1 km. Each</span>
+<span class="sd">    column comes from these ARL variables:</span>
 
 <span class="sd">    - ``mlht`` is ``PBLH``, the met model's boundary-layer height, in m</span>
 <span class="sd">      above ground.</span>
@@ -952,15 +939,9 @@
 <span class="sd">        :class:`runtraj.models.hysplit.HysplitConfig`), since HYSPLIT's</span>
 <span class="sd">        internal levels depend on it. A stored run records it:</span>
 <span class="sd">        ``particles_metadata(path).settings["z_top"]``. ``None`` reads the</span>
-<span class="sd">        met's own levels, for a transport model that is not HYSPLIT; a row</span>
-<span class="sd">        below their lowest or above their top is then NaN.</span>
-<span class="sd">    message : path-like, optional</span>
-<span class="sd">        The ``MESSAGE`` file of the run (HYSPLIT writes it in the run's</span>
-<span class="sd">        working directory, which ``keep_workdir: true`` keeps). The internal levels</span>
-<span class="sd">        are then the ones the run printed there, whatever its HYSPLIT</span>
-<span class="sd">        version. Without it they are the ones HYSPLIT 5.4.0 and later pick</span>
-<span class="sd">        for *z_top*; earlier versions pick a different grid when *z_top*</span>
-<span class="sd">        is below about 1.1 km. Needs a *z_top*.</span>
+<span class="sd">        met's own levels, for a transport model that is not HYSPLIT (a recorded</span>
+<span class="sd">        internal grid is then not used); a row below their lowest or above</span>
+<span class="sd">        their top is then NaN.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -973,8 +954,7 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If a column is not one of the four or is in *particles* already</span>
 <span class="sd">        (drop it first), *particles* has no ``time`` column, a row is outside</span>
-<span class="sd">        the files' times, *z_top* is not positive or is below a particle, or</span>
-<span class="sd">        *message* has no internal grid line or is given without a *z_top*.</span>
+<span class="sd">        the files' times, or *z_top* is not positive or is below a particle.</span>
 <span class="sd">    KeyError</span>
 <span class="sd">        If the met lacks a variable a column needs.</span>
 
@@ -1015,7 +995,7 @@
             <span class="sa">f</span><span class="s2">"sample_met cannot sample </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">; it samples </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">_MET_VARIABLES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="n">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
-    <span class="n">internal_grid</span> <span class="o">=</span> <span class="n">_read_internal_grid</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="n">internal_grid</span> <span class="o">=</span> <span class="n">_recorded_internal_grid</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
     <span class="n">present</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">present</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1167,7 +1147,6 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hysplit"</span><span class="p">,</span>
     <span class="n">z_top</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_DEFAULT_Z_TOP</span><span class="p">,</span>
-    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the mixed-layer height at each particle, found from the met as a transport model finds it.</span>
@@ -1191,7 +1170,8 @@
 <span class="sd">    HYSPLIT finds the height at each met grid point and met time, and a</span>
 <span class="sd">    particle takes the nearest grid point's height at the met times before</span>
 <span class="sd">    and after it, linear in time. The three HYSPLIT methods do the same, on</span>
-<span class="sd">    HYSPLIT's internal levels for a run with the top *z_top*. They apply</span>
+<span class="sd">    HYSPLIT's internal levels for a run with the top *z_top* (the ones the</span>
+<span class="sd">    run printed when *particles* record them, as in :func:`sample_met`). They apply</span>
 <span class="sd">    no minimum, as HYSPLIT's ``kmix0`` does: take ``numpy.maximum`` with</span>
 <span class="sd">    yours. Each height is at least a little above the lowest internal</span>
 <span class="sd">    level, as in HYSPLIT.</span>
@@ -1259,11 +1239,6 @@
 <span class="sd">        The top of the domain in meters, which sets HYSPLIT's internal</span>
 <span class="sd">        levels (``z_top`` of :class:`runtraj.models.hysplit.HysplitConfig`).</span>
 <span class="sd">        ``"flexpart"`` reads the met's own levels and ignores it.</span>
-<span class="sd">    message : path-like, optional</span>
-<span class="sd">        The ``MESSAGE`` file of the HYSPLIT run: the internal levels are</span>
-<span class="sd">        then the ones it printed, whatever its version, as in</span>
-<span class="sd">        :func:`sample_met`. Without it they are the ones HYSPLIT 5.4.0 and</span>
-<span class="sd">        later pick. ``"flexpart"`` ignores it.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1282,8 +1257,7 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If *method* is not one of the four, *particles* has no ``time``</span>
-<span class="sd">        column, a row is outside the files' times, or *message* has no</span>
-<span class="sd">        internal grid line.</span>
+<span class="sd">        column, or a row is outside the files' times.</span>
 <span class="sd">    KeyError</span>
 <span class="sd">        If the met lacks a variable the method needs.</span>
 
@@ -1337,7 +1311,7 @@
             <span class="s2">"calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."</span>
         <span class="p">)</span>
     <span class="n">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
-    <span class="n">internal_grid</span> <span class="o">=</span> <span class="n">_read_internal_grid</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="n">internal_grid</span> <span class="o">=</span> <span class="n">_recorded_internal_grid</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">_opened</span><span class="p">(</span><span class="n">met</span><span class="p">)</span> <span class="k">as</span> <span class="n">sources</span><span class="p">:</span>
         <span class="n">names</span> <span class="o">=</span> <span class="n">_met_variables</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
         <span class="n">pressure</span> <span class="o">=</span> <span class="n">_pressure_variable</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>

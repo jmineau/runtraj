@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../../_static/documentation_options.js?v=8265e977"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1019,7 +1019,8 @@
 since it is the release time plus <code class="docutils literal notranslate"><span class="pre">age</span></code>. A <code class="docutils literal notranslate"><span class="pre">release</span></code> column holds
 the release id, so a scan of many files can tell releases apart. The
 release, the run’s settings, and the met files go in the file’s
-metadata, so the file reads alone.</p>
+metadata, so the file reads alone, and so does <code class="docutils literal notranslate"><span class="pre">particles.attrs[&quot;internal_grid&quot;]</span></code>
+when it is there (a HYSPLIT run’s, <code class="xref py py-func docutils literal notranslate"><span class="pre">read_particles()</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

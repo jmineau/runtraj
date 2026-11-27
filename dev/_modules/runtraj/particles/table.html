@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../../../_static/documentation_options.js?v=8265e977"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -663,7 +663,10 @@
 <span class="sd">    It needs nothing but the file: the release time in its metadata gives</span>
 <span class="sd">    the ``time`` column (UTC) back, from ``age``. ``age`` and ``particle`` come back as</span>
 <span class="sd">    float64, as HYSPLIT writes them. :func:`particles_metadata` reads the</span>
-<span class="sd">    release and settings.</span>
+<span class="sd">    release and settings. A HYSPLIT run's internal grid, which the file</span>
+<span class="sd">    records, comes back in ``attrs["internal_grid"]``</span>
+<span class="sd">    (``(nlvl, aa, bb, cc)``), where :func:`runtraj.sampling.sample_met` reads</span>
+<span class="sd">    it.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -685,6 +688,7 @@
     <span class="k">with</span> <span class="n">readable</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
         <span class="n">pf</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">ParquetFile</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="n">stored</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">names</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="c1"># The output directory adds a ``release`` column for scans of the</span>
         <span class="c1"># whole tree. One file is one release, so it is not read here.</span>
         <span class="n">wanted</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="n">stored</span> <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">columns</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s2">"release"</span><span class="p">]</span>
@@ -696,8 +700,9 @@
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_INT_COLUMNS</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"float64"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="sa">b</span><span class="s2">"runtraj:internal_grid"</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"internal_grid"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="sa">b</span><span class="s2">"runtraj:internal_grid"</span><span class="p">]))</span>
     <span class="k">if</span> <span class="n">want_time</span> <span class="ow">and</span> <span class="s2">"age"</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">release</span> <span class="o">=</span> <span class="n">stored_release</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="n">data</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"min"</span>
@@ -791,7 +796,8 @@
 <span class="sd">    since it is the release time plus ``age``. A ``release`` column holds</span>
 <span class="sd">    the release id, so a scan of many files can tell releases apart. The</span>
 <span class="sd">    release, the run's settings, and the met files go in the file's</span>
-<span class="sd">    metadata, so the file reads alone.</span>
+<span class="sd">    metadata, so the file reads alone, and so does ``particles.attrs["internal_grid"]``</span>
+<span class="sd">    when it is there (a HYSPLIT run's, :func:`read_particles`).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -820,6 +826,13 @@
 <span class="sd">        If ``age`` or ``particle`` holds a value that is not a whole number.</span>
 <span class="sd">    """</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">particles</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"internal_grid"</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">b</span><span class="s2">"runtraj:internal_grid"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"internal_grid"</span><span class="p">])</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+            <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>
+        <span class="p">}</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_INT_COLUMNS</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../../../../_static/documentation_options.js?v=8265e977"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -481,6 +481,7 @@
     <span class="n">find_program</span><span class="p">,</span>
     <span class="n">hysplit_version</span><span class="p">,</span>
     <span class="n">program_name</span><span class="p">,</span>
+    <span class="n">read_internal_grid</span><span class="p">,</span>
     <span class="n">read_particle_dat</span><span class="p">,</span>
     <span class="n">run_hycs_std</span><span class="p">,</span>
     <span class="n">setting_refusals</span><span class="p">,</span>
@@ -794,6 +795,9 @@
     <span class="n">particles</span> <span class="o">=</span> <span class="n">read_particle_dat</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">outdt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># the check needs a row every time step</span>
         <span class="n">check_met_stop</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">,</span> <span class="n">_met_grid</span><span class="p">(</span><span class="n">met_file</span><span class="p">))</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">read_internal_grid</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># recorded with the particles (sample_met reads it)</span>
+        <span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"internal_grid"</span><span class="p">]</span> <span class="o">=</span> <span class="n">grid</span>
     <span class="k">return</span> <span class="n">particles</span>
 
 

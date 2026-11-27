@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=a71d42c7"></script>
+    <script src="../../_static/documentation_options.js?v=8265e977"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev46+g58c3d3c29" />
+  <meta name="docsearch:version" content="0.1.0a6.dev47+g3629fa036" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1013,7 +1013,7 @@
 <h1>runtraj.sampling.calc_pbl_height<a class="headerlink" href="#runtraj-sampling-calc-pbl-height" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="runtraj.sampling.calc_pbl_height">
-<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">calc_pbl_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hysplit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#calc_pbl_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.calc_pbl_height" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">runtraj.sampling.</span></span><span class="sig-name descname"><span class="pre">calc_pbl_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">particles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">met</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hysplit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_top</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/sampling.html#calc_pbl_height"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.sampling.calc_pbl_height" title="Link to this definition">#</a></dt>
 <dd><p>Return the mixed-layer height at each particle, found from the met as a transport model finds it.</p>
 <p>The mixed layer a stage reads should be the one the particles were
 mixed in, and each transport model finds it in its own way. Choose the
@@ -1034,7 +1034,8 @@ instead; give it <code class="docutils literal notranslate"><span class="pre">&q
 <p>HYSPLIT finds the height at each met grid point and met time, and a
 particle takes the nearest grid point’s height at the met times before
 and after it, linear in time. The three HYSPLIT methods do the same, on
-HYSPLIT’s internal levels for a run with the top <em>z_top</em>. They apply
+HYSPLIT’s internal levels for a run with the top <em>z_top</em> (the ones the
+run printed when <em>particles</em> record them, as in <a class="reference internal" href="runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a>). They apply
 no minimum, as HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">kmix0</span></code> does: take <code class="docutils literal notranslate"><span class="pre">numpy.maximum</span></code> with
 yours. Each height is at least a little above the lowest internal
 level, as in HYSPLIT.</p>
@@ -1097,10 +1098,6 @@ pressure, and at the ground <code class="docutils literal notranslate"><span cla
 <li><p><strong>z_top</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The top of the domain in meters, which sets HYSPLIT’s internal
 levels (<code class="docutils literal notranslate"><span class="pre">z_top</span></code> of <a class="reference internal" href="runtraj.models.hysplit.HysplitConfig.html#runtraj.models.hysplit.HysplitConfig" title="runtraj.models.hysplit.HysplitConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitConfig</span></code></a>).
 <code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> reads the met’s own levels and ignores it.</p></li>
-<li><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathLike</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code> file of the HYSPLIT run: the internal levels are
-then the ones it printed, whatever its version, as in
-<a class="reference internal" href="runtraj.sampling.sample_met.html#runtraj.sampling.sample_met" title="runtraj.sampling.sample_met"><code class="xref py py-func docutils literal notranslate"><span class="pre">sample_met()</span></code></a>. Without it they are the ones HYSPLIT 5.4.0 and
-later pick. <code class="docutils literal notranslate"><span class="pre">&quot;flexpart&quot;</span></code> ignores it.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1120,8 +1117,7 @@ FLEXPART stops.</p>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>method</em> is not one of the four, <em>particles</em> has no <code class="docutils literal notranslate"><span class="pre">time</span></code>
-    column, a row is outside the files’ times, or <em>message</em> has no
-    internal grid line.</p></li>
+    column, or a row is outside the files’ times.</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#KeyError" title="(in Python v3.15)"><strong>KeyError</strong></a> – If the met lacks a variable the method needs.</p></li>
 </ul>
 </dd>
