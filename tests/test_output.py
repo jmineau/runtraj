@@ -609,9 +609,8 @@ def test_status_without_hycs_std_finds_the_folders_a_variant_made(
         _ = variant.build
     assert out.present("particles", variant) == {release.id}
     assert out.present("count", variant) == {release.id}
-    assert out.complete(variant) == {release.id}
     # Another name has no folder of its own to be found without the build.
-    assert out.complete(_counted(tmp_path, "other")) == frozenset()
+    assert out.present("particles", _counted(tmp_path, "other")) == frozenset()
 
 
 def test_status_without_hycs_std_is_not_fooled_by_other_settings(tmp_path, monkeypatch):
@@ -620,7 +619,7 @@ def test_status_without_hycs_std_is_not_fooled_by_other_settings(tmp_path, monke
 
     monkeypatch.setenv("PATH", "")
     changed = _counted(tmp_path, numpar=7)
-    assert out.complete(changed) == frozenset()
+    assert out.present("particles", changed) == frozenset()
 
 
 def test_status_without_hycs_std_says_when_a_variant_made_folders_with_two_builds(

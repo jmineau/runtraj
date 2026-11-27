@@ -137,7 +137,35 @@ class LocalConfig(BackendConfig):
 TASKS_PER_WORKER = 10
 
 
-class SlurmConfig(BackendConfig):
+class _ArrayConfig(BackendConfig):
+    """
+    What the ``slurm`` and ``pbs`` blocks share: a job array of tasks, ``n_workers`` of them at once.
+
+    Each block declares its own ``n_workers``, ``n_tasks`` and ``setup``,
+    in its scheduler's words. ``setup`` stays out of this class's annotations
+    so that it keeps its place among the block's settings.
+    """
+
+    n_workers: int
+    n_tasks: int | None
+
+    @field_validator("setup", mode="before", check_fields=False)
+    @classmethod
+    def _one_command(cls, value: Any) -> Any:
+        """Accept one setup command as a string."""
+        return [value] if isinstance(value, str) else value
+
+    @property
+    def tasks(self) -> int:
+        """The most array tasks (subjobs on PBS): ``n_tasks``, or ten per worker when it is unset. An array has fewer when there are fewer releases (:func:`runtraj.execution.runner.array_size`)."""
+        return (
+            self.n_tasks
+            if self.n_tasks is not None
+            else TASKS_PER_WORKER * self.n_workers
+        )
+
+
+class SlurmConfig(_ArrayConfig):
     """
     The Slurm job array a project's releases run as: the ``slurm`` block of ``execution``.
 
@@ -245,12 +273,6 @@ class SlurmConfig(BackendConfig):
         """Read ``fetch: true`` (or an empty ``fetch:``) as a fetch job with the array's resources."""
         return {} if value is True or value is None else value
 
-    @field_validator("setup", mode="before")
-    @classmethod
-    def _one_command(cls, value: Any) -> Any:
-        """Accept one setup command as a string."""
-        return [value] if isinstance(value, str) else value
-
     @field_validator("time")
     @classmethod
     def _slurm_time(cls, value: str | int | None) -> str | int | None:
@@ -263,15 +285,6 @@ class SlurmConfig(BackendConfig):
     def options(self) -> dict[str, Any]:
         """The other ``sbatch`` options, by name: every key of the block that is not one of its settings."""
         return dict(self.model_extra or {})
-
-    @property
-    def tasks(self) -> int:
-        """The most array tasks: ``n_tasks``, or ten per worker when it is unset. An array has fewer when there are fewer releases (:func:`runtraj.execution.slurm.array_size`)."""
-        return (
-            self.n_tasks
-            if self.n_tasks is not None
-            else TASKS_PER_WORKER * self.n_workers
-        )
 
     def check(self) -> None:
         """Raise when the array has no time limit."""
@@ -287,7 +300,7 @@ class SlurmConfig(BackendConfig):
 _PBS_WALLTIME = r"\d+(:[0-5]?\d){0,2}"
 
 
-class PbsConfig(BackendConfig):
+class PbsConfig(_ArrayConfig):
     """
     The PBS job array a project's releases run as: the ``pbs`` block of ``execution``.
 
@@ -381,12 +394,6 @@ class PbsConfig(BackendConfig):
                     )
         return data
 
-    @field_validator("setup", mode="before")
-    @classmethod
-    def _one_command(cls, value: Any) -> Any:
-        """Accept one setup command as a string."""
-        return [value] if isinstance(value, str) else value
-
     @field_validator("walltime")
     @classmethod
     def _pbs_walltime(cls, value: str | int | None) -> str | int | None:
@@ -401,15 +408,6 @@ class PbsConfig(BackendConfig):
     def resources(self) -> dict[str, Any]:
         """The other PBS resources, by name: every key of the block that is not one of its settings."""
         return dict(self.model_extra or {})
-
-    @property
-    def tasks(self) -> int:
-        """The number of subjobs, ``n_tasks``, or ten per worker when it is unset; fewer when there are fewer releases."""
-        return (
-            self.n_tasks
-            if self.n_tasks is not None
-            else TASKS_PER_WORKER * self.n_workers
-        )
 
     def check(self) -> None:
         """Raise when the subjobs have no walltime."""
