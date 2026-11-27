@@ -477,9 +477,9 @@ class TransportModel(ABC, Generic[C]):
         and :meth:`run_many` never get such a release. HYSPLIT refuses a
         multipoint release whose points share a horizontal location, which
         it would join into a line source, in its trajectory mode with
-        a ``hyts_std`` before 5.4.0 a release not on the hour, and, with a
-        ``hycs_std`` that would ignore the setting, ``krand`` 10 to 13 or the
-        wind error in the concentration mode.
+        a ``hyts_std`` before 5.4.0 a release not on the hour, and a setting
+        its ``hycs_std`` would ignore (HYSPLIT's ``krand`` 10 to 13 before
+        5.1.0, the wind error in the concentration mode from 5.3.0).
         """
         return pd.DataFrame(columns=list(CHECK_COLUMNS))
 
