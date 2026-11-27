@@ -3,7 +3,8 @@ What HYSPLIT does with a release that another transport model may not: its line 
 
 :func:`check_releases` lists the multipoint releases HYSPLIT would turn
 into a line source, and :func:`release_rows` says where each particle
-started when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to
+started: from the particle's number for a column, and, for a multipoint
+release, when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to
 5.4.2 do not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's
 core (:class:`runtraj.models.TransportModel`), which refuses such a release
 before HYSPLIT runs; :func:`off_the_hour` lists the releases that
@@ -159,7 +160,7 @@ def release_rows(
     particles: pd.DataFrame, release: Release, config: HysplitConfig
 ) -> pd.DataFrame:
     """
-    Return where each particle of a HYSPLIT run started, for a run that wrote no row at ``age = 0``.
+    Return where each particle of a HYSPLIT run started, from its number and its first row.
 
     The columns are :data:`runtraj.particles.table.RELEASE_ROW_COLUMNS`. A
     column's particles are released bottom to top in ``particle`` order,
@@ -168,7 +169,10 @@ def release_rows(
     in slab ``(k - 1) % n + 1`` of the ``n`` released with it. So a start
     height is known to the depth of those slabs, ``(top - bottom) / n``:
     a long release of few particles knows it less well than a short one. A
-    multipoint release's particles are matched to a point from their first
+    build that writes a row at ``age = 0`` gets the same slabs for a column,
+    because that row's height is not exactly where the particle started
+    (HYSPLIT scales it by the terrain a minute downwind of the source).
+    A multipoint release's particles are matched to a point from their first
     row: by height when every point has its own altitude, since height
     drifts about 30 times less than horizontal position over the first
     step, and otherwise by position, with a warning when the points are too
@@ -176,9 +180,12 @@ def release_rows(
     """
     if isinstance(release, ColumnRelease):
         # A column's particle numbers run to the highest in *particles*, even
-        # when a particle left the domain before its first row.
+        # when a particle left the domain before its first row; a step has all
+        # its slabs even when MAXPAR cut its last particle (numpar + 1 of a
+        # step, so numpar remain), so that the slabs are as many as HYSPLIT's.
+        per_step = particles_per_step(config)
         return column_release_rows(
-            release, int(particles["particle"].max()), particles_per_step(config)
+            release, max(int(particles["particle"].max()), per_step), per_step
         )
     if isinstance(release, MultiPointRelease):
         return _multipoint_rows(particles, release)

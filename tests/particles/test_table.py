@@ -2,6 +2,7 @@
 
 import datetime as dt
 import json
+from functools import partial
 from pathlib import Path
 
 import numpy as np
@@ -12,7 +13,7 @@ import pytest
 
 from runtraj.identity import run_settings, transport_from_settings
 from runtraj.models import ModelInfo
-from runtraj.models.hysplit import HysplitConfig
+from runtraj.models.hysplit import HysplitConfig, HysplitModel
 from runtraj.particles import (
     particles_from_table,
     particles_metadata,
@@ -609,12 +610,13 @@ def test_stored_settings_this_version_does_not_have_are_dropped(
     assert rebuilt.settings() == params.settings()
 
 
-def test_a_column_release_row_says_which_slab_a_particle_stands_for():
-    """With t = 0 rows, release_height is the centre of the slab the release falls in, not the indx order."""
+def test_a_columns_particle_k_is_in_slab_k_whatever_height_its_release_row_has():
+    """HYSPLIT 5.5's row at age = 0 is off by the terrain's scaling, so a row near a slab's edge can fall in the next slab."""
     column = ColumnRelease(
         time="2023-01-01 12:00", longitude=-111.85, latitude=40.77, bottom=0, top=1000
     )
-    released = [900.0, 10.0, 600.0, 300.0]  # four slabs of 250 m, out of indx order
+    # Four slabs of 250 m; the rows of 1 and 3 fall in the next slab up, and that of 4 above the top.
+    released = [251.0, 240.0, 501.0, 1003.0]
     rows = pd.DataFrame(
         {
             "particle": [1, 2, 3, 4] * 2,
@@ -628,11 +630,42 @@ def test_a_column_release_row_says_which_slab_a_particle_stands_for():
     by_particle = with_release.drop_duplicates("particle").set_index("particle")[
         "release_height"
     ]
-    assert by_particle.to_dict() == {1: 875.0, 2: 125.0, 3: 625.0, 4: 375.0}
+    assert by_particle.to_dict() == {1: 125.0, 2: 375.0, 3: 625.0, 4: 875.0}
 
-    # Without the release rows, HYSPLIT's put particle indx in slab indx.
-    first_step = add_release_heights(rows[rows.age == -1], column)
-    assert first_step["release_height"].tolist() == [125.0, 375.0, 625.0, 875.0]
+    # A model with no release_rows has only the rows at age = 0 to go by.
+    from_rows = _add_release_heights(rows, column)
+    assert from_rows.drop_duplicates("particle")["release_height"].tolist() == [
+        375.0,
+        125.0,
+        625.0,
+        875.0,
+    ]
+
+
+def test_a_column_of_one_fewer_particle_than_slabs_keeps_one_slab_each():
+    """HYSPLIT's last particle of a step can be cut by MAXPAR: 1000 particles in 1001 slabs, none sharing."""
+    column = ColumnRelease(
+        time="2023-01-01 12:00", longitude=-111.85, latitude=40.77, bottom=0, top=3000
+    )
+    particles = pd.DataFrame(
+        {
+            "particle": np.arange(1, 1001),
+            "age": -1,
+            "lon": -111.85,
+            "lat": 40.77,
+            "zagl": np.linspace(1.0, 2999.0, 1000),
+        }
+    )
+    config = HysplitConfig(n_hours=-1, numpar=1000)  # 1001 slabs, the last particle cut
+
+    found = _add_release_heights(
+        particles, column, partial(HysplitModel().release_rows, config=config)
+    )
+
+    heights = found["release_height"].to_numpy()
+    assert len(np.unique(heights)) == 1000
+    assert heights[0] == pytest.approx(0.5 * 3000 / 1001)
+    assert heights[-1] == pytest.approx(999.5 * 3000 / 1001)
 
 
 @pytest.mark.parametrize(
