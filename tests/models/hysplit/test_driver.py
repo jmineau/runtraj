@@ -704,10 +704,12 @@ def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
 def test_setup_cfg_writes_dswf_in_upper_case_and_the_other_names_as_they_are(
     tmp_path, point_release
 ):
-    config = HysplitConfig(n_hours=-24, varsiwant=["time", "dswf", "zcfx"])
+    config = HysplitConfig(
+        n_hours=-24, varsiwant=["time", "indx", "long", "lati", "zagl", "dswf", "zcfx"]
+    )
     text = (_inputs(tmp_path, point_release, config) / "SETUP.CFG").read_text()
-    assert "VARSIWANT='time', 'DSWF', 'zcfx'," in text
-    assert config.varsiwant == ["time", "dswf", "zcfx"]
+    assert "'time', 'indx', 'long', 'lati', 'zagl', 'DSWF', 'zcfx'," in text
+    assert config.varsiwant[-2:] == ["dswf", "zcfx"]
 
 
 def test_run_without_a_particle_file_fails(tmp_path, point_release, monkeypatch):

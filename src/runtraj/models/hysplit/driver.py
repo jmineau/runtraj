@@ -33,6 +33,7 @@ from runtraj.models.hysplit.config import (
     CONCENTRATION_ONLY_SETTINGS,
     FIXED_SETUP,
     FIXED_TRAJECTORY_SETUP,
+    PARTICLE_COLUMNS,
     PARTICLES_SETTINGS,
     TRAJECTORY_ONLY_SETTINGS,
     TRAJECTORY_SETUP_SETTINGS,
@@ -336,11 +337,6 @@ def _tables_here(path: Path) -> bytes:
     if len(lines) >= 6:
         lines[5] = _TABLES_HERE
     return b"".join(lines)
-
-
-#: HYSPLIT's names for the columns the particle table names otherwise
-#: (:data:`runtraj.particles.PARTICLE_SCHEMA`); the rest keep HYSPLIT's.
-PARTICLE_COLUMNS = {"indx": "particle", "time": "age", "long": "lon", "lati": "lat"}
 
 
 def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
