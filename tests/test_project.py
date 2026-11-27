@@ -619,6 +619,27 @@ def test_a_selection_is_a_mask_over_simulations(selecting):
         assert list(table["variant"]) == ["hrrr", "long"]
 
 
+@pytest.mark.parametrize("dtype", ["boolean", "bool[pyarrow]"])
+def test_a_mask_with_missing_values_selects_nothing_there(selecting, dtype):
+    sims = selecting.simulations
+    mask = pd.Series(
+        [pd.NA, True, False, pd.NA][: len(sims)], dtype=dtype, index=sims.index
+    )
+
+    status = selecting.status(mask)
+
+    assert len(status) == 1
+    assert status["release"].iloc[0] == sims["release"].iloc[1]
+    assert status["variant"].iloc[0] == sims["variant"].iloc[1]
+
+
+def test_a_complete_pyarrow_mask_is_a_mask(selecting):
+    sims = selecting.simulations
+    mask = (sims["release"] == _release(13).id).astype("bool[pyarrow]")
+
+    assert set(selecting.status(mask)["release"]) == {_release(13).id}
+
+
 def test_a_selection_is_any_table_with_release_and_variant_columns(selecting):
     import pyarrow as pa
 
