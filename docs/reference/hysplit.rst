@@ -217,7 +217,7 @@ HYSPLIT 5.4.2:
        builds; 7 needs momentum fluxes in the met files; 11 needs a
        ``DAUGHTER.TXT`` from HYSPLIT's preprocessor.
    * - 8
-     - Refused here: it is ``mode: particles``, which takes ``ichem: 8``
+     - Refused here: it is ``mode: particle``, which takes ``ichem: 8``
        or none.
    * - others
      - Refused: HYSPLIT ran ``ICHEM=12`` as 0 without a message.

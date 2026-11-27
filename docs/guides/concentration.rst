@@ -112,7 +112,7 @@ What a concentration run does not have
 --------------------------------------
 
 The particle file's settings (``varsiwant``, ``outdt``, ``veght``) and
-``emisshrs`` belong to the particles mode. A concentration run leaves them
+``emisshrs`` belong to the particle mode. A concentration run leaves them
 out, so a ``hysplit`` block that sets them for its particle variants serves
 a concentration variant too; each pollutant has its own ``hours``. A
 ``pollutants``, ``grids`` or ``conversions`` without ``mode: concentration`` is refused. A stage reads
@@ -223,7 +223,7 @@ of the product per mass converted (1.5 for SO2 to SO4).
 
 The other values are refused, each with its reason
 (:ref:`hysplit-concentration`). ``ichem: 8`` is HYSPLIT's particle output,
-which is ``mode: particles``: there ``ichem`` may be 8 or left out, and a
+which is ``mode: particle``: there ``ichem`` may be 8 or left out, and a
 trajectory run reads none.
 
 In a project

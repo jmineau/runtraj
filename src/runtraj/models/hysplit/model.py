@@ -80,8 +80,8 @@ class HysplitModel(TransportModel[HysplitConfig]):
         """
         Return the type of result a run with *config* makes, which its ``mode`` says.
 
-        ``particles``, ``concentration``, or ``trajectories`` in ``mode:
-        trajectory``.
+        ``particles`` in ``mode: particle``, ``concentration``, or
+        ``trajectories`` in ``mode: trajectory``.
 
         Examples
         --------
@@ -90,7 +90,8 @@ class HysplitModel(TransportModel[HysplitConfig]):
         >>> HysplitModel().result(HysplitConfig(n_hours=-24, mode="trajectory"))
         'trajectories'
         """
-        return "trajectories" if config.mode == "trajectory" else config.mode
+        types = {"particle": "particles", "trajectory": "trajectories"}
+        return types.get(config.mode, config.mode)
 
     def result_files(self, config: HysplitConfig) -> tuple[str, ...]:
         """

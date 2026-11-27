@@ -81,7 +81,7 @@ def test_a_particles_record_names_no_trajectory_setting():
     assert "mode" not in record
 
 
-@pytest.mark.parametrize("mode", ["particles", "concentration"])
+@pytest.mark.parametrize("mode", ["particle", "concentration"])
 def test_another_mode_refuses_the_values_along_a_trajectory(mode):
     extra = (
         {"pollutants": [{"name": "TRCA"}], "grids": [{"name": "g"}]}
