@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=7935fc64"></script>
+    <script src="../_static/documentation_options.js?v=14efb440"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev20+gc2b359084" />
+  <meta name="docsearch:version" content="0.1.0a6.dev21+gb0f616ca9" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1790,11 +1790,15 @@ FLEXPART, which met to use, and what its particles hold.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">directory</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
+<td><p>A name that tells this met’s runs apart from those of another met of the same weather product, such as <code class="docutils literal notranslate"><span class="pre">mynn</span></code> and <code class="docutils literal notranslate"><span class="pre">ysu</span></code> for two WRF runs with different boundary-layer schemes, whose ARL files carry the same source id. A run records it only when it is set, so a met without one keeps its settings folders, and setting one moves its runs to a new folder. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> and a run refuse two mets of one transport model that record the same settings and no label to tell them apart, since their variants would share one run.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">directory</span></code></p></td>
 <td><p>Directory of the GRIB files. A relative path starts from the project directory.</p></td>
 <td><p>Required</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pattern</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pattern</span></code></p></td>
 <td><p>Glob that picks the GRIB files in <code class="docutils literal notranslate"><span class="pre">directory</span></code>. A file that holds no GRIB message, such as an index cfgrib wrote, is left out.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'*'</span></code></p></td>
 </tr>
@@ -1837,31 +1841,35 @@ footprint is such a stage:</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">directory</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
+<td><p>A name that tells this met’s runs apart from those of another met of the same weather product, such as <code class="docutils literal notranslate"><span class="pre">mynn</span></code> and <code class="docutils literal notranslate"><span class="pre">ysu</span></code> for two WRF runs with different boundary-layer schemes, whose ARL files carry the same source id. A run records it only when it is set, so a met without one keeps its settings folders, and setting one moves its runs to a new folder. <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> and a run refuse two mets of one transport model that record the same settings and no label to tell them apart, since their variants would share one run.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">directory</span></code></p></td>
 <td><p>Directory holding the ARL meteorology files. Downloads are saved here. In a project, a relative path starts from the project directory; <code class="docutils literal notranslate"><span class="pre">~</span></code> and <code class="docutils literal notranslate"><span class="pre">$VARIABLES</span></code> are expanded.</p></td>
 <td><p>Required</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_dir</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_dir</span></code></p></td>
 <td><p>Directory for the cropped files, shared by every simulation that uses this meteorology. Each crop box gets its own folder inside it. Required when cropping your own files; not used with <code class="docutils literal notranslate"><span class="pre">download</span></code>, which crops files as it downloads them. A relative path starts from the project directory.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">download</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">download</span></code></p></td>
 <td><p>Name of a NOAA ARL archive to download files from with arlmet, such as <code class="docutils literal notranslate"><span class="pre">hrrr</span></code>, <code class="docutils literal notranslate"><span class="pre">nam12</span></code>, <code class="docutils literal notranslate"><span class="pre">gdas1</span></code>, or <code class="docutils literal notranslate"><span class="pre">gfs0p25</span></code>. Options for the archive (such as <code class="docutils literal notranslate"><span class="pre">domain:</span> <span class="pre">ak</span></code>) go in the same entry.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">download_from</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">download_from</span></code></p></td>
 <td><p>Server to download from: <code class="docutils literal notranslate"><span class="pre">s3</span></code>, <code class="docutils literal notranslate"><span class="pre">ftp</span></code>, or <code class="docutils literal notranslate"><span class="pre">http</span></code>.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'s3'</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_enable</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_enable</span></code></p></td>
 <td><p>Crop the meteorology to <code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code> before running.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_bounds</span></code></p></td>
 <td><p>Longitude/latitude box to crop the meteorology to. Particles that leave it stop, so make it wide enough for the whole run.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_levels</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subgrid_levels</span></code></p></td>
 <td><p>Number of vertical levels to keep, counted from the surface. Unset keeps all.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>

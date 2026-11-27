@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=7935fc64"></script>
+    <script src="../../../_static/documentation_options.js?v=14efb440"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev20+gc2b359084" />
+  <meta name="docsearch:version" content="0.1.0a6.dev21+gb0f616ca9" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -475,6 +475,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._transient</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_transient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">look_alike_mets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span><span class="p">,</span> <span class="n">get_backend</span><span class="p">,</span> <span class="n">not_waited</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">LocalConfig</span><span class="p">,</span> <span class="n">PbsConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -926,7 +927,9 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If a release id is not in the project, *task* is not from 0 to</span>
-<span class="sd">        ``n - 1``, or the backend is not waited for.</span>
+<span class="sd">        ``n - 1``, the backend is not waited for, or two mets of one</span>
+<span class="sd">        transport model record the same settings, so that their variants</span>
+<span class="sd">        would share one run (:func:`runtraj.check.look_alike_mets`).</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -941,6 +944,7 @@
     <span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">backend</span><span class="o">.</span><span class="n">waits</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">not_waited</span><span class="p">(</span><span class="n">backend</span><span class="p">))</span>
+    <span class="n">_refuse_look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
     <span class="n">todo</span> <span class="o">=</span> <span class="n">pending</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="o">=</span><span class="n">releases</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">todo</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"run: every simulation is complete; nothing to do"</span><span class="p">)</span>
@@ -959,6 +963,13 @@
         <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
     <span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_refuse_look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise ``ValueError`` when two mets of one transport model record the same settings, before the completed runs are listed."""</span>
+    <span class="n">alike</span> <span class="o">=</span> <span class="n">look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">alike</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">alike</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">run_here</span><span class="p">(</span>
@@ -1124,7 +1135,8 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If the execution backend is ``local``, or one that takes no list</span>
-<span class="sd">        of releases (Kubernetes) with *releases* or ``skip_existing=False``.</span>
+<span class="sd">        of releases (Kubernetes) with *releases* or ``skip_existing=False``,</span>
+<span class="sd">        or two mets look alike, as for :func:`run`.</span>
 <span class="sd">    """</span>
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
     <span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
@@ -1136,6 +1148,7 @@
             <span class="s2">"and skips the complete ones, as a retried task must: it takes no "</span>
             <span class="s2">"list of releases and no --no-skip."</span>
         <span class="p">)</span>
+    <span class="n">_refuse_look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
     <span class="n">todo</span> <span class="o">=</span> <span class="n">pending</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="o">=</span><span class="n">releases</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">todo</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"submit: every simulation is complete; nothing to do"</span><span class="p">)</span>

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=7935fc64"></script>
+    <script src="../../_static/documentation_options.js?v=14efb440"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev20+gc2b359084" />
+  <meta name="docsearch:version" content="0.1.0a6.dev21+gb0f616ca9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -665,7 +665,25 @@
 <span class="sd">    model's built-in weather: nothing to check or fetch, nothing</span>
 <span class="sd">    downloaded, and ARL files when the met is read at the particles. A met</span>
 <span class="sd">    of files overrides the ones its files need.</span>
+
+<span class="sd">    Every met has :attr:`label`, which a run records beside :meth:`settings`</span>
+<span class="sd">    when it is set (:attr:`runtraj.config.Variant.met_settings`).</span>
 <span class="sd">    """</span>
+
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"A name that tells this met's runs apart from those of another met "</span>
+            <span class="s2">"of the same weather product, such as ``mynn`` and ``ysu`` for two "</span>
+            <span class="s2">"WRF runs with different boundary-layer schemes, whose ARL files "</span>
+            <span class="s2">"carry the same source id. A run records it only when it is set, so "</span>
+            <span class="s2">"a met without one keeps its settings folders, and setting one "</span>
+            <span class="s2">"moves its runs to a new folder. ``runtraj check`` and a run refuse "</span>
+            <span class="s2">"two mets of one transport model that record the same settings and "</span>
+            <span class="s2">"no label to tell them apart, since their variants would share one "</span>
+            <span class="s2">"run."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
 
 <div class="viewcode-block" id="MetConfig.settings">
 <a class="viewcode-back" href="../../reference/_api/runtraj.models.MetConfig.settings.html#runtraj.models.MetConfig.settings">[docs]</a>
@@ -677,7 +695,8 @@
 <span class="sd">        Never where its files are kept or how they are named, so that moving</span>
 <span class="sd">        them changes no settings folder. Plain values (mappings, lists,</span>
 <span class="sd">        strings, numbers). HYSPLIT's are the source id in the ARL headers</span>
-<span class="sd">        and the crop.</span>
+<span class="sd">        and the crop. The run adds :attr:`label` when it is set, so a</span>
+<span class="sd">        subclass leaves it out.</span>
 <span class="sd">        """</span></div>
 
 

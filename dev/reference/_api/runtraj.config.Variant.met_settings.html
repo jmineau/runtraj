@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=7935fc64"></script>
+    <script src="../../_static/documentation_options.js?v=14efb440"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev20+gc2b359084" />
+  <meta name="docsearch:version" content="0.1.0a6.dev21+gb0f616ca9" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1017,14 +1017,19 @@
 <dl class="py property">
 <dt class="sig sig-object py" id="runtraj.config.Variant.met_settings">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Variant.</span></span><span class="sig-name descname"><span class="pre">met_settings</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span><a class="reference internal" href="../../_modules/runtraj/config.html#Variant.met_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.config.Variant.met_settings" title="Link to this definition">#</a></dt>
-<dd><p>What a run records of the met, its config’s <code class="docutils literal notranslate"><span class="pre">settings()</span></code>.</p>
+<dd><p>its config’s <code class="docutils literal notranslate"><span class="pre">settings()</span></code>, and its <code class="docutils literal notranslate"><span class="pre">label</span></code> when it has one.</p>
 <p>For HYSPLIT, the weather product and the crop. Read on first use,
 once for all the variants of a met: the product comes from the
-header of the met’s first file.</p>
+header of the met’s first file. A met without a label records no
+<code class="docutils literal notranslate"><span class="pre">label</span></code> key, so its settings folders are the ones it had before
+labels existed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="runtraj.exceptions.MeteorologyError.html#runtraj.exceptions.MeteorologyError" title="runtraj.exceptions.MeteorologyError"><strong>runtraj.exceptions.MeteorologyError</strong></a> – If the met’s directory does not exist or holds no file to read
     its product from.</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>What a run records of the met</p>
 </dd>
 </dl>
 </dd></dl>
