@@ -67,8 +67,8 @@ newest:
 
 | Version | Build | Programs |
 |---|---|---|
-| 5.0.2 | the oldest supported, built from NOAA's repository | `hycs_std` |
-| 5.1.0 | the oldest that writes no `age = 0` row | `hycs_std` |
+| 5.0.2 | the oldest supported, built from NOAA's repository | `hycs_std`, `hyts_std` |
+| 5.1.0 | the oldest that writes no `age = 0` row | `hycs_std`, `hyts_std` |
 | 5.4.2 | NOAA ARL's public build, from [ARL's download page](https://www.ready.noaa.gov/HYSPLIT_linux.php) | `hycs_std`, `hyts_std` |
 
 A version in between is recorded only when it changes something runtraj reads.

@@ -1,0 +1,9 @@
+{
+ "status": 0,
+ "outputs": [
+  "MESSAGE",
+  "TRAJ.CFG",
+  "WARNING",
+  "tdump"
+ ]
+}
