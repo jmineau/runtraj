@@ -397,6 +397,20 @@ def test_particles_that_left_the_met_domain_are_not_a_failure(tmp_path):
     driver.run_hycs_std(tmp_path, timeout=5)  # does not raise
 
 
+def test_run_drops_the_hysf_variables_and_keeps_the_rest(tmp_path, monkeypatch):
+    """HYSPLIT 5.4 moves its files to where ``HYSF_*`` names; every other variable stays."""
+    monkeypatch.setenv("HYSF_PARTICLE_STILT", str(tmp_path / "elsewhere.dat"))
+    monkeypatch.setenv("HYSF_CONTROL", "elsewhere")
+    monkeypatch.setenv("RUNTRAJ_TEST_KEPT", "yes")
+    _script(tmp_path, "env > seen_env\n")
+
+    driver.run_hycs_std(tmp_path, timeout=5)
+
+    seen = (tmp_path / "seen_env").read_text().splitlines()
+    assert "RUNTRAJ_TEST_KEPT=yes" in seen
+    assert not [line for line in seen if line.startswith("HYSF_")]
+
+
 def test_run_times_out_and_keeps_log_output(tmp_path):
     _script(tmp_path, "echo 'starting hycs_std'\nsleep 30\n")
 
