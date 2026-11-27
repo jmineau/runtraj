@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import pandas as pd
 
-from runtraj._process import ended_if_this_process_dies, own_group, terminate
+from runtraj._process import read_log, run_program
 from runtraj.exceptions import HYSPLITNotFoundError, SimulationError
 from runtraj.models.hysplit.config import (
     CONCENTRATION_ONLY_SETTINGS,
@@ -985,34 +985,20 @@ def run_hycs_std(
         domain are not a failure.
     """
     log_path = workdir / LOG_FILE
-    with (
-        log_path.open("w", encoding="utf-8") as handle,
-        ended_if_this_process_dies() as watch,
-        subprocess.Popen(
+    try:
+        status = run_program(
             [str(program_file(workdir, program))],
             cwd=workdir,
-            stdout=handle,
-            stderr=subprocess.STDOUT,
+            log_path=log_path,
+            timeout=timeout,
             env=hysplit_environment(),
-            **own_group(),
-        ) as proc,
-    ):
-        watch(proc)
-        try:
-            proc.wait(timeout=timeout)
-        except subprocess.TimeoutExpired as e:
-            terminate(proc)
-            raise SimulationError(
-                f"HYSPLIT ran longer than the {timeout} s timeout.",
-                reason=FailureReason.TIMEOUT,
-            ) from e
-        except BaseException:
-            # Ctrl-C, or a worker told to stop: HYSPLIT runs in a session of
-            # its own (a process group on Windows), so no signal reached it and
-            # it would run on, unseen.
-            terminate(proc)
-            raise
-    messages = log_path.read_text(encoding="utf-8", errors="replace")
+        )
+    except subprocess.TimeoutExpired as e:
+        raise SimulationError(
+            f"HYSPLIT ran longer than the {timeout} s timeout.",
+            reason=FailureReason.TIMEOUT,
+        ) from e
+    messages = read_log(log_path)
     warnings = workdir / WARNING_FILE
     if warnings.exists():
         messages += warnings.read_text(encoding="utf-8", errors="replace")
@@ -1020,8 +1006,8 @@ def run_hycs_std(
     if found is not None:
         reason, line = found
         raise SimulationError(f"HYSPLIT: {line}", reason=reason)
-    if proc.returncode != 0:
-        raise _exit_status_error(workdir, proc.returncode)
+    if status != 0:
+        raise _exit_status_error(workdir, status)
 
 
 def _exit_status_error(workdir: Path, status: int) -> SimulationError:
