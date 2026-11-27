@@ -86,6 +86,16 @@ def test_due_hours_with_since_close_the_gap():
     assert after[0] == before[-1] + timedelta(hours=1)
 
 
+@pytest.mark.parametrize(
+    "offset",
+    [timedelta(minutes=30), timedelta(seconds=15), timedelta(microseconds=1)],
+)
+def test_due_hours_after_an_off_hour_release_stay_on_the_hour(offset):
+    hours = schedule.due_hours(NOW, delay=8, since=datetime(2026, 10, 27, 10) + offset)
+
+    assert hours == [datetime(2026, 10, 27, 11) + timedelta(hours=k) for k in range(48)]
+
+
 @pytest.mark.parametrize("back", [2, 25])
 def test_due_hours_ignore_a_since_inside_or_just_before_the_window(back):
     hours = schedule.due_hours(NOW, delay=8)
