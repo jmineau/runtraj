@@ -30,6 +30,7 @@ from runtraj.models.hysplit.driver import (
     check_met_stop,
     setup_entries,
     setup_seed,
+    version_at_least,
     winderrtf,
     zicontroltf,
     ziscale_factors,
@@ -1015,6 +1016,23 @@ def test_setup_cfg_winderrtf_follows_the_version_the_program_prints(
     build = make_hysplit_dir(tmp_path / "hysplit", version)
     config = _config(directory=build, ziscale=0.8)
     assert f"winderrtf={written}" in _setup_cfg(tmp_path, point_release, config)
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [
+        ("hysplit.v5.2.3", False),
+        ("hysplit.v5.3.0", True),
+        ("hysplit.v5.4.2", True),
+        ("hysplit.v6.0.0", True),
+        ("unknown", False),
+        (None, False),
+    ],
+)
+def test_version_at_least_takes_a_version_without_a_number_as_the_oldest(
+    version, expected
+):
+    assert version_at_least(version, (5, 3, 0)) is expected
 
 
 CONCENTRATION = {

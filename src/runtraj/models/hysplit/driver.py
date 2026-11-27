@@ -671,15 +671,26 @@ def winderrtf(params: HysplitConfig, version: str | None = None) -> int:
     (2, 0)
     """
     flag = (winderr(params) is not None) + 2 * (zierr(params) is not None)
-    if zicontroltf(params) and _since(version, ZICONTROL_ADDS_TWO):
+    if zicontroltf(params) and version_at_least(version, ZICONTROL_ADDS_TWO):
         flag -= 2
     return flag
 
 
-def _since(version: str | None, first: tuple[int, int, int]) -> bool:
-    """Return whether *version*, as ``hycs_std`` prints it, is *first* or later; a version without a number is older."""
+def version_at_least(version: str | None, minimum: tuple[int, int, int]) -> bool:
+    """
+    Return whether *version*, as ``hycs_std`` prints it, is *minimum* or later.
+
+    A *version* without a number, or ``None``, is taken to be the oldest.
+
+    Examples
+    --------
+    >>> version_at_least("hysplit.v5.4.2", (5, 3, 0))
+    True
+    >>> version_at_least("hysplit.v5.2.3", (5, 3, 0)), version_at_least(None, (5, 3, 0))
+    (False, False)
+    """
     found = _VERSION_NUMBER.search(version or "")
-    return found is not None and tuple(map(int, found.groups())) >= first
+    return found is not None and tuple(map(int, found.groups())) >= minimum
 
 
 def check_wind_error(params: HysplitConfig, version: str | None) -> None:
@@ -721,7 +732,7 @@ def check_wind_error(params: HysplitConfig, version: str | None) -> None:
     if (
         params.mode == "concentration"
         and winderr(params) is not None
-        and _since(version, WINDERR_NEEDS_IDSP)
+        and version_at_least(version, WINDERR_NEEDS_IDSP)
     ):
         raise ValueError(
             f"The wind error settings ({', '.join(WIND_ERROR_SETTINGS)}) do "
