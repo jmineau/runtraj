@@ -50,8 +50,8 @@ Download HYSPLIT from
 `NOAA's Air Resources Laboratory <https://www.ready.noaa.gov/HYSPLIT.php>`_,
 which asks you to accept the
 `HYSPLIT terms of use <https://www.ready.noaa.gov/HYSPLIT_agreement.php>`_
-first. Unpack it, and point ``directory`` at the folder it makes, in a
-project's ``config.yaml``:
+first. runtraj supports HYSPLIT 5.0 and later. Unpack it, and point
+``directory`` at the folder it makes, in a project's ``config.yaml``:
 
 .. code-block:: yaml
 
@@ -68,6 +68,13 @@ load it.
 
    Make sure ``hycs_std`` has permission to run:
    ``chmod +x exec/hycs_std``.
+
+.. note::
+
+   HYSPLIT 5.0.x never seeds the random numbers of a column release or of
+   an ``ichem: 5`` run, so on it those runs differ every time, whatever
+   ``seed`` is. Use HYSPLIT 5.1.0 or later when you need to repeat them
+   (:ref:`hysplit-versions`).
 
 ``runtraj check`` says when a project can find no ``hycs_std``, or one that
 cannot run. :doc:`../guides/hysplit_build` has more on choosing a download

@@ -49,7 +49,7 @@ For plotting and for downloading meteorology from NOAA, add the `complete` extra
 (`runtraj[complete]`).
 
 runtraj runs NOAA's HYSPLIT program, `hycs_std`, but does not include it or its data tables.
-Download HYSPLIT from [NOAA's Air Resources Laboratory](https://www.ready.noaa.gov/HYSPLIT.php),
+It supports HYSPLIT 5.0 and later. Download HYSPLIT from [NOAA's Air Resources Laboratory](https://www.ready.noaa.gov/HYSPLIT.php),
 which asks you to accept the
 [HYSPLIT terms of use](https://www.ready.noaa.gov/HYSPLIT_agreement.php) first. Unpack it, then
 set `directory` under `models: hysplit:` in `config.yaml` to the folder it makes, or put that
