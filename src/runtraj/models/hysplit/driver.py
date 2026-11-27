@@ -312,7 +312,8 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
 
     In the particles mode the entries of :data:`FIXED_SETUP` come first.
     Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,
-    under their own names; the concentration mode leaves out the particle
+    under their own names (``DSWF`` in ``VARSIWANT`` in upper case, which
+    ``hycs_std`` 5.2 and later needs to fill it); the concentration mode leaves out the particle
     file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the
     config's ``ichem``, 0 unless set. The driver adds
     ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``
@@ -341,6 +342,13 @@ def setup_entries(params: HysplitConfig) -> dict[str, Any]:
         if name not in skip and getattr(params, name) is not None
     )
     entries["zicontroltf"] = zicontroltf(params)
+    if "varsiwant" in entries:
+        # From 5.2.0 hycs_std turns the shortwave flux on by a case-sensitive
+        # comparison to 'DSWF': in lower case the column is written as 0. Every
+        # other name stays lower case, which 'zcfx' needs ('ZCFX' is unknown).
+        entries["varsiwant"] = [
+            "DSWF" if name == "dswf" else name for name in params.varsiwant
+        ]
     if params.seed is not None:
         entries["seed"] = setup_seed(params.seed)
     return entries

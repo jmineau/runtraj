@@ -619,7 +619,8 @@ class HysplitConfig(TransportConfig):
             "column of the particles under the same name, except ``indx``, "
             "``time``, ``long``, and ``lati``. ``zcfx`` is the vertical "
             "displacement by convective flux along the trajectory, in m. "
-            "The default is HYSPLIT's own list of 20."
+            "``SETUP.CFG`` gets ``dswf`` as ``DSWF``, as HYSPLIT 5.2 and later "
+            "fills it only then. The default is HYSPLIT's own list of 20."
         ),
     )
     capemin: float | None = Field(
