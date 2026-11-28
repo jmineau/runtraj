@@ -188,12 +188,17 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
     n = len(frame)
     ref = frame["altitude_ref"].astype(str).str.lower().to_numpy()
     # Group keys as text: a file that mixes numeric and string ids must not
-    # split one release into two. Without a group column, every row is a release.
-    keys = (
-        frame["group"].astype(str).to_numpy()
+    # split one release into two. A row with no group (no column, or a blank
+    # cell) is a release of its own: its key starts with NUL, so no group
+    # label can equal it.
+    nogroup = (
+        frame["group"].isna().to_numpy()
         if "group" in frame.columns
-        else np.arange(n).astype(str)
+        else np.ones(n, bool)
     )
+    keys = np.char.add("\0", np.arange(n).astype(str)).astype(object)
+    if not nogroup.all():
+        keys[~nogroup] = frame["group"].astype(str).to_numpy()[~nogroup]
     codes, uniques = pd.factorize(keys)
 
     def fail(mask: np.ndarray, message: str) -> None:
@@ -201,7 +206,7 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
         if mask.any():
             where = int(np.flatnonzero(mask)[0])
             label = (
-                f"group={uniques[codes[where]]}" if "group" in frame else f"row {where}"
+                f"row {where}" if nogroup[where] else f"group={uniques[codes[where]]}"
             )
             raise ValueError(f"{label}: {message}")
 

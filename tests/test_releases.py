@@ -720,6 +720,25 @@ def test_read_releases_multipoint_via_group(tmp_path):
     assert len(releases[0].coords()) == 2
 
 
+def test_blank_group_cell_is_a_release_of_its_own():
+    csv = """time,longitude,latitude,altitude,group
+2024-01-15 18:00,-111.85,40.77,10,
+2024-01-15 18:00,-112.00,40.50,10,
+2024-01-15 18:00,-111.90,40.70,0,col
+2024-01-15 18:00,-111.90,40.70,3000,col
+"""
+    releases = read_releases(io.StringIO(csv))
+    assert [type(r) for r in releases] == [PointRelease, PointRelease, ColumnRelease]
+
+
+def test_blank_group_rows_at_different_times_are_separate_releases():
+    csv = """time,longitude,latitude,altitude,group
+2024-01-15 18:00,-111.85,40.77,10,
+2024-01-15 19:00,-112.00,40.50,10,
+"""
+    assert len(read_releases(io.StringIO(csv))) == 2
+
+
 def test_read_releases_refuses_the_old_group_column_name(tmp_path):
     """``r_idx`` is not read: a file that has it is told to say ``group``."""
     csv = tmp_path / "releases.csv"
