@@ -200,8 +200,9 @@ class ParticlesPlotAccessor:
 
         Parameters
         ----------
-        color_by : {"age", "zagl", "foot"}, default "age"
-            Particle variable to color by.
+        color_by : str, default "age"
+            The numeric column to color by, such as ``zagl``, ``pres``,
+            ``mlht`` or ``weight``.
         release : Release, optional
             Mark this release on the map.
         ax : Axes, optional
@@ -228,22 +229,18 @@ class ParticlesPlotAccessor:
         lons: np.ndarray = p["lon"].to_numpy(dtype=float)
         lats: np.ndarray = p["lat"].to_numpy(dtype=float)
 
-        _color_labels = {
+        if color_by not in p.columns or not pd.api.types.is_numeric_dtype(p[color_by]):
+            numeric = [str(c) for c in p.select_dtypes("number").columns]
+            raise ValueError(
+                f"The particles have no numeric column {color_by!r} to color by; "
+                f"they have {numeric}."
+            )
+        c: np.ndarray = p[color_by].to_numpy(dtype=float)
+        cbar_label = {
             "age": "Seconds since release",
             "zagl": "Altitude AGL (m)",
             "foot": "Surface influence (foot)",
-        }
-        if color_by not in _color_labels:
-            raise ValueError(
-                f"color_by must be one of {list(_color_labels)!r}, got {color_by!r}"
-            )
-        if color_by == "foot" and "foot" not in p.columns:
-            raise ValueError(
-                "The particles have no 'foot' column to color by: the transport "
-                "model wrote none."
-            )
-        c: np.ndarray = p[color_by].to_numpy(dtype=float)
-        cbar_label = _color_labels[color_by]
+        }.get(color_by, color_by)
 
         extent = _extent(lons, lats, pad=0.5)
         fig, ax = _make_ax(ax, extent=extent, tiler=tiler, tiler_zoom=tiler_zoom)

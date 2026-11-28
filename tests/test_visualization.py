@@ -234,9 +234,21 @@ def test_trajectories_map_color_by_foot(minimal_trajectories):
     assert ax is not None
 
 
+def test_trajectories_map_colors_by_any_numeric_column(minimal_trajectories):
+    particles = minimal_trajectories.assign(pres=[850.0, 860.0, 870.0])
+    ax = particles.runtraj.plot.map(color_by="pres")
+    assert ax.figure.axes[-1].get_ylabel() == "pres"
+
+
 def test_trajectories_map_invalid_color_by_raises(minimal_trajectories):
-    with pytest.raises(ValueError, match="color_by"):
+    with pytest.raises(ValueError, match="no numeric column 'bad_col'.*'zagl'"):
         minimal_trajectories.runtraj.plot.map(color_by="bad_col")
+
+
+def test_trajectories_map_refuses_a_text_column(minimal_trajectories):
+    particles = minimal_trajectories.assign(site="WBB")
+    with pytest.raises(ValueError, match="no numeric column 'site'"):
+        particles.runtraj.plot.map(color_by="site")
 
 
 def test_trajectories_map_reuses_ax(minimal_trajectories):

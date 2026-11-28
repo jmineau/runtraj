@@ -82,7 +82,8 @@ also show coastlines and country borders.
    @savefig particles_map.png width=6in
    particles.runtraj.plot.map(release=sim.release);   # every position, by age
 
-``color_by="zagl"`` colors the particles by height instead. Two more plots
+``color_by="zagl"`` colors the particles by height instead, and any other
+numeric column, such as ``pres`` or ``weight``, works too. Two more plots
 help before a batch: ``sim.release.plot.map()`` shows where a release is, and
 ``project.plot.availability()`` the days each location has releases.
 
