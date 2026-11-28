@@ -4,6 +4,7 @@ The dry deposition transform: weigh each row by the tracer that survives to the 
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -24,10 +25,51 @@ if TYPE_CHECKING:
 MAX_STEP_SECONDS = 60.0
 
 
+def _hysplit_surface_layer(internal_grid: tuple[int, float, float, float]) -> float:
+    """
+    Return the depth in meters of HYSPLIT's surface layer, for the internal grid a run printed.
+
+    It is the height of the highest internal level at or below 75 m
+    (``metlvl.f``), where level ``k`` is ``aa k**2 + bb k + cc``: 50 m
+    on HRRR, 75 m on HYSPLIT's default grid.
+
+    Examples
+    --------
+    >>> _hysplit_surface_layer((41, 15.0, -5.0, 0.0))
+    50.0
+    >>> _hysplit_surface_layer((25, 30.0, -25.0, 5.0))
+    75.0
+    """
+    _, aa, bb, cc = internal_grid
+    dist = bb * bb - 4.0 * aa * (cc - 75.0)
+    k = int((-bb + math.sqrt(dist)) / (2.0 * aa)) if dist >= 0 else 1
+    depth = aa * k * k + bb * k + cc
+    if not depth > 0:
+        raise ValueError(
+            f"The internal grid {internal_grid} has no level between the ground "
+            "and 75 m; give surface_layer_depth in meters."
+        )
+    return float(depth)
+
+
+def _surface_layer_depth(particles: pd.DataFrame, depth: float | None) -> float:
+    """Return *depth*, or HYSPLIT's surface layer for the internal grid *particles* record."""
+    if depth is not None:
+        return depth
+    grid = particles.attrs.get("internal_grid")
+    if grid is None:
+        raise ValueError(
+            "The particles record no HYSPLIT internal grid, so the depth of the "
+            "surface layer is not known. Give surface_layer_depth in meters (it "
+            "was 50 by default, HYSPLIT's on HRRR)."
+        )
+    return _hysplit_surface_layer(grid)
+
+
 def dry_deposition_survival(
     particles: pd.DataFrame,
     velocity: float,
-    surface_layer_depth: float = 50.0,
+    surface_layer_depth: float | None = None,
 ) -> pd.Series:
     r"""
     Return the fraction of a depositing tracer that survives from each row to the release.
@@ -44,9 +86,11 @@ def dry_deposition_survival(
         ``zagl`` (m) columns and a row at every time step (HYSPLIT's ``outdt: 0``).
     velocity : float
         The dry deposition velocity, in m/s.
-    surface_layer_depth : float, default 50.0
+    surface_layer_depth : float, optional
         The depth of the layer the tracer deposits from, in meters above
-        ground.
+        ground. Unset, it is HYSPLIT's surface layer, the highest internal
+        level at or below 75 m, of the internal grid the particles record
+        (``particles.attrs["internal_grid"]``, as a HYSPLIT run's do).
 
     Returns
     -------
@@ -57,8 +101,9 @@ def dry_deposition_survival(
     Raises
     ------
     ValueError
-        If a column is missing or a particle's rows are more than
-        :data:`MAX_STEP_SECONDS` apart.
+        If a column is missing, a particle's rows are more than
+        :data:`MAX_STEP_SECONDS` apart, or *surface_layer_depth* is unset and
+        the particles record no internal grid.
 
     Notes
     -----
@@ -80,7 +125,9 @@ def dry_deposition_survival(
     ...         "zagl": [10.0, 100.0, 10.0],
     ...     }
     ... )
-    >>> dry_deposition_survival(p, velocity=0.01).round(4).tolist()
+    >>> dry_deposition_survival(p, velocity=0.01, surface_layer_depth=50.0).round(
+    ...     4
+    ... ).tolist()
     [0.9881, 0.9881, 0.9763]
     """
     missing = [c for c in ("particle", "age", "zagl") if c not in particles.columns]
@@ -96,8 +143,9 @@ def dry_deposition_survival(
             f"these rows are up to {step.max():g} seconds apart. Have the "
             "transport model write a row every minute (HYSPLIT: outdt: 0)."
         )
-    below = particles["zagl"].to_numpy(dtype=float) < surface_layer_depth
-    return survival(particles, np.where(below, velocity / surface_layer_depth, 0.0))
+    depth = _surface_layer_depth(particles, surface_layer_depth)
+    below = particles["zagl"].to_numpy(dtype=float) < depth
+    return survival(particles, np.where(below, velocity / depth, 0.0))
 
 
 class DryDeposition(BaseModel):
@@ -114,13 +162,14 @@ class DryDeposition(BaseModel):
 
     kind: Literal["dry_deposition"] = "dry_deposition"
     velocity: float = Field(gt=0, description="Dry deposition velocity, in m/s.")
-    surface_layer_depth: float = Field(
-        50.0,
+    surface_layer_depth: float | None = Field(
+        None,
         gt=0,
         description=(
             "Depth of the layer the tracer deposits from, in meters above "
-            "ground. HYSPLIT uses its lowest internal level at or below 75 m, "
-            "50 m on HRRR."
+            "ground. Unset, it is HYSPLIT's: the highest internal level at or "
+            "below 75 m of the run's internal grid, 50 m on HRRR. Particles "
+            "that record no internal grid need it set."
         ),
     )
 

@@ -182,7 +182,9 @@ def test_dry_deposition_runs_on_toy_rows_a_minute_apart():
         _release(), {"weather": "hrrr"}, model=TOY, n_hours=-1, step=1
     )
 
-    survived = dry_deposition_survival(particles, velocity=0.01)
+    survived = dry_deposition_survival(
+        particles, velocity=0.01, surface_layer_depth=50.0
+    )
 
     assert ((survived > 0) & (survived <= 1)).all()
 
