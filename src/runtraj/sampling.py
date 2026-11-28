@@ -366,9 +366,7 @@ def _met_times(sources: list[Any]) -> pd.DatetimeIndex:
             index = pd.DatetimeIndex(source.indexes["time"])
         else:
             index = pd.DatetimeIndex(source.times)
-        if index.tz is not None:
-            index = index.tz_convert("UTC").tz_localize(None)
-        times.update(index)
+        times.update(_utc(index))
     return pd.DatetimeIndex(sorted(times))
 
 
