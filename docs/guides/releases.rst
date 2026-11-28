@@ -157,13 +157,13 @@ A time with an offset, such as ``2023-07-15T12:00:00-06:00``, is converted
 to UTC; one without is taken as UTC. Other forms are refused, naming the
 row: ``05/07/2023`` could be 5 July or 7 May.
 
-Some other column names also work. Use ``long`` or ``lon`` for
-longitude, ``lati`` or ``lat`` for latitude, and ``zagl`` or ``zmsl`` for
-altitude. A ``zmsl`` column means the altitudes are above sea level. To mix
-the two in one file, add an ``altitude_ref`` (or ``height_ref``) column with
-``agl`` or ``msl`` on each row. A column under another name that holds only
-``agl`` and ``msl``, such as ``alt_ref``, is an error: it would be kept as a
-label, and every height read as above ground.
+Altitudes are in meters above ground. For heights above sea level, or to
+mix the two in one file, add an ``altitude_ref`` column with ``agl`` or
+``msl`` on each row. Each column has only the name shown here, in lower
+case: a file with ``lat``, ``zagl`` or ``Time`` is refused, naming the column
+to use, since under another name the column would be kept as a label. So is
+a column under another name that holds only ``agl`` and ``msl``, such as
+``alt_ref``: every height would be read as above ground.
 
 To build a column or multipoint release, give its rows the same ``group``
 value. Rows that share a ``group`` become one release, so they must also

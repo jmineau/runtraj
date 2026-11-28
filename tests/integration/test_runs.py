@@ -189,7 +189,7 @@ def test_cli_tasks_split_the_releases(tmp_path, traj_only_config):
     project_dir.mkdir()
     traj_only_config.to_yaml(project_dir / "config.yaml")
     (project_dir / "releases.csv").write_text(
-        "time,lati,long,zagl\n"
+        "time,latitude,longitude,altitude\n"
         "2021-01-15 06:00:00,40.5,-112.0,5.0\n"
         "2021-01-15 06:00:00,40.6,-111.9,5.0\n"
         "2021-01-15 06:00:00,40.7,-111.8,5.0\n"
