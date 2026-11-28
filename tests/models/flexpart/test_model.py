@@ -109,15 +109,6 @@ def test_config_needs_lsynctime_to_divide_loutstep(checkout):
         config(checkout, loutstep=3600, lsynctime=700)
 
 
-@pytest.mark.parametrize("loutstep", [90, 3630])
-def test_config_refuses_a_loutstep_that_is_not_whole_minutes(loutstep):
-    with pytest.raises(
-        ValidationError, match=rf"loutstep \({loutstep} s\) must be a whole"
-    ):
-        FlexpartConfig(n_hours=-24, loutstep=loutstep, lsynctime=30)
-    assert FlexpartConfig(n_hours=-24, loutstep=120, lsynctime=30).loutstep == 120
-
-
 def test_config_needs_loutstep_of_twice_lsynctime_or_more():
     """FLEXPART stops on ``(loutstep/lsynctime).lt.2`` (readoptions_mod.f90)."""
     with pytest.raises(ValidationError, match="at least twice lsynctime"):

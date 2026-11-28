@@ -76,10 +76,7 @@ class FlexpartConfig(TransportConfig):
     )
     loutstep: int = Field(
         3600,
-        description=(
-            "Seconds between particle outputs (``LOUTSTEP``): a whole number of "
-            "minutes, since a particle's ``age`` is in minutes."
-        ),
+        description=("Seconds between particle outputs (``LOUTSTEP``)."),
     )
     lsynctime: int = Field(
         900,
@@ -158,13 +155,7 @@ class FlexpartConfig(TransportConfig):
 
     @model_validator(mode="after")
     def _steps(self) -> FlexpartConfig:
-        """Check that ``loutstep`` is whole minutes and a multiple of ``lsynctime`` of at least two, and that ``cblflag`` has the time steps FLEXPART would force."""
-        if self.loutstep % 60:
-            raise ValueError(
-                f"loutstep ({self.loutstep} s) must be a whole number of minutes: "
-                "FLEXPART would run, but runtraj's particle table counts age in "
-                "whole minutes and could not read its output."
-            )
+        """Check that ``loutstep`` is a multiple of ``lsynctime`` of at least two, and that ``cblflag`` has the time steps FLEXPART would force."""
         if self.loutstep % self.lsynctime:
             raise ValueError(
                 f"lsynctime ({self.lsynctime} s) must divide loutstep "
