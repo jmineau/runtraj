@@ -38,7 +38,7 @@ def test_an_unknown_backend_name_says_how_to_name_one():
 
 
 def test_a_class_that_is_not_a_backend_is_refused():
-    with pytest.raises(TypeError, match="subclasses runtraj.execution.Backend"):
+    with pytest.raises(ValueError, match="subclasses runtraj.execution.Backend"):
         get_backend("tests.fixtures.backends.NotABackend")
 
 
