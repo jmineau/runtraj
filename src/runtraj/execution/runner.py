@@ -526,7 +526,7 @@ def run(
     ``KeyboardInterrupt``, and ``runtraj run`` exits with 3. Whoever
     started the task decides whether it runs again: the Slurm job array
     script requeues it after the time-limit notice or a preemption
-    (:func:`runtraj.execution.job_script`), and a Kubernetes Job retries it
+    (:func:`runtraj.execution.slurm.job_script`), and a Kubernetes Job retries it
     (:mod:`runtraj.execution.kubernetes`). It then skips what it finished.
     """
     execution = execution if execution is not None else project.config.execution

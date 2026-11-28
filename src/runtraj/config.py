@@ -1196,5 +1196,4 @@ __all__ = [
     "VARIANT_NAME_RE",
     "ProjectConfig",
     "Variant",
-    "transport_config",
 ]

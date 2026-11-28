@@ -400,8 +400,6 @@ def check_stage(stage: Stage, config: Any) -> None:
 
 __all__ = [
     "RESERVED_NAMES",
-    "STAGE_NAME_RE",
-    "STAGE_VERSION_RE",
     "Stage",
     "check_stage",
     "get_stage",
