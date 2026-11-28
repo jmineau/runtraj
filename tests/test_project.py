@@ -7,6 +7,7 @@ import matplotlib
 import pandas as pd
 import pytest
 
+import runtraj.output
 from runtraj import Project
 from runtraj.config import ProjectConfig
 from runtraj.models.hysplit import HysplitMetConfig
@@ -509,6 +510,32 @@ def test_an_ensembles_particles_are_one_set_per_realization(tmp_path, transport_
 
     assert list(project.status()["state"]) == ["complete", "complete"]
     assert particles["realization"].value_counts().to_dict() == {0: 50, 1: 50}
+
+
+def test_status_lists_the_results_tree_once_however_many_realizations(
+    tmp_path, transport_runs, monkeypatch
+):
+    """Each listing is a request on an object store, and a lookup that finds no folder did one per realization."""
+    project = _project(
+        tmp_path, [_release(12)], variants={"ens": {"realizations": 4, "krand": 4}}
+    )
+    listings = []
+    original = runtraj.output._settings_folders
+    monkeypatch.setattr(
+        runtraj.output,
+        "_settings_folders",
+        lambda tree: listings.append(tree) or original(tree),
+    )
+
+    before = project.status()
+    assert len(listings) == 1
+    assert list(before["state"]) == ["pending"] * 4
+
+    project.incomplete()
+    assert len(listings) == 2
+
+    _run(project)  # a folder made after a miss is found by the next call
+    assert list(project.status()["state"]) == ["complete"] * 4
 
 
 # ---------------------------------------------------------------------------

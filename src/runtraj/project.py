@@ -697,13 +697,14 @@ class Project:
         one for each stage it uses.
         """
         present: dict[_Key, _Present] = {}
-        for name, k, rows in _groups(frame):
-            variant = self.variants[name]
-            among = set(rows["release"])
-            present[(name, k)] = {
-                kind: self.output.present(kind, variant, among, k)
-                for kind in (variant.result, *variant.stage_order)
-            }
+        with self.output._listed_once():
+            for name, k, rows in _groups(frame):
+                variant = self.variants[name]
+                among = set(rows["release"])
+                present[(name, k)] = {
+                    kind: self.output.present(kind, variant, among, k)
+                    for kind in (variant.result, *variant.stage_order)
+                }
         return present
 
     @staticmethod
@@ -755,7 +756,10 @@ class Project:
         >>> st[st.state == "failed"][["release", "variant", "reason"]]  # doctest: +SKIP
         """
         frame = self._selected(sel)
-        present = self._present(frame)
+        with self.output._listed_once():
+            present = self._present(frame)
+            found = self._failure_records(frame, present)
+            started = self._started(frame, present, found)
         rows = _rows(frame)
         # One column for each kind of result any variant of the project makes.
         made = {v.result for v in self.variants.values()}
@@ -776,9 +780,7 @@ class Project:
             for kind in kinds
         }
         complete = self._complete(frame, present)
-        found = self._failure_records(frame, present)
         records = [found.get(row, {}) for row in rows]
-        started = self._started(frame, present, found)
         state = [
             "complete"
             if done
