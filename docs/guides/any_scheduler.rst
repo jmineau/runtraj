@@ -138,7 +138,7 @@ Exit codes
        directory that is not a project. Or the project's files are invalid:
        ``config.yaml`` is not valid YAML or has a misspelled setting, or a
        row of ``releases.csv`` is bad. Or a met directory does not exist
-       or holds no ARL file (``runtraj check`` lists it; ``runtraj status`` exits
+       or holds no met file (``runtraj check`` lists it; ``runtraj status`` exits
        with 2 for it only when the output may hold results). Nothing ran. Do
        not retry.
    * - 3

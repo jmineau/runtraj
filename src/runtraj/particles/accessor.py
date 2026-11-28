@@ -113,9 +113,9 @@ class ParticlesAccessor:
         and ``lon``, ``lat``, ``zagl``, ``age`` and ``time`` are interpolated
         along it to where it crosses. If the line crosses two edges at a
         corner, ``edge`` is the first it crosses. A particle whose first row is
-        already outside has no row inside to interpolate from (the
-        meteorology HYSPLIT 5.1.0 writes no row at
-        the release), so it is reported at that row, on the edge it is
+        already outside has no row inside to interpolate from (a particle that
+        leaves the box in its first step, since HYSPLIT writes no row at the
+        release), so it is reported at that row, on the edge it is
         farthest beyond.
 
         Parameters

@@ -812,7 +812,7 @@ def wind_error_refusal(
     wind error only with ``IDSP=2``, which the concentration mode does not
     set, and otherwise prints ``IDSP must be set to 2 to use WINDERRTF=1``
     and runs without it, so the settings would do nothing. Earlier versions
-    apply it, and the particles mode sets ``IDSP=2``. A version runtraj
+    apply it, and the particle mode sets ``IDSP=2``. A version runtraj
     cannot read, or none, is taken to be older. *version* is called only
     when *params* set the wind error in the concentration mode.
 
@@ -844,7 +844,7 @@ def wind_error_refusal(
         f"nothing in the concentration mode on {found}: HYSPLIT 5.3.0 "
         "and later apply the wind error only with IDSP=2, which this "
         "mode does not set, so the run would go on without it. Remove "
-        "them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."
+        "them, use the particle mode, or run HYSPLIT 5.2.3 or earlier."
     )
 
 

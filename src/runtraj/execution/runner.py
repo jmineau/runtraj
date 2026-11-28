@@ -4,7 +4,8 @@ Running a project: finding the releases with missing results and handing them to
 What every backend shares: which releases run (:func:`pending`), the
 share of a task (:func:`task_share`), the compute root, a local run in this
 process, and the fetch before it. :func:`run` and :func:`submit` hand a
-Slurm job array to :mod:`runtraj.execution.slurm` and a Kubernetes Job to
+Slurm job array to :mod:`runtraj.execution.slurm`, a PBS job array to
+:mod:`runtraj.execution.pbs` and a Kubernetes Job to
 :mod:`runtraj.execution.kubernetes`.
 """
 
@@ -522,9 +523,10 @@ def run(
 
     Notes
     -----
-    A task (``task`` given) stopped with SIGTERM or Ctrl-C raises
-    ``KeyboardInterrupt``, and ``runtraj run`` exits with 3. Whoever
-    started the task decides whether it runs again: the Slurm job array
+    A run stopped with SIGTERM or Ctrl-C does not raise: the workers stop,
+    what finished is kept, and this returns the status table, which marks
+    the rest ``pending`` or ``interrupted``, so ``runtraj run`` exits with
+    3. Whoever started the task decides whether it runs again: the Slurm job array
     script requeues it after the time-limit notice or a preemption
     (:func:`runtraj.execution.slurm.job_script`), and a Kubernetes Job retries it
     (:mod:`runtraj.execution.kubernetes`). It then skips what it finished.
@@ -654,13 +656,14 @@ def submit(
     compute_root: str | Path | None = None,
 ) -> str | None:
     """
-    Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.
+    Submit every simulation of a project that has not finished to the scheduler ``execution.backend`` names.
 
     The releases with missing results are split among the ``n_tasks``
     tasks of one job array (:func:`array_size`), at
     most ``n_workers`` running at once, and this returns once it is
-    submitted. The
-    submission is a folder ``_slurm/<date_time>_<id>/`` in the project:
+    submitted. On Slurm the
+    submission is a folder ``_slurm/<date_time>_<id>/`` in the project
+    (``_pbs/`` on PBS):
     ``releases.txt`` lists the releases to run, ``releases.parquet``
     holds their checked rows from ``releases.csv``, ``execution.yaml``
     holds the execution settings, ``job.sh`` is the script given to

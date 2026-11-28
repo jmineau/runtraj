@@ -90,12 +90,8 @@ The project is ``tests/kubernetes/demo``: two releases at the University of
 Utah early on 2021-01-15, three hours back, 100 particles each, with its
 inputs and results on the stand-in S3 server (its ``config.yaml`` has the
 ``kubernetes`` block). It needs a Linux HYSPLIT folder at ``/opt/hysplit``,
-here and in the image. The script the test uses installs one (it asks for
-``sudo``):
-
-.. code-block:: bash
-
-   .github/scripts/install_hysplit.sh
+here and in the image: put your HYSPLIT folder there, the one with ``exec/``
+and ``bdyfiles/`` in it (:doc:`hysplit_build`).
 
 The meteorology
 ^^^^^^^^^^^^^^^

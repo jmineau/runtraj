@@ -1096,7 +1096,7 @@ class Project:
         variant it checks that:
 
         - the project has releases (``releases``);
-        - the met's ``directory`` exists and holds an ARL file (``met_directory``);
+        - the met's ``directory`` exists and holds a met file (``met_directory``);
         - every met file each release's run needs is there, naming the
           hours (``met_files``), and a run needs at most the 128 files
           HYSPLIT reads (``met_count``);
@@ -1188,7 +1188,7 @@ class Project:
         ValueError
             If ``config.yaml`` or ``releases.csv`` is invalid.
         FileNotFoundError
-            If the directory of a met without ``download`` holds no ARL
+            If the directory of a met without ``download`` holds no met
             file, which names the output folder of its runs.
         ImportError
             If a met downloads and the ``download`` extra is not installed.
@@ -1230,7 +1230,7 @@ class Project:
         Run every simulation that has not finished, and wait for it.
 
         Shorthand for :func:`runtraj.execution.run`, which documents the
-        parameters. Use :meth:`submit` to submit to Slurm and return at once.
+        parameters. Use :meth:`submit` to submit to a scheduler and return at once.
         """
         from runtraj.execution import run
 
@@ -1252,10 +1252,10 @@ class Project:
         releases: Iterable[str] | None = None,
     ) -> str | None:
         """
-        Submit every simulation that has not finished to Slurm or Kubernetes, and return at once.
+        Submit every simulation that has not finished to the scheduler ``execution.backend`` names, and return at once.
 
         Shorthand for :func:`runtraj.execution.submit`, which documents the
-        parameters. Returns the Slurm job id or the Kubernetes Job's name,
+        parameters. Returns the scheduler's job id (the Kubernetes Job's name),
         or ``None`` when nothing needs to run.
         """
         from runtraj.execution import submit

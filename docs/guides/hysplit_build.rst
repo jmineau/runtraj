@@ -64,12 +64,6 @@ still opens a project. ``runtraj status`` finds each variant's folder by the
 variant's name and its other settings, and exits with 2 when the variant
 has folders from two builds.
 
-A build that writes each particle's release as a row at ``age = 0`` gives
-exact release heights for multipoint and slant releases. HYSPLIT 5.1.0
-writes its first row one time step after release, and runtraj matches
-each particle to its release point from that first position
-(:doc:`../reference/particles`).
-
 What a build reads from runtraj
 -------------------------------
 

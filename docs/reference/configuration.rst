@@ -232,8 +232,8 @@ Parameters
 ----------
 
 The settings that shape a run's particles belong to the transport model,
-and are written in its block under ``models:`` (``hysplit`` when the config
-has no ``models``). HYSPLIT's are in
+and are written in its block under ``models:``, which a config must have:
+there is no default model. HYSPLIT's are in
 :class:`runtraj.models.hysplit.HysplitConfig`, under HYSPLIT's names (see
 :doc:`hysplit`). Each model's block holds all of its settings, the ones
 runtraj reads itself among them (``n_hours`` and ``seed``): nothing passes

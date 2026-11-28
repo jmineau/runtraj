@@ -7,7 +7,7 @@ runtraj runs the same particle model, ``hycs_std``, from Python. It writes
 ARL met files, and returns every particle's position at every time step as
 a pandas table. For many starting times and places, and for the same runs
 under other settings, a project runs them all, on your computer or as a
-Slurm job array, and keeps the particles of each set of settings in a
+job array on a scheduler (Slurm, PBS or Kubernetes), and keeps the particles of each set of settings in a
 folder of its own. It runs the ``hycs_std`` you already have: set
 ``directory`` to the HYSPLIT folder, or put the folder of ``hycs_std`` on ``PATH``
 (:doc:`../getting_started/installation`).
@@ -80,49 +80,11 @@ file holds from its header, and gives HYSPLIT the ones the run needs.
 A single trajectory
 -------------------
 
-``hyts_std``, HYSPLIT's trajectory model, follows the mean wind. One
-particle with turbulence off follows the same path, so ``numpar=1`` and
-``nturb=1`` give you a trajectory:
-
-.. ipython:: python
-
-   path = runtraj.run_trajectories(
-       start, met_dir, model="hysplit", n_hours=6, numpar=1, nturb=1
-   )
-   path[["time", "lon", "lat", "zagl"]].iloc[[0, 59, 179, 359]]
-
-We compared this run with ``hyts_std`` (NOAA's public 5.4.2) on the same
-met. After 6 hours the two are 0.001 degrees apart in longitude and 0.008 in
-latitude. The mean position of 200 particles with turbulence on ended about
-41 km away and 340 m lower:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 46 18 18 18
-
-   * - After 6 hours
-     - Longitude
-     - Latitude
-     - Height (m)
-   * - ``hyts_std``
-     - -110.709
-     - 40.544
-     - 1354
-   * - One particle, turbulence off
-     - -110.707
-     - 40.536
-     - 1428
-   * - Mean of 200 particles
-     - -111.111
-     - 40.735
-     - 1087
-
-So the mean of many particles is the center of a cloud that spreads as it
-goes, which is a different thing from a trajectory. For a trajectory, run one
-particle.
-For several trajectories from one time, use a
-:class:`~runtraj.MultiPointRelease` with ``numpar`` equal to its number of
-locations: HYSPLIT gives each location one particle.
+For a trajectory, which follows the mean wind and has no turbulence, use
+``mode: trajectory``: runtraj runs ``hyts_std``, HYSPLIT's trajectory model.
+:doc:`trajectories` shows how. One particle with turbulence off is not the
+same thing, and the mean of many particles is the center of a cloud that
+spreads as it goes.
 
 Many runs: a project
 --------------------
@@ -155,7 +117,8 @@ The starting points go in ``releases.csv``, one row each:
    2021-07-15 13:00:00,-111.85,40.77,500
 
 ``runtraj run ./my_project`` runs them here, and ``runtraj submit
-./my_project --backend slurm`` as a Slurm job array (:doc:`slurm`). Then read the particles
+./my_project --backend slurm`` as a Slurm job array (:doc:`slurm`; PBS and
+Kubernetes have their own guides). Then read the particles
 of any selection of runs as one table:
 
 .. code-block:: python

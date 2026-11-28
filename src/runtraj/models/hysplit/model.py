@@ -216,7 +216,7 @@ class HysplitModel(TransportModel[HysplitConfig]):
         self, particles: pd.DataFrame, release: Release, config: HysplitConfig
     ) -> pd.DataFrame:
         """
-        Return where each particle started, for a HYSPLIT build that writes no row at ``age = 0``.
+        Return where each particle started, for HYSPLIT, which writes no row at ``age = 0``.
 
         See :func:`runtraj.models.hysplit.releases.release_rows`.
         """

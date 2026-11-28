@@ -183,14 +183,15 @@ Glossary
       (:doc:`../guides/slurm`).
 
    backend
-      Where the simulations run: ``local`` (your computer) or ``slurm`` (an
-      HPC cluster). Set it in the ``execution`` block of ``config.yaml``,
+      Where the simulations run: ``local`` (your computer), ``slurm``,
+      ``pbs`` or ``kubernetes``, or a class of your own that plugs in by its
+      import path. Set it in the ``execution`` block of ``config.yaml``,
       with that backend's settings in the block of its name. See
       :doc:`../guides/running`.
 
    numpar
-      The number of particles released per simulation, 2500 unless set.
-      More particles sample the turbulence better and take longer. We use
+      The number of particles released per simulation. HYSPLIT's default is
+      2500 and FLEXPART's is 1000. More particles sample the turbulence better and take longer. We use
       1000 for a tower.
 
    n_hours

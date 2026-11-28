@@ -689,8 +689,7 @@ changed setting writes a new folder and never overwrites a result.
 
 `Output` knows where each result's file is (`path`), which releases have
 one (`present`, from a listing of their date folders), and the one
-definition of a finished simulation (`complete`, which applies
-`runtraj.output.completed`): the model's output file exists, and so does the
+definition of a finished simulation (`runtraj.output.completed`): the model's output file exists, and so does the
 file of every stage the variant uses. `Simulation.is_complete` and
 `status()` use it. Every method takes the kind of result, `"particles"` or
 a stage's name, so a stage needs no method of its own; it writes its file
@@ -702,8 +701,9 @@ check, a registry, or a manifest. Call these instead.
 `runtraj.execution.run` (`execution/runner.py`) finds the releases with
 missing results and hands them to the backend `execution.backend` names
 (`get_backend`, `execution/backends.py`): `LocalBackend` calls
-`run_releases` in this process, `SlurmBackend` (`execution/slurm.py`) and
-`KubernetesBackend` (`execution/kubernetes.py`) start tasks. Anything that
+`run_releases` in this process, `SlurmBackend` (`execution/slurm.py`),
+`PbsBackend` (`execution/pbs.py`) and `KubernetesBackend`
+(`execution/kubernetes.py`) start tasks. Anything that
 differs between backends is a method or attribute of their class, never a
 branch on `execution.backend` elsewhere. The Slurm backend writes `releases.txt`,
 `releases.parquet` (the submitted releases' checked rows, which tasks
@@ -725,7 +725,7 @@ optional. One in another package is named by its import path in
 under its `name`; `tests/fixtures/backends.py` is a toy one.
 
 A new `execution:` setting goes on its backend's block (`LocalConfig`,
-`SlurmConfig` or `KubernetesConfig` in `execution/config.py`) with a
+`SlurmConfig`, `PbsConfig` or `KubernetesConfig` in `execution/config.py`) with a
 description; only a setting that applies wherever a run happens goes on
 `ExecutionConfig` itself. A setting a backend cannot run without is
 checked in its block's `check`, which runs only when that backend is

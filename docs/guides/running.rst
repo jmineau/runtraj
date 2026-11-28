@@ -169,7 +169,7 @@ Commands
 
 ``runtraj run <project>``
    Run every unfinished simulation and wait until they are done, here or
-   as a Slurm job array. Its options:
+   on the scheduler ``execution.backend`` names. Its options:
 
    - ``--backend`` and ``--n-workers`` override ``config.yaml`` for this run.
    - ``--cpus N`` runs ``N`` releases at once. Ctrl-C or ``SIGTERM`` stops
@@ -187,7 +187,7 @@ Commands
 
 ``runtraj submit <project>``
    Submit the unfinished simulations as a job array, and return as soon as
-   it is submitted (:doc:`slurm`). It goes to the scheduler ``--backend``
+   it is submitted (:doc:`slurm`, :doc:`pbs`, :doc:`containers`). It goes to the scheduler ``--backend``
    names, or ``execution.backend`` in ``config.yaml``; with neither,
    ``submit`` is an error.
 

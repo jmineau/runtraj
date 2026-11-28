@@ -118,7 +118,7 @@ src/runtraj/
 
 **A run** (`runtraj run`, `Project.run()`, `submit()`) happens where its
 backend says (`execution.backend`, a `Backend` found by `get_backend`): in this
-process, or as tasks (a Slurm job array, a Kubernetes indexed Job) that each
+process, or as tasks (a Slurm or PBS job array, a Kubernetes indexed Job) that each
 run `runtraj run --task i/N`. A backend only starts tasks and, if it can, waits;
 the branches on its name live in its class, not in `cli.py` or `runner.py`. The unit
 of work is a release: the worker runs the model once per run-settings hash,
@@ -251,7 +251,7 @@ log, met files or `age = 0` row; particles numbered 10, 20, ...):
 - Exceptions live in `runtraj/exceptions.py`, each subclassing `RuntrajError` and
   the builtin that describes it; a failed run is a `SimulationError`. Plain
   input checks raise builtins such as `ValueError`.
-- Extras: `visualization`, `geometry` (shapely, for `Release.geometry`), `download`, `concentration` (netCDF4), and `complete`, which the `dev` group installs.
+- Extras: `visualization`, `geometry` (shapely, for `Release.geometry`), `download`, `concentration` (netCDF4), `flexpart` (GRIB met), and `complete`, which the `dev` group installs.
 
 ### Documentation
 
@@ -344,7 +344,7 @@ machine-written, is "Writing documentation" in `CONTRIBUTING.md`. Words:
   run writes it too, harmlessly).
 - **Release heights come from the `age = 0` row** (`add_release_heights`), or
   from the model's `release_rows(particles, release, config)` when it writes
-  none, as HYSPLIT 5.1.0 to 5.4.2 do: a column there is `particles_per_step`
+  none, as HYSPLIT does: a column there is `particles_per_step`
   particles up the column each minute of `emisshrs`, numbered in order
   (`models/hysplit/releases.py`). With neither, a column or multipoint run
   fails `NO_RELEASE_ROWS`.

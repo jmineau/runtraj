@@ -68,10 +68,10 @@ looks at share its rows. The command exits with 0 when it finds nothing and
      - Get HYSPLIT and set ``directory`` or ``PATH``
        (:doc:`../getting_started/installation`).
    * - ``release_refused``
-     - The transport model cannot run a release. HYSPLIT refuses a
-       multipoint release whose points share a horizontal location, which
-       it would join into a line source; such a run fails as
-       ``RELEASE_REFUSED``.
+     - The transport model cannot run a release, and such a run fails as
+       ``RELEASE_REFUSED``. HYSPLIT's refusals are listed in its failure
+       table (:doc:`../reference/hysplit`); the usual one is a multipoint
+       release whose points share a horizontal location.
      - For HYSPLIT, use a ``ColumnRelease`` for a vertical column, or one
        ``PointRelease`` per height (:doc:`releases`).
    * - ``setting_refused``
@@ -83,7 +83,7 @@ looks at share its rows. The command exits with 0 when it finds nothing and
      - Change the setting, or use another HYSPLIT build
        (:ref:`hysplit-versions`).
    * - ``met_directory``
-     - A met's ``directory`` does not exist or holds no ARL file.
+     - A met's ``directory`` does not exist or holds no met file.
      - Correct ``directory`` under ``mets:``. A met with ``download`` makes
        its folder when a run needs it, so it is not checked.
    * - ``met_files``

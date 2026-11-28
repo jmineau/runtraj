@@ -260,10 +260,9 @@ lists the other settings HYSPLIT chooses for you.
 A :class:`ColumnRelease` released over more than a minute is a column of
 particles every minute. With ``numpar: 1000`` and ``emisshrs: 0.5``, HYSPLIT
 releases 34 particles a minute, each in one of 34 slabs from ``bottom`` to
-``top``. A HYSPLIT build that writes no rows at release time (5.4.2 and
-earlier) then tells runtraj a particle's start height only to within its
-slab, about 29 m in a 1000 m column, against about 1 m for the default
-instant release. A build that writes them makes it exact.
+``top``. HYSPLIT writes no rows at release time, so runtraj knows a
+particle's start height only to within its slab, about 29 m in a 1000 m
+column, against about 1 m for the default instant release.
 
 
 Advanced: release heights for multipoint and slant releases
@@ -272,35 +271,19 @@ Advanced: release heights for multipoint and slant releases
 Vertical weighting needs each particle's release height, the
 ``release_height`` column of the particles. HYSPLIT does not record which
 release point a particle came from, so runtraj works it out from the first
-row HYSPLIT writes for the particle. With HYSPLIT 5.1.0 that row comes
-one timestep after release. By then the wind
+row HYSPLIT writes for the particle. That row comes one timestep after
+release, since HYSPLIT writes none at release. By then the wind
 has moved the particle a few hundred meters, which can be more than the
 spacing between the points of a slant column.
 
 runtraj recovers release heights in this order:
 
-1. If the HYSPLIT build writes rows at release time (``age = 0``), it
-   uses them. The result is exact.
-2. If the release altitudes are all different, as they are in a slant
+1. If the release altitudes are all different, as they are in a slant
    column, it matches particles by height. Height changes much less than
    horizontal position over one timestep, so this is accurate to about
    20 m.
-3. Otherwise it matches by horizontal position. It warns when the release
+2. Otherwise it matches by horizontal position. It warns when the release
    points are closer than 1 km, because the match cannot be trusted there.
-
-To get exact release heights, run a HYSPLIT build that writes rows at
-release time (:doc:`hysplit_build`):
-
-.. code-block:: yaml
-
-   # config.yaml
-   models:
-     hysplit:
-       directory: /path/to/hysplit    # holds exec/hycs_std
-
-The checksum of the build's ``hycs_std`` is part of the particles'
-settings, and the version it prints is recorded beside them, so you can
-tell which build made them.
 
 
 Working with releases in code
