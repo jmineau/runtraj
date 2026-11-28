@@ -9,6 +9,7 @@ All notable changes to runtraj are listed here. The format follows
 
 ### Fixed
 
+- A FLEXPART `loutstep` that is not a whole number of minutes (such as 90) is refused when the settings are read, with the value and why. FLEXPART ran to the end, and then runtraj could not read output whose particle ages are not whole minutes. A multipoint release with more points than `numpar` is refused by `runtraj check` and before the run, instead of stopping FLEXPART on a release with no particles.
 - An unquoted `time: 12:00:00` (or `walltime`, or any other `h:mm:ss`) in `config.yaml` or an `--execution` file stays the text `12:00:00`. PyYAML read it as the base-60 integer 43200, which Slurm took as 43200 minutes (30 days).
 - A variant's `realizations` must be a whole number, 1 or more. A float such as `2.5`, a boolean, a string or a list is refused with an error naming the variant and the value, instead of being rounded (`2.5` ran 2 realizations, `true` ran 1) or ending `runtraj check` in a traceback.
 - `oxidation` reads its oxidant field's levels in their own units: a field on pressure levels in Pa (or kPa, mb) is matched to a particle's `pres` in hPa, and levels in m or km to `zagl`, instead of picking the level nearest the number. Levels whose `units` cannot be matched to the particle column are an error; levels with no `units` are taken to be in the particles' units, as before.

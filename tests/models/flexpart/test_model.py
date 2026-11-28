@@ -13,7 +13,7 @@ from pydantic import ValidationError
 
 import runtraj
 from runtraj.exceptions import MeteorologyError, SimulationError
-from runtraj.models import get_model
+from runtraj.models import get_model, run_model
 from runtraj.models.flexpart import FlexpartConfig, FlexpartMetConfig, FlexpartModel
 from runtraj.models.flexpart.config import flexpart_version
 from runtraj.models.flexpart.inputs import (
@@ -25,6 +25,7 @@ from runtraj.models.flexpart.inputs import (
 )
 from runtraj.models.flexpart.met import catalog, files_for
 from runtraj.models.flexpart.model import run_flexpart
+from runtraj.models.run import _release_points
 from runtraj.releases import ColumnRelease, MultiPointRelease, PointRelease
 
 pytest.importorskip("eccodes")
@@ -108,6 +109,15 @@ def test_config_needs_lsynctime_to_divide_loutstep(checkout):
         config(checkout, loutstep=3600, lsynctime=700)
 
 
+@pytest.mark.parametrize("loutstep", [90, 3630])
+def test_config_refuses_a_loutstep_that_is_not_whole_minutes(loutstep):
+    with pytest.raises(
+        ValidationError, match=rf"loutstep \({loutstep} s\) must be a whole"
+    ):
+        FlexpartConfig(n_hours=-24, loutstep=loutstep, lsynctime=30)
+    assert FlexpartConfig(n_hours=-24, loutstep=120, lsynctime=30).loutstep == 120
+
+
 def test_config_refuses_cblflag_with_time_steps_flexpart_would_change(checkout):
     """FLEXPART raises CTL to 5 and IFINE until CTL * IFINE is 50, and caps LSYNCTIME at 1200 s."""
     for steps in (
@@ -118,6 +128,29 @@ def test_config_refuses_cblflag_with_time_steps_flexpart_would_change(checkout):
         with pytest.raises(ValidationError, match="cblflag: 1 needs ctl"):
             config(checkout, cblflag=1, **steps)
     assert config(checkout, cblflag=1, ctl=5.0, ifine=10).cblflag == 1
+
+
+def _three_points():
+    return MultiPointRelease(
+        time="2023-06-01 18:00",
+        longitudes=[-111.8, -111.9, -112.0],
+        latitudes=[40.7, 40.8, 40.9],
+        altitudes=[10, 10, 10],
+    )
+
+
+def test_a_multipoint_release_with_more_points_than_numpar_is_refused():
+    release = _three_points()
+    table = _release_points([release])
+    model = FlexpartModel()
+    refused = model.check_releases(table, FlexpartConfig(n_hours=-24, numpar=2))
+    assert list(refused["check"]) == ["release_refused"]
+    assert "numpar of at least 3, and numpar is 2" in refused["message"].iloc[0]
+    assert model.check_releases(table, FlexpartConfig(n_hours=-24, numpar=3)).empty
+    # Refused before FLEXPART or the met is looked for.
+    with pytest.raises(SimulationError, match="numpar of at least 3") as error:
+        run_model("flexpart", release, FlexpartConfig(n_hours=-24, numpar=2), None)
+    assert error.value.reason == "RELEASE_REFUSED"
 
 
 def test_config_records_threads_but_not_where_the_checkout_is(checkout):
