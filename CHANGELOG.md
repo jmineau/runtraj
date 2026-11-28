@@ -9,6 +9,7 @@ All notable changes to runtraj are listed here. The format follows
 
 ### Fixed
 
+- `Project.init(..., output=Path(...))` and `ProjectConfig(output=Path(...))` take a `pathlib.Path`, as `Project(path, output=...)` and a met's `directory` already did, instead of failing with "Input should be a valid string".
 - An unquoted `time: 12:00:00` (or `walltime`, or any other `h:mm:ss`) in `config.yaml` or an `--execution` file stays the text `12:00:00`. PyYAML read it as the base-60 integer 43200, which Slurm took as 43200 minutes (30 days).
 - A variant's `realizations` must be a whole number, 1 or more. A float such as `2.5`, a boolean, a string or a list is refused with an error naming the variant and the value, instead of being rounded (`2.5` ran 2 realizations, `true` ran 1) or ending `runtraj check` in a traceback.
 - `oxidation` reads its oxidant field's levels in their own units: a field on pressure levels in Pa (or kPa, mb) is matched to a particle's `pres` in hPa, and levels in m or km to `zagl`, instead of picking the level nearest the number. Levels whose `units` cannot be matched to the particle column are an error; levels with no `units` are taken to be in the particles' units, as before.
