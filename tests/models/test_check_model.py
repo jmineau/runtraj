@@ -116,45 +116,9 @@ def test_a_run_needs_a_met_of_the_models_own():
         check_model(ToyModel(), ToyConfig(n_hours=-3), {"weather": "x"}, RELEASES[0])
 
 
-def test_a_batched_model_returns_a_release_column():
-    class Batched(ToyModel):
-        batched = True
-
-        def run_many(self, releases, config, met, windows, workdir=None, timeout=None):
-            runs = [
-                self.run(r, config, met, w).result.assign(release=str(r.id))
-                for r, w in zip(releases, windows, strict=True)
-            ]
-            return ModelRun(pd.concat(runs, ignore_index=True))
-
-    check_model(Batched(), ToyConfig(n_hours=-3), ToyMet(), RELEASES[0])
-
-    class NoColumn(Batched):
-        def run_many(self, *args, **kwargs):
-            return ModelRun(
-                super().run_many(*args, **kwargs).result.drop(columns="release")
-            )
-
-    with pytest.raises(SimulationError, match="release column"):
-        check_model(NoColumn(), ToyConfig(n_hours=-3), ToyMet(), RELEASES[0])
-
-
 # ---------------------------------------------------------------------------
 # Each promise, broken by a toy that breaks only it
 # ---------------------------------------------------------------------------
-
-
-class _Batched(ToyModel):
-    """The toy, batched."""
-
-    batched = True
-
-    def run_many(self, releases, config, met, windows, workdir=None, timeout=None):
-        runs = [
-            self.run(r, config, met, w).result.assign(release=str(r.id))
-            for r, w in zip(releases, windows, strict=True)
-        ]
-        return ModelRun(pd.concat(runs, ignore_index=True))
 
 
 class _NoTimeout(ToyModel):
@@ -162,18 +126,6 @@ class _NoTimeout(ToyModel):
 
     def run(self, release, config, met, window, workdir=None):
         return super().run(release, config, met, window, workdir)
-
-
-class _ManyNeedsWorkdir(_Batched):
-    """A run_many that needs a workdir, which the worker never gives it."""
-
-    def run_many(self, releases, config, met, windows, workdir=None, timeout=None):
-        (workdir / "input").exists()
-        return super().run_many(releases, config, met, windows, workdir, timeout)
-
-
-class _BatchedWithoutRunMany(ToyModel):
-    batched = True
 
 
 class _ModelField(ToyConfig):
@@ -246,8 +198,6 @@ class _FewRealizations(ToyModel):
     ("model", "release", "error", "message"),
     [
         (_NoTimeout, RELEASES[0], AssertionError, "timeout"),
-        (_ManyNeedsWorkdir, RELEASES[0], AssertionError, "NoneType"),
-        (_BatchedWithoutRunMany, RELEASES[0], AssertionError, "run_many"),
         (_NamedModel, None, AssertionError, r"field named \['model'\]"),
         (_NoName, None, AssertionError, "name must be a string"),
         (_NotTransport, None, AssertionError, "TransportConfig"),
@@ -270,11 +220,6 @@ def test_each_broken_promise_fails(model, release, error, message):
     config = config_class(n_hours=-3, seed=1)
     with pytest.raises(error, match=message):
         check_model(model(), config, ToyMet(), release)
-
-
-def test_a_batched_model_keeps_its_promises_by_run_and_by_run_many():
-    for release in RELEASES:
-        check_model(_Batched(), ToyConfig(n_hours=-3, seed=1), ToyMet(), release)
 
 
 class _RefusesColumns(ToyModel):

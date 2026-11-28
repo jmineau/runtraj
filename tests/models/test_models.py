@@ -338,7 +338,7 @@ class _Defaults(TransportModel):
 
 def test_a_model_keeps_the_defaults_it_does_not_override():
     model = _Defaults()
-    assert (model.needs_workdir, model.batched) == (True, False)
+    assert model.needs_workdir is True
     assert model.result(None) == "particles"
     assert model.result_files(None) == ()
     assert (model.sha256(None), model.version(None), model.data_files(None)) == (
@@ -349,8 +349,6 @@ def test_a_model_keeps_the_defaults_it_does_not_override():
     assert model.release_rows(None, None, None) is None
     table = model.check_releases(None, None)
     assert table.empty and list(table.columns) == ["check", "release", "message"]
-    with pytest.raises(NotImplementedError, match="sets batched but has no run_many"):
-        model.run_many([], None, None, [])
 
 
 class _NoRun(TransportModel):

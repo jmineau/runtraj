@@ -42,7 +42,7 @@ import pandas as pd
 from runtraj._transient import is_transient
 from runtraj.exceptions import SimulationError, WorkerDied
 from runtraj.execution.config import ExecutionConfig
-from runtraj.models import get_model, run_model, run_model_many
+from runtraj.models import get_model, run_model
 from runtraj.simulation import Simulation
 
 if TYPE_CHECKING:
@@ -309,66 +309,6 @@ def _log_end(sim: Simulation, log: str) -> None:
             path.unlink(missing_ok=True)
 
 
-def run_result_batch(
-    sims: list[Simulation], *, timeout: int | None = None
-) -> tuple[dict[str, pd.DataFrame], dict[str, str]]:
-    """
-    Run a batched transport model once for many releases, and write each one's particles.
-
-    *sims* are simulations of one variant and realization, one per release,
-    so they share the transport settings. The model's one call
-    (:func:`runtraj.models.run_model_many`) gives each release its
-    particles or an error: the particles and the log are written, and a
-    failure is recorded with its simulation.
-
-    Returns
-    -------
-    tuple of (dict, dict)
-        The particles written, and a line saying why for each release
-        that failed, both by release id.
-    """
-    first = sims[0]
-    for sim in sims:
-        _log_start(sim)
-    try:
-        results = run_model_many(
-            first.variant.model,
-            [sim.release for sim in sims],
-            first.transport,
-            first.variant.met_config,
-            timeout=timeout,
-        )
-    except Exception as error:
-        log = getattr(error, "log", "")
-        failed: dict[str, str] = {}
-        for sim in sims:
-            # A SimulationError ends the run as one run's does; any other
-            # error keeps the started line unless the error carries a log.
-            if log or isinstance(error, SimulationError):
-                _log_end(sim, log)
-            failed[sim.release.id] = _failed(sim, sim.variant.result, error)
-        return {}, failed
-    written: dict[str, pd.DataFrame] = {}
-    failed = {}
-    for sim in sims:
-        rid = sim.release.id
-        result = results[rid]
-        _log_end(sim, result.log)
-        if isinstance(result, SimulationError):
-            failed[rid] = _failed(sim, sim.variant.result, result)
-            continue
-        sim.output.write_result(
-            sim.variant,
-            sim.release,
-            result.result,
-            result.met_files,
-            sim.realization,
-        )
-        _succeeded(sim, sim.variant.result)
-        written[rid] = result.result
-    return written, failed
-
-
 @contextlib.contextmanager
 def _stage_file(path: Path | UPath, suffix: str) -> Iterator[Path | UPath]:
     """
@@ -514,7 +454,6 @@ def run_release(
     compute_root: Path,
     execution: ExecutionConfig | None = None,
     skip_existing: bool = True,
-    batched: bool = True,
 ) -> list[str]:
     """
     Run every simulation of one release, and return what did not complete.
@@ -546,10 +485,6 @@ def run_release(
         to the project's.
     skip_existing : bool, default True
         Keep particles and stage files that already exist.
-    batched : bool, default True
-        Also run the variants of a batched transport model, one release
-        per call. :func:`run_releases` runs those for all its releases at
-        once first, and passes False.
 
     Returns
     -------
@@ -561,8 +496,6 @@ def run_release(
     execution = execution if execution is not None else project.config.execution
     problems: list[str] = []
     for (_, k), names in _groups(project).items():
-        if not batched and _is_batched(project, names[0]):
-            continue
         group = [project.simulation(release_id, n, k) for n in names]
         problems += _run_group(
             project,
@@ -578,58 +511,14 @@ def _groups(project: Project) -> dict[tuple[str, int | None], list[str]]:
     """
     Return the variants that share particles, by particles hash and realization.
 
-    Each group's transport model runs once per release (or once for many
-    releases, when it is batched), and each variant in it runs its stages
-    on those particles.
+    Each group's transport model runs once per release, and each variant in
+    it runs its stages on those particles.
     """
     groups: dict[tuple[str, int | None], list[str]] = {}
     for name, variant in project.variants.items():
         for k in variant.realization_numbers:
             groups.setdefault((variant.result_hash, k), []).append(name)
     return groups
-
-
-def _is_batched(project: Project, variant: str) -> bool:
-    """Whether a variant's transport model runs many releases in one call."""
-    model = get_model(project.variants[variant].model)
-    return model.batched
-
-
-def _run_batched(
-    project: Project,
-    release_ids: list[str],
-    *,
-    execution: ExecutionConfig,
-    skip_existing: bool,
-) -> dict[str, list[str]]:
-    """
-    Run the variants of batched transport models for many releases, one model call per group.
-
-    For each group of variants that share particles, the releases whose
-    particles are missing (all of them, without *skip_existing*) run in one
-    call (:func:`run_result_batch`); then each variant's stages run
-    per release. Returns the failures by release id.
-    """
-    problems: dict[str, list[str]] = {rid: [] for rid in release_ids}
-    for (_, k), names in _groups(project).items():
-        if not _is_batched(project, names[0]):
-            continue
-        firsts = [project.simulation(rid, names[0], k) for rid in release_ids]
-        todo = [s for s in firsts if not (skip_existing and s.has_result)]
-        written: dict[str, pd.DataFrame] = {}
-        if todo:
-            written, failed = run_result_batch(todo, timeout=execution.timeout)
-            for rid, line in failed.items():
-                problems[rid].append(line)
-        ran = {s.release.id for s in todo}
-        for rid in release_ids:
-            if rid in ran and rid not in written:
-                continue  # its particles failed, so no stage has any to read
-            sims = [project.simulation(rid, n, k) for n in names]
-            problems[rid] += run_stages(
-                sims, written.get(rid), remade=rid in ran, skip_existing=skip_existing
-            )
-    return problems
 
 
 def _new_workdir(compute_root: Path, sim: Simulation) -> Path:
@@ -754,7 +643,6 @@ def _pool_run(item: tuple[int, str]) -> tuple[int, list[str]]:
             compute_root=_POOL_COMPUTE_ROOT,
             execution=_POOL_EXECUTION,
             skip_existing=_POOL_SKIP,
-            batched=False,  # run_releases ran those first
         )
     except SystemExit:
         # SIGTERM (:func:`_exit_worker`), after the run's `finally` blocks
@@ -860,7 +748,6 @@ def _a_worker_died(executor: ProcessPoolExecutor) -> bool:
 def _run_in_pool(
     project: Project,
     release_ids: list[str],
-    earlier: dict[str, list[str]],
     *,
     compute_root: Path,
     execution: ExecutionConfig,
@@ -914,7 +801,7 @@ def _run_in_pool(
                     del running[future]
                     done += 1
                     rid = release_ids[idx]
-                    _log_progress(rid, earlier.get(rid, []) + problems, done, total)
+                    _log_progress(rid, problems, done, total)
             # Normal completion: let the workers exit on their own.
             executor.shutdown()
         except KeyboardInterrupt:
@@ -959,9 +846,7 @@ def run_releases(
     """
     Run a list of releases, in this process or in a process pool.
 
-    The variants of a batched transport model run first, one model call
-    for all the releases that need their particles. Then each release
-    runs its other variants. Pool workers open the project again from its
+    Pool workers open the project again from its
     directory, with the same output directory. Ctrl-C, or a SIGTERM such as Slurm preemption or a stopped
     pod, stops the batch: the transport model runs in progress are ended, the workers exit, and this logs
     how many releases had finished and returns. What finished is in the output directory, with a failure
@@ -993,31 +878,16 @@ def run_releases(
     execution = execution if execution is not None else project.config.execution
     total = len(release_ids)
 
-    earlier: dict[str, list[str]] = {}
-    if any(_is_batched(project, names[0]) for names in _groups(project).values()):
-        with _sigterm_as_interrupt():
-            try:
-                earlier = _run_batched(
-                    project,
-                    release_ids,
-                    execution=execution,
-                    skip_existing=skip_existing,
-                )
-            except KeyboardInterrupt:
-                logger.info("stopped during a batched run; the rest did not run")
-                return
-
     if execution.cpus <= 1:
         with _sigterm_as_interrupt():
             for i, release_id in enumerate(release_ids, 1):
                 try:
-                    problems = earlier.get(release_id, []) + run_release(
+                    problems = run_release(
                         project,
                         release_id,
                         compute_root=compute_root,
                         execution=execution,
                         skip_existing=skip_existing,
-                        batched=False,
                     )
                 except KeyboardInterrupt:
                     logger.info("stopped at %s; the rest did not run", release_id)
@@ -1028,7 +898,6 @@ def run_releases(
     _run_in_pool(
         project,
         release_ids,
-        earlier,
         compute_root=compute_root,
         execution=execution,
         skip_existing=skip_existing,
@@ -1037,7 +906,6 @@ def run_releases(
 
 __all__ = [
     "run_result",
-    "run_result_batch",
     "run_release",
     "run_releases",
     "run_stage",

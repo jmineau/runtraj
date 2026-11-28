@@ -57,7 +57,7 @@ from runtraj.models import (
     TransportConfig,
     TransportModel,
 )
-from runtraj.models.run import _refused, _release_points, _run_many, _run_one
+from runtraj.models.run import _refused, _release_points, _run_one
 from runtraj.particles import read_particles, write_particles
 from runtraj.project import Project
 from runtraj.results import model_result, result_type
@@ -262,8 +262,7 @@ def check_model(
       this machine).
 
     With a *release* and its *met* (of ``met_config_class``), it also runs
-    the model once, through the code a project's run uses (``run``, and
-    ``run_many`` too for a batched model), and checks the result. A result
+    the model once, through the code a project's run uses (``run``), and checks the result. A result
     of a type other than particles (the model's ``result``) is checked by
     its type and stored and read back. Particles are checked further: the
     columns of the particle table, ages that go the way ``n_hours`` does and
@@ -414,30 +413,17 @@ def _check_run(
 ) -> None:
     """Run *model* once for *release* as a project's run does, and check its particles."""
     name = type(model).__name__
-    batched = model.batched
-    assert not batched or type(model).run_many is not TransportModel.run_many, (
-        f"{name} is batched, so it needs run_many"
-    )
     with tempfile.TemporaryDirectory(prefix="runtraj-check-") as tmp:
         workdir = None
         if model.needs_workdir:
             workdir = Path(tmp) / "work"
             workdir.mkdir()
-        runs = {"run": _promised(name, _run_one, model, release, config, met, workdir)}
-        if batched:
-            # The worker gives run_many no workdir.
-            many = _promised(name, _run_many, model, [release], config, met, None)
-            result = many.get(str(release.id))
-            assert result is not None, f"{name}.run_many must return the release"
-            if isinstance(result, SimulationError):
-                raise result
-            runs["run_many"] = result
+        run = _promised(name, _run_one, model, release, config, met, workdir)
         made = model_result(model, config)
-        for how, run in runs.items():
-            if made == "particles":
-                _check_particles(f"{name}.{how}", run, config, release, Path(tmp))
-            else:
-                _check_stored(f"{name}.{how}", run, made, config, release, Path(tmp))
+        if made == "particles":
+            _check_particles(f"{name}.run", run, config, release, Path(tmp))
+        else:
+            _check_stored(f"{name}.run", run, made, config, release, Path(tmp))
 
 
 def _promised(name: str, run: Callable[..., Any], *args: Any) -> Any:

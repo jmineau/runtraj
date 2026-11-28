@@ -290,24 +290,6 @@ class _RefusesLate(ToyModel):
         )
 
 
-class _BatchedRefusesLate(_RefusesLate):
-    """The refusing toy, batched: it runs all its releases in one call."""
-
-    batched = True
-
-    def __init__(self) -> None:
-        self.given: list[str] = []
-
-    def run_many(self, releases, config, met, windows, workdir=None, timeout=None):
-        """Run each release as the toy does, in one table with a release column."""
-        self.given = [str(r.id) for r in releases]
-        tables = [
-            self.run(r, config, met, w).result.assign(release=str(r.id))
-            for r, w in zip(releases, windows, strict=True)
-        ]
-        return ModelRun(result=pd.concat(tables, ignore_index=True))
-
-
 def test_the_core_refuses_a_release_the_model_lists_before_it_runs(monkeypatch):
     monkeypatch.setitem(models.MODELS, "late", _RefusesLate)
 
@@ -315,20 +297,6 @@ def test_the_core_refuses_a_release_the_model_lists_before_it_runs(monkeypatch):
         runtraj.run_trajectories(_release(13), {}, model="late", n_hours=-1)
     assert error.value.reason == "RELEASE_REFUSED"
     assert len(runtraj.run_trajectories(_release(12), {}, model="late", n_hours=-1))
-
-
-def test_a_batched_model_is_not_given_a_release_it_refuses(monkeypatch):
-    model = _BatchedRefusesLate()
-    monkeypatch.setitem(models.MODELS, "late", lambda: model)
-    noon, late = _release(12), _release(13)
-
-    results = models.run_model_many(
-        "late", [noon, late], ToyConfig(n_hours=-1), ToyMet()
-    )
-
-    assert model.given == [noon.id]
-    assert isinstance(results[noon.id], models.ModelRun)
-    assert results[late.id].reason == "RELEASE_REFUSED"
 
 
 # ---------------------------------------------------------------------------
