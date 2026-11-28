@@ -22,9 +22,6 @@ from runtraj.transforms.lifetime import survival
 if TYPE_CHECKING:
     from runtraj.releases import Release
 
-# The specific gas constant of dry air, in J kg⁻¹ K⁻¹.
-_R_DRY_AIR = 287.05
-
 
 # Units a CF file gives a vertical coordinate, by the particle column it can
 # be matched to: that column's unit, and each CF unit as a multiple of it.
@@ -107,8 +104,10 @@ def _temperature(particles: pd.DataFrame) -> np.ndarray:
     if "temz" in particles.columns:
         return particles["temz"].to_numpy(dtype=float)
     if {"pres", "dens"} <= set(particles.columns):
+        from arlmet.vertical import R_D
+
         pres = particles["pres"].to_numpy(dtype=float) * 100.0
-        return pres / (particles["dens"].to_numpy(dtype=float) * _R_DRY_AIR)
+        return pres / (particles["dens"].to_numpy(dtype=float) * R_D)
     raise ValueError(
         "Particle DataFrame has neither 'temz' nor 'pres' and 'dens', one of "
         "which oxidation needs for the temperature."
