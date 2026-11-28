@@ -98,6 +98,17 @@ def test_make_ax_with_extent():
     assert ax is not None
 
 
+def test_make_ax_draws_country_borders_not_state_lines():
+    """US state lines suit one country, and cartopy downloads them on first use."""
+    feature = pytest.importorskip("cartopy.feature")
+    from cartopy.mpl.feature_artist import FeatureArtist
+
+    _, ax = _make_ax()
+    drawn = [a._feature for a in ax.get_children() if isinstance(a, FeatureArtist)]
+    assert feature.BORDERS in drawn
+    assert feature.STATES not in drawn
+
+
 def test_make_ax_with_existing_ax():
     _, existing = plt.subplots()
     fig, ax = _make_ax(ax=existing)
@@ -223,9 +234,21 @@ def test_trajectories_map_color_by_foot(minimal_trajectories):
     assert ax is not None
 
 
+def test_trajectories_map_colors_by_any_numeric_column(minimal_trajectories):
+    particles = minimal_trajectories.assign(pres=[850.0, 860.0, 870.0])
+    ax = particles.runtraj.plot.map(color_by="pres")
+    assert ax.figure.axes[-1].get_ylabel() == "pres"
+
+
 def test_trajectories_map_invalid_color_by_raises(minimal_trajectories):
-    with pytest.raises(ValueError, match="color_by"):
+    with pytest.raises(ValueError, match="no numeric column 'bad_col'.*'zagl'"):
         minimal_trajectories.runtraj.plot.map(color_by="bad_col")
+
+
+def test_trajectories_map_refuses_a_text_column(minimal_trajectories):
+    particles = minimal_trajectories.assign(site="WBB")
+    with pytest.raises(ValueError, match="no numeric column 'site'"):
+        particles.runtraj.plot.map(color_by="site")
 
 
 def test_trajectories_map_reuses_ax(minimal_trajectories):

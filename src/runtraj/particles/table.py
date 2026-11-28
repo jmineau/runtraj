@@ -238,10 +238,11 @@ def read_particles(
     It needs nothing but the file: the release time in its metadata gives
     the ``time`` column (UTC) back, from ``age``. ``age``, ``particle``, and any
     float32 column come back as float64, whatever the model stored.
-    :func:`particles_metadata` reads the release and settings. A HYSPLIT
-    run's internal grid, which the file records, comes back in
-    ``attrs["internal_grid"]`` (``(nlvl, aa, bb, cc)``), where
-    :func:`runtraj.sampling.sample_met` reads it.
+    :func:`particles_metadata` reads the release and settings. The name of
+    the transport model that made them comes back in
+    ``attrs["transport_model"]``, and a HYSPLIT run's internal grid, which
+    the file records, in ``attrs["internal_grid"]`` (``(nlvl, aa, bb,
+    cc)``): :mod:`runtraj.sampling` reads both.
 
     Parameters
     ----------
@@ -277,6 +278,10 @@ def read_particles(
     for name in _INT_COLUMNS:
         if name in data.columns:
             data[name] = data[name].astype("float64")
+    if b"runtraj:settings" in meta:
+        model = json.loads(meta[b"runtraj:settings"]).get("model", {}).get("name")
+        if model is not None:
+            data.attrs["transport_model"] = model
     if b"runtraj:internal_grid" in meta:
         data.attrs["internal_grid"] = tuple(json.loads(meta[b"runtraj:internal_grid"]))
     if want_time and "age" in data.columns:

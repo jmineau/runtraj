@@ -684,7 +684,7 @@ def test_dry_deposition_survival_loses_tracer_only_below_the_surface_layer():
 
 def test_dry_deposition_survival_counts_the_step_from_release():
     p = pd.DataFrame({"particle": [1, 1], "age": [0.0, -60.0], "zagl": [10.0, 10.0]})
-    s = dry_deposition_survival(p, velocity=0.01)
+    s = dry_deposition_survival(p, velocity=0.01, surface_layer_depth=50.0)
     assert s.tolist() == pytest.approx([1.0, math.exp(-0.012)])
 
 
@@ -707,10 +707,27 @@ def test_dry_deposition_survival_requires_zagl():
 def test_dry_deposition_scales_the_weight_and_leaves_input_unchanged():
     p = _deposition_particles()
     before = p.copy(deep=True)
-    result = DryDeposition(velocity=0.01).apply(p)
+    result = DryDeposition(velocity=0.01, surface_layer_depth=50.0).apply(p)
     pd.testing.assert_frame_equal(p, before)
-    expected = dry_deposition_survival(p, velocity=0.01).to_numpy()
+    expected = dry_deposition_survival(
+        p, velocity=0.01, surface_layer_depth=50.0
+    ).to_numpy()
     assert result["weight"].to_numpy() == pytest.approx(expected)
+
+
+def test_dry_deposition_takes_hysplit_surface_layer_from_the_internal_grid():
+    """HRRR's grid gives HYSPLIT's 50 m layer: the highest level at or below 75 m."""
+    p = _deposition_particles()
+    p.attrs["internal_grid"] = (41, 15.0, -5.0, 0.0)
+    expected = dry_deposition_survival(p, velocity=0.01, surface_layer_depth=50.0)
+    pd.testing.assert_series_equal(dry_deposition_survival(p, velocity=0.01), expected)
+    result = DryDeposition(velocity=0.01).apply(p)
+    assert result["weight"].to_numpy() == pytest.approx(expected.to_numpy())
+
+
+def test_dry_deposition_without_an_internal_grid_needs_the_depth():
+    with pytest.raises(ValueError, match="Give surface_layer_depth.*was 50 by default"):
+        DryDeposition(velocity=0.01).apply(_deposition_particles())
 
 
 def test_dry_deposition_rejects_nonpositive_velocity():

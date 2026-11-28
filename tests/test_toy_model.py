@@ -177,12 +177,22 @@ def test_transforms_weigh_the_toys_particles(tmp_path):
     assert weighted.groupby("particle")["weight"].is_monotonic_decreasing.all()
 
 
+def test_a_run_names_its_transport_model_with_the_particles():
+    particles = runtraj.run_trajectories(
+        _release(), {"weather": "hrrr"}, model=TOY, n_hours=-1, step=1
+    )
+
+    assert particles.attrs["transport_model"] == "toy"
+
+
 def test_dry_deposition_runs_on_toy_rows_a_minute_apart():
     particles = runtraj.run_trajectories(
         _release(), {"weather": "hrrr"}, model=TOY, n_hours=-1, step=1
     )
 
-    survived = dry_deposition_survival(particles, velocity=0.01)
+    survived = dry_deposition_survival(
+        particles, velocity=0.01, surface_layer_depth=50.0
+    )
 
     assert ((survived > 0) & (survived <= 1)).all()
 

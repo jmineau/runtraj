@@ -39,14 +39,16 @@ _EXACT_FLOATS: dict[str, Any] = (
 #: The columns of a release table, one row per release point.
 COLUMNS = ("group", "time", "longitude", "latitude", "altitude", "altitude_ref")
 
-#: Column names :func:`read_releases` accepts for each field, in any case.
-ALIASES: dict[str, tuple[str, ...]] = {
-    "group": ("group",),
-    "time": ("time",),
-    "longitude": ("longitude", "long", "lon"),
-    "latitude": ("latitude", "lati", "lat"),
-    "altitude": ("altitude", "zagl", "zmsl", "z"),
-    "altitude_ref": ("altitude_ref", "height_ref"),
+#: Column names a release table once took, and the name each is now.
+_OLD_NAMES = {
+    "long": "longitude",
+    "lon": "longitude",
+    "lati": "latitude",
+    "lat": "latitude",
+    "zagl": "altitude",
+    "zmsl": "altitude",
+    "z": "altitude",
+    "height_ref": "altitude_ref",
 }
 
 
@@ -83,41 +85,45 @@ def releases_to_frame(releases: Iterable[Release]) -> pd.DataFrame:
     return frame.astype({"time": "datetime64[ns]"})
 
 
-def _normalize_columns(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str]]:
+def _check_column_names(columns: Iterable[Any]) -> None:
     """
-    Return *frame* with the release columns under their standard names.
+    Raise if a column is a release column under another name, such as ``lat`` or ``Time``.
 
-    Also returns the file's own spelling of each standard column. Any other
-    column is kept as it is. A ``zmsl`` altitude column implies ``msl``.
-
-    Raises
-    ------
-    ValueError
-        If two columns name one field, such as ``altitude`` and ``zagl``.
+    Each release column has one name, in lower case (:data:`COLUMNS`).
+    Under another, it would be kept as a label, so it is refused, naming
+    the one to use.
     """
-    spelling: dict[str, str] = {}
-    for field, aliases in ALIASES.items():
-        found = [str(col) for col in frame.columns if str(col).lower() in aliases]
-        if len(found) > 1:
-            raise ValueError(
-                f"The columns {found} all name the release's {field}; keep one."
-            )
-        if found:
-            spelling[field] = found[0]
-    frame = frame.rename(columns={name: field for field, name in spelling.items()})
-    if "altitude_ref" not in frame.columns:
-        implied = "msl" if spelling.get("altitude", "").lower() == "zmsl" else "agl"
-        _refuse_misnamed_altitude_ref(frame, implied)
-        frame = frame.assign(altitude_ref=implied)
-    return frame, spelling
+    for col in map(str, columns):
+        name = col.lower()
+        new = _OLD_NAMES.get(name, name if name in COLUMNS else None)
+        if new is None or col == new:
+            continue
+        extra = (
+            ", and add an altitude_ref column of msl (a zmsl column was read as "
+            "heights above sea level)"
+            if name == "zmsl"
+            else ""
+        )
+        raise ValueError(
+            f"The release table has a column {col!r}; the column is now named "
+            f"{new!r}. Rename it to {new!r}{extra}."
+        )
 
 
-def _refuse_misnamed_altitude_ref(frame: pd.DataFrame, implied: str) -> None:
+def _with_altitude_ref(frame: pd.DataFrame) -> pd.DataFrame:
+    """Return *frame* with an ``altitude_ref`` column, ``agl`` on every row when it has none."""
+    if "altitude_ref" in frame.columns:
+        return frame
+    _refuse_misnamed_altitude_ref(frame)
+    return frame.assign(altitude_ref="agl")
+
+
+def _refuse_misnamed_altitude_ref(frame: pd.DataFrame) -> None:
     """
     Raise if a label column holds only ``agl`` and ``msl``, as an ``altitude_ref`` column would.
 
     Under another name, such as ``alt_ref``, the column would be kept as a
-    label and every height read as *implied*: 1500 m above sea level as
+    label and every height read as above ground: 1500 m above sea level as
     1500 m above ground.
     """
     for col in frame.columns:
@@ -129,9 +135,8 @@ def _refuse_misnamed_altitude_ref(frame: pd.DataFrame, implied: str) -> None:
             raise ValueError(
                 f"The column {col!r} holds altitude references "
                 f"({', '.join(sorted(refs))}), but only a column named "
-                f"'altitude_ref' or 'height_ref' is read as one, so every height "
-                f"would be taken as {implied}. Did you mean 'altitude_ref'? "
-                "Rename the column."
+                "'altitude_ref' is read as one, so every height would be taken "
+                "as agl. Did you mean 'altitude_ref'? Rename the column."
             )
 
 
@@ -144,9 +149,9 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
     Check a release table and return it with each row's release id, kind, and location.
 
     The table has a row per release point, as ``releases.csv`` does, with
-    ``time``, ``longitude``, ``latitude``, and ``altitude`` columns in any of
-    the accepted spellings (see :func:`releases_from_frame`). The result has
-    the standard column names, ``altitude_ref``, and three more columns:
+    ``time``, ``longitude``, ``latitude``, and ``altitude`` columns (see
+    :func:`releases_from_frame`). The result has ``altitude_ref`` and three
+    more columns:
     ``release`` (the id), ``kind`` (``point``, ``column``, or
     ``multipoint``), and ``location`` (the location id). A release listed
     twice keeps its first rows. No release object is built, so this is quick
@@ -159,19 +164,19 @@ def release_rows(frame: pd.DataFrame) -> pd.DataFrame:
         or latitude out of range or empty, a height that is empty or not
         finite, a negative height above ground, rows of one group that
         differ in time or altitude reference, a column whose two heights are
-        equal, or two different releases with one id. Also for a misnamed
+        equal, or two different releases with one id. Also for a release
+        column under another name, such as ``lat``, and a misnamed
         ``altitude_ref`` column (:func:`releases_from_frame`).
     """
-    found = [str(c) for c in frame.columns]
-    frame, _ = _normalize_columns(frame)
+    _check_column_names(frame.columns)
     required = ("time", "longitude", "latitude", "altitude")
     missing = [c for c in required if c not in frame.columns]
     if missing:
-        accepted = "; ".join(f"{c}: {', '.join(ALIASES[c])}" for c in missing)
         raise ValueError(
-            f"The release table has no {' or '.join(missing)} column. The names "
-            f"read as one are ({accepted}); its columns are {found}."
+            f"The release table has no {' or '.join(missing)} column; its "
+            f"columns are {[str(c) for c in frame.columns]}."
         )
+    frame = _with_altitude_ref(frame)
     clash = [c for c in frame.columns if c in ROW_COLUMNS]
     if clash:
         raise ValueError(
@@ -421,23 +426,15 @@ def releases_from_frame(frame: pd.DataFrame) -> list[Release]:
     location is a :class:`ColumnRelease`, any other group a
     :class:`MultiPointRelease`.
 
-    ======================  =============================================
-    Field                   Accepted column names (any case)
-    ======================  =============================================
-    time                    ``time``
-    longitude               ``longitude``, ``long``, ``lon``
-    latitude                ``latitude``, ``lati``, ``lat``
-    altitude (m)            ``altitude``, ``zagl``, ``zmsl``, ``z``
-    release group           ``group``
-    altitude reference      ``altitude_ref``, ``height_ref``
-    ======================  =============================================
-
-    Without an ``altitude_ref`` column, altitudes are above mean sea level
-    when the column is named ``zmsl`` and above ground level otherwise. Any
-    other column becomes a label in each release's ``attrs``. For a group,
-    labels come from its first row. Without an ``altitude_ref`` column, a
-    label column that holds only ``agl`` and ``msl``, such as ``alt_ref``,
-    is refused, since its heights would be read with the wrong reference.
+    The columns are ``time``, ``longitude``, ``latitude``, ``altitude`` (m),
+    ``group``, and ``altitude_ref`` (``agl`` or ``msl``), each by that name
+    in lower case. Without an ``altitude_ref`` column, altitudes are above
+    ground level. Any other column becomes a label in each release's
+    ``attrs``; for a group, labels come from its first row. A release column
+    under another name, such as ``lat``, ``zagl`` or ``Time``, is refused,
+    naming the one to use, and so is a label column that holds only ``agl``
+    and ``msl``, such as ``alt_ref``, when there is no ``altitude_ref``
+    column, since its heights would be read with the wrong reference.
 
     Returns
     -------
@@ -513,8 +510,7 @@ def read_releases(path: str | Path | IO[str]) -> list[Release]:
 
     The file needs columns for time, longitude, latitude, and altitude, and
     may group rows into one release with ``group``. See
-    :func:`releases_from_frame` for the rules and the accepted column
-    names.
+    :func:`releases_from_frame` for the rules and the column names.
 
     Parameters
     ----------
@@ -555,7 +551,7 @@ def append_releases_csv(text: str, releases: Iterable[Release]) -> str:
     Return the text of a releases CSV with rows for more releases appended.
 
     The existing header sets the columns and their order, so a hand-written
-    file keeps its column names and ``group`` values, and its rows are kept
+    file keeps its column order and ``group`` values, and its rows are kept
     as written. Label columns are filled from each release's ``attrs`` or
     left empty. New releases are numbered after the largest ``group`` in
     the file. When a new release's heights are above sea level and the file
@@ -566,53 +562,43 @@ def append_releases_csv(text: str, releases: Iterable[Release]) -> str:
     ------
     ValueError
         If the file lacks a time, longitude, latitude, or altitude column,
-        has no ``group`` column for a column or multipoint release, or
-        names its altitude column ``zagl``/``zmsl`` for a different altitude
-        reference than a new release uses.
+        names one of the release columns another way (``lat``), or has no
+        ``group`` column for a column or multipoint release.
     """
     releases = list(releases)
     if not text.strip():
         return releases_to_csv(releases)
     columns = list(pd.read_csv(StringIO(text), nrows=0).columns)
-    _, spelling = _normalize_columns(pd.DataFrame(columns=columns))
+    _check_column_names(columns)
     missing = [
-        f for f in ("time", "longitude", "latitude", "altitude") if f not in spelling
+        f for f in ("time", "longitude", "latitude", "altitude") if f not in columns
     ]
     if missing:
         raise ValueError(f"releases.csv lacks a column for {missing}; cannot append.")
-    if "group" not in spelling and any(len(r.coords()) > 1 for r in releases):
+    if "group" not in columns and any(len(r.coords()) > 1 for r in releases):
         raise ValueError(
             "releases.csv has no group column, so a column or multipoint release "
             "cannot be appended; add a group column to the file."
         )
-    if "altitude_ref" not in spelling:
-        file_ref = {"zagl": "agl", "zmsl": "msl"}.get(spelling["altitude"].lower())
-        for r in releases:
-            if file_ref is not None and r.altitude_ref != file_ref:
-                raise ValueError(
-                    f"releases.csv altitudes are {file_ref}; release {r.id} is "
-                    f"{r.altitude_ref}. Add an altitude_ref column to mix them."
-                )
-        if file_ref is None and any(r.altitude_ref != "agl" for r in releases):
-            # The one case that rewrites the existing rows: they gain the column.
-            existing = pd.read_csv(StringIO(text), dtype=str, keep_default_na=False)
-            text = existing.assign(altitude_ref="agl").to_csv(
-                index=False, lineterminator="\n"
-            )
-            columns.append("altitude_ref")
-            spelling["altitude_ref"] = "altitude_ref"
+    if "altitude_ref" not in columns and any(r.altitude_ref != "agl" for r in releases):
+        # The one case that rewrites the existing rows: they gain the column.
+        existing = pd.read_csv(StringIO(text), dtype=str, keep_default_na=False)
+        text = existing.assign(altitude_ref="agl").to_csv(
+            index=False, lineterminator="\n"
+        )
+        columns.append("altitude_ref")
 
     new = _csv_frame(releases)
-    if "group" in spelling:
+    if "group" in columns:
         ids = pd.read_csv(
             StringIO(text),
-            usecols=[spelling["group"]],
+            usecols=["group"],
             dtype=str,
             keep_default_na=False,
         ).iloc[:, 0]
         numbers = [int(v) for v in ids if v.strip().lstrip("-").isdigit()]
         new["group"] += max(numbers, default=-1) + 1
-    new = new.rename(columns=spelling).reindex(columns=columns)
+    new = new.reindex(columns=columns)
     rows = new.astype(object).where(new.notna(), "")
     body = text if text.endswith("\n") else text + "\n"
     return body + rows.to_csv(index=False, header=False, lineterminator="\n")

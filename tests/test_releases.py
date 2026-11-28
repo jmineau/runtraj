@@ -333,14 +333,14 @@ def test_release_time_text_that_is_not_iso_or_compact_is_refused(text):
 
 
 def test_read_releases_refuses_a_day_first_time_and_names_the_row():
-    text = "time,lon,lat,z\n2023-07-15 18:00,-111.8,40.7,10\n05/07/2023 18:00,-111.8,40.7,10\n"
+    text = "time,longitude,latitude,altitude\n2023-07-15 18:00,-111.8,40.7,10\n05/07/2023 18:00,-111.8,40.7,10\n"
     with pytest.raises(ValueError, match="row 1: time is '05/07/2023 18:00'"):
         read_releases(io.StringIO(text))
 
 
 def test_read_releases_reads_iso_and_compact_times_with_or_without_an_offset():
     text = (
-        "time,lon,lat,z\n"
+        "time,longitude,latitude,altitude\n"
         "2023-07-15 18:00,-111.8,40.7,10\n"
         "202307151900,-111.8,40.7,10\n"
         "2023-07-15T14:00:00-06:00,-111.8,40.7,10\n"
@@ -352,7 +352,9 @@ def test_read_releases_reads_iso_and_compact_times_with_or_without_an_offset():
 
 def test_read_releases_refuses_an_empty_time():
     with pytest.raises(ValueError, match="row 0: time is empty"):
-        read_releases(io.StringIO("time,lon,lat,z\n,-111.8,40.7,10\n"))
+        read_releases(
+            io.StringIO("time,longitude,latitude,altitude\n,-111.8,40.7,10\n")
+        )
 
 
 def test_release_time_is_cut_to_the_minute():
@@ -372,7 +374,9 @@ def test_a_release_with_seconds_reads_back_from_csv_as_it_was_made():
         time="2023-07-15T18:00:30.5", longitude=-111.85, latitude=40.77, altitude=5
     )
     assert read_releases(io.StringIO(releases_to_csv([r]))) == [r]
-    table = io.StringIO("time,lon,lat,z\n2023-07-15T18:00:30.5,-111.85,40.77,5\n")
+    table = io.StringIO(
+        "time,longitude,latitude,altitude\n2023-07-15T18:00:30.5,-111.85,40.77,5\n"
+    )
     assert read_releases(table) == [r]
 
 
@@ -517,9 +521,7 @@ def test_a_multipoint_release_with_a_nan_point_is_refused():
 
 
 def test_a_releases_file_with_an_empty_longitude_names_the_row():
-    text = (
-        "time,lon,lat,z\n2023-07-15 18:00,-111.8,40.7,10\n2023-07-15 18:00,,40.7,10\n"
-    )
+    text = "time,longitude,latitude,altitude\n2023-07-15 18:00,-111.8,40.7,10\n2023-07-15 18:00,,40.7,10\n"
     with pytest.raises(ValueError, match="row 1: longitude must be a number"):
         read_releases(io.StringIO(text))
 
@@ -686,14 +688,16 @@ def test_release_from_dict_multipoint_round_trip():
 
 def test_read_releases_missing_required_columns_raises(tmp_path):
     csv = tmp_path / "releases.csv"
-    csv.write_text("time,lat,lon\n2023-01-01 12:00:00,40.77,-111.85\n")
+    csv.write_text("time,latitude,longitude\n2023-01-01 12:00:00,40.77,-111.85\n")
     with pytest.raises(ValueError, match="no altitude column"):
         read_releases(csv)
 
 
 def test_read_releases_basic(tmp_path):
     csv = tmp_path / "releases.csv"
-    csv.write_text("time,lati,long,zagl\n2023-01-01 12:00:00,40.77,-111.85,5.0\n")
+    csv.write_text(
+        "time,latitude,longitude,altitude\n2023-01-01 12:00:00,40.77,-111.85,5.0\n"
+    )
     releases = read_releases(csv)
     assert len(releases) == 1
     assert isinstance(releases[0], PointRelease)
@@ -706,7 +710,7 @@ def test_read_releases_basic(tmp_path):
 def test_read_releases_multiple_rows(tmp_path):
     csv = tmp_path / "releases.csv"
     csv.write_text(
-        "time,lati,long,zagl\n"
+        "time,latitude,longitude,altitude\n"
         "2023-01-01 12:00:00,40.77,-111.85,5.0\n"
         "2023-01-01 13:00:00,40.78,-111.86,5.0\n"
     )
@@ -717,7 +721,7 @@ def test_read_releases_multiple_rows(tmp_path):
 def test_read_releases_multipoint_via_group(tmp_path):
     csv = tmp_path / "releases.csv"
     csv.write_text(
-        "time,lati,long,zagl,group\n"
+        "time,latitude,longitude,altitude,group\n"
         "2023-01-01 12:00:00,40.77,-111.85,5.0,0\n"
         "2023-01-01 12:00:00,40.78,-111.86,5.0,0\n"
         "2023-01-01 13:00:00,40.79,-111.87,5.0,1\n"
@@ -750,7 +754,7 @@ def test_blank_group_rows_at_different_times_are_separate_releases():
 def test_read_releases_group_with_mixed_times_raises(tmp_path):
     csv = tmp_path / "releases.csv"
     csv.write_text(
-        "time,lati,long,zagl,group\n"
+        "time,latitude,longitude,altitude,group\n"
         "2023-01-01 12:00:00,40.77,-111.85,5.0,0\n"
         "2023-01-01 13:00:00,40.78,-111.86,5.0,0\n"
     )
@@ -768,12 +772,16 @@ def test_read_releases_alt_column_names(tmp_path):
     assert releases[0].latitude == 40.77
 
 
-def test_read_releases_zmsl_infers_msl(tmp_path):
+def test_a_zmsl_column_names_altitude_and_altitude_ref(tmp_path):
+    """A zmsl column was read as heights above sea level; read as altitude now, it would be above ground."""
     csv = tmp_path / "releases.csv"
-    csv.write_text("time,lati,long,zmsl\n2023-01-01 12:00:00,40.77,-111.85,1500.0\n")
-    releases = read_releases(csv)
-    assert len(releases) == 1
-    assert releases[0].altitude_ref == "msl"
+    csv.write_text(
+        "time,latitude,longitude,zmsl\n2023-01-01 12:00:00,40.77,-111.85,1500.0\n"
+    )
+    with pytest.raises(
+        ValueError, match="'zmsl'.*Rename it to 'altitude', and add an altitude_ref"
+    ):
+        read_releases(csv)
 
 
 # ---------------------------------------------------------------------------
@@ -918,7 +926,7 @@ def test_write_releases_creates_parent_directories(tmp_path, point_release):
 def test_read_releases_keeps_extra_columns_as_attrs(tmp_path):
     csv = tmp_path / "releases.csv"
     csv.write_text(
-        "time,lati,long,zagl,group,Scene,note\n"
+        "time,latitude,longitude,altitude,group,Scene,note\n"
         "2023-01-01 12:00:00,40.77,-111.85,5.0,0,A,\n"
         "2023-01-01 12:00:00,40.78,-111.86,5.0,0,A,\n"
         "2023-01-01 13:00:00,40.79,-111.87,5.0,1,B,hello\n"
@@ -1111,23 +1119,34 @@ def test_frame_has_a_row_per_release_point(
     assert releases_to_frame([]).empty
 
 
-def test_frame_accepts_the_alternate_column_names():
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("long", "longitude"),
+        ("lon", "longitude"),
+        ("LON", "longitude"),
+        ("lati", "latitude"),
+        ("lat", "latitude"),
+        ("zagl", "altitude"),
+        ("z", "altitude"),
+        ("Time", "time"),
+        ("height_ref", "altitude_ref"),
+    ],
+)
+def test_a_release_column_under_another_name_is_refused(old, new):
     from runtraj.releases import releases_from_frame
 
     frame = pd.DataFrame(
         {
-            "Time": ["2023-01-01 12:00"],
-            "LON": [-111.85],
-            "lati": [40.77],
-            "zmsl": [1500.0],
-            "Scene": ["A"],
+            "time": ["2023-01-01 12:00"],
+            "longitude": [-111.85],
+            "latitude": [40.77],
+            "altitude": [10.0],
+            "altitude_ref": ["agl"],
         }
-    )
-    [r] = releases_from_frame(frame)
-    assert isinstance(r, PointRelease)
-    assert (r.longitude, r.latitude, r.altitude) == (-111.85, 40.77, 1500.0)
-    assert r.altitude_ref == "msl"
-    assert r.attrs == {"Scene": "A"}
+    ).rename(columns={new: old})
+    with pytest.raises(ValueError, match=f"'{old}'.*Rename it to '{new}'"):
+        releases_from_frame(frame)
 
 
 # ---------------------------------------------------------------------------
@@ -1160,7 +1179,7 @@ def test_append_msl_release_to_plain_altitude_file_keeps_its_reference():
 def test_append_agl_release_leaves_a_plain_file_without_the_column():
     from runtraj.releases.table import append_releases_csv
 
-    text = "time,lon,lat,z,site\n2023-01-01 12:00:00,-111.85,40.77,5,WBB\n"
+    text = "time,longitude,latitude,altitude,site\n2023-01-01 12:00:00,-111.85,40.77,5,WBB\n"
     agl = PointRelease(
         time="2023-01-02 12:00",
         longitude=-111.9,
@@ -1171,24 +1190,20 @@ def test_append_agl_release_leaves_a_plain_file_without_the_column():
 
     grown = append_releases_csv(text, [agl])
 
-    assert grown.splitlines()[0] == "time,lon,lat,z,site"
+    assert grown.splitlines()[0] == "time,longitude,latitude,altitude,site"
     assert grown.splitlines()[1] == "2023-01-01 12:00:00,-111.85,40.77,5,WBB"
     assert grown.splitlines()[2] == "2023-01-02 12:00:00,-111.9,40.7,10.0,UOU"
 
 
-def test_append_to_a_zagl_file_still_refuses_an_msl_release():
+def test_append_to_a_file_with_an_old_column_name_is_refused():
     from runtraj.releases.table import append_releases_csv
 
-    text = "time,long,lati,zagl\n2023-01-01 12:00:00,-111.85,40.77,5\n"
-    msl = PointRelease(
-        time="2023-01-02 12:00",
-        longitude=-111.9,
-        latitude=40.7,
-        altitude=1500.0,
-        altitude_ref="msl",
+    text = "time,longitude,latitude,zagl\n2023-01-01 12:00:00,-111.85,40.77,5\n"
+    release = PointRelease(
+        time="2023-01-02 12:00", longitude=-111.9, latitude=40.7, altitude=10.0
     )
-    with pytest.raises(ValueError, match="altitudes are agl"):
-        append_releases_csv(text, [msl])
+    with pytest.raises(ValueError, match="'zagl'.*Rename it to 'altitude'"):
+        append_releases_csv(text, [release])
 
 
 # ---------------------------------------------------------------------------
@@ -1422,13 +1437,13 @@ def test_multipoint_ids_are_the_same_as_first_written():
 @pytest.mark.parametrize("name", ["alt_ref", "height_reference", "ref"])
 def test_a_misnamed_altitude_ref_column_is_refused(name):
     """Kept as a label, it left 1500 m above sea level as 1500 m above ground."""
-    text = f"time,lon,lat,z,{name}\n2023-07-15 18:00,-111.8,40.7,1500,MSL\n"
+    text = f"time,longitude,latitude,altitude,{name}\n2023-07-15 18:00,-111.8,40.7,1500,MSL\n"
     with pytest.raises(ValueError, match=f"'{name}'.*Did you mean 'altitude_ref'"):
         read_releases(io.StringIO(text))
 
 
 def test_a_label_column_that_is_not_a_reference_is_kept():
-    text = "time,lon,lat,z,site,altitude_ref,note\n2023-07-15 18:00,-111.8,40.7,1500,WBB,msl,agl\n"
+    text = "time,longitude,latitude,altitude,site,altitude_ref,note\n2023-07-15 18:00,-111.8,40.7,1500,WBB,msl,agl\n"
     (release,) = read_releases(io.StringIO(text))
     assert release.altitude_ref == "msl"
     assert release.attrs == {"site": "WBB", "note": "agl"}
@@ -1464,12 +1479,12 @@ def test_a_table_of_datetimes_with_a_missing_one_names_the_row():
         release_rows(frame)
 
 
-def test_read_releases_refuses_two_height_columns(tmp_path):
+def test_read_releases_refuses_an_old_height_column_beside_altitude(tmp_path):
     path = tmp_path / "releases.csv"
     path.write_text(
         "time,longitude,latitude,altitude,zagl\n2023-07-15 18:00,-111.8,40.7,10,500\n"
     )
-    with pytest.raises(ValueError, match="keep one"):
+    with pytest.raises(ValueError, match="'zagl'.*Rename it to 'altitude'"):
         read_releases(path)
 
 
@@ -1530,8 +1545,10 @@ def test_read_releases_names_the_row_of_a_height_that_is_not_a_number(tmp_path):
         read_releases(path)
 
 
-def test_read_releases_names_a_missing_column_and_the_names_it_takes(tmp_path):
+def test_read_releases_names_a_missing_column_and_the_columns_it_has(tmp_path):
     path = tmp_path / "releases.csv"
-    path.write_text("time,lon,lat,height\n2023-07-15 18:00,-111.8,40.7,10\n")
-    with pytest.raises(ValueError, match="no altitude column.*zagl.*'height'"):
+    path.write_text("time,longitude,latitude,height\n2023-07-15 18:00,-111.8,40.7,10\n")
+    with pytest.raises(
+        ValueError, match="no altitude column; its columns are.*'height'"
+    ):
         read_releases(path)
