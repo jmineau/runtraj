@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=c0d9f4ba"></script>
+    <script src="../../_static/documentation_options.js?v=96b37ba0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev58+g78e778e7d" />
+  <meta name="docsearch:version" content="0.1.0a6.dev59+g5dc290a2b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -869,6 +869,23 @@
                 <span class="p">)</span>
             <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="n">deep</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_base60_stays_text</span><span class="p">(</span><span class="n">construct</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrap a number constructor so YAML 1.1's base-60 form (``12:00:00``) stays text."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="n">loader</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">ScalarNode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="s2">":"</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span> <span class="k">else</span> <span class="n">construct</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapped</span>
+
+
+<span class="c1"># YAML 1.1 reads an unquoted 12:00:00 as the integer 43200 (a Slurm time limit</span>
+<span class="c1"># of 30 days, a PBS walltime in seconds); YAML 1.2 dropped base 60, and so does this.</span>
+<span class="k">for</span> <span class="n">_tag</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"tag:yaml.org,2002:int"</span><span class="p">,</span> <span class="s2">"tag:yaml.org,2002:float"</span><span class="p">):</span>
+    <span class="n">_UniqueKeyLoader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span>
+        <span class="n">_tag</span><span class="p">,</span> <span class="n">_base60_stays_text</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="o">.</span><span class="n">yaml_constructors</span><span class="p">[</span><span class="n">_tag</span><span class="p">])</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="ProjectConfig">
