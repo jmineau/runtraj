@@ -39,8 +39,9 @@ def run_model(
 
     The result is checked against its type (:mod:`runtraj.results`).
     Particles are checked against the particle table
-    (:func:`runtraj.particles.check_particles`) and get their release heights
-    (:func:`runtraj.particles.add_release_heights`). These steps are
+    (:func:`runtraj.particles.check_particles`), get their release heights
+    (:func:`runtraj.particles.add_release_heights`), and record the model's
+    name in ``attrs["transport_model"]``. These steps are
     runtraj's, the same for any model. Nothing else is added: ``foot`` is
     the model's own, or missing for a model that writes none.
 
@@ -183,6 +184,8 @@ def _finish(
         raise SimulationError(
             str(error), reason="NO_RELEASE_ROWS", log=run.log
         ) from error
+    # What the sampling defaults follow (runtraj.sampling), as a file records it.
+    particles.attrs["transport_model"] = model.name
     return replace(run, result=particles)
 
 

@@ -212,6 +212,18 @@ def test_the_internal_grid_of_a_run_is_recorded_with_its_particles(
     )
 
 
+def test_particles_read_back_name_the_transport_model_that_made_them(
+    point_release, tmp_path
+):
+    """The sampling defaults follow it (runtraj.sampling)."""
+    params = _params(tmp_path)
+    path = tmp_path / "traj.parquet"
+    traj = finished(_particles_basic(), point_release)
+    write_particles(path, traj, point_release, _settings(params), [])
+
+    assert read_particles(path).attrs["transport_model"] == "hysplit"
+
+
 def test_a_float32_file_reads_as_float64_and_keeps_its_attrs(point_release, tmp_path):
     params = _params(tmp_path)
     traj = finished(_particles_basic(), point_release)

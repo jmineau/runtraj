@@ -228,7 +228,12 @@ amounts under :func:`sample_met`'s Notes. ``mlht`` from :func:`sample_met`
 is the met's ``PBLH``. A transport model may find the mixed layer from
 the met's profile instead: HYSPLIT does by default (``kmixd: 3``), and
 FLEXPART does on ERA5. :func:`calc_pbl_height` finds the mixed layer the
-way the run did; give it the run's ``method``:
+way the run did; give it the run's ``method`` (unset, it is ``"hysplit"`` for
+HYSPLIT's particles and refused for another model's). Both functions read
+the transport model from ``particles.attrs["transport_model"]``, which a
+run's particles and a particle file record: :func:`sample_met` samples
+HYSPLIT's particles on HYSPLIT's internal levels and another model's on the
+met's own levels, unless ``z_top`` says otherwise.
 
 .. code-block:: python
 

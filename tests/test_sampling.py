@@ -387,8 +387,8 @@ def _met_file(
 
 
 def _particles_at(times, zagl):
-    """Return particles at 25.5 E, 5 S, at the given times and heights."""
-    return pd.DataFrame(
+    """Return HYSPLIT's particles at 25.5 E, 5 S, at the given times and heights."""
+    particles = pd.DataFrame(
         {
             "particle": np.arange(1, len(times) + 1),
             "lon": 25.5,
@@ -397,6 +397,8 @@ def _particles_at(times, zagl):
             "time": pd.to_datetime(times),
         }
     )
+    particles.attrs["transport_model"] = "hysplit"
+    return particles
 
 
 def test_sample_met_interpolates_linearly_in_time_and_height(tmp_path):
@@ -534,6 +536,43 @@ def test_the_met_own_levels_are_read_without_the_recorded_grid(tmp_path):
         recorded["pres"],
         sample_met(particles, [met], columns=["pres"], z_top=None)["pres"],
     )
+
+
+def test_sample_met_follows_the_transport_model_the_particles_record(tmp_path):
+    """HYSPLIT's particles are sampled on its levels by default, another model's on the met's."""
+    met = _met_file(tmp_path / "met.arl")
+    hysplit = _particles_at([_T0], [100.0])
+    other = hysplit.copy()
+    other.attrs["transport_model"] = "flexpart"
+
+    def pres(particles, **kwargs):
+        return sample_met(particles, [met], columns=["pres"], **kwargs)["pres"]
+
+    pd.testing.assert_series_equal(pres(hysplit), pres(hysplit, z_top=25000.0))
+    pd.testing.assert_series_equal(pres(other), pres(other, z_top=None))
+    assert not np.allclose(pres(hysplit), pres(other))
+
+
+def test_sample_met_needs_z_top_for_particles_that_record_no_model(tmp_path):
+    met = _met_file(tmp_path / "met.arl")
+    particles = _particles_at([_T0], [100.0])
+    particles.attrs = {}
+
+    with pytest.raises(ValueError, match="z_top has no default.*z_top=25000"):
+        sample_met(particles, [met], columns=["pres"])
+
+
+@pytest.mark.parametrize(
+    ("model", "message"),
+    [(None, "method has no default.*method='hysplit'"), ("flexpart", "'flexpart' for")],
+)
+def test_calc_pbl_height_has_no_default_method_but_hysplit_s(tmp_path, model, message):
+    met = _met_file(tmp_path / "met.arl", winds=True)
+    particles = _particles_at([_T0], [100.0])
+    particles.attrs = {} if model is None else {"transport_model": model}
+
+    with pytest.raises(ValueError, match=message):
+        sampling.calc_pbl_height(particles, [met])
 
 
 def test_calc_pbl_height_uses_the_internal_grid_the_particles_record(tmp_path):

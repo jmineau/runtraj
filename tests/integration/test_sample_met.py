@@ -141,7 +141,7 @@ def test_a_run_with_another_top_is_sampled_with_that_top(met_dir, tmp_path):
     same = sample_met(particles, met_files, ["pres", "dens"], z_top=z_top)
     own_levels = sample_met(particles, met_files, ["pres", "dens"], z_top=None)
     bare = particles.copy()
-    bare.attrs = {}  # the grid the run recorded is left out
+    bare.attrs = {"transport_model": "hysplit"}  # the grid the run recorded is left out
     unrecorded = sample_met(bare, met_files, ["pres", "dens"], z_top=z_top)
     default = sample_met(bare, met_files, ["pres", "dens"])
 

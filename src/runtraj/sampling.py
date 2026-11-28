@@ -26,7 +26,7 @@ import os
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -284,6 +284,29 @@ def _check_z_top(particles: pd.DataFrame, z_top: float | None) -> None:
             )
 
 
+def _recorded_model(particles: pd.DataFrame, setting: str, old: str) -> str:
+    """Return the transport model *particles* record (``attrs["transport_model"]``), which *setting*'s default follows; raise naming *old*, the way to the former default, when they record none."""
+    name = particles.attrs.get("transport_model")
+    if name is None:
+        raise ValueError(
+            "The particles do not record the transport model that made them "
+            f"(particles.attrs['transport_model']), so {setting} has no default. "
+            f"Give it: {old}."
+        )
+    return str(name)
+
+
+def _default_z_top(particles: pd.DataFrame) -> float | None:
+    """Return the *z_top* :func:`sample_met` takes by default: HYSPLIT's levels for HYSPLIT's particles, else the met's."""
+    model = _recorded_model(
+        particles,
+        "z_top",
+        "z_top=25000, the default before, or the run's z_top, for HYSPLIT's "
+        "internal levels, or z_top=None for the met's own levels",
+    )
+    return _DEFAULT_Z_TOP if model == "hysplit" else None
+
+
 def _recorded_internal_grid(
     particles: pd.DataFrame, z_top: float | None
 ) -> tuple[int, float, float, float] | None:
@@ -423,7 +446,7 @@ def sample_met(
     met: Met,
     columns: Iterable[str] = ("mlht", "dens", "pres", "zsfc"),
     *,
-    z_top: float | None = _DEFAULT_Z_TOP,
+    z_top: float | Literal["auto"] | None = "auto",
 ) -> pd.DataFrame:
     """
     Return the particles with met columns sampled at each particle's position.
@@ -473,14 +496,19 @@ def sample_met(
         (:meth:`runtraj.models.MetConfig.open`, or an arlmet converter's output).
     columns : iterable of str, default ("mlht", "dens", "pres", "zsfc")
         The columns to add.
-    z_top : float or None, default 25000
+    z_top : float, None or "auto", default "auto"
         The top of the run's domain in meters (``z_top`` of
         :class:`runtraj.models.hysplit.HysplitConfig`), since HYSPLIT's
         internal levels depend on it. A stored run records it:
         ``particles_metadata(path).settings["z_top"]``. ``None`` reads the
         met's own levels, for a transport model that is not HYSPLIT (a recorded
         internal grid is then not used); a row below their lowest or above
-        their top is then NaN.
+        their top is then NaN. ``"auto"`` follows the transport model the
+        particles record (``particles.attrs["transport_model"]``, as a run's
+        and a particle file's do): HYSPLIT's internal levels, for 25000 m when
+        they record no internal grid, for HYSPLIT's particles, and the met's
+        own levels for another model's. Particles that record no model need
+        *z_top* given.
 
     Returns
     -------
@@ -493,7 +521,8 @@ def sample_met(
     ValueError
         If a column is not one of the four or is in *particles* already
         (drop it first), *particles* has no ``time`` column, a row is outside
-        the files' times, or *z_top* is not positive or is below a particle.
+        the files' times, *z_top* is not positive or is below a particle, or
+        *z_top* is ``"auto"`` and the particles record no transport model.
     KeyError
         If the met lacks a variable a column needs.
 
@@ -533,6 +562,8 @@ def sample_met(
         raise ValueError(
             f"sample_met cannot sample {unknown}; it samples {list(_MET_VARIABLES)}."
         )
+    if z_top == "auto":
+        z_top = _default_z_top(particles)
     _check_z_top(particles, z_top)
     internal_grid = _recorded_internal_grid(particles, z_top)
     present = [c for c in columns if c in particles.columns]
@@ -681,7 +712,7 @@ def calc_pbl_height(
     particles: pd.DataFrame,
     met: Met,
     *,
-    method: str = "hysplit",
+    method: str | None = None,
     z_top: float = _DEFAULT_Z_TOP,
 ) -> np.ndarray:
     """
@@ -691,7 +722,7 @@ def calc_pbl_height(
     mixed in, and each transport model finds it in its own way. Choose the
     *method* of the run the particles came from:
 
-    - ``"hysplit"`` (the default): HYSPLIT's default, ``kmixd: 3``. Going
+    - ``"hysplit"``: HYSPLIT's default, ``kmixd: 3``. Going
       up the column, the mixed layer ends where the bulk Richardson number
       between the lowest level and the level reached passes 0.25 (below).
     - ``"hysplit_temperature"``: HYSPLIT's ``kmixd: 1``. The top is the
@@ -769,8 +800,12 @@ def calc_pbl_height(
         - ``"flexpart"``: ``TEMP``, ``SPHU``, ``UWND``, ``VWND``, the
           pressure, and at the ground ``PRSS``, ``T02M``, ``DP2M``,
           ``U10M``, ``V10M``, ``USTR`` and ``SHTF``.
-    method : {"hysplit", "hysplit_temperature", "met", "flexpart"}, default "hysplit"
+    method : {"hysplit", "hysplit_temperature", "met", "flexpart"}, optional
         How the mixed layer is found: the transport model and its method.
+        Unset, it follows the transport model the particles record
+        (``particles.attrs["transport_model"]``): ``"hysplit"`` for HYSPLIT's
+        particles. Another model's, or particles that record none, need it
+        given.
     z_top : float, default 25000
         The top of the domain in meters, which sets HYSPLIT's internal
         levels (``z_top`` of :class:`runtraj.models.hysplit.HysplitConfig`).
@@ -792,8 +827,9 @@ def calc_pbl_height(
     Raises
     ------
     ValueError
-        If *method* is not one of the four, *particles* has no ``time``
-        column, or a row is outside the files' times.
+        If *method* is not one of the four, or is unset and the particles are
+        not HYSPLIT's, *particles* has no ``time`` column, or a row is
+        outside the files' times.
     KeyError
         If the met lacks a variable the method needs.
 
@@ -837,6 +873,17 @@ def calc_pbl_height(
     ...     particles, met, method="flexpart"
     ... )  # doctest: +SKIP
     """
+    if method is None:
+        model = _recorded_model(
+            particles, "method", "method='hysplit', the default before"
+        )
+        if model != "hysplit":
+            raise ValueError(
+                f"The particles are {model}'s, so calc_pbl_height has no default "
+                "method. Give it: 'flexpart' for FLEXPART on ERA5 model levels, "
+                "'met' for the met's PBLH."
+            )
+        method = "hysplit"
     if method not in _PBL_VARIABLES:
         raise ValueError(
             f"calc_pbl_height has no method {method!r}; choose one of "
