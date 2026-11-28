@@ -286,7 +286,7 @@ The release height
 The length of the run
    ``n_hours`` sets how far the particles go. Particles also stop early
    when they leave the met's domain or its crop, and the run is still
-   complete. ``particles["age"].abs().max() / 60`` is how many hours they
+   complete. ``particles["age"].abs().max() / 3600`` is how many hours they
    went. If that is short, widen the met's domain or ``subgrid_bounds``
    (:doc:`choosing_settings`).
 

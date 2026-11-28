@@ -56,7 +56,7 @@ particle:
    project = runtraj.Project("./my_project")
    sim = project.simulation("202101150800_-111.848_40.766_10", "hrrr")
    ends = sim.particles.runtraj.endpoints()
-   print(f"the longest particle ran {ends['age'].abs().max() / 60:.1f} of 24 hours")
+   print(f"the longest particle ran {ends['age'].abs().max() / 3600:.1f} of 24 hours")
 
 These particles stopped before 24 hours because they left the small crop of
 met files these pages run on. The met's domain, not ``n_hours``, limited this

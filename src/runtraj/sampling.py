@@ -464,7 +464,7 @@ def sample_met(
         A particle table with ``lon``, ``lat``, ``zagl``, and ``time``
         (UTC; a time with a time zone is converted to UTC).
         ``sim.particles`` has ``time``. For a table a transport model
-        returned, add it: the release time plus ``age`` minutes.
+        returned, add it: the release time plus ``age`` seconds.
     met : path-like, iterable of path-like, or xarray.Dataset
         ARL met files that cover the particles' times, such as the files the
         run read (``met_files`` of :class:`runtraj.models.ModelRun` or of
@@ -542,7 +542,7 @@ def sample_met(
         )
     if "time" not in particles.columns:
         raise ValueError(
-            "sample_met needs a 'time' column: the release time plus 'age' minutes."
+            "sample_met needs a 'time' column: the release time plus 'age' seconds."
         )
     variables = list(dict.fromkeys(v for c in columns for v in _MET_VARIABLES[c]))
 
@@ -844,7 +844,7 @@ def calc_pbl_height(
         )
     if "time" not in particles.columns:
         raise ValueError(
-            "calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."
+            "calc_pbl_height needs a 'time' column: the release time plus 'age' seconds."
         )
     _check_z_top(particles, z_top)
     internal_grid = _recorded_internal_grid(particles, z_top)

@@ -14,7 +14,7 @@ def _particles(*rows: tuple, time: bool = False) -> pd.DataFrame:
     p = pd.DataFrame(rows, columns=["particle", "age", "lon", "lat", "zagl"])
     if time:
         p["time"] = pd.Timestamp("2023-01-01 12:00") + pd.to_timedelta(
-            p["age"], unit="min"
+            p["age"], unit="s"
         )
     return p
 
@@ -59,8 +59,8 @@ def test_position_height_and_age_are_interpolated_onto_the_edge():
 def test_time_is_interpolated_when_the_table_has_it():
     p = _particles(
         (1, 0, -111, 41, 10),
-        (1, -60, -110.5, 41, 20),
-        (1, -120, -109.5, 41, 30),
+        (1, -3600, -110.5, 41, 20),
+        (1, -7200, -109.5, 41, 30),
         time=True,
     )
     exits = p.runtraj.grid_exits(BOX)

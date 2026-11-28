@@ -212,7 +212,7 @@ column means.
      - :func:`runtraj.read_particles` gives it back as float64.
    * - ``age``
      - int32
-     - Minutes since release, negative for a backward run. Read back as
+     - Seconds since release, negative for a backward run. Read back as
        float64.
    * - ``lon``, ``lat``, ``zagl``, and the rest
      - float32 or float64

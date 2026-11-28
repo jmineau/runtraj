@@ -397,7 +397,7 @@ def test_a_project_stores_and_reads_trajectories_beside_particles(
     sim = project.simulation(releases[0].id, "traj")
     assert sim.result_path.suffix == ".parquet"
     assert sim.result_path.parent.parent.parent.name == "trajectories"
-    assert sim.trajectories["age"].tolist() == [0, -60, -120, -180, -240]
+    assert sim.trajectories["age"].tolist() == [0, -3600, -7200, -10800, -14400]
 
     table = project.trajectories()
     assert list(table.columns[:2]) == ["release", "variant"]

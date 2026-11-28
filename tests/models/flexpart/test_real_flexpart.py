@@ -33,7 +33,7 @@ pytestmark = integration
 #: Hours back from each release: six outputs, an hour apart.
 N_HOURS = -6
 NUMPAR = 1000
-OUTPUT_AGES = list(range(-60, -361, -60))  # minutes
+OUTPUT_AGES = list(range(-3600, -21601, -3600))  # seconds
 
 #: Midday in Salt Lake City, when the mixed layer is deep.
 NOON = "2023-06-01 18:00"
@@ -113,7 +113,7 @@ def test_point_release(flexpart_checkout, era5, tmp_path):
     assert particles.loc[~last, ["zagl", "mlht", "dens", "pres"]].notna().all().all()
     # At midday the particles mix through the boundary layer within an hour
     # (on GFS, where FLEXPART derives no turbulence, they stayed near 8 m).
-    first = particles[particles["age"] == -60]
+    first = particles[particles["age"] == -3600]
     assert first["zagl"].median() > 500
 
 
@@ -127,7 +127,7 @@ def test_column_release(flexpart_checkout, era5):
     start = particles.groupby("particle")["release_height"].first()
     assert np.allclose(start, (start.index - 0.5) * 1000 / NUMPAR)
     # ... and an hour later, in the stable night, its height still says which.
-    first = particles[particles["age"] == -60]
+    first = particles[particles["age"] == -3600]
     assert np.corrcoef(first["release_height"], first["zagl"])[0, 1] > 0.9
 
 
@@ -142,7 +142,7 @@ def test_multipoint_release(flexpart_checkout, era5):
     particles = run(release, flexpart_checkout, era5)
 
     every_particle_every_hour(particles)
-    first = particles[particles["age"] == -60]
+    first = particles[particles["age"] == -3600]
     # The points share the particles in turn, and an hour later each point's
     # particles are still near it.
     by_point = first.groupby("release_height")

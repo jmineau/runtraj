@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 #: The columns every particle table has, as a particle file stores them:
 #: what a transport model's run must return. ``particle`` is the number the
-#: transport model gives the particle, ``age`` the minutes since release (negative for a
+#: transport model gives the particle, ``age`` the seconds since release (negative for a
 #: backward run), ``lon`` and ``lat`` the position in degrees, and ``zagl``
 #: the height above ground in meters. ``particle`` and ``age`` are int32; the
 #: float columns are float32 or float64, as the transport model computed
@@ -255,7 +255,7 @@ def read_particles(
     if want_time and "age" in data.columns:
         release = stored_release(meta, path)
         data["time"] = pd.Timestamp(release.time) + pd.to_timedelta(
-            data["age"].to_numpy(), unit="min"
+            data["age"].to_numpy(), unit="s"
         )
     return data
 
@@ -290,7 +290,7 @@ def particles_from_table(table: pa.Table, time: bool = True) -> pd.DataFrame:
         release_time = pd.to_datetime([parse_release_id(r)[0] for r in ids])
         data["time"] = pd.Series(
             release_time.take(codes), index=data.index
-        ) + pd.to_timedelta(data["age"].to_numpy(), unit="min")
+        ) + pd.to_timedelta(data["age"].to_numpy(), unit="s")
     return data
 
 

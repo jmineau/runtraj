@@ -82,11 +82,11 @@ def _make_particles(n: int = 10, heights: list[float] | None = None) -> pd.DataF
 
 
 def _aged_particles() -> pd.DataFrame:
-    """Three particles at 0, 1 and 2 hours of transport age (minutes)."""
+    """Three particles at 0, 1 and 2 hours of transport age (seconds)."""
     return pd.DataFrame(
         {
             "particle": [1, 2, 3],
-            "age": [0.0, -60.0, -120.0],
+            "age": [0.0, -3600.0, -7200.0],
         }
     )
 
@@ -667,7 +667,7 @@ def _deposition_particles() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "particle": [2, 1, 1, 2, 1, 2],
-            "age": [-3.0, -1.0, -3.0, -1.0, -2.0, -2.0],
+            "age": [-180.0, -60.0, -180.0, -60.0, -120.0, -120.0],
             "zagl": [10.0, 10.0, 10.0, 200.0, 100.0, 20.0],
         }
     )
@@ -683,13 +683,15 @@ def test_dry_deposition_survival_loses_tracer_only_below_the_surface_layer():
 
 
 def test_dry_deposition_survival_counts_the_step_from_release():
-    p = pd.DataFrame({"particle": [1, 1], "age": [0.0, -1.0], "zagl": [10.0, 10.0]})
+    p = pd.DataFrame({"particle": [1, 1], "age": [0.0, -60.0], "zagl": [10.0, 10.0]})
     s = dry_deposition_survival(p, velocity=0.01)
     assert s.tolist() == pytest.approx([1.0, math.exp(-0.012)])
 
 
 def test_dry_deposition_survival_refuses_hourly_rows():
-    p = pd.DataFrame({"particle": [1, 1], "age": [-60.0, -120.0], "zagl": [10.0, 10.0]})
+    p = pd.DataFrame(
+        {"particle": [1, 1], "age": [-3600.0, -7200.0], "zagl": [10.0, 10.0]}
+    )
     with pytest.raises(
         ValueError, match=r"write a row every minute \(HYSPLIT: outdt: 0\)"
     ):
@@ -735,15 +737,15 @@ def test_survival_adds_each_rows_loss_over_the_step_that_ends_at_it():
     p = _deposition_particles()
     rate = np.array([0.0, 1e-3, 2e-3, 3e-3, 4e-3, 0.0])
     s = survival(p, rate)
-    # particle 1: ages -1 (1e-3), -2 (4e-3), -3 (2e-3)
-    # particle 2: ages -1 (3e-3), -2 (0), -3 (0)
+    # particle 1: ages -60 (1e-3), -120 (4e-3), -180 (2e-3)
+    # particle 2: ages -60 (3e-3), -120 (0), -180 (0)
     one = np.exp(-60.0 * np.cumsum([1e-3, 4e-3, 2e-3]))
     two = np.exp(-60.0 * np.cumsum([3e-3, 0.0, 0.0]))
     assert s.tolist() == pytest.approx([two[2], one[0], one[2], two[0], one[1], two[1]])
 
 
 def test_survival_takes_any_step():
-    p = pd.DataFrame({"particle": [1, 1], "age": [-30.0, -90.0]})
+    p = pd.DataFrame({"particle": [1, 1], "age": [-1800.0, -5400.0]})
     s = survival(p, [1e-4, 2e-4])
     assert s.tolist() == pytest.approx(
         [math.exp(-1e-4 * 1800.0), math.exp(-1e-4 * 1800.0 - 2e-4 * 3600.0)]
@@ -780,7 +782,7 @@ def _oxidized_particles() -> pd.DataFrame:
     return pd.DataFrame(
         {
             "particle": [1, 1, 2, 2],
-            "age": [-60.0, -120.0, -60.0, -120.0],
+            "age": [-3600.0, -7200.0, -3600.0, -7200.0],
             "lon": [-111.0, -112.0, -111.0, -110.0],
             "lat": [40.0, 40.0, 40.0, 41.0],
             "pres": [900.0, 850.0, 900.0, 700.0],
@@ -1464,7 +1466,7 @@ def _releases_a_and_b(a: pd.DataFrame, b: pd.DataFrame) -> pd.DataFrame:
 
 def _trajectory(n: int = 6) -> pd.DataFrame:
     """Return three particles of ``n`` ten-minute rows each."""
-    ages = -10.0 * np.arange(1, n + 1)
+    ages = -600.0 * np.arange(1, n + 1)
     return pd.DataFrame({"particle": np.repeat([1, 2, 3], n), "age": np.tile(ages, 3)})
 
 
@@ -1517,10 +1519,10 @@ def test_averaging_kernel_reads_each_releases_own_heights():
 
 
 def test_an_age_given_as_a_timedelta_is_refused():
-    p = _trajectory().assign(age=lambda d: pd.to_timedelta(d["age"], unit="min"))
-    with pytest.raises(TypeError, match="minutes"):
+    p = _trajectory().assign(age=lambda d: pd.to_timedelta(d["age"], unit="s"))
+    with pytest.raises(TypeError, match="seconds"):
         FirstOrderLifetime(lifetime_hours=24).apply(p)
-    with pytest.raises(TypeError, match="minutes"):
+    with pytest.raises(TypeError, match="seconds"):
         survival(p, np.full(len(p), 1e-4))
 
 

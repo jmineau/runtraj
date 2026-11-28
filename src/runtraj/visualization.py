@@ -229,7 +229,7 @@ class ParticlesPlotAccessor:
         lats: np.ndarray = p["lat"].to_numpy(dtype=float)
 
         _color_labels = {
-            "age": "Minutes since release",
+            "age": "Seconds since release",
             "zagl": "Altitude AGL (m)",
             "foot": "Surface influence (foot)",
         }

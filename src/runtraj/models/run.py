@@ -368,6 +368,6 @@ def run_trajectories(
     if made != "particles":
         return particles
     particles["time"] = pd.Timestamp(release.time) + pd.to_timedelta(
-        particles["age"].to_numpy(), unit="min"
+        particles["age"].to_numpy(), unit="s"
     )
     return particles

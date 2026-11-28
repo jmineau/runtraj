@@ -97,7 +97,8 @@ above ground and 1 above sea level, as ``SETUP.CFG``'s ``KMSL``.
 release points (``release.coords()``) and ``altitude_ref``.
 :func:`~runtraj.models.hysplit.run_hycs_std` runs ``hycs_std`` in the
 folder, and :func:`~runtraj.models.hysplit.read_particle_dat` reads its
-particle file as a particle table. Use them to look at or change
+particle file as a particle table, with HYSPLIT's minutes (``time``, which
+becomes ``age``, and ``samt``) in seconds. Use them to look at or change
 the input files of a run. A project run then adds the release heights
 (:doc:`particles`); by hand:
 

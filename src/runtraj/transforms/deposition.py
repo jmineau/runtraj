@@ -11,17 +11,17 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from runtraj.transforms._common import step_minutes, weigh
+from runtraj.transforms._common import step_seconds, weigh
 from runtraj.transforms.lifetime import survival
 
 if TYPE_CHECKING:
     from runtraj.releases import Release
 
-#: The longest time step, in minutes, the surviving fraction is computed over.
+#: The longest time step, in seconds, the surviving fraction is computed over.
 #: A particle can cross the surface layer within a few minutes, so rows
 #: further apart than HYSPLIT's one-minute step do not say how long it
 #: stayed below the layer top.
-MAX_STEP_MINUTES = 1.0
+MAX_STEP_SECONDS = 60.0
 
 
 def dry_deposition_survival(
@@ -40,7 +40,7 @@ def dry_deposition_survival(
     Parameters
     ----------
     particles : pandas.DataFrame
-        The particle table, with ``particle``, ``age`` (minutes) and
+        The particle table, with ``particle``, ``age`` (seconds) and
         ``zagl`` (m) columns and a row at every time step (HYSPLIT's ``outdt: 0``).
     velocity : float
         The dry deposition velocity, in m/s.
@@ -58,7 +58,7 @@ def dry_deposition_survival(
     ------
     ValueError
         If a column is missing or a particle's rows are more than
-        :data:`MAX_STEP_MINUTES` apart.
+        :data:`MAX_STEP_SECONDS` apart.
 
     Notes
     -----
@@ -76,7 +76,7 @@ def dry_deposition_survival(
     >>> p = pd.DataFrame(
     ...     {
     ...         "particle": [1, 1, 1],
-    ...         "age": [-1.0, -2.0, -3.0],
+    ...         "age": [-60.0, -120.0, -180.0],
     ...         "zagl": [10.0, 100.0, 10.0],
     ...     }
     ... )
@@ -89,11 +89,11 @@ def dry_deposition_survival(
             f"Particle DataFrame has no {missing} column(s), required for "
             "dry deposition."
         )
-    step = step_minutes(particles)
-    if (step > MAX_STEP_MINUTES + 1e-6).any():
+    step = step_seconds(particles)
+    if (step > MAX_STEP_SECONDS + 1e-6).any():
         raise ValueError(
             "Dry deposition needs a particle row at every one-minute time step; "
-            f"these rows are up to {step.max():g} minutes apart. Have the "
+            f"these rows are up to {step.max():g} seconds apart. Have the "
             "transport model write a row every minute (HYSPLIT: outdt: 0)."
         )
     below = particles["zagl"].to_numpy(dtype=float) < surface_layer_depth

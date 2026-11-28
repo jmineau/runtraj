@@ -99,7 +99,7 @@ def read_partoutput(
     Returns
     -------
     pandas.DataFrame
-        ``particle``, ``age`` (minutes, negative for a backward run), ``lon``,
+        ``particle``, ``age`` (seconds, negative for a backward run), ``lon``,
         ``lat``, ``zagl``, then the other fields, ordered by output time
         as FLEXPART wrote them and by particle within a time.
 
@@ -110,8 +110,7 @@ def read_partoutput(
     ValueError
         If no file is given, a file has no ``lon``, ``lat``, or ``z``, a
         field is on FLEXPART's grid rather than per particle (the output
-        of a domain-filling run, ``MDOMAINFILL`` 1), or an output time is
-        not a whole number of minutes from *release_time*.
+        of a domain-filling run, ``MDOMAINFILL`` 1).
 
     Examples
     --------
@@ -161,12 +160,8 @@ def _read_one(path: str, release_time: dt.datetime) -> pd.DataFrame:
         times = ds["time"].values.astype("datetime64[ns]")
         numbers = ds["particle"].values
 
-    age = (times - np.datetime64(release_time, "ns")) / np.timedelta64(1, "m")
-    if not np.allclose(age, np.round(age)):
-        raise ValueError(
-            f"{os.path.basename(path)} has output times that are not whole "
-            f"minutes from the release time {release_time}."
-        )
+    # FLEXPART writes its times in whole seconds, as the particle table counts age.
+    age = (times - np.datetime64(release_time, "ns")) / np.timedelta64(1, "s")
     kept = fields["z"] != _FILL
     rows_time, rows_particle = np.nonzero(kept)
 

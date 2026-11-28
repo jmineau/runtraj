@@ -13,8 +13,8 @@ from numpy.typing import ArrayLike
 from pydantic import BaseModel, ConfigDict, Field
 
 from runtraj.transforms._common import (
-    elapsed_minutes,
-    step_minutes,
+    elapsed_seconds,
+    step_seconds,
     trajectory_columns,
     weigh,
 )
@@ -36,7 +36,7 @@ def survival(particles: pd.DataFrame, rate: ArrayLike) -> pd.Series:
     Parameters
     ----------
     particles : pandas.DataFrame
-        The particle table, with ``particle`` and ``age`` (minutes) columns.
+        The particle table, with ``particle`` and ``age`` (seconds) columns.
         A table of several simulations tells each trajectory apart by its
         ``release``, ``variant`` and ``realization`` as well.
     rate : array-like
@@ -70,7 +70,7 @@ def survival(particles: pd.DataFrame, rate: ArrayLike) -> pd.Series:
     --------
     >>> import pandas as pd
     >>> from runtraj.transforms import survival
-    >>> p = pd.DataFrame({"particle": [1, 1, 1], "age": [-60.0, -120.0, -180.0]})
+    >>> p = pd.DataFrame({"particle": [1, 1, 1], "age": [-3600.0, -7200.0, -10800.0]})
     >>> survival(p, rate=[1e-4, 1e-4, 0.0]).round(4).tolist()
     [0.6977, 0.4868, 0.4868]
     """
@@ -83,13 +83,13 @@ def survival(particles: pd.DataFrame, rate: ArrayLike) -> pd.Series:
         raise ValueError(
             "rate must be a finite number, zero or positive, at every row."
         )
-    step = step_minutes(particles)
+    step = step_seconds(particles)
     # Add the losses up from the release, one trajectory at a time.
     keys = trajectory_columns(particles)
     rows = particles[keys].reset_index(drop=True)
     rows = rows.assign(
-        _loss=k * step.to_numpy() * 60.0,
-        _elapsed=elapsed_minutes(particles),
+        _loss=k * step.to_numpy(),
+        _elapsed=elapsed_seconds(particles),
     ).sort_values([*keys, "_elapsed"], kind="stable")
     cumulative = rows.groupby(keys, sort=False, dropna=False)["_loss"].cumsum()
     return pd.Series(np.exp(-cumulative.sort_index().to_numpy()), index=particles.index)
@@ -100,7 +100,7 @@ class FirstOrderLifetime(BaseModel):
     Transform that decays each row's ``weight`` by ``exp(-age / lifetime)``.
 
     ``age`` is the particle's time since release, its ``age`` column
-    (minutes), and the lifetime is the species' e-folding lifetime.
+    (seconds), and the lifetime is the species' e-folding lifetime.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -115,5 +115,5 @@ class FirstOrderLifetime(BaseModel):
         directory: str | Path | None = None,
     ) -> pd.DataFrame:
         """Return the particles with ``weight`` decayed by age."""
-        age_hours = elapsed_minutes(particles) / 60.0
+        age_hours = elapsed_seconds(particles) / 3600.0
         return weigh(particles, np.exp(-age_hours / self.lifetime_hours))
