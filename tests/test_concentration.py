@@ -5,7 +5,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from runtraj.concentration import read_concentration, write_concentration
+from runtraj.concentration import (
+    describe_grid,
+    read_concentration,
+    write_concentration,
+)
 
 
 def _tree() -> xr.DataTree:
@@ -29,3 +33,13 @@ def test_a_concentration_file_is_compressed_and_reads_back(tmp_path, point_relea
         assert nc.groups["local"].variables["SO2"].filters()["zlib"]
     back = read_concentration(path)
     assert float(back["local"]["SO2"].sum()) == 3.0
+
+
+def test_a_grids_longitude_and_latitude_carry_the_cf_attributes_of_an_axis():
+    grid = _tree()["local"].to_dataset().assign(time_end=lambda ds: ds["time"])
+    describe_grid(grid, "mass m-3", "{name} concentration")
+    lon, lat = grid["lon"].attrs, grid["lat"].attrs
+    assert (lon["standard_name"], lon["axis"]) == ("longitude", "X")
+    assert (lat["standard_name"], lat["axis"]) == ("latitude", "Y")
+    assert (lon["units"], lat["units"]) == ("degrees_east", "degrees_north")
+    assert lon["long_name"] == "longitude of the cell center"
