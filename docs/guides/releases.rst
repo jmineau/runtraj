@@ -191,6 +191,12 @@ results by it with pandas:
    releases = project.releases          # one row per release
    releases[releases.site.isin(["WBB", "UOU"])]
 
+A label may not be named like a column runtraj adds to those tables
+(``variant``, ``realization``, ``model``, ``state``, ``stage``, ``reason``,
+``message``, a result type such as ``particles``, or the name of one of the
+project's stages). Reading or adding such a release is an error that lists
+the names.
+
 For a release built from several rows, the first row's labels are used.
 ``project.release(release_id)`` returns the release itself. A project
 reads ``releases.csv`` as a table and builds a release only when you ask
