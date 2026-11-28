@@ -538,6 +538,16 @@ def test_run_runs_the_releases_it_is_given_in_this_process(tmp_path, ran):
     assert list(table["state"]) == ["pending"]  # the fake ran nothing
 
 
+@pytest.mark.parametrize("method", ["run", "submit"])
+def test_run_and_submit_take_their_options_by_keyword_only(tmp_path, ran, method):
+    """Release ids passed first are not read as ``skip_existing`` (which ran the whole project)."""
+    project = _project(tmp_path)
+
+    with pytest.raises(TypeError, match="positional"):
+        getattr(project, method)([_release(12).id])
+    assert ran == []
+
+
 def test_run_refuses_a_release_the_project_does_not_have(tmp_path, ran):
     project = _project(tmp_path)
 
