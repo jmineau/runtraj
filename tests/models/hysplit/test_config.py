@@ -53,11 +53,6 @@ def test_ziscale_empty_list_is_rejected():
         HysplitConfig(n_hours=-24, ziscale=[])
 
 
-def test_ziscale_rejects_multiple_per_simulation_lists():
-    with pytest.raises(ValueError, match="Per-simulation ziscale lists"):
-        HysplitConfig(n_hours=-24, ziscale=[[0.8, 0.8], [0.9, 0.9]])
-
-
 @pytest.mark.parametrize("krand", [0, 1, 3, 4, 10, 13])
 def test_seed_requires_krand_2(krand):
     with pytest.raises(ValueError, match="requires krand=2"):

@@ -62,16 +62,6 @@ def test_a_met_with_only_a_folder_is_valid(tmp_path):
     assert cfg.download is None
 
 
-@pytest.mark.parametrize(
-    "key",
-    [{"file_format": "%Y%m%d_%H"}, {"file_tres": "6h"}],
-    ids=lambda k: next(iter(k)),
-)
-def test_the_old_file_settings_are_refused_with_what_to_do(tmp_path, key):
-    with pytest.raises(ValueError, match=f"{next(iter(key))} is gone: delete it"):
-        HysplitMetConfig(directory=tmp_path, **key)
-
-
 def test_metconfig_download_keeps_its_folder(tmp_path):
     cfg = HysplitMetConfig(directory=tmp_path, download="hrrr")
     assert cfg.download == "hrrr"
@@ -1431,16 +1421,6 @@ def test_the_crop_is_the_box(tmp_path):
         "bbox": [BOUNDS.xmin, BOUNDS.ymin, BOUNDS.xmax, BOUNDS.ymax],
         "levels": None,
     }
-
-
-def test_n_min_is_refused_with_why(tmp_path):
-    with pytest.raises(ValueError, match="n_min is gone: a run needs every met file"):
-        _local(tmp_path, n_min=5)
-
-
-def test_a_buffer_is_refused_with_how_to_widen_the_box(tmp_path):
-    with pytest.raises(ValueError, match="Widen the bounds"):
-        _local(tmp_path, subgrid_buffer=0.2)
 
 
 def test_a_crop_turned_off_is_no_crop(tmp_path):

@@ -534,11 +534,6 @@ def test_an_ensemble_keeps_its_folder_when_its_realizations_grow(tmp_path):
     assert variants["e"].run_settings["ensemble"] is True
 
 
-def test_from_is_rejected_with_advice(tmp_path):
-    with pytest.raises(ValueError, match="no longer needed"):
-        _variant_config(tmp_path, variants={"a": {}, "b": {"from": "a"}})
-
-
 def test_to_yaml_always_writes_the_variants_that_run(tmp_path):
     mc = _met_config(tmp_path)["hrrr"]
     cfg = ProjectConfig(

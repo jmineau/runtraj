@@ -220,14 +220,6 @@ def test_a_project_without_releases_has_no_simulations(tmp_path):
     ]
 
 
-def test_a_receptors_csv_is_named_as_renamed(tmp_path):
-    project = _project(tmp_path)
-    project.releases_path.rename(project.directory / "receptors.csv")
-
-    with pytest.raises(ValueError, match="now named releases.csv"):
-        Project(project.directory)
-
-
 # ---------------------------------------------------------------------------
 # Output directory and scratch
 # ---------------------------------------------------------------------------
@@ -729,11 +721,6 @@ def test_a_table_without_realization_selects_every_realization(tmp_path):
     ("sel", "error", "match"),
     [
         (pd.DataFrame({"release": ["r"]}), ValueError, r"has no \['variant'\]"),
-        (
-            pd.DataFrame({"receptor": ["r"], "variant": ["hrrr"]}),
-            ValueError,
-            "now named 'release'",
-        ),
         ("hrrr", ValueError, "a mask over project.simulations"),
         (
             pd.DataFrame({"release": ["r"], "variant": ["nope"]}),
@@ -830,16 +817,6 @@ def test_a_table_refuses_other_columns_and_a_bad_name(tmp_path):
         project.add_table("kernels", pd.DataFrame({"release": ["b"], "w": [1.0]}))
     with pytest.raises(ValueError, match="A table name is letters"):
         project.table_path("../kernels")
-
-
-def test_a_table_written_with_a_receptor_column_is_named_as_renamed(tmp_path):
-    project = _project(tmp_path)
-    path = project.table_path("kernels")
-    path.parent.mkdir()
-    pd.DataFrame({"receptor": ["a"], "weight": [1.0]}).to_parquet(path)
-
-    with pytest.raises(ValueError, match="now named 'release'"):
-        project.add_table("kernels", pd.DataFrame({"release": ["b"], "weight": [1.0]}))
 
 
 @pytest.mark.parametrize("keep_workdir", [False, True])

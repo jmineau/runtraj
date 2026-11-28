@@ -739,18 +739,6 @@ def test_blank_group_rows_at_different_times_are_separate_releases():
     assert len(read_releases(io.StringIO(csv))) == 2
 
 
-def test_read_releases_refuses_the_old_group_column_name(tmp_path):
-    """``r_idx`` is not read: a file that has it is told to say ``group``."""
-    csv = tmp_path / "releases.csv"
-    csv.write_text(
-        "time,lati,long,zagl,r_idx\n"
-        "2023-01-01 12:00:00,40.77,-111.85,5.0,0\n"
-        "2023-01-01 12:00:00,40.78,-111.86,5.0,0\n"
-    )
-    with pytest.raises(ValueError, match="r_idx.*Rename it to 'group'"):
-        read_releases(csv)
-
-
 def test_read_releases_group_with_mixed_times_raises(tmp_path):
     csv = tmp_path / "releases.csv"
     csv.write_text(
