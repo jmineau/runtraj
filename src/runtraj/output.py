@@ -71,8 +71,9 @@ import logging
 import os
 import shutil
 import warnings
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Collection, Iterable, Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -507,6 +508,8 @@ class Output:
         # means reading its _settings.yaml and hashing it again, so each is
         # read once; a lookup that misses lists the tree again.
         self._hashes: dict[str, dict[str, str]] = {}
+        # The trees listed so far inside `_listed_once`, else None.
+        self._listed: set[str] | None = None
 
     def __repr__(self) -> str:
         return f"Output({str(self.directory)!r})"
@@ -724,6 +727,23 @@ class Output:
                 found.append((settings_hash(stored), record.get("name", "")))
         return found
 
+    @contextmanager
+    def _listed_once(self) -> Iterator[None]:
+        """
+        List each tree at most once inside the block, however many folders are looked up.
+
+        Without it a lookup that finds no folder lists the tree again, once per
+        variant, kind and realization. Here a folder missing from the first
+        listing is taken as missing for the rest of the block, so a bulk read
+        (``status``) is one snapshot of the tree.
+        """
+        outer = self._listed
+        self._listed = set() if outer is None else outer
+        try:
+            yield
+        finally:
+            self._listed = outer
+
     def _name(self, kind: Kind, variant: Variant) -> str | None:
         """
         Return the name of *variant*'s folder of *kind*, or ``None`` when it does not exist.
@@ -739,6 +759,10 @@ class Output:
             if folder_hash == digest:
                 return name
         # A miss lists the tree again: another worker may have made the folder.
+        if self._listed is not None:
+            if kind in self._listed:
+                return None
+            self._listed.add(kind)
         for name, folder_hash in self.hashes(kind).items():
             if folder_hash == digest:
                 return name
