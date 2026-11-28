@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=3415377b"></script>
+    <script src="../../_static/documentation_options.js?v=1261e425"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev66+g6455e3ed5" />
+  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -484,6 +484,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._plugins</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_class</span><span class="p">,</span> <span class="n">near_miss</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.identity</span><span class="w"> </span><span class="kn">import</span> <span class="n">canonical</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">ROW_COLUMNS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">RESULT_TYPES</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -495,25 +496,28 @@
 <span class="c1">#: Pattern for a stage's name, which is a folder in the output directory and a column of ``project.status()``.</span>
 <span class="n">STAGE_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[a-z][a-z0-9_]*$"</span><span class="p">)</span>
 
-<span class="c1">#: Names a stage may not take: the output directory's own trees (the result</span>
-<span class="c1">#: types of :mod:`runtraj.results`), and the columns of ``project.status()``.</span>
-<span class="n">RESERVED_NAMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+<span class="c1">#: The columns :attr:`~runtraj.Project.simulations` adds to the release table, after ``release``.</span>
+<span class="n">SIMULATION_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"variant"</span><span class="p">,</span> <span class="s2">"realization"</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">)</span>
+
+<span class="c1">#: The columns of :meth:`~runtraj.Project.status` that say where a failed simulation stopped.</span>
+<span class="n">FAILURE_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"stage"</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">)</span>
+
+<span class="c1">#: Names a release label or a stage may not take: the columns the core adds to</span>
+<span class="c1">#: ``project.simulations`` and ``project.status()``, and a column for each result type.</span>
+<span class="n">COLUMN_NAMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
     <span class="p">{</span>
-        <span class="s2">"particles"</span><span class="p">,</span>
-        <span class="s2">"concentration"</span><span class="p">,</span>
-        <span class="s2">"trajectories"</span><span class="p">,</span>
-        <span class="s2">"logs"</span><span class="p">,</span>
-        <span class="s2">"scratch"</span><span class="p">,</span>
-        <span class="s2">"release"</span><span class="p">,</span>
-        <span class="s2">"variant"</span><span class="p">,</span>
-        <span class="s2">"realization"</span><span class="p">,</span>
-        <span class="s2">"model"</span><span class="p">,</span>
+        <span class="s2">"time"</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">ROW_COLUMNS</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">SIMULATION_COLUMNS</span><span class="p">,</span>
         <span class="s2">"state"</span><span class="p">,</span>
-        <span class="s2">"stage"</span><span class="p">,</span>
-        <span class="s2">"reason"</span><span class="p">,</span>
-        <span class="s2">"message"</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">FAILURE_COLUMNS</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">RESULT_TYPES</span><span class="p">,</span>
     <span class="p">}</span>
 <span class="p">)</span>
+
+<span class="c1">#: Names a stage may not take: those of :data:`COLUMN_NAMES`, and the output</span>
+<span class="c1">#: directory's own folders.</span>
+<span class="n">RESERVED_NAMES</span> <span class="o">=</span> <span class="n">COLUMN_NAMES</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"logs"</span><span class="p">,</span> <span class="s2">"scratch"</span><span class="p">}</span>
 
 
 <span class="c1">#: The config class a stage takes, a pydantic model.</span>

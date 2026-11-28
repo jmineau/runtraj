@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=3415377b"></script>
+    <script src="../_static/documentation_options.js?v=1261e425"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev66+g6455e3ed5" />
+  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -675,6 +675,11 @@ results by it with pandas:</p>
 <span class="n">releases</span><span class="p">[</span><span class="n">releases</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s2">"WBB"</span><span class="p">,</span> <span class="s2">"UOU"</span><span class="p">])]</span>
 </pre></div>
 </div>
+<p>A label may not be named like a column runtraj adds to those tables
+(<code class="docutils literal notranslate"><span class="pre">variant</span></code>, <code class="docutils literal notranslate"><span class="pre">realization</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">stage</span></code>, <code class="docutils literal notranslate"><span class="pre">reason</span></code>,
+<code class="docutils literal notranslate"><span class="pre">message</span></code>, a result type such as <code class="docutils literal notranslate"><span class="pre">particles</span></code>, or the name of one of the
+project’s stages). Reading or adding such a release is an error that lists
+the names.</p>
 <p>For a release built from several rows, the first row’s labels are used.
 <code class="docutils literal notranslate"><span class="pre">project.release(release_id)</span></code> returns the release itself. A project
 reads <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> as a table and builds a release only when you ask
