@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=8ee1e9cf"></script>
+    <script src="../../_static/documentation_options.js?v=487503e1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev54+g43eaaa300" />
+  <meta name="docsearch:version" content="0.1.0a6.dev55+g6ef1caed0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1022,10 +1022,10 @@
 and <code class="docutils literal notranslate"><span class="pre">RELEASES</span></code> (<code class="xref py py-func docutils literal notranslate"><span class="pre">releases()</span></code>)
 releases a column’s particle <em>k</em> in slab <em>k</em> of <code class="docutils literal notranslate"><span class="pre">numpar</span></code>, and a
 multipoint release’s particles point by point, so the number says
-where each started. <code class="docutils literal notranslate"><span class="pre">numpar</span></code> is taken to be the highest
-<code class="docutils literal notranslate"><span class="pre">particle</span></code> in <em>particles</em>: a run whose last-released particles
-left the met’s domain before the first output step has them missing,
-and the slabs or points of the others shift.</p>
+where each started. The number of particles released is
+<code class="docutils literal notranslate"><span class="pre">config.numpar</span></code>, whichever of them <em>particles</em> holds: those that
+left the met’s domain before the first output step are missing, and
+the others keep their slabs or points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <em>release</em> is not a column or multipoint release.</p>

@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=8ee1e9cf"></script>
+    <script src="../../../../_static/documentation_options.js?v=487503e1"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev54+g43eaaa300" />
+  <meta name="docsearch:version" content="0.1.0a6.dev55+g6ef1caed0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -554,17 +554,17 @@
 <span class="sd">        and ``RELEASES`` (:func:`~runtraj.models.flexpart.inputs.releases`)</span>
 <span class="sd">        releases a column's particle *k* in slab *k* of ``numpar``, and a</span>
 <span class="sd">        multipoint release's particles point by point, so the number says</span>
-<span class="sd">        where each started. ``numpar`` is taken to be the highest</span>
-<span class="sd">        ``particle`` in *particles*: a run whose last-released particles</span>
-<span class="sd">        left the met's domain before the first output step has them missing,</span>
-<span class="sd">        and the slabs or points of the others shift.</span>
+<span class="sd">        where each started. The number of particles released is</span>
+<span class="sd">        ``config.numpar``, whichever of them *particles* holds: those that</span>
+<span class="sd">        left the met's domain before the first output step are missing, and</span>
+<span class="sd">        the others keep their slabs or points.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If *release* is not a column or multipoint release.</span>
 <span class="sd">        """</span>
-        <span class="n">numpar</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">particles</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">numpar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">numpar</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">ColumnRelease</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">column_release_rows</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">numpar</span><span class="p">,</span> <span class="n">numpar</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">MultiPointRelease</span><span class="p">):</span>
