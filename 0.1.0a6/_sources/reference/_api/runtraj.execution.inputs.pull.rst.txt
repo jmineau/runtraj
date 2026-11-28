@@ -1,0 +1,6 @@
+﻿runtraj.execution.inputs.pull
+=============================
+
+.. currentmodule:: runtraj.execution.inputs
+
+.. autofunction:: pull

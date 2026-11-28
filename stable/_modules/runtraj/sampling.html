@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.sampling &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.sampling &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -594,7 +594,9 @@
 
 <span class="sd">    A point outside the field horizontally, or in a missing cell, gives</span>
 <span class="sd">    ``fill_value``. Longitudes are wrapped to the field's convention (-180</span>
-<span class="sd">    to 180 or 0 to 360).</span>
+<span class="sd">    to 180 or 0 to 360), and a cell at one end of the field reaches across</span>
+<span class="sd">    the seam: on a global field from 0 to 359.75, a point at 359.9 is in</span>
+<span class="sd">    the cell at 0.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -653,6 +655,10 @@
     <span class="k">if</span> <span class="n">x_dim</span> <span class="o">==</span> <span class="s2">"lon"</span><span class="p">:</span>
         <span class="n">xs</span> <span class="o">=</span> <span class="n">xs</span> <span class="o">%</span> <span class="mf">360.0</span> <span class="k">if</span> <span class="n">lons</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">180.0</span> <span class="k">else</span> <span class="p">((</span><span class="n">xs</span> <span class="o">+</span> <span class="mf">180.0</span><span class="p">)</span> <span class="o">%</span> <span class="mf">360.0</span><span class="p">)</span> <span class="o">-</span> <span class="mf">180.0</span>
     <span class="n">ix</span> <span class="o">=</span> <span class="n">nearest_cell</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">xs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x_dim</span> <span class="o">==</span> <span class="s2">"lon"</span><span class="p">:</span>
+        <span class="c1"># A point past one end of the field may be in the cell at the other end, across the seam.</span>
+        <span class="k">for</span> <span class="n">shift</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mf">360.0</span><span class="p">,</span> <span class="mf">360.0</span><span class="p">):</span>
+            <span class="n">ix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ix</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ix</span><span class="p">,</span> <span class="n">nearest_cell</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">xs</span> <span class="o">+</span> <span class="n">shift</span><span class="p">))</span>
     <span class="n">iy</span> <span class="o">=</span> <span class="n">nearest_cell</span><span class="p">(</span><span class="n">field</span><span class="p">[</span><span class="n">y_dim</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">ys</span><span class="p">)</span>
     <span class="n">inside</span> <span class="o">=</span> <span class="p">(</span><span class="n">ix</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">iy</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
 
@@ -737,12 +743,33 @@
             <span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_recorded_internal_grid</span><span class="p">(</span>
+    <span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">z_top</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the internal grid the run of *particles* printed (``attrs["internal_grid"]``), or None when it has none or *z_top* is None (the met's own levels)."""</span>
+    <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">z_top</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"internal_grid"</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_nearest_level</span><span class="p">(</span><span class="n">levels</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the index of the level nearest each ``z``."""</span>
     <span class="n">coords</span> <span class="o">=</span> <span class="n">levels</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">coords</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">coords</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The vertical coordinate must be a non-empty 1-D array."</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">z</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Memory is proportional to the points, not points x levels. The nearest</span>
+    <span class="c1"># level is one of the two neighbors of z in the sorted levels; a tie goes</span>
+    <span class="c1"># to the lower index, and non-finite z to level 0.</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"stable"</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+    <span class="n">above</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+    <span class="n">hi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">above</span><span class="p">,</span> <span class="n">c</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">lo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">above</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>  <span class="c1"># first of repeated levels</span>
+    <span class="n">d_lo</span><span class="p">,</span> <span class="n">d_hi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">lo</span><span class="p">]</span> <span class="o">-</span> <span class="n">z</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">hi</span><span class="p">]</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span>
+    <span class="n">nearest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">d_lo</span> <span class="o">&lt;</span> <span class="n">d_hi</span><span class="p">,</span>
+        <span class="n">order</span><span class="p">[</span><span class="n">lo</span><span class="p">],</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">d_hi</span> <span class="o">&lt;</span> <span class="n">d_lo</span><span class="p">,</span> <span class="n">order</span><span class="p">[</span><span class="n">hi</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">order</span><span class="p">[</span><span class="n">lo</span><span class="p">],</span> <span class="n">order</span><span class="p">[</span><span class="n">hi</span><span class="p">])),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="n">nearest</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 
 <span class="c1">#: The ARL variables each particle column is computed from, by :func:`sample_met`.</span>
@@ -867,8 +894,13 @@
 <span class="sd">    ``lon``, ``lat``, ``zagl``, and ``time``: bilinear across the met's</span>
 <span class="sd">    grid and linear in height between the internal levels of a HYSPLIT run</span>
 <span class="sd">    with the top *z_top* (:func:`arlmet.sample_points`), then linear in time</span>
-<span class="sd">    between the two met times around the particle's, as HYSPLIT does. Each column comes</span>
-<span class="sd">    from these ARL variables:</span>
+<span class="sd">    between the two met times around the particle's, as HYSPLIT does. The</span>
+<span class="sd">    internal levels are the ones the run printed in its ``MESSAGE`` file when</span>
+<span class="sd">    *particles* record them (``particles.attrs["internal_grid"]``, as the</span>
+<span class="sd">    particles of a HYSPLIT run do, whatever its version); without them they</span>
+<span class="sd">    are the ones HYSPLIT 5.4.0 and later pick for *z_top*, and earlier</span>
+<span class="sd">    versions pick a different grid for a *z_top* below about 1.1 km. Each</span>
+<span class="sd">    column comes from these ARL variables:</span>
 
 <span class="sd">    - ``mlht`` is ``PBLH``, the met model's boundary-layer height, in m</span>
 <span class="sd">      above ground.</span>
@@ -893,7 +925,7 @@
 <span class="sd">        A particle table with ``lon``, ``lat``, ``zagl``, and ``time``</span>
 <span class="sd">        (UTC; a time with a time zone is converted to UTC).</span>
 <span class="sd">        ``sim.particles`` has ``time``. For a table a transport model</span>
-<span class="sd">        returned, add it: the release time plus ``age`` minutes.</span>
+<span class="sd">        returned, add it: the release time plus ``age`` seconds.</span>
 <span class="sd">    met : path-like, iterable of path-like, or xarray.Dataset</span>
 <span class="sd">        ARL met files that cover the particles' times, such as the files the</span>
 <span class="sd">        run read (``met_files`` of :class:`runtraj.models.ModelRun` or of</span>
@@ -907,8 +939,9 @@
 <span class="sd">        :class:`runtraj.models.hysplit.HysplitConfig`), since HYSPLIT's</span>
 <span class="sd">        internal levels depend on it. A stored run records it:</span>
 <span class="sd">        ``particles_metadata(path).settings["z_top"]``. ``None`` reads the</span>
-<span class="sd">        met's own levels, for a transport model that is not HYSPLIT; a row</span>
-<span class="sd">        below their lowest or above their top is then NaN.</span>
+<span class="sd">        met's own levels, for a transport model that is not HYSPLIT (a recorded</span>
+<span class="sd">        internal grid is then not used); a row below their lowest or above</span>
+<span class="sd">        their top is then NaN.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -962,6 +995,7 @@
             <span class="sa">f</span><span class="s2">"sample_met cannot sample </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">; it samples </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">_MET_VARIABLES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="n">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
+    <span class="n">internal_grid</span> <span class="o">=</span> <span class="n">_recorded_internal_grid</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
     <span class="n">present</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">present</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -969,7 +1003,7 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="s2">"time"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"sample_met needs a 'time' column: the release time plus 'age' minutes."</span>
+            <span class="s2">"sample_met needs a 'time' column: the release time plus 'age' seconds."</span>
         <span class="p">)</span>
     <span class="n">variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_MET_VARIABLES</span><span class="p">[</span><span class="n">c</span><span class="p">]))</span>
 
@@ -1000,7 +1034,12 @@
         <span class="p">)</span>
         <span class="n">points</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">[</span><span class="n">later</span><span class="p">]])</span>
         <span class="n">sampled</span> <span class="o">=</span> <span class="n">arlmet</span><span class="o">.</span><span class="n">sample_points</span><span class="p">(</span>
-            <span class="n">sources</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">z_kind</span><span class="o">=</span><span class="s2">"agl"</span><span class="p">,</span> <span class="n">model_top</span><span class="o">=</span><span class="n">z_top</span>
+            <span class="n">sources</span><span class="p">,</span>
+            <span class="n">points</span><span class="p">,</span>
+            <span class="n">names</span><span class="p">,</span>
+            <span class="n">z_kind</span><span class="o">=</span><span class="s2">"agl"</span><span class="p">,</span>
+            <span class="n">model_top</span><span class="o">=</span><span class="n">z_top</span><span class="p">,</span>
+            <span class="n">internal_grid</span><span class="o">=</span><span class="n">internal_grid</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
@@ -1131,7 +1170,8 @@
 <span class="sd">    HYSPLIT finds the height at each met grid point and met time, and a</span>
 <span class="sd">    particle takes the nearest grid point's height at the met times before</span>
 <span class="sd">    and after it, linear in time. The three HYSPLIT methods do the same, on</span>
-<span class="sd">    HYSPLIT's internal levels for a run with the top *z_top*. They apply</span>
+<span class="sd">    HYSPLIT's internal levels for a run with the top *z_top* (the ones the</span>
+<span class="sd">    run printed when *particles* record them, as in :func:`sample_met`). They apply</span>
 <span class="sd">    no minimum, as HYSPLIT's ``kmix0`` does: take ``numpy.maximum`` with</span>
 <span class="sd">    yours. Each height is at least a little above the lowest internal</span>
 <span class="sd">    level, as in HYSPLIT.</span>
@@ -1268,9 +1308,10 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="s2">"time"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."</span>
+            <span class="s2">"calc_pbl_height needs a 'time' column: the release time plus 'age' seconds."</span>
         <span class="p">)</span>
     <span class="n">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
+    <span class="n">internal_grid</span> <span class="o">=</span> <span class="n">_recorded_internal_grid</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">_opened</span><span class="p">(</span><span class="n">met</span><span class="p">)</span> <span class="k">as</span> <span class="n">sources</span><span class="p">:</span>
         <span class="n">names</span> <span class="o">=</span> <span class="n">_met_variables</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
         <span class="n">pressure</span> <span class="o">=</span> <span class="n">_pressure_variable</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
@@ -1306,7 +1347,14 @@
             <span class="n">zmix</span> <span class="o">=</span> <span class="n">_flexpart_columns</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">pressure</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">zmix</span> <span class="o">=</span> <span class="n">_hysplit_columns</span><span class="p">(</span>
-                <span class="n">sources</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">z_top</span>
+                <span class="n">sources</span><span class="p">,</span>
+                <span class="n">columns</span><span class="p">,</span>
+                <span class="n">header</span><span class="p">,</span>
+                <span class="n">names</span><span class="p">,</span>
+                <span class="n">pressure</span><span class="p">,</span>
+                <span class="n">method</span><span class="p">,</span>
+                <span class="n">z_top</span><span class="p">,</span>
+                <span class="n">internal_grid</span><span class="p">,</span>
             <span class="p">)</span>
     <span class="n">columns</span><span class="p">[</span><span class="s2">"zmix"</span><span class="p">]</span> <span class="o">=</span> <span class="n">zmix</span>
     <span class="n">reads</span> <span class="o">=</span> <span class="n">reads</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">columns</span><span class="p">[[</span><span class="o">*</span><span class="n">key</span><span class="p">,</span> <span class="s2">"zmix"</span><span class="p">]],</span> <span class="n">on</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">)</span>
@@ -1411,6 +1459,7 @@
     <span class="n">pressure</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">z_top</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">internal_grid</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the mixed-layer height of each grid point and met time in *columns*, as HYSPLIT's *method* finds it."""</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">arlmet</span>
@@ -1421,7 +1470,9 @@
         <span class="s2">"hysplit_temperature"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"SHGT"</span><span class="p">],</span>
         <span class="s2">"met"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"SHGT"</span><span class="p">,</span> <span class="s2">"PBLH"</span><span class="p">],</span>
     <span class="p">}[</span><span class="n">method</span><span class="p">]</span>
-    <span class="n">levels</span> <span class="o">=</span> <span class="n">arlmet</span><span class="o">.</span><span class="n">internal_levels</span><span class="p">(</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">model_top</span><span class="o">=</span><span class="n">z_top</span><span class="p">)</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="n">arlmet</span><span class="o">.</span><span class="n">internal_levels</span><span class="p">(</span>
+        <span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">model_top</span><span class="o">=</span><span class="n">z_top</span><span class="p">,</span> <span class="n">internal_grid</span><span class="o">=</span><span class="n">internal_grid</span>
+    <span class="p">)</span>
     <span class="n">ground</span> <span class="o">=</span> <span class="n">arlmet</span><span class="o">.</span><span class="n">sample_points</span><span class="p">(</span>
         <span class="n">sources</span><span class="p">,</span>
         <span class="n">columns</span><span class="p">[[</span><span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">]]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
@@ -1429,6 +1480,7 @@
         <span class="n">z_kind</span><span class="o">=</span><span class="s2">"agl"</span><span class="p">,</span>
         <span class="n">method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">,</span>
         <span class="n">model_top</span><span class="o">=</span><span class="n">z_top</span><span class="p">,</span>
+        <span class="n">internal_grid</span><span class="o">=</span><span class="n">internal_grid</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># The internal levels above each column's ground, (columns, levels).</span>
     <span class="n">zz</span> <span class="o">=</span> <span class="n">levels</span><span class="o">.</span><span class="n">heights_at</span><span class="p">(</span><span class="n">ground</span><span class="p">[</span><span class="s2">"SHGT"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
@@ -1458,6 +1510,7 @@
         <span class="n">z_kind</span><span class="o">=</span><span class="s2">"agl"</span><span class="p">,</span>
         <span class="n">method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">,</span>
         <span class="n">model_top</span><span class="o">=</span><span class="n">z_top</span><span class="p">,</span>
+        <span class="n">internal_grid</span><span class="o">=</span><span class="n">internal_grid</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">grid</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>

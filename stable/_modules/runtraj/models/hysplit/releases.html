@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.models.hysplit.releases &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.models.hysplit.releases &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -430,9 +430,6 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../../models.html" class="nav-link">runtraj.models</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.hysplit.releases</span></li>
   </ul>
 </nav>
@@ -456,26 +453,33 @@
 
 <span class="sd">:func:`check_releases` lists the multipoint releases HYSPLIT would turn</span>
 <span class="sd">into a line source, and :func:`release_rows` says where each particle</span>
-<span class="sd">started when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 does</span>
-<span class="sd">not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's</span>
+<span class="sd">started: from the particle's number for a column, and, for a multipoint</span>
+<span class="sd">release, when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to</span>
+<span class="sd">5.4.2 do not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's</span>
 <span class="sd">core (:class:`runtraj.models.TransportModel`), which refuses such a release</span>
-<span class="sd">before HYSPLIT runs.</span>
+<span class="sd">before HYSPLIT runs; :func:`off_the_hour` lists the releases that</span>
+<span class="sd">``hyts_std`` before 5.4.0 cannot run.</span>
 <span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles.table</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_MIN_RELIABLE_SPACING_M</span><span class="p">,</span>
-    <span class="n">RELEASE_ROW_COLUMNS</span><span class="p">,</span>
     <span class="n">_closest_points_m</span><span class="p">,</span>
     <span class="n">_height</span><span class="p">,</span>
+    <span class="n">column_release_rows</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">ColumnRelease</span><span class="p">,</span> <span class="n">MultiPointRelease</span><span class="p">,</span> <span class="n">Release</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">HysplitConfig</span>
 
 <span class="c1">#: Why HYSPLIT cannot run a multipoint release whose points share a horizontal location.</span>
 <span class="n">REPEATED_LOCATION</span> <span class="o">=</span> <span class="p">(</span>
@@ -493,6 +497,15 @@
     <span class="s2">"line source of particles, and hyts_std follows one trajectory from "</span>
     <span class="s2">"each location. Use a PointRelease at each height (distinct group), or "</span>
     <span class="s2">"a MultiPointRelease."</span>
+<span class="p">)</span>
+
+
+<span class="c1">#: Why a trajectory release off the hour is refused before HYSPLIT 5.4.0.</span>
+<span class="n">TRAJECTORY_OFF_HOUR</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"Before HYSPLIT 5.4.0, hyts_std ends the first hour of a run that starts "</span>
+    <span class="s2">"off the hour at the next clock hour, so the run comes up short of "</span>
+    <span class="s2">"n_hours and its rows fall on clock times instead of every tout from the "</span>
+    <span class="s2">"release. Release on the hour, or use HYSPLIT 5.4.0 or later."</span>
 <span class="p">)</span>
 
 
@@ -566,6 +579,24 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">off_the_hour</span><span class="p">(</span><span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the releases of *releases* whose time is not on the hour, one row each, with ``check``, ``release`` and ``message``.</span>
+
+<span class="sd">    *releases* has a ``release`` and a ``time`` column. The message says why</span>
+<span class="sd">    ``hyts_std`` before HYSPLIT 5.4.0 cannot run them (:data:`TRAJECTORY_OFF_HOUR`).</span>
+<span class="sd">    """</span>
+    <span class="n">off</span> <span class="o">=</span> <span class="n">releases</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">releases</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">minute</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"release_refused"</span><span class="p">,</span>
+            <span class="s2">"release"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">off</span><span class="p">),</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="n">TRAJECTORY_OFF_HOUR</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">],</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_repeated</span><span class="p">(</span><span class="n">release</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">lon</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return which points share a horizontal location, to 5 decimal places, with an earlier point of their release."""</span>
     <span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
@@ -580,46 +611,83 @@
 
 <div class="viewcode-block" id="release_rows">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.releases.release_rows.html#runtraj.models.hysplit.releases.release_rows">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">release_rows</span><span class="p">(</span><span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">release_rows</span><span class="p">(</span>
+    <span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return where each particle of a HYSPLIT run started, for a run that wrote no row at ``age = 0``.</span>
+<span class="sd">    Return where each particle of a HYSPLIT run started, from its number and its first row.</span>
 
 <span class="sd">    The columns are :data:`runtraj.particles.table.RELEASE_ROW_COLUMNS`. A</span>
 <span class="sd">    column's particles are released bottom to top in ``particle`` order,</span>
-<span class="sd">    particle ``k`` of ``numpar`` in slab ``k``. A multipoint release's</span>
-<span class="sd">    particles are matched to a point from their first row: by height when</span>
-<span class="sd">    every point has its own altitude, since height drifts about 30 times</span>
-<span class="sd">    less than horizontal position over the first step, and otherwise by</span>
-<span class="sd">    position, with a warning when the points are too close for that.</span>
+<span class="sd">    :func:`particles_per_step` of them at each one-minute time step of the</span>
+<span class="sd">    release (``emisshrs``), each a column of its own: particle ``k`` starts</span>
+<span class="sd">    in slab ``(k - 1) % n + 1`` of the ``n`` released with it. So a start</span>
+<span class="sd">    height is known to the depth of those slabs, ``(top - bottom) / n``:</span>
+<span class="sd">    a long release of few particles knows it less well than a short one. A</span>
+<span class="sd">    build that writes a row at ``age = 0`` gets the same slabs for a column,</span>
+<span class="sd">    because that row's height is not exactly where the particle started</span>
+<span class="sd">    (HYSPLIT scales it by the terrain a minute downwind of the source).</span>
+<span class="sd">    A multipoint release's particles are matched to a point from their first</span>
+<span class="sd">    row: by height when every point has its own altitude, since height</span>
+<span class="sd">    drifts about 30 times less than horizontal position over the first</span>
+<span class="sd">    step, and otherwise by position, with a warning when the points are too</span>
+<span class="sd">    close for that.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">ColumnRelease</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">_column_rows</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">)</span>
+        <span class="c1"># A column's particle numbers run to the highest in *particles*, even</span>
+        <span class="c1"># when a particle left the domain before its first row; a step has all</span>
+        <span class="c1"># its slabs even when MAXPAR cut its last particle (numpar + 1 of a</span>
+        <span class="c1"># step, so numpar remain), so that the slabs are as many as HYSPLIT's.</span>
+        <span class="n">per_step</span> <span class="o">=</span> <span class="n">particles_per_step</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">column_release_rows</span><span class="p">(</span>
+            <span class="n">release</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">particles</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">per_step</span><span class="p">),</span> <span class="n">per_step</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">MultiPointRelease</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_multipoint_rows</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"A </span><span class="si">{</span><span class="n">release</span><span class="o">.</span><span class="n">kind</span><span class="si">}</span><span class="s2"> release needs no release rows."</span><span class="p">)</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_column_rows</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">ColumnRelease</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<div class="viewcode-block" id="particles_per_step">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.releases.particles_per_step.html#runtraj.models.hysplit.releases.particles_per_step">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">particles_per_step</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">locations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return each particle's start: the center of slab ``particle`` of ``numpar``.</span>
+<span class="sd">    Return how many particles HYSPLIT releases from one location in one block of a time step of a particle run.</span>
 
-<span class="sd">    HYSPLIT numbers a column's particles 1 to ``numpar``, so there is a row</span>
-<span class="sd">    for each of them, even one missing from *p*, such as a particle that</span>
-<span class="sd">    left the domain before its first row: the slabs stay ``numpar``.</span>
+<span class="sd">    HYSPLIT's ``EMSPNT`` spreads ``numpar``, divided among the *locations*</span>
+<span class="sd">    horizontal locations of the release, over the ``emisshrs`` of the</span>
+<span class="sd">    release, rounding up the particles of an hour and then of a step, in</span>
+<span class="sd">    single precision. A particle run (``ICHEM=8``) steps one minute, so a</span>
+<span class="sd">    release of a minute or less is one step of ``numpar`` or ``numpar + 1``</span>
+<span class="sd">    particles; a longer one is a step every minute until ``MAXPAR``</span>
+<span class="sd">    particles are out, the last step cut short. Each step releases a block</span>
+<span class="sd">    of this many particles for each of the ``nbptyp`` size bins, and with</span>
+<span class="sd">    ``maxdim: 1`` the bins share ``numpar``. A puff run (``initd`` 1 or</span>
+<span class="sd">    2, or a three-digit ``initd`` whose tens digit is 1 or 2) releases one</span>
+<span class="sd">    puff a step, at the middle of the column. HYSPLIT 5.1.0 to 5.4.2 count the same way.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from runtraj.models.hysplit import HysplitConfig</span>
+<span class="sd">    &gt;&gt;&gt; particles_per_step(HysplitConfig(n_hours=-24, numpar=1000))</span>
+<span class="sd">    1001</span>
+<span class="sd">    &gt;&gt;&gt; particles_per_step(HysplitConfig(n_hours=-24, numpar=1000, emisshrs=0.5))</span>
+<span class="sd">    34</span>
+<span class="sd">    &gt;&gt;&gt; particles_per_step(HysplitConfig(n_hours=-24, numpar=1000, emisshrs=0.5), 3)</span>
+<span class="sd">    12</span>
 <span class="sd">    """</span>
-    <span class="n">numpar</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
-    <span class="n">particle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">numpar</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">step</span> <span class="o">=</span> <span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">top</span> <span class="o">-</span> <span class="n">release</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span> <span class="o">/</span> <span class="n">numpar</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-        <span class="p">{</span>
-            <span class="s2">"particle"</span><span class="p">:</span> <span class="n">particle</span><span class="p">,</span>
-            <span class="s2">"lon"</span><span class="p">:</span> <span class="n">release</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span>
-            <span class="s2">"lat"</span><span class="p">:</span> <span class="n">release</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span>
-            <span class="s2">"height"</span><span class="p">:</span> <span class="p">(</span><span class="n">particle</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">step</span> <span class="o">+</span> <span class="n">release</span><span class="o">.</span><span class="n">bottom</span><span class="p">,</span>
-        <span class="p">},</span>
-        <span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">RELEASE_ROW_COLUMNS</span><span class="p">),</span>
-    <span class="p">)</span>
+    <span class="n">initial</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">initd</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">initd</span> <span class="o">&lt;</span> <span class="mi">100</span> <span class="k">else</span> <span class="n">config</span><span class="o">.</span><span class="n">initd</span> <span class="o">//</span> <span class="mi">10</span> <span class="o">%</span> <span class="mi">10</span>
+    <span class="k">if</span> <span class="n">initial</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">minute</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mf">60.0</span><span class="p">)</span>  <span class="c1"># ABS(DT/60.0)</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">minute</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">emisshrs</span><span class="p">))</span>
+    <span class="n">qsum</span> <span class="o">=</span> <span class="n">hours</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">maxdim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># HYSPLIT sums the hours of the bins</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">nbptyp</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">qsum</span> <span class="o">=</span> <span class="n">qsum</span> <span class="o">+</span> <span class="n">hours</span>
+    <span class="n">per_hour</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">numpar</span> <span class="o">//</span> <span class="n">locations</span><span class="p">)</span> <span class="o">/</span> <span class="n">qsum</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">per_hour</span><span class="p">)</span> <span class="o">*</span> <span class="n">minute</span><span class="p">))</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_multipoint_rows</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">MultiPointRelease</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; runtraj 0.1.0a5</title>
+    <title>Installation &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -506,8 +506,14 @@ cartopy for plotting maps. Check that it worked:</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">visualization</span></code></p></td>
 <td><p>Plotting (<code class="docutils literal notranslate"><span class="pre">.runtraj.plot.map()</span></code> on particles, <code class="docutils literal notranslate"><span class="pre">.plot.map()</span></code> on releases), with coastlines and state borders from cartopy.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">download</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">geometry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">release.geometry</span></code> and <code class="docutils literal notranslate"><span class="pre">release.points</span></code>, as shapely objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">download</span></code></p></td>
 <td><p>Downloading meteorology from NOAA.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">flexpart</span></code></p></td>
+<td><p>Reading GRIB meteorology, to run FLEXPART (<a class="reference internal" href="../reference/flexpart.html"><span class="doc">FLEXPART Integration</span></a>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">complete</span></code></p></td>
 <td><p>Everything above.</p></td>
@@ -526,8 +532,8 @@ Download HYSPLIT from
 <a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT.php">NOAA’s Air Resources Laboratory</a>,
 which asks you to accept the
 <a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT_agreement.php">HYSPLIT terms of use</a>
-first. Unpack it, and point <code class="docutils literal notranslate"><span class="pre">directory</span></code> at the folder it makes, in a
-project’s <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>:</p>
+first. runtraj supports HYSPLIT 5.0 and later. Unpack it, and point
+<code class="docutils literal notranslate"><span class="pre">directory</span></code> at the folder it makes, in a project’s <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">models</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">hysplit</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/hysplit</span>
@@ -541,6 +547,13 @@ load it.</p>
 <p class="admonition-title">Tip</p>
 <p>Make sure <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> has permission to run:
 <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">+x</span> <span class="pre">exec/hycs_std</span></code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>HYSPLIT 5.0.x never seeds the random numbers of a column release or of
+an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run, so on it those runs differ every time, whatever
+<code class="docutils literal notranslate"><span class="pre">seed</span></code> is. Use HYSPLIT 5.1.0 or later when you need to repeat them
+(<a class="reference internal" href="../reference/hysplit.html#hysplit-versions"><span class="std std-ref">HYSPLIT versions</span></a>).</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> says when a project can find no <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, or one that
 cannot run. <a class="reference internal" href="../guides/hysplit_build.html"><span class="doc">Your Own HYSPLIT Build And Data Tables</span></a> has more on choosing a download

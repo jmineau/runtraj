@@ -1,0 +1,6 @@
+runtraj.execution.kubernetes.KubernetesBackend.name
+===================================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+.. autoattribute:: KubernetesBackend.name

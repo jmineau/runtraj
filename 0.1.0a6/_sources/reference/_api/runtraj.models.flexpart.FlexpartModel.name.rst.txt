@@ -1,0 +1,6 @@
+runtraj.models.flexpart.FlexpartModel.name
+==========================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+.. autoattribute:: FlexpartModel.name

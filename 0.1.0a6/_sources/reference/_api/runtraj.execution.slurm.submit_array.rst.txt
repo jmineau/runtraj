@@ -1,0 +1,6 @@
+﻿runtraj.execution.slurm.submit\_array
+=====================================
+
+.. currentmodule:: runtraj.execution.slurm
+
+.. autofunction:: submit_array

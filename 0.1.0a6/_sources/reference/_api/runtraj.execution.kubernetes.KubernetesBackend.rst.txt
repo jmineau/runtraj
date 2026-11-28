@@ -1,0 +1,49 @@
+﻿runtraj.execution.kubernetes.KubernetesBackend
+==============================================
+
+.. currentmodule:: runtraj.execution.kubernetes
+
+
+
+
+
+
+.. class-signature:: runtraj.execution.kubernetes.KubernetesBackend
+
+
+.. class-parameters:: runtraj.execution.kubernetes.KubernetesBackend
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~KubernetesBackend.name
+   ~KubernetesBackend.takes_releases
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~KubernetesBackend.describe
+   ~KubernetesBackend.jobs
+   ~KubernetesBackend.submit
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.Backend`: :py:obj:`~.Backend.here`, :py:obj:`~.Backend.run`, :py:obj:`~.Backend.waits`
+
+

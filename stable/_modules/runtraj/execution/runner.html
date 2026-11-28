@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.runner &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.execution.runner &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -460,10 +460,13 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
@@ -474,9 +477,16 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">absolute</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._transient</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_transient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">look_alike_mets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span><span class="p">,</span> <span class="n">get_backend</span><span class="p">,</span> <span class="n">not_waited</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">LocalConfig</span><span class="p">,</span> <span class="n">PbsConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">lock</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.inputs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FETCH_DONE</span><span class="p">,</span>
+    <span class="n">hash_inputs</span><span class="p">,</span>
+    <span class="n">lock</span><span class="p">,</span>
+    <span class="n">read_text</span><span class="p">,</span>
+    <span class="n">write_text</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.fetch</span><span class="w"> </span><span class="kn">import</span> <span class="n">downloads</span><span class="p">,</span> <span class="n">fetch_project</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -507,6 +517,11 @@
 
 <span class="sd">    The share is every *n_tasks*-th release, starting at *task*, which runs</span>
 <span class="sd">    from 0 to ``n_tasks - 1`` as the index of a job array does.</span>
+<span class="sd">    ``runtraj run --task i/n`` takes this share of the list</span>
+<span class="sd">    ``--releases`` gives; without one it takes it of every release of the</span>
+<span class="sd">    project in the order of a hash of their ids, so</span>
+<span class="sd">    ``pending(project, task=(i, n))`` (:func:`pending`) is the releases</span>
+<span class="sd">    such a task runs.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -566,8 +581,10 @@
     <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the ids of the releases a run would run, each once, in project order.</span>
+<span class="sd">    Return the ids of the releases a run would run, each once.</span>
 
+<span class="sd">    They are in project order, or in the order of *releases* when given;</span>
+<span class="sd">    with *task* and no *releases*, in the order of a hash of their ids.</span>
 <span class="sd">    A driver that starts tasks itself writes these to the ``releases.txt``</span>
 <span class="sd">    each task reads (``runtraj run --releases``).</span>
 
@@ -581,7 +598,10 @@
 <span class="sd">        ``(i, n)``: share ``i`` of ``n`` (:func:`task_share`), taken from</span>
 <span class="sd">        all the releases (or all of *releases*) before the complete ones</span>
 <span class="sd">        are dropped, so the tasks of a job array split the releases the</span>
-<span class="sd">        same way whenever each starts.</span>
+<span class="sd">        same way whenever each starts. All the releases are first put in</span>
+<span class="sd">        the order of a hash of their ids, so the unfinished ones spread</span>
+<span class="sd">        over the tasks however they lie in the project, such as one</span>
+<span class="sd">        site's hours among many sites'; *releases* keep their order.</span>
 <span class="sd">    skip_existing : bool, default True</span>
 <span class="sd">        Leave out releases whose simulations are all complete.</span>
 
@@ -593,7 +613,7 @@
     <span class="n">sims</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulations</span>
     <span class="n">every</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">sims</span><span class="p">[</span><span class="s2">"release"</span><span class="p">]))</span>
     <span class="k">if</span> <span class="n">releases</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">chosen</span> <span class="o">=</span> <span class="n">every</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">every</span> <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">every</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_scattered</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">chosen</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">))</span>
         <span class="n">known</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">every</span><span class="p">)</span>
@@ -610,6 +630,11 @@
         <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">chosen</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">left</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">chosen</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_scattered</span><span class="p">(</span><span class="n">release_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a sort key that puts release ids in an order unrelated to the project's: a hash of the id."""</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">release_id</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_to_fetch</span><span class="p">(</span>
@@ -639,9 +664,9 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_here</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">setting</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"execution.local.fetch"</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Get the met files of the *unrun* simulations in this process, before a local run's workers start.</span>
+<span class="sd">    Get the met files of the *unrun* simulations in this process, before a local run's workers start, and return whether every one was had.</span>
 
 <span class="sd">    A file that could not be had, or a download that failed and that a</span>
 <span class="sd">    retry may get past (:func:`runtraj._transient.is_transient`), is only</span>
@@ -655,7 +680,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_transient</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
             <span class="k">raise</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"The fetch stopped (</span><span class="si">%s</span><span class="s2">); each run downloads its own."</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
-        <span class="k">return</span>
+        <span class="k">return</span> <span class="kc">False</span>
     <span class="n">problems</span> <span class="o">=</span> <span class="n">files</span><span class="p">[</span><span class="s2">"message"</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -663,6 +688,8 @@
             <span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">),</span>
             <span class="n">problems</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
 
 
 <span class="c1">#: The lock a task holds where the inputs are while it gets the met files (:func:`fetch_shared`).</span>
@@ -681,9 +708,17 @@
 <span class="sd">    lock :data:`FETCH_LOCK` at *location* while it fetches</span>
 <span class="sd">    (:func:`runtraj.execution.inputs.lock`), so the first downloads the</span>
 <span class="sd">    files and the others, waiting their turn, find them and download</span>
-<span class="sd">    nothing. Nothing is locked when no met downloads. As for a local run's</span>
-<span class="sd">    fetch, a file that could not be had, or a download a retry may get</span>
-<span class="sd">    past, is only logged: each run then tries again.</span>
+<span class="sd">    nothing. A task that got every file writes</span>
+<span class="sd">    :data:`~runtraj.execution.inputs.FETCH_DONE` there, holding the hash of</span>
+<span class="sd">    the inputs (:func:`runtraj.execution.inputs.hash_inputs`), and a task</span>
+<span class="sd">    that finds it, before the lock or once it holds it, does not list the</span>
+<span class="sd">    project again. New inputs, such as more releases, hash to another value</span>
+<span class="sd">    and are fetched again, and ``runtraj submit`` removes the note when it</span>
+<span class="sd">    makes a Job, so it holds for one Job. Nothing is locked when no met</span>
+<span class="sd">    downloads. As for a local run's fetch, a file that could not be had, or</span>
+<span class="sd">    a download a retry may get past, is only logged; the task then writes</span>
+<span class="sd">    no note, so the next task tries again under the lock, and each run</span>
+<span class="sd">    tries again too.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -701,11 +736,15 @@
     <span class="n">sims</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulations</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">downloads</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">sims</span><span class="p">[</span><span class="s2">"variant"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()):</span>
         <span class="k">return</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">hash_inputs</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">read_text</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_DONE</span><span class="p">)</span> <span class="o">==</span> <span class="n">inputs</span><span class="p">:</span>
+        <span class="k">return</span>
     <span class="k">with</span> <span class="n">lock</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_LOCK</span><span class="p">):</span>
-        <span class="c1"># Listed under the lock: what the task before got is not fetched again.</span>
+        <span class="k">if</span> <span class="n">read_text</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_DONE</span><span class="p">)</span> <span class="o">==</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c1"># the task before fetched them while this one waited</span>
         <span class="n">unrun</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">_unrun</span><span class="p">(</span><span class="n">sims</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">unrun</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">_fetch_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">,</span> <span class="s2">"execution.kubernetes.fetch"</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">unrun</span><span class="o">.</span><span class="n">empty</span> <span class="ow">or</span> <span class="n">_fetch_here</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">unrun</span><span class="p">,</span> <span class="s2">"execution.kubernetes.fetch"</span><span class="p">):</span>
+            <span class="n">write_text</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">FETCH_DONE</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span></div>
 
 
 
@@ -758,6 +797,63 @@
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">folder</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">task_command</span><span class="p">(</span>
+    <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
+    <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">n_tasks</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">cpus</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">compute_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">restarted</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">on_first_start</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the lines and the command of a job script's task, for ``runtraj run --task``.</span>
+
+<span class="sd">    The command is ``runtraj run &lt;project&gt; --releases &lt;folder&gt;/releases.parquet</span>
+<span class="sd">    --task &lt;index&gt;/&lt;n_tasks&gt; --execution &lt;folder&gt;/execution.yaml --cpus &lt;cpus&gt;</span>
+<span class="sd">    --output &lt;output&gt;`` with the Python that called this, and</span>
+<span class="sd">    ``--compute-root`` when given. *index* is a shell variable of the scheduler</span>
+<span class="sd">    (``$SLURM_ARRAY_TASK_ID``), left to expand when the script runs.</span>
+
+<span class="sd">    With ``skip_existing=False`` the task's first start runs again what</span>
+<span class="sd">    exists and a start after that skips it: the lines, which go before the</span>
+<span class="sd">    command, set ``skip`` to ``--no-skip`` unless the shell command</span>
+<span class="sd">    *restarted* succeeds, then run *on_first_start*; the command ends with</span>
+<span class="sd">    ``$skip``. With ``skip_existing=True`` there are no lines.</span>
+<span class="sd">    """</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+        <span class="s2">"-m"</span><span class="p">,</span>
+        <span class="s2">"runtraj"</span><span class="p">,</span>
+        <span class="s2">"run"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
+        <span class="s2">"--releases"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"releases.parquet"</span><span class="p">),</span>
+        <span class="s2">"--task"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">n_tasks</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"--execution"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"execution.yaml"</span><span class="p">),</span>
+        <span class="c1"># A task runs its share here, so it is told the array's cpus.</span>
+        <span class="s2">"--cpus"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">cpus</span><span class="p">),</span>
+        <span class="c1"># The output the submitting process uses, which may not be config.yaml's.</span>
+        <span class="s2">"--output"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">compute_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">words</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--compute-root"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resolve_compute_root</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">))]</span>
+    <span class="c1"># The index must expand, so that word is quoted with "".</span>
+    <span class="n">quoted</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1">"'</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"$"</span><span class="p">)</span> <span class="k">else</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span><span class="p">]</span>
+    <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_existing</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'skip="--no-skip"'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">restarted</span><span class="si">}</span><span class="s1"> &amp;&amp; skip=""'</span><span class="p">,</span> <span class="o">*</span><span class="n">on_first_start</span><span class="p">]</span>
+        <span class="n">quoted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"$skip"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lines</span><span class="p">,</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">quoted</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="array_size">
@@ -862,9 +958,10 @@
 <span class="sd">    task : tuple of (int, int), optional</span>
 <span class="sd">        ``(i, n)``: run share ``i`` of ``n`` of the releases here, in this</span>
 <span class="sd">        process, whatever the backend. The share is every ``n``-th</span>
-<span class="sd">        release in project order (or in *releases* order), starting at</span>
-<span class="sd">        ``i`` (:func:`task_share`), whether it is complete or not, and the</span>
-<span class="sd">        complete ones are then skipped. Each task of a job array or a</span>
+<span class="sd">        release, starting at ``i`` (:func:`task_share`), of *releases* in</span>
+<span class="sd">        their order, or else of every release of the project in the order</span>
+<span class="sd">        of a hash of their ids (:func:`pending`), whether it is complete</span>
+<span class="sd">        or not, and the complete ones are then skipped. Each task of a job array or a</span>
 <span class="sd">        Kubernetes indexed Job runs one share, and every task splits the</span>
 <span class="sd">        releases the same way whenever it starts.</span>
 <span class="sd">    execution : ExecutionConfig, optional</span>
@@ -889,7 +986,9 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If a release id is not in the project, *task* is not from 0 to</span>
-<span class="sd">        ``n - 1``, or the backend is not waited for.</span>
+<span class="sd">        ``n - 1``, the backend is not waited for, or two mets of one</span>
+<span class="sd">        transport model record the same settings, so that their variants</span>
+<span class="sd">        would share one run (:func:`runtraj.check.look_alike_mets`).</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -897,13 +996,14 @@
 <span class="sd">    ``KeyboardInterrupt``, and ``runtraj run`` exits with 3. Whoever</span>
 <span class="sd">    started the task decides whether it runs again: the Slurm job array</span>
 <span class="sd">    script requeues it after the time-limit notice or a preemption</span>
-<span class="sd">    (:func:`runtraj.execution.job_script`), and a Kubernetes Job retries it</span>
+<span class="sd">    (:func:`runtraj.execution.slurm.job_script`), and a Kubernetes Job retries it</span>
 <span class="sd">    (:mod:`runtraj.execution.kubernetes`). It then skips what it finished.</span>
 <span class="sd">    """</span>
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
     <span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">backend</span><span class="o">.</span><span class="n">waits</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">not_waited</span><span class="p">(</span><span class="n">backend</span><span class="p">))</span>
+    <span class="n">_refuse_look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
     <span class="n">todo</span> <span class="o">=</span> <span class="n">pending</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="o">=</span><span class="n">releases</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">todo</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"run: every simulation is complete; nothing to do"</span><span class="p">)</span>
@@ -922,6 +1022,13 @@
         <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
     <span class="p">)</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_refuse_look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise ``ValueError`` when two mets of one transport model record the same settings, before the completed runs are listed."""</span>
+    <span class="n">alike</span> <span class="o">=</span> <span class="n">look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">alike</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">message</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">alike</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">run_here</span><span class="p">(</span>
@@ -1087,7 +1194,8 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If the execution backend is ``local``, or one that takes no list</span>
-<span class="sd">        of releases (Kubernetes) with *releases* or ``skip_existing=False``.</span>
+<span class="sd">        of releases (Kubernetes) with *releases* or ``skip_existing=False``,</span>
+<span class="sd">        or two mets look alike, as for :func:`run`.</span>
 <span class="sd">    """</span>
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
     <span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">execution</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
@@ -1099,6 +1207,7 @@
             <span class="s2">"and skips the complete ones, as a retried task must: it takes no "</span>
             <span class="s2">"list of releases and no --no-skip."</span>
         <span class="p">)</span>
+    <span class="n">_refuse_look_alike_mets</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
     <span class="n">todo</span> <span class="o">=</span> <span class="n">pending</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">releases</span><span class="o">=</span><span class="n">releases</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">todo</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"submit: every simulation is complete; nothing to do"</span><span class="p">)</span>
@@ -1125,6 +1234,7 @@
     <span class="s2">"run_here"</span><span class="p">,</span>
     <span class="s2">"status_after_job"</span><span class="p">,</span>
     <span class="s2">"submit"</span><span class="p">,</span>
+    <span class="s2">"task_command"</span><span class="p">,</span>
     <span class="s2">"task_share"</span><span class="p">,</span>
     <span class="s2">"write_submission"</span><span class="p">,</span>
 <span class="p">]</span>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.releases.table &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.releases.table &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -479,6 +479,13 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">column_errors</span><span class="p">,</span> <span class="n">point_errors</span>
 
+<span class="c1"># Before pandas 3 the C reader's default float parser can differ from Python's</span>
+<span class="c1"># in the last digit, and ``round_trip`` reads every value exactly; pandas 3</span>
+<span class="c1"># parses exactly by default and deprecates the argument.</span>
+<span class="n">_EXACT_FLOATS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">{</span><span class="s2">"float_precision"</span><span class="p">:</span> <span class="s2">"round_trip"</span><span class="p">}</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">__version__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="p">{}</span>
+<span class="p">)</span>
+
 <span class="c1">#: The columns of a release table, one row per release point.</span>
 <span class="n">COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"group"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">,</span> <span class="s2">"longitude"</span><span class="p">,</span> <span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"altitude"</span><span class="p">,</span> <span class="s2">"altitude_ref"</span><span class="p">)</span>
 
@@ -539,15 +546,8 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If a column is named ``r_idx``, the old name of ``group``, or two</span>
-<span class="sd">        columns name one field, such as ``altitude`` and ``zagl``.</span>
+<span class="sd">        If two columns name one field, such as ``altitude`` and ``zagl``.</span>
 <span class="sd">    """</span>
-    <span class="n">old</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"r_idx"</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">old</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"The column </span><span class="si">{</span><span class="n">old</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> is not read. Rename it to 'group': rows "</span>
-            <span class="s2">"that share a group make one column or multipoint release."</span>
-        <span class="p">)</span>
     <span class="n">spelling</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">aliases</span> <span class="ow">in</span> <span class="n">ALIASES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">found</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">]</span>
@@ -634,12 +634,17 @@
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
     <span class="n">ref</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="s2">"altitude_ref"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
     <span class="c1"># Group keys as text: a file that mixes numeric and string ids must not</span>
-    <span class="c1"># split one release into two. Without a group column, every row is a release.</span>
-    <span class="n">keys</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">frame</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="c1"># split one release into two. A row with no group (no column, or a blank</span>
+    <span class="c1"># cell) is a release of its own: its key starts with NUL, so no group</span>
+    <span class="c1"># label can equal it.</span>
+    <span class="n">nogroup</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">frame</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
         <span class="k">if</span> <span class="s2">"group"</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span>
-        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
     <span class="p">)</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"</span><span class="se">\0</span><span class="s2">"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nogroup</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">keys</span><span class="p">[</span><span class="o">~</span><span class="n">nogroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[</span><span class="o">~</span><span class="n">nogroup</span><span class="p">]</span>
     <span class="n">codes</span><span class="p">,</span> <span class="n">uniques</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">factorize</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">fail</span><span class="p">(</span><span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -647,7 +652,7 @@
         <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">where</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"group=</span><span class="si">{</span><span class="n">uniques</span><span class="p">[</span><span class="n">codes</span><span class="p">[</span><span class="n">where</span><span class="p">]]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="s2">"group"</span> <span class="ow">in</span> <span class="n">frame</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"row </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"row </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">nogroup</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"group=</span><span class="si">{</span><span class="n">uniques</span><span class="p">[</span><span class="n">codes</span><span class="p">[</span><span class="n">where</span><span class="p">]]</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
@@ -756,7 +761,8 @@
 <span class="sd">    Return a release table's times as naive UTC times, calling *fail* on a row that has none.</span>
 
 <span class="sd">    Text must be ISO 8601 or ``YYYYMMDDHHMM`` (:func:`_parse_time_text`);</span>
-<span class="sd">    datetimes are taken as they are, an aware one converted to UTC.</span>
+<span class="sd">    datetimes are taken as they are, an aware one converted to UTC. Seconds</span>
+<span class="sd">    are dropped, as :func:`~runtraj.releases.models.parse_time` drops them.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">column</span><span class="p">):</span>
         <span class="n">fail</span><span class="p">(</span>
@@ -775,7 +781,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">utc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">fail</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="s2">"time is empty."</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">tz_localize</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="s2">"min"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_build</span><span class="p">(</span>
@@ -953,7 +959,8 @@
     <span class="n">dtype</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">c</span><span class="p">:</span> <span class="nb">str</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">header</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"group"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">)</span>
     <span class="p">}</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c1"># A coordinate read one digit off would change the release's id.</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="o">**</span><span class="n">_EXACT_FLOATS</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="read_releases">

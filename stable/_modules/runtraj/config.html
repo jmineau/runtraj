@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.config &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.config &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -594,7 +594,7 @@
 <span class="sd">        :class:`~runtraj.models.hysplit.HysplitConfig`, with the base seed.</span>
 <span class="sd">    model : str</span>
 <span class="sd">        The transport model that runs it, as ``config.yaml`` names it: a</span>
-<span class="sd">        built-in name such as ``hysplit``, or a model class's import path.</span>
+<span class="sd">        supported model's name such as ``hysplit``, or a model class's import path.</span>
 <span class="sd">        Its build is :attr:`build`.</span>
 <span class="sd">    realizations : int or None</span>
 <span class="sd">        Number of realizations of an ensemble, or ``None`` for a single run.</span>
@@ -651,11 +651,13 @@
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">met_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        What a run records of the met, its config's ``settings()``.</span>
+<span class="sd">        What a run records of the met: its config's ``settings()``, and its ``label`` when it has one.</span>
 
 <span class="sd">        For HYSPLIT, the weather product and the crop. Read on first use,</span>
 <span class="sd">        once for all the variants of a met: the product comes from the</span>
-<span class="sd">        header of the met's first file.</span>
+<span class="sd">        header of the met's first file. A met without a label records no</span>
+<span class="sd">        ``label`` key, so its settings folders are the ones it had before</span>
+<span class="sd">        labels existed.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -664,9 +666,11 @@
 <span class="sd">            its product from.</span>
 <span class="sd">        """</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">met_config</span><span class="o">.</span><span class="n">settings</span><span class="p">()</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">met_config</span><span class="o">.</span><span class="n">settings</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">MeteorologyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Met </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">met</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+            <span class="k">raise</span> <span class="n">MeteorologyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Met </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">met</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">met_config</span><span class="o">.</span><span class="n">label</span>
+        <span class="k">return</span> <span class="n">settings</span> <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="o">**</span><span class="n">settings</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="Variant.build">
@@ -867,6 +871,23 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="n">deep</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_base60_stays_text</span><span class="p">(</span><span class="n">construct</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrap a number constructor so YAML 1.1's base-60 form (``12:00:00``) stays text."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="n">loader</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">yaml</span><span class="o">.</span><span class="n">ScalarNode</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="s2">":"</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span> <span class="k">else</span> <span class="n">construct</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapped</span>
+
+
+<span class="c1"># YAML 1.1 reads an unquoted 12:00:00 as the integer 43200 (a Slurm time limit</span>
+<span class="c1"># of 30 days, a PBS walltime in seconds); YAML 1.2 dropped base 60, and so does this.</span>
+<span class="k">for</span> <span class="n">_tag</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"tag:yaml.org,2002:int"</span><span class="p">,</span> <span class="s2">"tag:yaml.org,2002:float"</span><span class="p">):</span>
+    <span class="n">_UniqueKeyLoader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span>
+        <span class="n">_tag</span><span class="p">,</span> <span class="n">_base60_stays_text</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="o">.</span><span class="n">yaml_constructors</span><span class="p">[</span><span class="n">_tag</span><span class="p">])</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="ProjectConfig">
 <a class="viewcode-back" href="../../reference/_api/runtraj.ProjectConfig.html#runtraj.ProjectConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ProjectConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -906,14 +927,16 @@
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">models</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s2">"hysplit"</span><span class="p">:</span> <span class="p">{}},</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Transport models by name, each a block of its settings: the "</span>
-            <span class="s2">"defaults of every variant that runs it. A block named "</span>
-            <span class="s2">"``hysplit`` is that built-in model. Any other model class gets a "</span>
+            <span class="s2">"defaults of every variant that runs it. At least one is "</span>
+            <span class="s2">"required: runtraj has no default model. A block named for a "</span>
+            <span class="s2">"model runtraj supports (:data:`runtraj.models.MODELS`: ``hysplit`` or "</span>
+            <span class="s2">"``flexpart``) is that model, and ``hysplit: </span><span class="si">{}</span><span class="s2">`` runs HYSPLIT "</span>
+            <span class="s2">"with its own defaults. Any other model class gets a "</span>
             <span class="s2">"block of any name that gives its import path as ``class``, such "</span>
-            <span class="s2">"as ``class: mypkg.models.MyModel``. A model has "</span>
-            <span class="s2">"one block. Left out, the project runs HYSPLIT with its defaults."</span>
+            <span class="s2">"as ``class: mypkg.models.MyModel``. A model has one block."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">stages</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -982,6 +1005,12 @@
                 <span class="n">elsewhere</span><span class="o">=</span><span class="n">_blocks_of_settings</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"models"</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"stages"</span><span class="p">)),</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">data</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"output"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_output_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Accept a path in Python, kept as text like a URL."""</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">)</span> <span class="k">else</span> <span class="n">output</span>
 
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"mets"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
@@ -1096,20 +1125,13 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            For a bad name, an unknown met, model or stage, a bad</span>
-<span class="sd">            ``realizations``, ``from:``, a setting written outside its</span>
+<span class="sd">            ``realizations``, a setting written outside its</span>
 <span class="sd">            block, or a stage set to null that another of its stages reads.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">VARIANT_NAME_RE</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">group</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Variant name </span><span class="si">{</span><span class="n">group</span><span class="si">!r}</span><span class="s2"> </span><span class="si">{</span><span class="n">_NAME_RULE</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Variant </span><span class="si">{</span><span class="n">group</span><span class="si">!r}</span><span class="s2">"</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="ow">or</span> <span class="p">{})</span>
-        <span class="k">if</span> <span class="s2">"from"</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2"> uses 'from:', which is no longer needed: a "</span>
-                <span class="s2">"variant with the same transport settings as another shares its "</span>
-                <span class="s2">"particles. Give the variant the transport overrides of "</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">spec</span><span class="p">[</span><span class="s1">'from'</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> (if any) and its own stage settings."</span>
-            <span class="p">)</span>
         <span class="n">met</span> <span class="o">=</span> <span class="n">_met_name</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mets</span><span class="p">)</span>
         <span class="n">block</span> <span class="o">=</span> <span class="n">_model_name</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_models</span><span class="p">)</span>
         <span class="n">model</span><span class="p">,</span> <span class="n">defaults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_models</span><span class="p">[</span><span class="n">block</span><span class="p">]</span>
@@ -1127,10 +1149,15 @@
             <span class="p">},</span>
         <span class="p">)</span>
         <span class="n">realizations</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"realizations"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">realizations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">realizations</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">realizations</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">realizations</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: realizations must be &gt;= 1"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">realizations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">realizations</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">realizations</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">realizations</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: realizations must be a whole number, 1 or more, "</span>
+                <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="n">realizations</span><span class="si">!r}</span><span class="s2">"</span>
+            <span class="p">)</span>
         <span class="n">stages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variant_stages</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"stages"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="n">transport</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">defaults</span><span class="p">,</span> <span class="o">**</span><span class="n">spec</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">_Declared</span><span class="p">(</span>
@@ -1377,19 +1404,22 @@
 <span class="sd">    setting belongs.</span>
 
 <span class="sd">    The model is as :func:`runtraj.models.get_model` names it: the block's</span>
-<span class="sd">    ``class``, or the block's own name for a built-in model. The settings</span>
+<span class="sd">    ``class``, or the block's own name for a model runtraj supports. The settings</span>
 <span class="sd">    are checked by name here, and by value as a variant runs them.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If there is no block, a block names no model, two blocks name one</span>
+<span class="sd">        If there is no block (runtraj has no default model), a block names no model, two blocks name one</span>
 <span class="sd">        model, or a block holds what is no setting of its model.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">models</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"models: has no block. Leave it out to run HYSPLIT with its "</span>
-            <span class="s2">"defaults, or write models: {hysplit: </span><span class="si">{}</span><span class="s2">}."</span>
+            <span class="s2">"The config names no transport model. Add a models: block for the "</span>
+            <span class="sa">f</span><span class="s2">"one to run: a model runtraj supports (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MODELS</span><span class="p">))</span><span class="si">}</span><span class="s2">), such "</span>
+            <span class="s2">"as</span><span class="se">\n</span><span class="s2">  models:</span><span class="se">\n</span><span class="s2">    hysplit: </span><span class="si">{}</span><span class="se">\n</span><span class="s2">to run it with its own defaults, "</span>
+            <span class="s2">"or a block of any name with class: and the import path of a model "</span>
+            <span class="s2">"class in another package, such as class: mypkg.models.MyModel."</span>
         <span class="p">)</span>
     <span class="n">blocks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">block_of</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1406,8 +1436,8 @@
             <span class="p">)</span>
         <span class="k">if</span> <span class="s2">"."</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model</span> <span class="ow">and</span> <span class="n">model</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MODELS</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">model</span><span class="si">!r}</span><span class="s2"> is not a built-in transport model (they "</span>
-                <span class="sa">f</span><span class="s2">"are </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MODELS</span><span class="p">)</span><span class="si">}</span><span class="s2">). A model in another package gets "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">model</span><span class="si">!r}</span><span class="s2"> is not a transport model runtraj supports "</span>
+                <span class="sa">f</span><span class="s2">"(they are </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">MODELS</span><span class="p">)</span><span class="si">}</span><span class="s2">). A model in another package gets "</span>
                 <span class="s2">"class: with its import path, such as class: mypkg.models.MyModel."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">block_of</span><span class="p">:</span>
@@ -1488,24 +1518,22 @@
 <span class="sd">    The class checks the values first, so that it can refuse a setting it</span>
 <span class="sd">    once had with what to do instead; then a key that is no setting of the</span>
 <span class="sd">    stage is refused, saying where it belongs (*elsewhere*) or naming the</span>
-<span class="sd">    nearest setting.</span>
+<span class="sd">    nearest setting. A class that forbids extra keys refuses them in its own</span>
+<span class="sd">    check, so the keys are checked before its error is raised.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If a setting is unknown to the stage or invalid.</span>
 <span class="sd">    """</span>
+    <span class="n">allowed</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">config_class</span><span class="o">.</span><span class="n">model_fields</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"a </span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> setting"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">config_class</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">ValidationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"extra_forbidden"</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">error</span><span class="o">.</span><span class="n">errors</span><span class="p">()):</span>
+            <span class="n">_check_keys</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">allowed</span><span class="p">,</span> <span class="n">elsewhere</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-    <span class="n">fields</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">config_class</span><span class="o">.</span><span class="n">model_fields</span>
-    <span class="n">_check_keys</span><span class="p">(</span>
-        <span class="n">settings</span><span class="p">,</span>
-        <span class="n">where</span><span class="p">,</span>
-        <span class="n">allowed</span><span class="o">=</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"a </span><span class="si">{</span><span class="n">stage</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> setting"</span><span class="p">),</span>
-        <span class="n">elsewhere</span><span class="o">=</span><span class="n">elsewhere</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">_check_keys</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">allowed</span><span class="p">,</span> <span class="n">elsewhere</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">config</span>
 
 
@@ -1586,10 +1614,6 @@
                 <span class="n">setting</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"a </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2"> setting. Write it under models: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">:."</span>
             <span class="p">)</span>
     <span class="n">places</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_stage_places</span><span class="p">(</span><span class="n">stages</span><span class="p">))</span>
-    <span class="n">places</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="s2">"no longer a key. Name each transport model as a block under "</span>
-        <span class="s2">"models:, such as models: {hysplit: </span><span class="si">{}</span><span class="s2">}."</span>
-    <span class="p">)</span>
     <span class="k">return</span> <span class="n">places</span>
 
 
@@ -1659,7 +1683,7 @@
 <span class="sd">        If a key is not one of *allowed*.</span>
 <span class="sd">    """</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">allowed</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"from"</span><span class="p">:</span>  <span class="c1"># "from:" has its own message</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">elsewhere</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> is </span><span class="si">{</span><span class="n">elsewhere</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
@@ -1676,7 +1700,6 @@
     <span class="s2">"VARIANT_NAME_RE"</span><span class="p">,</span>
     <span class="s2">"ProjectConfig"</span><span class="p">,</span>
     <span class="s2">"Variant"</span><span class="p">,</span>
-    <span class="s2">"transport_config"</span><span class="p">,</span>
 <span class="p">]</span>
 </pre></div>
 

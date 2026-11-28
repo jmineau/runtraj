@@ -1,0 +1,6 @@
+runtraj.testing.ReplayModel.name
+================================
+
+.. currentmodule:: runtraj.testing
+
+.. autoattribute:: ReplayModel.name

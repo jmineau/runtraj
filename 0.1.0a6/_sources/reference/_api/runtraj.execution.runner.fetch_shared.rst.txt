@@ -1,0 +1,6 @@
+﻿runtraj.execution.runner.fetch\_shared
+======================================
+
+.. currentmodule:: runtraj.execution.runner
+
+.. autofunction:: fetch_shared

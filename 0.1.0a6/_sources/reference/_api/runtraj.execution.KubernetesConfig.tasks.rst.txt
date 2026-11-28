@@ -1,0 +1,6 @@
+runtraj.execution.KubernetesConfig.tasks
+========================================
+
+.. currentmodule:: runtraj.execution
+
+.. autoproperty:: KubernetesConfig.tasks

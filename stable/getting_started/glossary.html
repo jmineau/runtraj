@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Glossary &#8212; runtraj 0.1.0a5</title>
+    <title>Glossary &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -501,13 +501,21 @@ the transport model’s under <code class="docutils literal notranslate"><span c
 it changes. A setting written in neither takes the transport model’s
 own default (<a class="reference internal" href="../guides/choosing_settings.html"><span class="doc">Choosing Settings</span></a>).</p>
 </dd>
+<dt id="term-FLEXPART">FLEXPART<a class="headerlink" href="#term-FLEXPART" title="Link to this term">#</a></dt><dd><p><a class="reference external" href="https://www.flexpart.eu">The University of Vienna’s open-source particle dispersion model</a>, written in Fortran, one of the
+<a class="reference internal" href="#term-transport-model"><span class="xref std std-term">transport models</span></a> runtraj supports
+(<a class="reference internal" href="../reference/flexpart.html"><span class="doc">FLEXPART Integration</span></a>). runtraj runs FLEXPART 11 from its
+source checkout and includes none of it.</p>
+</dd>
 <dt id="term-HRRR">HRRR<a class="headerlink" href="#term-HRRR" title="Link to this term">#</a></dt><dd><p>The High-Resolution Rapid Refresh, NOAA’s 3 km weather model of the
 contiguous United States, archived in <a class="reference internal" href="#term-ARL"><span class="xref std std-term">ARL</span></a> format since 2015.
 The examples in these docs use it, and name their met <code class="docutils literal notranslate"><span class="pre">hrrr</span></code>.</p>
 </dd>
-<dt id="term-HYSPLIT">HYSPLIT<a class="headerlink" href="#term-HYSPLIT" title="Link to this term">#</a></dt><dd><p>NOAA’s particle dispersion model, written in Fortran, and runtraj’s
-built-in <a class="reference internal" href="#term-transport-model"><span class="xref std std-term">transport model</span></a>. runtraj runs its <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>
-executable and does not include it (<a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>).</p>
+<dt id="term-HYSPLIT">HYSPLIT<a class="headerlink" href="#term-HYSPLIT" title="Link to this term">#</a></dt><dd><p><a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT.php">NOAA’s particle dispersion model</a>,
+written in Fortran, one of the <a class="reference internal" href="#term-transport-model"><span class="xref std std-term">transport models</span></a>
+runtraj supports (<a class="reference internal" href="../reference/hysplit.html"><span class="doc">HYSPLIT Integration</span></a>), in versions 5.0 and
+later. runtraj runs its
+<code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> executable, and <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> for single trajectories, and
+includes neither (<a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>).</p>
 </dd>
 <dt id="term-met">met<a class="headerlink" href="#term-met" title="Link to this term">#</a></dt><dd><p>Short for <a class="reference internal" href="#term-meteorology"><span class="xref std std-term">meteorology</span></a>, and also one named set of meteorology
 files in your settings, such as
@@ -613,8 +621,9 @@ the way to a lifetime, deposition, or oxidation. See
 <a class="reference internal" href="../guides/particles.html"><span class="doc">Reading And Plotting Particles</span></a>.</p>
 </dd>
 <dt id="term-transport-model">transport model<a class="headerlink" href="#term-transport-model" title="Link to this term">#</a></dt><dd><p>The program that moves the particles through the meteorology.
-runtraj runs it; <a class="reference internal" href="#term-HYSPLIT"><span class="xref std std-term">HYSPLIT</span></a> is the one built in, and another can
-be added by the import path of its class.</p>
+runtraj runs the one <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> names: it supports <a class="reference internal" href="#term-HYSPLIT"><span class="xref std std-term">HYSPLIT</span></a>
+and <a class="reference internal" href="#term-FLEXPART"><span class="xref std std-term">FLEXPART</span></a>, and another can be added by the import path of its
+class.</p>
 </dd>
 <dt id="term-variant">variant<a class="headerlink" href="#term-variant" title="Link to this term">#</a></dt><dd><p>A named set of settings that every release runs under: a <a class="reference internal" href="#term-met"><span class="xref std std-term">met</span></a>
 plus any settings that differ from the <a class="reference internal" href="#term-defaults"><span class="xref std std-term">defaults</span></a>, such as

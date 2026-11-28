@@ -1,0 +1,6 @@
+﻿runtraj.execution.schedule.check\_now
+=====================================
+
+.. currentmodule:: runtraj.execution.schedule
+
+.. autofunction:: check_now

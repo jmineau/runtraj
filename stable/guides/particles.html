@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Reading And Plotting Particles &#8212; runtraj 0.1.0a5</title>
+    <title>Reading And Plotting Particles &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -527,12 +527,12 @@ its particles:</p>
 
 <span class="gp">In [6]: </span><span class="n">particles</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 <span class="gh">Out[6]: </span>
-<span class="go">   age  particle       lon  ...   mlht    pres                time</span>
-<span class="go">0 -1.0       1.0 -111.8473  ...  150.0  859.37 2021-01-15 07:59:00</span>
-<span class="go">1 -1.0       2.0 -111.8473  ...  150.0  859.12 2021-01-15 07:59:00</span>
-<span class="go">2 -1.0       3.0 -111.8474  ...  150.0  859.34 2021-01-15 07:59:00</span>
-<span class="go">3 -1.0       4.0 -111.8473  ...  150.0  858.78 2021-01-15 07:59:00</span>
-<span class="go">4 -1.0       5.0 -111.8473  ...  150.0  859.09 2021-01-15 07:59:00</span>
+<span class="go">    age  particle       lon  ...   mlht    pres                time</span>
+<span class="go">0 -60.0       1.0 -111.8473  ...  150.0  859.48 2021-01-15 07:59:00</span>
+<span class="go">1 -60.0       2.0 -111.8473  ...  150.0  859.25 2021-01-15 07:59:00</span>
+<span class="go">2 -60.0       3.0 -111.8474  ...  150.0  859.46 2021-01-15 07:59:00</span>
+<span class="go">3 -60.0       4.0 -111.8473  ...  150.0  858.91 2021-01-15 07:59:00</span>
+<span class="go">4 -60.0       5.0 -111.8473  ...  150.0  859.21 2021-01-15 07:59:00</span>
 
 <span class="go">[5 rows x 21 columns]</span>
 </pre></div>
@@ -554,8 +554,8 @@ step. The columns you are most likely to use:</p>
 <td><p>Particle number, from 1 to <code class="docutils literal notranslate"><span class="pre">numpar</span></code> (HYSPLIT’s <code class="docutils literal notranslate"><span class="pre">indx</span></code>)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">age</span></code></p></td>
-<td><p>Minutes since release, negative for a backward run (HYSPLIT’s
-<code class="docutils literal notranslate"><span class="pre">time</span></code>)</p></td>
+<td><p>Seconds since release, negative for a backward run (HYSPLIT’s
+<code class="docutils literal notranslate"><span class="pre">time</span></code>, which it writes in minutes)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time</span></code></p></td>
 <td><p>Time of the row, UTC, built from <code class="docutils literal notranslate"><span class="pre">age</span></code> when the table is read</p></td>
@@ -619,15 +619,15 @@ run long enough for the particles to leave the region of its sources
 
 <span class="gp">In [10]: </span><span class="n">ends</span><span class="p">[[</span><span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"age"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"zagl"</span><span class="p">]]</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
 <span class="gh">Out[10]: </span>
-<span class="go">         particle          age         lon         lat         zagl</span>
-<span class="go">count  100.000000   100.000000  100.000000  100.000000   100.000000</span>
-<span class="go">mean    50.500000  -518.620000 -112.606935   42.137872   797.238494</span>
-<span class="go">std     29.011492   150.853048    0.163699    0.020341   319.659445</span>
-<span class="go">min      1.000000 -1031.000000 -113.000100   42.090200   157.438400</span>
-<span class="go">25%     25.750000  -615.000000 -112.700625   42.126475   583.699200</span>
-<span class="go">50%     50.500000  -477.500000 -112.608650   42.138350   795.512700</span>
-<span class="go">75%     75.250000  -407.250000 -112.512775   42.150375   971.123800</span>
-<span class="go">max    100.000000  -304.000000 -111.931800   42.218100  1775.547900</span>
+<span class="go">         particle           age         lon         lat         zagl</span>
+<span class="go">count  100.000000    100.000000  100.000000  100.000000   100.000000</span>
+<span class="go">mean    50.500000 -33686.400000 -112.615739   42.136784   768.364077</span>
+<span class="go">std     29.011492  11004.882619    0.152558    0.018940   339.032489</span>
+<span class="go">min      1.000000 -83760.000000 -112.915000   42.100200   166.072500</span>
+<span class="go">25%     25.750000 -40035.000000 -112.711900   42.122950   523.281325</span>
+<span class="go">50%     50.500000 -34050.000000 -112.621700   42.137800   811.694100</span>
+<span class="go">75%     75.250000 -24315.000000 -112.515200   42.150600   978.178100</span>
+<span class="go">max    100.000000 -18120.000000 -112.122200   42.194500  1899.188700</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">particles.runtraj.grid_exits(bounds)</span></code> gives where each particle first left
@@ -644,7 +644,7 @@ of a tracer with a 24-hour lifetime that survives to the release.</p>
 
 <span class="gp">In [12]: </span><span class="n">weighted</span> <span class="o">=</span> <span class="n">apply_transforms</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="p">[</span><span class="n">FirstOrderLifetime</span><span class="p">(</span><span class="n">lifetime_hours</span><span class="o">=</span><span class="mi">24</span><span class="p">)])</span>
 
-<span class="gp">In [13]: </span><span class="n">weighted</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">weighted</span><span class="o">.</span><span class="n">age</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)[</span><span class="s2">"weight"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+<span class="gp">In [13]: </span><span class="n">weighted</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">weighted</span><span class="o">.</span><span class="n">age</span> <span class="o">//</span> <span class="mi">3600</span><span class="p">)[</span><span class="s2">"weight"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 <span class="gh">Out[13]: </span>
 <span class="go">age</span>
 <span class="go">-5.0    0.828801</span>
@@ -732,8 +732,8 @@ a <code class="docutils literal notranslate"><span class="pre">site</span></code
 <span class="gp">   ....: </span>    <span class="n">sim</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulation</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">variant</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="p">))</span>
 <span class="gp">   ....: </span>
-<span class="go">202101150600_-111.848_40.766_10/hrrr 41370</span>
-<span class="go">202101150700_-111.848_40.766_10/hrrr 43853</span>
+<span class="go">202101150600_-111.848_40.766_10/hrrr 45200</span>
+<span class="go">202101150700_-111.848_40.766_10/hrrr 43987</span>
 </pre></div>
 </div>
 <p>A run of 1000 particles over 24 hours is about 1.4 million rows, some 250 MB
@@ -762,7 +762,7 @@ or its own shell, a question about thousands of simulations is one query:</p>
 <span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">release</span><span class="p">,</span><span class="w"> </span><span class="n">particle</span><span class="p">;</span>
 
 <span class="c1">-- the time of each row, UTC: the release id starts with the release time</span>
-<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">strptime</span><span class="p">(</span><span class="k">left</span><span class="p">(</span><span class="n">release</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">),</span><span class="w"> </span><span class="s1">'%Y%m%d%H%M'</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_minutes</span><span class="p">(</span><span class="n">age</span><span class="p">::</span><span class="nb">INTEGER</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">time</span>
+<span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">strptime</span><span class="p">(</span><span class="k">left</span><span class="p">(</span><span class="n">release</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">),</span><span class="w"> </span><span class="s1">'%Y%m%d%H%M'</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">to_seconds</span><span class="p">(</span><span class="n">age</span><span class="p">::</span><span class="nb">INTEGER</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="k">time</span>
 <span class="k">FROM</span><span class="w"> </span><span class="n">read_parquet</span><span class="p">(</span><span class="s1">'output/particles/settings=hrrr-a3f9c2/date=2021-01-15/*.parquet'</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -771,7 +771,7 @@ or its own shell, a question about thousands of simulations is one query:</p>
 <span class="n">particles</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">open_dataset</span><span class="p">(</span><span class="s">"output/particles"</span><span class="p">)</span><span class="w">   </span><span class="c1"># settings and date are columns</span>
 </pre></div>
 </div>
-<p>A file stores no <code class="docutils literal notranslate"><span class="pre">time</span></code>; <code class="docutils literal notranslate"><span class="pre">age</span></code> is minutes from the release time, which
+<p>A file stores no <code class="docutils literal notranslate"><span class="pre">time</span></code>; <code class="docutils literal notranslate"><span class="pre">age</span></code> is seconds from the release time, which
 the release id begins with and the file’s metadata holds. An ensemble’s folders have a <code class="docutils literal notranslate"><span class="pre">realization=k</span></code>
 level as well, so its files are one folder deeper (<code class="docutils literal notranslate"><span class="pre">*/*/*/*.parquet</span></code>)
 and <code class="docutils literal notranslate"><span class="pre">realization</span></code> is a column. <a class="reference internal" href="../reference/layout.html"><span class="doc">Output Layout</span></a> describes every
@@ -814,7 +814,7 @@ values. Write it with <a class="reference external" href="https://docs.xarray.de
 <span class="n">ds</span><span class="o">.</span><span class="n">traj</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">decode_timedelta=False</span></code> keeps <code class="docutils literal notranslate"><span class="pre">age</span></code> in minutes rather than reading it
+<p><code class="docutils literal notranslate"><span class="pre">decode_timedelta=False</span></code> keeps <code class="docutils literal notranslate"><span class="pre">age</span></code> in seconds rather than reading it
 as a duration. A table with several realizations is refused: select one
 first, <code class="docutils literal notranslate"><span class="pre">particles[particles.realization</span> <span class="pre">==</span> <span class="pre">k]</span></code>. The particles of
 <a class="reference internal" href="../reference/_api/runtraj.run_trajectories.html#runtraj.run_trajectories" title="runtraj.run_trajectories"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtraj.run_trajectories()</span></code></a> convert the same way.</p>

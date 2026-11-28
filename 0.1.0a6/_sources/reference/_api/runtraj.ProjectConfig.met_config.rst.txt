@@ -1,0 +1,5 @@
+runtraj.ProjectConfig.met\_config
+=================================
+
+.. currentmodule:: runtraj
+.. automethod:: ProjectConfig.met_config

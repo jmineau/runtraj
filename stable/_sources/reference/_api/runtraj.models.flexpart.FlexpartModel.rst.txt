@@ -1,0 +1,50 @@
+﻿runtraj.models.flexpart.FlexpartModel
+=====================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+
+
+
+
+
+.. class-signature:: runtraj.models.flexpart.FlexpartModel
+
+
+.. class-parameters:: runtraj.models.flexpart.FlexpartModel
+
+
+
+Attributes
+----------
+
+.. autosummary::
+   :toctree:
+   :nosignatures:
+
+   ~FlexpartModel.name
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~FlexpartModel.check_releases
+   ~FlexpartModel.release_rows
+   ~FlexpartModel.run
+   ~FlexpartModel.sha256
+   ~FlexpartModel.version
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.TransportModel`: :py:obj:`~.TransportModel.data_files`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.result`, :py:obj:`~.TransportModel.result_files`
+
+

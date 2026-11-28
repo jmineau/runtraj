@@ -1,0 +1,6 @@
+runtraj.execution.Backend.name
+==============================
+
+.. currentmodule:: runtraj.execution
+
+.. autoattribute:: Backend.name

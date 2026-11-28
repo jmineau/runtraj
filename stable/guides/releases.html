@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Releases &#8212; runtraj 0.1.0a5</title>
+    <title>Releases &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -549,7 +549,9 @@ release points at one time</p></td>
 </table>
 </div>
 <p>Every release also needs a <code class="docutils literal notranslate"><span class="pre">time</span></code> in UTC. A timezone-aware time is
-converted to UTC. Altitudes are in meters above ground level. Pass
+converted to UTC. A time is kept to the minute, and its seconds are
+dropped: HYSPLIT starts a run on the minute, and the release id names the
+minute. Altitudes are in meters above ground level. Pass
 <code class="docutils literal notranslate"><span class="pre">altitude_ref=&quot;msl&quot;</span></code> to give them above mean sea level instead.</p>
 <section id="pointrelease">
 <h2>PointRelease<a class="headerlink" href="#pointrelease" title="Link to this heading">#</a></h2>
@@ -673,6 +675,11 @@ results by it with pandas:</p>
 <span class="n">releases</span><span class="p">[</span><span class="n">releases</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s2">"WBB"</span><span class="p">,</span> <span class="s2">"UOU"</span><span class="p">])]</span>
 </pre></div>
 </div>
+<p>A label may not be named like a column runtraj adds to those tables
+(<code class="docutils literal notranslate"><span class="pre">variant</span></code>, <code class="docutils literal notranslate"><span class="pre">realization</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">stage</span></code>, <code class="docutils literal notranslate"><span class="pre">reason</span></code>,
+<code class="docutils literal notranslate"><span class="pre">message</span></code>, a result type such as <code class="docutils literal notranslate"><span class="pre">particles</span></code>, or the name of one of the
+project’s stages). Reading or adding such a release is an error that lists
+the names.</p>
 <p>For a release built from several rows, the first row’s labels are used.
 <code class="docutils literal notranslate"><span class="pre">project.release(release_id)</span></code> returns the release itself. A project
 reads <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code> as a table and builds a release only when you ask
@@ -707,7 +714,10 @@ each gets 26, 1040 in all; over 56 locations, each gets 17, 952 in all.</p></li>
 <p>HYSPLIT stops releasing when it reaches <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> and fills the locations
 in order, so a <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> set too low would leave the last locations with
 fewer particles or none. Leave <code class="docutils literal notranslate"><span class="pre">maxpar</span></code> unset: runtraj then gives HYSPLIT
-room for every location (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">(numpar</span> <span class="pre">//</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">1)</span></code>). A run whose <code class="docutils literal notranslate"><span class="pre">maxpar</span></code>
+room for every location (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">(numpar</span> <span class="pre">//</span> <span class="pre">n</span> <span class="pre">+</span> <span class="pre">1)</span></code> for a release of one time
+step; a longer <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> releases a share at every one-minute step, and
+HYSPLIT rounds each one up: 1000 particles over 3 locations and half an hour
+give 12 x 3 x 30 = 1080). A run whose <code class="docutils literal notranslate"><span class="pre">maxpar</span></code>
 cuts a multipoint release short fails as <code class="docutils literal notranslate"><span class="pre">PARTICLE_LIMIT</span></code>.</p>
 <p>A release happens at one time, but HYSPLIT releases its particles over
 <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code> hours, starting at that time. The default,
@@ -721,6 +731,13 @@ that averages over one, set <code class="docutils literal notranslate"><span cla
 </div>
 <p>The particles are then spread evenly over the hour. <a class="reference internal" href="choosing_settings.html"><span class="doc">Choosing Settings</span></a>
 lists the other settings HYSPLIT chooses for you.</p>
+<p>A <a class="reference internal" href="../reference/_api/runtraj.ColumnRelease.html#runtraj.ColumnRelease" title="runtraj.ColumnRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnRelease</span></code></a> released over more than a minute is a column of
+particles every minute. With <code class="docutils literal notranslate"><span class="pre">numpar:</span> <span class="pre">1000</span></code> and <code class="docutils literal notranslate"><span class="pre">emisshrs:</span> <span class="pre">0.5</span></code>, HYSPLIT
+releases 34 particles a minute, each in one of 34 slabs from <code class="docutils literal notranslate"><span class="pre">bottom</span></code> to
+<code class="docutils literal notranslate"><span class="pre">top</span></code>. A HYSPLIT build that writes no rows at release time (5.4.2 and
+earlier) then tells runtraj a particle’s start height only to within its
+slab, about 29 m in a 1000 m column, against about 1 m for the default
+instant release. A build that writes them makes it exact.</p>
 </section>
 <section id="advanced-release-heights-for-multipoint-and-slant-releases">
 <h2>Advanced: release heights for multipoint and slant releases<a class="headerlink" href="#advanced-release-heights-for-multipoint-and-slant-releases" title="Link to this heading">#</a></h2>
@@ -782,7 +799,8 @@ A <a class="reference internal" href="../reference/_api/runtraj.PointRelease.htm
 (bottom and top), and a <a class="reference internal" href="../reference/_api/runtraj.MultiPointRelease.html#runtraj.MultiPointRelease" title="runtraj.MultiPointRelease"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiPointRelease</span></code></a> one per location.
 This lets code read coordinates without checking the type.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">release.geometry</span></code></dt><dd><p>A shapely geometry: a <code class="docutils literal notranslate"><span class="pre">Point</span></code>, <code class="docutils literal notranslate"><span class="pre">LineString</span></code>, or <code class="docutils literal notranslate"><span class="pre">MultiPoint</span></code>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">release.geometry</span></code></dt><dd><p>A shapely geometry: a <code class="docutils literal notranslate"><span class="pre">Point</span></code>, <code class="docutils literal notranslate"><span class="pre">LineString</span></code>, or <code class="docutils literal notranslate"><span class="pre">MultiPoint</span></code>.
+Needs the <code class="docutils literal notranslate"><span class="pre">geometry</span></code> extra.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">release.plot.map()</span></code></dt><dd><p>A quick map of the release.</p>
 </dd>

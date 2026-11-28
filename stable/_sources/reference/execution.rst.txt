@@ -10,7 +10,7 @@ work underneath.
   ``task=(i, n)`` runs share ``i`` of ``n`` here (:func:`~runtraj.execution.task_share`),
   which is what ``runtraj run --task i/n`` does.
 - :func:`~runtraj.execution.submit` is what ``project.submit()`` calls. It
-  writes a job array script (:func:`~runtraj.execution.job_script`) whose
+  writes a job array script (:func:`~runtraj.execution.slurm.job_script`) whose
   tasks each run ``runtraj run --task``, submits it with ``sbatch``, and
   returns the job id at once. With ``backend: kubernetes`` it makes an
   indexed Job instead (:func:`~runtraj.execution.kubernetes.job_manifest`)
@@ -40,8 +40,8 @@ On Slurm each task of the job array runs one share of the releases
 run happens in this process. A program that starts the tasks itself, on
 another scheduler, writes :func:`~runtraj.execution.pending` to the
 ``releases.txt`` each task reads (``runtraj run --releases``;
-:doc:`../guides/any_scheduler`); :func:`~runtraj.execution.wait` waits
-for a Slurm job array by its id.
+:doc:`../guides/any_scheduler`);
+:func:`~runtraj.execution.slurm.wait` waits for a Slurm job array by its id.
 
 Running
 -------
@@ -53,7 +53,6 @@ Running
    runtraj.execution.run
    runtraj.execution.submit
    runtraj.execution.pending
-   runtraj.execution.wait
    runtraj.execution.task_share
 
 Workers
@@ -106,7 +105,7 @@ names them. A backend that sets ``waits`` and writes
 :meth:`~runtraj.execution.Backend.run` waits for them, so ``runtraj run``
 can use it; one that writes :meth:`~runtraj.execution.Backend.jobs` lists
 them in ``runtraj status``. The tasks need nothing else: every task splits
-the releases the same way (:func:`~runtraj.execution.task_share`), skips
+the releases the same way (:func:`~runtraj.execution.pending`), skips
 what is complete, and exits with a code that says whether to try it again
 (:ref:`exit-codes`).
 
@@ -127,15 +126,16 @@ Slurm job arrays
 
 The Slurm backend is :mod:`runtraj.execution.slurm`: it writes the job
 array and fetch scripts, submits them with ``sbatch``, follows the tasks
-with ``sacct``. The job array script requeues a task that Slurm stops
+with ``sacct`` (``squeue`` where it does not answer). The job array script requeues a task that Slurm stops
 near its time limit or preempts; the worker only stops, and exits with 3.
 
 .. autosummary::
    :toctree: _api
    :nosignatures:
 
-   runtraj.execution.job_script
-   runtraj.execution.fetch_script
+   runtraj.execution.slurm.job_script
+   runtraj.execution.slurm.fetch_script
+   runtraj.execution.slurm.wait
    runtraj.execution.slurm.submit_array
 
 PBS job arrays
@@ -194,11 +194,12 @@ Transport model
 ----------------
 
 The worker runs a simulation through the transport model its settings name.
-HYSPLIT is the one built in, and CONTRIBUTING describes how to add
-another, named by its import path.
+runtraj supports HYSPLIT 5.0 and later (:doc:`hysplit`) and FLEXPART 11 (:doc:`flexpart`),
+and has no default: ``config.yaml`` names the model in its
+``models`` block. CONTRIBUTING describes how to add another, named by its import path.
 A model fails a run that its meteorology does not cover, as
 ``MET_COVERAGE``. Particles that all leave the met's domain before the end
-of the run are a complete run. Use :func:`~runtraj.models.check_model` in
+of the run are a complete run. Use :func:`~runtraj.testing.check_model` in
 the tests of a model of your own.
 
 .. autosummary::
@@ -210,10 +211,11 @@ the tests of a model of your own.
    runtraj.models.ModelRun
    runtraj.models.get_model
    runtraj.models.run_model
-   runtraj.models.run_model_many
    runtraj.models.MetConfig
-   runtraj.models.check_model
+   runtraj.testing.check_model
    runtraj.models.hysplit.HysplitModel
+   runtraj.models.flexpart.FlexpartModel
+   runtraj.models.flexpart.read_partoutput
 
 Stages
 ------

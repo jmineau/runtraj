@@ -1,0 +1,5 @@
+runtraj.execution.SlurmConfig.check
+===================================
+
+.. currentmodule:: runtraj.execution
+.. automethod:: SlurmConfig.check

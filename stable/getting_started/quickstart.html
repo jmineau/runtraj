@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Your First Run &#8212; runtraj 0.1.0a5</title>
+    <title>Your First Run &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -534,6 +534,7 @@ follows them through the meteorology:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [3]: </span><span class="n">particles</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
 <span class="gp">   ...: </span>    <span class="n">release</span><span class="p">,</span>
 <span class="gp">   ...: </span>    <span class="n">met</span><span class="p">,</span>
+<span class="gp">   ...: </span>    <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span>
 <span class="gp">   ...: </span>    <span class="n">n_hours</span><span class="o">=-</span><span class="mi">12</span><span class="p">,</span>     <span class="c1"># follow the air 12 hours back in time</span>
 <span class="gp">   ...: </span>    <span class="n">numpar</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>      <span class="c1"># number of particles to release</span>
 <span class="gp">   ...: </span>    <span class="n">krand</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>         <span class="c1"># the random numbers a seed can fix</span>
@@ -564,12 +565,12 @@ The particles are a <a class="reference external" href="https://pandas.pydata.or
 time step:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [4]: </span><span class="n">particles</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 <span class="gh">Out[4]: </span>
-<span class="go">   age  particle       lon  ...     mlht    pres                time</span>
-<span class="go">0 -1.0       1.0 -111.8488  ...  1029.05  856.06 2021-01-14 18:59:00</span>
-<span class="go">1 -1.0       2.0 -111.8497  ...  1029.05  854.15 2021-01-14 18:59:00</span>
-<span class="go">2 -1.0       3.0 -111.8488  ...  1029.05  856.30 2021-01-14 18:59:00</span>
-<span class="go">3 -1.0       4.0 -111.8495  ...  1029.05  855.26 2021-01-14 18:59:00</span>
-<span class="go">4 -1.0       5.0 -111.8504  ...  1029.05  856.21 2021-01-14 18:59:00</span>
+<span class="go">    age  particle       lon  ...     mlht    pres                time</span>
+<span class="go">0 -60.0       1.0 -111.8488  ...  1029.05  856.21 2021-01-14 18:59:00</span>
+<span class="go">1 -60.0       2.0 -111.8490  ...  1029.05  854.01 2021-01-14 18:59:00</span>
+<span class="go">2 -60.0       3.0 -111.8475  ...  1029.05  856.32 2021-01-14 18:59:00</span>
+<span class="go">3 -60.0       4.0 -111.8493  ...  1029.05  855.24 2021-01-14 18:59:00</span>
+<span class="go">4 -60.0       5.0 -111.8491  ...  1029.05  856.18 2021-01-14 18:59:00</span>
 
 <span class="go">[5 rows x 21 columns]</span>
 
@@ -580,9 +581,9 @@ time step:</p>
 </a>
 <p>The particles start at the release and spread out. The met files here cover
 only a small region around Salt Lake, and a particle that leaves the met stops
-there. This is how many hours they went (<code class="docutils literal notranslate"><span class="pre">age</span></code> is in minutes):</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">particles</span><span class="p">[</span><span class="s1">'age'</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours"</span><span class="p">)</span>
-<span class="go">10.2 hours</span>
+there. This is how many hours they went (<code class="docutils literal notranslate"><span class="pre">age</span></code> is in seconds):</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">particles</span><span class="p">[</span><span class="s1">'age'</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours"</span><span class="p">)</span>
+<span class="go">12.0 hours</span>
 </pre></div>
 </div>
 </section>
@@ -631,12 +632,12 @@ and the variant name:</p>
 
 <span class="gp">In [11]: </span><span class="n">sim</span><span class="o">.</span><span class="n">particles</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 <span class="gh">Out[11]: </span>
-<span class="go">   age  particle       lon  ...     mlht    pres                time</span>
-<span class="go">0 -1.0       1.0 -111.8488  ...  1029.05  856.06 2021-01-14 18:59:00</span>
-<span class="go">1 -1.0       2.0 -111.8497  ...  1029.05  854.15 2021-01-14 18:59:00</span>
-<span class="go">2 -1.0       3.0 -111.8488  ...  1029.05  856.30 2021-01-14 18:59:00</span>
-<span class="go">3 -1.0       4.0 -111.8495  ...  1029.05  855.26 2021-01-14 18:59:00</span>
-<span class="go">4 -1.0       5.0 -111.8504  ...  1029.05  856.21 2021-01-14 18:59:00</span>
+<span class="go">    age  particle       lon  ...     mlht    pres                time</span>
+<span class="go">0 -60.0       1.0 -111.8488  ...  1029.05  856.21 2021-01-14 18:59:00</span>
+<span class="go">1 -60.0       2.0 -111.8490  ...  1029.05  854.01 2021-01-14 18:59:00</span>
+<span class="go">2 -60.0       3.0 -111.8475  ...  1029.05  856.32 2021-01-14 18:59:00</span>
+<span class="go">3 -60.0       4.0 -111.8493  ...  1029.05  855.24 2021-01-14 18:59:00</span>
+<span class="go">4 -60.0       5.0 -111.8491  ...  1029.05  856.18 2021-01-14 18:59:00</span>
 
 <span class="go">[5 rows x 21 columns]</span>
 </pre></div>

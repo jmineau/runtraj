@@ -1,0 +1,6 @@
+runtraj.config.Variant.realization\_numbers
+===========================================
+
+.. currentmodule:: runtraj.config
+
+.. autoproperty:: Variant.realization_numbers

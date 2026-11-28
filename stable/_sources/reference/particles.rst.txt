@@ -24,10 +24,11 @@ Every table has five columns, :data:`PARTICLE_SCHEMA`:
        for the whole run. HYSPLIT calls it ``indx``. Stored as int32 and
        read back as float64.
    * - ``age``
-     - minutes
+     - s
      - Time since release. Negative for a backward run, positive for a
-       forward one. HYSPLIT calls it ``time``. Stored as whole minutes,
-       int32, and read back as float64.
+       forward one. HYSPLIT calls it ``time`` and writes it in minutes,
+       which runtraj reads as seconds. Stored as whole seconds, int32, and
+       read back as float64.
    * - ``lon``
      - degrees east
      - Longitude of the particle (HYSPLIT's ``long``).
@@ -37,6 +38,18 @@ Every table has five columns, :data:`PARTICLE_SCHEMA`:
    * - ``zagl``
      - m
      - Height of the particle above ground.
+
+The float columns, ``lon``, ``lat``, ``zagl``, and any others a model adds, are
+float32 or float64, as the transport model computed them, and a particle
+file stores them that way: HYSPLIT's are float64 (rounding positions
+to float32 can move a particle across a grid-cell edge), FLEXPART's float32.
+:func:`~runtraj.particles.read_particles` and
+:meth:`~runtraj.output.Output.table` give every float column back as
+float64, whatever a file stores, so a table does not depend on which
+file was read first. ``age`` is whole seconds, the unit FLEXPART counts
+in, so an output step under a minute is kept as it is; a model whose
+output times are not whole seconds from the release cannot write
+particles (:func:`~runtraj.particles.write_particles` raises).
 
 The release row
 ---------------
@@ -49,11 +62,20 @@ says where each particle started through its ``release_rows``
 (:class:`~runtraj.models.TransportModel`); without either, a column or
 multipoint release fails with the reason ``NO_RELEASE_ROWS``.
 
-HYSPLIT 5.1.0 writes no release row: its first row is one time step after
-release. Its ``release_rows`` matches each particle to a release point from
+HYSPLIT 5.1.0 to 5.4.2 write no release row: their first row is one time step after
+release. Their ``release_rows`` matches each particle to a release point from
 its first position, and takes a column's particles to be released bottom to
-top in ``particle`` order. A HYSPLIT build that writes the release rows
-(``directory``) makes the matching exact.
+top in ``particle`` order, a column for each minute of ``emisshrs``
+(:func:`~runtraj.models.hysplit.releases.release_rows`). A HYSPLIT build that writes the release rows
+(``directory``) makes the matching of a multipoint release exact. A column's slab
+is still the one its ``release_rows`` gives, from the particle's number: a
+particle does not start at the height its release row reports (HYSPLIT scales
+it by the terrain a minute downwind of the source), so near a slab's edge the
+row can fall in the next slab, which would hold two particles while its own
+holds none.
+FLEXPART writes no release row either: its first row is one output step
+after release. Its ``release_rows`` reads where each particle started from
+its number, in the order FLEXPART released them (:doc:`flexpart`).
 
 Columns the model adds
 ----------------------
@@ -82,9 +104,19 @@ Some of them:
    * - ``dens``
      - kg m⁻³
      - Air density.
+   * - ``temp``
+     - K
+     - Air temperature at the lowest model level under the particle, the
+       same for every particle over one place.
+   * - ``temz``
+     - K
+     - Air temperature at the particle. FLEXPART's table has this one and
+       not ``temp``.
    * - ``samt``
-     - minutes
+     - s
      - Time the particle spent in the surface layer during the step.
+       HYSPLIT writes it in minutes; runtraj reads it as seconds, as it
+       does ``age``.
    * - ``sigw``
      - m s⁻¹
      - Standard deviation of the vertical wind.
@@ -102,6 +134,10 @@ Some of them:
      - Vertical displacement by convective flux along the trajectory,
        summed over the steps (the Grell scheme, ``capemin: -2``). HYSPLIT
        reads this name only: ``zfx1`` stops it, and the config refuses it.
+
+FLEXPART writes ``mlht``, ``dens``, ``pres``, ``temz``, ``sphu`` and
+``zsfc`` at each particle, and no other column of this table.
+:doc:`flexpart` lists them and where they differ from HYSPLIT's.
 
 Columns runtraj adds
 --------------------
@@ -201,6 +237,17 @@ way the run did; give it the run's ``method``:
    mlht = calc_pbl_height(sim.particles, meta.met_files)  # HYSPLIT, kmixd: 3
    mlht = calc_pbl_height(sim.particles, meta.met_files, method="hysplit_temperature")  # kmixd: 1
    mlht = calc_pbl_height(particles, met, method="flexpart")  # FLEXPART on ERA5
+
+HYSPLIT's internal levels, which the sampling is done on, depend on its
+version when the top is below about 1.1 km (5.4.0 changed them). A HYSPLIT
+run prints the ones it used in its ``MESSAGE`` file, and runtraj records
+them with the particles: ``sim.particles.attrs["internal_grid"]`` is
+``(nlvl, aa, bb, cc)``, where level ``k`` is ``aa k**2 + bb k + cc`` meters.
+Both functions use it when the particles have it, so a run is sampled on its
+own levels, whatever its version, and a filter or a dropped column keeps it.
+Particles with none (a file written before it was recorded, another
+transport model's, or a table you made) get the levels of HYSPLIT 5.4.0 and
+later for *z_top*.
 
 Met files that are not ARL files, such as GRIB, are read as one Dataset in
 :func:`arlmet.open_dataset`'s layout, the way a converter in

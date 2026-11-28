@@ -1,0 +1,6 @@
+﻿runtraj.models.flexpart.read\_partoutput
+========================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+.. autofunction:: read_partoutput

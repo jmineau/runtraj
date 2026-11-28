@@ -1,0 +1,6 @@
+runtraj.Simulation.transport
+============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.transport

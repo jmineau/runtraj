@@ -1,0 +1,43 @@
+﻿runtraj.models.flexpart.FlexpartMetConfig
+=========================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+
+
+
+
+
+.. class-signature:: runtraj.models.flexpart.FlexpartMetConfig
+
+
+Parameters
+----------
+
+.. config-model:: runtraj.models.flexpart.FlexpartMetConfig
+
+
+
+
+
+Methods
+-------
+
+.. autosummary::
+   :toctree:
+
+   ~FlexpartMetConfig.model_post_init
+   ~FlexpartMetConfig.open
+   ~FlexpartMetConfig.settings
+   ~FlexpartMetConfig.source
+
+
+
+
+Inherited
+---------
+
+
+From :class:`~.MetConfig`: :py:obj:`~.MetConfig.check`, :py:obj:`~.MetConfig.downloads`, :py:obj:`~.MetConfig.fetch`
+
+

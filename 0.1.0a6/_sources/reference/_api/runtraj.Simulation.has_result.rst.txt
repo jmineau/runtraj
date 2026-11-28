@@ -1,0 +1,6 @@
+runtraj.Simulation.has\_result
+==============================
+
+.. currentmodule:: runtraj
+
+.. autoproperty:: Simulation.has_result

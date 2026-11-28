@@ -1,0 +1,5 @@
+runtraj.ProjectConfig.model\_post\_init
+=======================================
+
+.. currentmodule:: runtraj
+.. automethod:: ProjectConfig.model_post_init

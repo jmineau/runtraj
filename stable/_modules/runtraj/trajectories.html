@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.trajectories &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.trajectories &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -462,7 +462,7 @@
 <span class="sd">The table has the columns of :data:`TRAJECTORY_SCHEMA`:</span>
 
 <span class="sd">- ``trajectory``, the trajectory's number, from 1;</span>
-<span class="sd">- ``time``, when the row is (UTC), and ``age``, the minutes since the</span>
+<span class="sd">- ``time``, when the row is (UTC), and ``age``, the seconds since the</span>
 <span class="sd">  release, negative in a backward run. Each trajectory has a row at</span>
 <span class="sd">  ``age = 0``, where it started;</span>
 <span class="sd">- ``lon`` and ``lat``, in degrees, and ``zagl``, the height above ground</span>
@@ -481,7 +481,6 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
@@ -491,8 +490,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pq</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">location</span><span class="p">,</span> <span class="n">readable</span><span class="p">,</span> <span class="n">write_parquet</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles</span><span class="w"> </span><span class="kn">import</span> <span class="n">release_metadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">location</span><span class="p">,</span> <span class="n">readable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">OLD_TEMP</span><span class="p">,</span> <span class="n">write_release_file</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">upath</span><span class="w"> </span><span class="kn">import</span> <span class="n">UPath</span>
@@ -507,7 +506,7 @@
 <span class="n">TRAJECTORY_SCHEMA</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"trajectory"</span><span class="p">:</span> <span class="s2">"The trajectory's number in its release, from 1."</span><span class="p">,</span>
     <span class="s2">"time"</span><span class="p">:</span> <span class="s2">"Time of the row, in UTC."</span><span class="p">,</span>
-    <span class="s2">"age"</span><span class="p">:</span> <span class="s2">"Minutes since the release, negative in a backward run."</span><span class="p">,</span>
+    <span class="s2">"age"</span><span class="p">:</span> <span class="s2">"Seconds since the release, negative in a backward run."</span><span class="p">,</span>
     <span class="s2">"lon"</span><span class="p">:</span> <span class="s2">"Longitude, in degrees east."</span><span class="p">,</span>
     <span class="s2">"lat"</span><span class="p">:</span> <span class="s2">"Latitude, in degrees north."</span><span class="p">,</span>
     <span class="s2">"zagl"</span><span class="p">:</span> <span class="s2">"Height above ground, in meters."</span><span class="p">,</span>
@@ -590,22 +589,7 @@
     <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
         <span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_INT_COLUMNS</span><span class="p">}</span>
     <span class="p">)</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">preserve_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
-        <span class="mi">0</span><span class="p">,</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"release"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">dictionary</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">(),</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">())),</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">DictionaryArray</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
-            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
-            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="o">**</span><span class="n">release_metadata</span><span class="p">(</span><span class="n">release</span><span class="p">),</span>
-        <span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
-        <span class="sa">b</span><span class="s2">"runtraj:met_files"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">met_files</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
-        <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="n">write_parquet</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">replace_schema_metadata</span><span class="p">(</span><span class="n">meta</span><span class="p">),</span> <span class="n">location</span><span class="p">(</span><span class="n">path</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">write_release_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">met_files</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span></div>
 
 
 
@@ -633,6 +617,8 @@
     <span class="k">with</span> <span class="n">readable</span><span class="p">(</span><span class="n">where</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
         <span class="n">pf</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">ParquetFile</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s2">"release"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">"temp"</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">OLD_TEMP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="sa">f</span><span class="s2">"The file </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">pf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span></div>
 
 
@@ -647,6 +633,8 @@
 <span class="sd">    ``release`` column, the stored columns, and ``date``, which is dropped.</span>
 <span class="sd">    ``release`` comes back as strings.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"temp"</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">OLD_TEMP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="s2">"A trajectory file in the table"</span><span class="p">))</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">unify_dictionaries</span><span class="p">()</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"date"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>

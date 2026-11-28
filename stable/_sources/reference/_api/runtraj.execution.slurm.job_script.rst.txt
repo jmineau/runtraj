@@ -1,0 +1,6 @@
+﻿runtraj.execution.slurm.job\_script
+===================================
+
+.. currentmodule:: runtraj.execution.slurm
+
+.. autofunction:: job_script

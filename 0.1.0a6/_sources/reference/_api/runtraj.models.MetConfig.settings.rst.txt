@@ -1,0 +1,5 @@
+runtraj.models.MetConfig.settings
+=================================
+
+.. currentmodule:: runtraj.models
+.. automethod:: MetConfig.settings

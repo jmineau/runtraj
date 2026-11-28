@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.worker &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.execution.worker &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -492,7 +492,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._transient</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_transient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationError</span><span class="p">,</span> <span class="n">WorkerDied</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span><span class="p">,</span> <span class="n">run_model</span><span class="p">,</span> <span class="n">run_model_many</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span><span class="p">,</span> <span class="n">run_model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Simulation</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -762,66 +762,6 @@
             <span class="n">path</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">run_result_batch</span><span class="p">(</span>
-    <span class="n">sims</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Simulation</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Run a batched transport model once for many releases, and write each one's particles.</span>
-
-<span class="sd">    *sims* are simulations of one variant and realization, one per release,</span>
-<span class="sd">    so they share the transport settings. The model's one call</span>
-<span class="sd">    (:func:`runtraj.models.run_model_many`) gives each release its</span>
-<span class="sd">    particles or an error: the particles and the log are written, and a</span>
-<span class="sd">    failure is recorded with its simulation.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    tuple of (dict, dict)</span>
-<span class="sd">        The particles written, and a line saying why for each release</span>
-<span class="sd">        that failed, both by release id.</span>
-<span class="sd">    """</span>
-    <span class="n">first</span> <span class="o">=</span> <span class="n">sims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">sims</span><span class="p">:</span>
-        <span class="n">_log_start</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="n">run_model_many</span><span class="p">(</span>
-            <span class="n">first</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="p">[</span><span class="n">sim</span><span class="o">.</span><span class="n">release</span> <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">sims</span><span class="p">],</span>
-            <span class="n">first</span><span class="o">.</span><span class="n">transport</span><span class="p">,</span>
-            <span class="n">first</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">met_config</span><span class="p">,</span>
-            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-        <span class="n">log</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="s2">"log"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-        <span class="n">failed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">sims</span><span class="p">:</span>
-            <span class="c1"># A SimulationError ends the run as one run's does; any other</span>
-            <span class="c1"># error keeps the started line unless the error carries a log.</span>
-            <span class="k">if</span> <span class="n">log</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">SimulationError</span><span class="p">):</span>
-                <span class="n">_log_end</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">log</span><span class="p">)</span>
-            <span class="n">failed</span><span class="p">[</span><span class="n">sim</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">_failed</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">{},</span> <span class="n">failed</span>
-    <span class="n">written</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">failed</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">sims</span><span class="p">:</span>
-        <span class="n">rid</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span>
-        <span class="n">_log_end</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationError</span><span class="p">):</span>
-            <span class="n">failed</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span> <span class="o">=</span> <span class="n">_failed</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-            <span class="k">continue</span>
-        <span class="n">sim</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_result</span><span class="p">(</span>
-            <span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="p">,</span>
-            <span class="n">sim</span><span class="o">.</span><span class="n">release</span><span class="p">,</span>
-            <span class="n">result</span><span class="o">.</span><span class="n">result</span><span class="p">,</span>
-            <span class="n">result</span><span class="o">.</span><span class="n">met_files</span><span class="p">,</span>
-            <span class="n">sim</span><span class="o">.</span><span class="n">realization</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">_succeeded</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
-        <span class="n">written</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">result</span>
-    <span class="k">return</span> <span class="n">written</span><span class="p">,</span> <span class="n">failed</span>
-
-
 <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_stage_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">,</span> <span class="n">suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
@@ -975,7 +915,6 @@
     <span class="n">compute_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="n">batched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Run every simulation of one release, and return what did not complete.</span>
@@ -1007,10 +946,6 @@
 <span class="sd">        to the project's.</span>
 <span class="sd">    skip_existing : bool, default True</span>
 <span class="sd">        Keep particles and stage files that already exist.</span>
-<span class="sd">    batched : bool, default True</span>
-<span class="sd">        Also run the variants of a batched transport model, one release</span>
-<span class="sd">        per call. :func:`run_releases` runs those for all its releases at</span>
-<span class="sd">        once first, and passes False.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1022,8 +957,6 @@
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
     <span class="n">problems</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">names</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">project</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">batched</span> <span class="ow">and</span> <span class="n">_is_batched</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="k">continue</span>
         <span class="n">group</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="o">.</span><span class="n">simulation</span><span class="p">(</span><span class="n">release_id</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
         <span class="n">problems</span> <span class="o">+=</span> <span class="n">_run_group</span><span class="p">(</span>
             <span class="n">project</span><span class="p">,</span>
@@ -1040,58 +973,14 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the variants that share particles, by particles hash and realization.</span>
 
-<span class="sd">    Each group's transport model runs once per release (or once for many</span>
-<span class="sd">    releases, when it is batched), and each variant in it runs its stages</span>
-<span class="sd">    on those particles.</span>
+<span class="sd">    Each group's transport model runs once per release, and each variant in</span>
+<span class="sd">    it runs its stages on those particles.</span>
 <span class="sd">    """</span>
     <span class="n">groups</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">variant</span><span class="o">.</span><span class="n">realization_numbers</span><span class="p">:</span>
             <span class="n">groups</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">variant</span><span class="o">.</span><span class="n">result_hash</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">groups</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_is_batched</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span> <span class="n">variant</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Whether a variant's transport model runs many releases in one call."""</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">variant</span><span class="p">]</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">batched</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_run_batched</span><span class="p">(</span>
-    <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
-    <span class="n">release_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
-    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Run the variants of batched transport models for many releases, one model call per group.</span>
-
-<span class="sd">    For each group of variants that share particles, the releases whose</span>
-<span class="sd">    particles are missing (all of them, without *skip_existing*) run in one</span>
-<span class="sd">    call (:func:`run_result_batch`); then each variant's stages run</span>
-<span class="sd">    per release. Returns the failures by release id.</span>
-<span class="sd">    """</span>
-    <span class="n">problems</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="n">rid</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">release_ids</span><span class="p">}</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">names</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">project</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_batched</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="k">continue</span>
-        <span class="n">firsts</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="o">.</span><span class="n">simulation</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">release_ids</span><span class="p">]</span>
-        <span class="n">todo</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">firsts</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">has_result</span><span class="p">)]</span>
-        <span class="n">written</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">todo</span><span class="p">:</span>
-            <span class="n">written</span><span class="p">,</span> <span class="n">failed</span> <span class="o">=</span> <span class="n">run_result_batch</span><span class="p">(</span><span class="n">todo</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">execution</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">rid</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">failed</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">problems</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="n">ran</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">release</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">todo</span><span class="p">}</span>
-        <span class="k">for</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">release_ids</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">rid</span> <span class="ow">in</span> <span class="n">ran</span> <span class="ow">and</span> <span class="n">rid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">written</span><span class="p">:</span>
-                <span class="k">continue</span>  <span class="c1"># its particles failed, so no stage has any to read</span>
-            <span class="n">sims</span> <span class="o">=</span> <span class="p">[</span><span class="n">project</span><span class="o">.</span><span class="n">simulation</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
-            <span class="n">problems</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span> <span class="o">+=</span> <span class="n">run_stages</span><span class="p">(</span>
-                <span class="n">sims</span><span class="p">,</span> <span class="n">written</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rid</span><span class="p">),</span> <span class="n">remade</span><span class="o">=</span><span class="n">rid</span> <span class="ow">in</span> <span class="n">ran</span><span class="p">,</span> <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span>
-            <span class="p">)</span>
-    <span class="k">return</span> <span class="n">problems</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_new_workdir</span><span class="p">(</span><span class="n">compute_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">sim</span><span class="p">:</span> <span class="n">Simulation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -1216,7 +1105,6 @@
             <span class="n">compute_root</span><span class="o">=</span><span class="n">_POOL_COMPUTE_ROOT</span><span class="p">,</span>
             <span class="n">execution</span><span class="o">=</span><span class="n">_POOL_EXECUTION</span><span class="p">,</span>
             <span class="n">skip_existing</span><span class="o">=</span><span class="n">_POOL_SKIP</span><span class="p">,</span>
-            <span class="n">batched</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># run_releases ran those first</span>
         <span class="p">)</span>
     <span class="k">except</span> <span class="ne">SystemExit</span><span class="p">:</span>
         <span class="c1"># SIGTERM (:func:`_exit_worker`), after the run's `finally` blocks</span>
@@ -1322,7 +1210,6 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_run_in_pool</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="n">release_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">earlier</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">compute_root</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
     <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
@@ -1376,7 +1263,7 @@
                     <span class="k">del</span> <span class="n">running</span><span class="p">[</span><span class="n">future</span><span class="p">]</span>
                     <span class="n">done</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="n">rid</span> <span class="o">=</span> <span class="n">release_ids</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-                    <span class="n">_log_progress</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="n">earlier</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="n">problems</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
+                    <span class="n">_log_progress</span><span class="p">(</span><span class="n">rid</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span>
             <span class="c1"># Normal completion: let the workers exit on their own.</span>
             <span class="n">executor</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
@@ -1423,9 +1310,7 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Run a list of releases, in this process or in a process pool.</span>
 
-<span class="sd">    The variants of a batched transport model run first, one model call</span>
-<span class="sd">    for all the releases that need their particles. Then each release</span>
-<span class="sd">    runs its other variants. Pool workers open the project again from its</span>
+<span class="sd">    Pool workers open the project again from its</span>
 <span class="sd">    directory, with the same output directory. Ctrl-C, or a SIGTERM such as Slurm preemption or a stopped</span>
 <span class="sd">    pod, stops the batch: the transport model runs in progress are ended, the workers exit, and this logs</span>
 <span class="sd">    how many releases had finished and returns. What finished is in the output directory, with a failure</span>
@@ -1457,31 +1342,16 @@
     <span class="n">execution</span> <span class="o">=</span> <span class="n">execution</span> <span class="k">if</span> <span class="n">execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">project</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">execution</span>
     <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">release_ids</span><span class="p">)</span>
 
-    <span class="n">earlier</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">_is_batched</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">names</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">project</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
-        <span class="k">with</span> <span class="n">_sigterm_as_interrupt</span><span class="p">():</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">earlier</span> <span class="o">=</span> <span class="n">_run_batched</span><span class="p">(</span>
-                    <span class="n">project</span><span class="p">,</span>
-                    <span class="n">release_ids</span><span class="p">,</span>
-                    <span class="n">execution</span><span class="o">=</span><span class="n">execution</span><span class="p">,</span>
-                    <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"stopped during a batched run; the rest did not run"</span><span class="p">)</span>
-                <span class="k">return</span>
-
     <span class="k">if</span> <span class="n">execution</span><span class="o">.</span><span class="n">cpus</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">_sigterm_as_interrupt</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">release_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">release_ids</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">problems</span> <span class="o">=</span> <span class="n">earlier</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">release_id</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="n">run_release</span><span class="p">(</span>
+                    <span class="n">problems</span> <span class="o">=</span> <span class="n">run_release</span><span class="p">(</span>
                         <span class="n">project</span><span class="p">,</span>
                         <span class="n">release_id</span><span class="p">,</span>
                         <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
                         <span class="n">execution</span><span class="o">=</span><span class="n">execution</span><span class="p">,</span>
                         <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-                        <span class="n">batched</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"stopped at </span><span class="si">%s</span><span class="s2">; the rest did not run"</span><span class="p">,</span> <span class="n">release_id</span><span class="p">)</span>
@@ -1492,7 +1362,6 @@
     <span class="n">_run_in_pool</span><span class="p">(</span>
         <span class="n">project</span><span class="p">,</span>
         <span class="n">release_ids</span><span class="p">,</span>
-        <span class="n">earlier</span><span class="p">,</span>
         <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
         <span class="n">execution</span><span class="o">=</span><span class="n">execution</span><span class="p">,</span>
         <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
@@ -1502,7 +1371,6 @@
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"run_result"</span><span class="p">,</span>
-    <span class="s2">"run_result_batch"</span><span class="p">,</span>
     <span class="s2">"run_release"</span><span class="p">,</span>
     <span class="s2">"run_releases"</span><span class="p">,</span>
     <span class="s2">"run_stage"</span><span class="p">,</span>

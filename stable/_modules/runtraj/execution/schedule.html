@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.schedule &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.execution.schedule &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -550,9 +550,9 @@
 <span class="sd">    The newest is *now* less *delay* hours, down to the hour; the oldest is</span>
 <span class="sd">    normally :data:`WINDOW_HOURS` - 1 hours before it.</span>
 
-<span class="sd">    *since*, when given, is the newest hour the project already has (in</span>
-<span class="sd">    ``releases.csv``). If the normal window would leave a gap after it, the</span>
-<span class="sd">    window reaches back to close the gap instead, at most</span>
+<span class="sd">    *since*, when given, is the newest release time the project already has</span>
+<span class="sd">    (in ``releases.csv``), rounded down to the hour. If the normal window would</span>
+<span class="sd">    leave a gap after it, the window reaches back to close the gap instead, at most</span>
 <span class="sd">    :data:`MAX_BACKFILL_HOURS` before its normal start: an outage longer</span>
 <span class="sd">    than that is closed a week at a time, by the ticks that follow.</span>
 
@@ -568,6 +568,8 @@
 <span class="sd">    """</span>
     <span class="n">newest</span> <span class="o">=</span> <span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">delay</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">oldest</span> <span class="o">=</span> <span class="n">newest</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">WINDOW_HOURS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">since</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">since</span> <span class="o">=</span> <span class="n">since</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">since</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">since</span> <span class="o">&lt;</span> <span class="n">oldest</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">oldest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
             <span class="n">since</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">oldest</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">MAX_BACKFILL_HOURS</span><span class="p">)</span>

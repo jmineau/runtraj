@@ -17,10 +17,14 @@ Every task runs the same command with its own number ``I``, from 0 to
 
    runtraj run ./my_project --task I/N
 
-Task ``I`` runs every ``N``-th release of the project, in the order of
-``releases.csv``, starting at ``I``: with ``N = 4``, task 1 runs releases
-1, 5, 9, and so on. Every task splits the releases the same way, whether
-they are finished or not, and then skips those whose results all exist.
+Task ``I`` runs every ``N``-th release of the project, starting at
+``I``, with the releases put in the order of a hash of their ids: with
+``N = 4``, task 1 runs the 2nd, 6th, 10th, and so on, of that order. The
+order is unrelated to ``releases.csv``'s, so the releases left to run
+spread over the tasks even when they lie together in the file, such as
+one site's hours among many sites'. Every task splits the releases the
+same way, whether they are finished or not, and then skips those whose
+results all exist.
 ``--cpus`` sets how many of its releases a task runs at once (1 unless the
 ``local`` block of ``execution`` says otherwise). The task runs here, in
 this process, whatever ``execution.backend`` says.

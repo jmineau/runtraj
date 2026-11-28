@@ -1,0 +1,6 @@
+﻿runtraj.results.result\_type
+============================
+
+.. currentmodule:: runtraj.results
+
+.. autofunction:: result_type

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.backends &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.execution.backends &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -470,8 +470,8 @@
 <span class="sd">       cpus: 4</span>
 
 <span class="sd">Every task a backend starts runs the same command, ``runtraj run &lt;project&gt;</span>
-<span class="sd">--task i/N`` (:func:`runtraj.execution.task_share` is the releases of task</span>
-<span class="sd">``i``), so a backend starts tasks and, if it can, waits for them; it never</span>
+<span class="sd">--task i/N`` (``pending(project, task=(i, N))``, :func:`runtraj.execution.pending`,</span>
+<span class="sd">is the releases of task ``i``), so a backend starts tasks and, if it can, waits for them; it never</span>
 <span class="sd">runs a transport model itself.</span>
 <span class="sd">"""</span>
 
@@ -549,7 +549,10 @@
 <span class="sd">        Start the tasks that run *releases*, and return what names them, such as a job id.</span>
 
 <span class="sd">        *releases* are the ids of the releases with missing results, in</span>
-<span class="sd">        the order the tasks share them (:func:`runtraj.execution.task_share`).</span>
+<span class="sd">        project order. Tasks given them (``runtraj run --releases``) share</span>
+<span class="sd">        them in this order (:func:`runtraj.execution.task_share`); tasks</span>
+<span class="sd">        given none share every release of the project in the order of a</span>
+<span class="sd">        hash of their ids (:func:`runtraj.execution.pending`).</span>
 <span class="sd">        ``execution.block`` is this backend's block. *compute_root* is</span>
 <span class="sd">        where the workdirs go, or ``None`` for each task's own.</span>
 <span class="sd">        """</span></div>
@@ -591,7 +594,7 @@
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError, RuntimeError</span>
+<span class="sd">        SchedulerError</span>
 <span class="sd">            When the jobs cannot be listed; ``runtraj status`` prints the</span>
 <span class="sd">            message and the counts.</span>
 <span class="sd">        """</span>
@@ -616,6 +619,13 @@
         <span class="sa">f</span><span class="s2">"backend </span><span class="si">{</span><span class="n">backend</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Use submit() (runtraj submit), and runtraj "</span>
         <span class="s2">"status to follow it."</span>
     <span class="p">)</span>
+
+
+<span class="c1">#: How long a backend's ``wait`` goes on when the scheduler gives no answer</span>
+<span class="c1">#: about the job (``sacct`` or ``qstat`` failing, or not knowing it), before</span>
+<span class="c1">#: it stops with an error: long enough for an accounting database that is</span>
+<span class="c1">#: slow to hear of a new job, short of waiting for ever where it never will.</span>
+<span class="n">SILENT_SCHEDULER_SECONDS</span> <span class="o">=</span> <span class="mi">1800</span>
 
 
 <span class="c1">#: The backends built in, by the name ``execution.backend`` gives them, and</span>

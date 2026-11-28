@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.models.hysplit.model &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.models.hysplit.model &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -430,9 +430,6 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../../models.html" class="nav-link">runtraj.models</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.hysplit.model</span></li>
   </ul>
 </nav>
@@ -458,16 +455,16 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._process</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_log</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.concentration</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_netcdf4</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HYSPLITNotFoundError</span><span class="p">,</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelRun</span><span class="p">,</span> <span class="n">TransportModel</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.cdump</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cdump</span>
@@ -476,95 +473,30 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">.driver</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LOG_FILE</span><span class="p">,</span>
     <span class="n">PARTICLE_FILE</span><span class="p">,</span>
+    <span class="n">TRAJECTORY_FULL_HOURS</span><span class="p">,</span>
+    <span class="n">_stamp</span><span class="p">,</span>
     <span class="n">check_met_stop</span><span class="p">,</span>
     <span class="n">check_release</span><span class="p">,</span>
     <span class="n">data_tables</span><span class="p">,</span>
     <span class="n">find_program</span><span class="p">,</span>
+    <span class="n">hysplit_version</span><span class="p">,</span>
     <span class="n">program_name</span><span class="p">,</span>
+    <span class="n">read_internal_grid</span><span class="p">,</span>
     <span class="n">read_particle_dat</span><span class="p">,</span>
     <span class="n">run_hycs_std</span><span class="p">,</span>
+    <span class="n">setting_refusals</span><span class="p">,</span>
+    <span class="n">version_at_least</span><span class="p">,</span>
     <span class="n">write_inputs</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.failures</span><span class="w"> </span><span class="kn">import</span> <span class="n">FailureReason</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.met</span><span class="w"> </span><span class="kn">import</span> <span class="n">HysplitMetConfig</span><span class="p">,</span> <span class="n">Met</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_releases</span><span class="p">,</span> <span class="n">release_rows</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_releases</span><span class="p">,</span> <span class="n">off_the_hour</span><span class="p">,</span> <span class="n">release_rows</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tdump</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_tdump</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">arlmet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Grid</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">Release</span>
-
-
-<span class="c1">#: What ``hycs_std`` prints on its first lines: ``HYSPLIT version: hysplit.v5.1.0``.</span>
-<span class="n">_VERSION_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"HYSPLIT version:\s*(\S+)"</span><span class="p">)</span>
-
-<span class="c1">#: Seconds ``hycs_std`` gets to print its version; it stops at once without ``CONTROL``.</span>
-<span class="n">_VERSION_TIMEOUT</span> <span class="o">=</span> <span class="mi">30</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">hysplit_version</span><span class="p">(</span>
-    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">program</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hycs_std"</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the version the ``hycs_std`` of *directory*, or else on ``PATH``, prints when it starts.</span>
-
-<span class="sd">    *program* names another HYSPLIT program to ask, such as ``hyts_std``,</span>
-<span class="sd">    which prints the same line.</span>
-
-<span class="sd">    ``hycs_std`` prints a line such as ``HYSPLIT version: hysplit.v5.1.0``</span>
-<span class="sd">    before it reads its input; this returns ``hysplit.v5.1.0``. It runs the</span>
-<span class="sd">    binary for a moment in an empty temporary directory, where it stops for</span>
-<span class="sd">    want of a ``CONTROL`` file. The version is recorded with a run's</span>
-<span class="sd">    settings, but it is not what tells two builds apart: the SHA-256 of</span>
-<span class="sd">    ``hycs_std`` is (:meth:`HysplitModel.sha256`). Two builds of one</span>
-<span class="sd">    release print the same version, and CHPC's ``hysplit/5.2.3`` module</span>
-<span class="sd">    prints ``hysplit.v5.2.2``.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str or None</span>
-<span class="sd">        The version, or ``None`` when ``hycs_std`` printed none or could</span>
-<span class="sd">        not be run here.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    HYSPLITNotFoundError</span>
-<span class="sd">        If there is no such program (:func:`find_program`).</span>
-<span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">directory</span><span class="p">)))</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_stamp</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return *path*, resolved, with its modification time and size, the key of the caches below."""</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-    <span class="n">stat</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
-    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_mtime_ns</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span>
-
-
-<span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_printed_version</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mtime_ns</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return the version the ``hycs_std`` at *path* prints, read once per file."""</span>
-    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"runtraj-version-"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">path</span><span class="p">],</span>
-                <span class="n">cwd</span><span class="o">=</span><span class="n">tmp</span><span class="p">,</span>
-                <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>  <span class="c1"># not executable here, such as another platform's build</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">_VERSION_TIMEOUT</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
-            <span class="n">proc</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
-            <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
-            <span class="k">return</span> <span class="kc">None</span>
-    <span class="n">found</span> <span class="o">=</span> <span class="n">_VERSION_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="kc">None</span>
 
 
 <span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
@@ -607,8 +539,8 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the type of result a run with *config* makes, which its ``mode`` says.</span>
 
-<span class="sd">        ``particles``, ``concentration``, or ``trajectories`` in ``mode:</span>
-<span class="sd">        trajectory``.</span>
+<span class="sd">        ``particles`` in ``mode: particle``, ``concentration``, or</span>
+<span class="sd">        ``trajectories`` in ``mode: trajectory``.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -617,7 +549,8 @@
 <span class="sd">        &gt;&gt;&gt; HysplitModel().result(HysplitConfig(n_hours=-24, mode="trajectory"))</span>
 <span class="sd">        'trajectories'</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="s2">"trajectories"</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span> <span class="k">else</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span></div>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"particle"</span><span class="p">:</span> <span class="s2">"particles"</span><span class="p">,</span> <span class="s2">"trajectory"</span><span class="p">:</span> <span class="s2">"trajectories"</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HysplitModel.result_files">
@@ -700,31 +633,66 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Return the releases HYSPLIT cannot run with *config*.</span>
+<span class="sd">        Return the releases HYSPLIT cannot run with *config*, and the settings it cannot.</span>
 
 <span class="sd">        Multipoint releases whose points share a location, which</span>
 <span class="sd">        ``hycs_std`` joins into a line source; in the trajectory mode,</span>
-<span class="sd">        column releases, since ``hyts_std`` has no line source; and in a</span>
+<span class="sd">        column releases, since ``hyts_std`` has no line source, and, when</span>
+<span class="sd">        ``hyts_std`` is older than HYSPLIT 5.4.0, releases whose time is not</span>
+<span class="sd">        on the hour, whose run would come up short; and in a</span>
 <span class="sd">        concentration run with ``ichem: 1``, column releases too, which</span>
 <span class="sd">        are one source at two locations. See</span>
 <span class="sd">        :func:`runtraj.models.hysplit.releases.check_releases`.</span>
+
+<span class="sd">        A setting the program would ignore or change without a word is</span>
+<span class="sd">        one row with no release (``setting_refused``), which refuses every</span>
+<span class="sd">        release: ``krand`` 10 to 13 before HYSPLIT 5.1.0, and the wind error</span>
+<span class="sd">        in the concentration mode from 5.3.0 (:func:`setting_refusals`).</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">check_releases</span><span class="p">(</span>
+        <span class="n">trajectory</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span>
+        <span class="n">refused</span> <span class="o">=</span> <span class="n">check_releases</span><span class="p">(</span>
             <span class="n">releases</span><span class="p">,</span>
-            <span class="n">trajectory</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">,</span>
+            <span class="n">trajectory</span><span class="o">=</span><span class="n">trajectory</span><span class="p">,</span>
             <span class="n">sources</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">ichem</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="c1"># The version is read only when a release or a setting needs it.</span>
+        <span class="c1"># Without a program there is nothing to refuse here: the model check</span>
+        <span class="c1"># says so.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">trajectory</span><span class="p">:</span>
+                <span class="n">off</span> <span class="o">=</span> <span class="n">off_the_hour</span><span class="p">(</span><span class="n">releases</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">off</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">version_at_least</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="n">config</span><span class="p">),</span> <span class="n">TRAJECTORY_FULL_HOURS</span>
+                <span class="p">):</span>
+                    <span class="n">refused</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">refused</span><span class="p">,</span> <span class="n">off</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">messages</span> <span class="o">:=</span> <span class="n">setting_refusals</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="n">config</span><span class="p">)):</span>
+                    <span class="c1"># No release: the settings refuse every release.</span>
+                    <span class="n">both</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+                        <span class="p">{</span>
+                            <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"setting_refused"</span><span class="p">,</span>
+                            <span class="s2">"release"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">NA</span><span class="p">,</span>
+                            <span class="s2">"message"</span><span class="p">:</span> <span class="n">messages</span><span class="p">,</span>
+                        <span class="p">},</span>
+                        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">],</span>
+                    <span class="p">)</span>
+                    <span class="n">refused</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">refused</span><span class="p">,</span> <span class="n">both</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">HYSPLITNotFoundError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">refused</span></div>
 
 
 <div class="viewcode-block" id="HysplitModel.release_rows">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.HysplitModel.release_rows.html#runtraj.models.hysplit.HysplitModel.release_rows">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">release_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">release_rows</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">HysplitConfig</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return where each particle started, for a HYSPLIT build that writes no row at ``age = 0``.</span>
 
 <span class="sd">        See :func:`runtraj.models.hysplit.releases.release_rows`.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">release_rows</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">release_rows</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HysplitModel.run">
@@ -793,7 +761,9 @@
             <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
                 <span class="n">run_hycs_std</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">program</span><span class="o">=</span><span class="n">program_name</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">_read_trajectories</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">coords</span><span class="p">()))</span>
-                <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span><span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span>
+                    <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">read_log</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span>
+                <span class="p">)</span>
             <span class="n">run_hycs_std</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
             <span class="n">check_release</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">release</span><span class="o">.</span><span class="n">coords</span><span class="p">(),</span> <span class="n">config</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"concentration"</span><span class="p">:</span>
@@ -801,11 +771,13 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="n">_read_particles</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">readable</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">except</span> <span class="n">SimulationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-            <span class="n">error</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+            <span class="n">error</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">read_log</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">)</span>
             <span class="k">raise</span>
         <span class="c1"># The record names the files found for the run: the archive's, or a</span>
         <span class="c1"># crop that served it; the crop settings are in the run's settings.</span>
-        <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span><span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">ModelRun</span><span class="p">(</span>
+            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="n">read_log</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">),</span> <span class="n">met_files</span><span class="o">=</span><span class="n">source</span>
+        <span class="p">)</span></div>
 </div>
 
 
@@ -823,6 +795,9 @@
     <span class="n">particles</span> <span class="o">=</span> <span class="n">read_particle_dat</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">outdt</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># the check needs a row every time step</span>
         <span class="n">check_met_stop</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">,</span> <span class="n">_met_grid</span><span class="p">(</span><span class="n">met_file</span><span class="p">))</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">read_internal_grid</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># recorded with the particles (sample_met reads it)</span>
+        <span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"internal_grid"</span><span class="p">]</span> <span class="o">=</span> <span class="n">grid</span>
     <span class="k">return</span> <span class="n">particles</span>
 
 
@@ -958,12 +933,6 @@
 
     <span class="k">with</span> <span class="n">File</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">met</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">met</span><span class="o">.</span><span class="n">grid</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_read_log</span><span class="p">(</span><span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return HYSPLIT's log in *workdir*, or an empty string when it wrote none."""</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span>
-    <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="s2">""</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"HysplitModel"</span><span class="p">,</span> <span class="s2">"hysplit_version"</span><span class="p">]</span>

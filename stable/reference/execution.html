@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Execution &#8212; runtraj 0.1.0a5</title>
+    <title>Execution &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -692,7 +692,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.pending.html">runtraj.execution.pending</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.wait.html">runtraj.execution.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.task_share.html">runtraj.execution.task_share</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.runner.resolve_compute_root.html">runtraj.execution.runner.resolve_compute_root</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_result.html">runtraj.execution.worker.run_result</a></li>
@@ -751,8 +750,9 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.job_script.html">runtraj.execution.slurm.job_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.fetch_script.html">runtraj.execution.slurm.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.wait.html">runtraj.execution.slurm.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.pbs.job_script.html">runtraj.execution.pbs.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.pbs.submit_array.html">runtraj.execution.pbs.submit_array</a></li>
@@ -780,7 +780,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
@@ -791,7 +790,6 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run_many.html">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
 </ul>
@@ -805,7 +803,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.ModelRun.html">runtraj.models.ModelRun</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.get_model.html">runtraj.models.get_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model.html">runtraj.models.run_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.MetConfig.html">runtraj.models.MetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.check.html">runtraj.models.MetConfig.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.downloads.html">runtraj.models.MetConfig.downloads</a></li>
@@ -814,7 +811,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.settings.html">runtraj.models.MetConfig.settings</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.check_model.html">runtraj.models.check_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.testing.check_model.html">runtraj.testing.check_model</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.name.html">runtraj.models.hysplit.HysplitModel.name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
@@ -827,6 +824,16 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.version.html">runtraj.models.hysplit.HysplitModel.version</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.html">runtraj.models.flexpart.FlexpartModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.name.html">runtraj.models.flexpart.FlexpartModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.check_releases.html">runtraj.models.flexpart.FlexpartModel.check_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.release_rows.html">runtraj.models.flexpart.FlexpartModel.release_rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.run.html">runtraj.models.flexpart.FlexpartModel.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.sha256.html">runtraj.models.flexpart.FlexpartModel.sha256</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.version.html">runtraj.models.flexpart.FlexpartModel.version</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.flexpart.read_partoutput.html">runtraj.models.flexpart.read_partoutput</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.stages.Stage.html">runtraj.stages.Stage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.stages.Stage.config_class.html">runtraj.stages.Stage.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.stages.Stage.name.html">runtraj.stages.Stage.name</a></li>
@@ -855,7 +862,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="project.html">Project And Output</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.output.Output.html">runtraj.output.Output</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.clear_failure.html">runtraj.output.Output.clear_failure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.complete.html">runtraj.output.Output.complete</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.failure.html">runtraj.output.Output.failure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.failures.html">runtraj.output.Output.failures</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.folder.html">runtraj.output.Output.folder</a></li>
@@ -908,7 +914,25 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.particles_per_step.html">runtraj.models.hysplit.releases.particles_per_step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="flexpart.html">FLEXPART Integration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.html">runtraj.models.flexpart.FlexpartConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.checkout.html">runtraj.models.flexpart.FlexpartConfig.checkout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.executable.html">runtraj.models.flexpart.FlexpartConfig.executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.UNRECORDED.html">runtraj.models.flexpart.FlexpartConfig.UNRECORDED</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.html">runtraj.models.flexpart.FlexpartMetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.model_post_init.html">runtraj.models.flexpart.FlexpartMetConfig.model_post_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.open.html">runtraj.models.flexpart.FlexpartMetConfig.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.settings.html">runtraj.models.flexpart.FlexpartMetConfig.settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.source.html">runtraj.models.flexpart.FlexpartMetConfig.source</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.flexpart.flexpart_version.html">runtraj.models.flexpart.flexpart_version</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="exceptions.html">Exceptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -918,6 +942,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.WorkerDied.html">runtraj.exceptions.WorkerDied</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.HYSPLITNotFoundError.html">runtraj.exceptions.HYSPLITNotFoundError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.MissingClass.html">runtraj.exceptions.MissingClass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.SchedulerError.html">runtraj.exceptions.SchedulerError</a></li>
 </ul>
 </details></li>
 </ul>
@@ -991,7 +1016,7 @@ releases with missing results, runs them, and waits until they finish.
 <code class="docutils literal notranslate"><span class="pre">task=(i,</span> <span class="pre">n)</span></code> runs share <code class="docutils literal notranslate"><span class="pre">i</span></code> of <code class="docutils literal notranslate"><span class="pre">n</span></code> here (<a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">task_share()</span></code></a>),
 which is what <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span> <span class="pre">i/n</span></code> does.</p></li>
 <li><p><a class="reference internal" href="_api/runtraj.execution.submit.html#runtraj.execution.submit" title="runtraj.execution.submit"><code class="xref py py-func docutils literal notranslate"><span class="pre">submit()</span></code></a> is what <code class="docutils literal notranslate"><span class="pre">project.submit()</span></code> calls. It
-writes a job array script (<a class="reference internal" href="_api/runtraj.execution.job_script.html#runtraj.execution.job_script" title="runtraj.execution.job_script"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_script()</span></code></a>) whose
+writes a job array script (<a class="reference internal" href="_api/runtraj.execution.slurm.job_script.html#runtraj.execution.slurm.job_script" title="runtraj.execution.slurm.job_script"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_script()</span></code></a>) whose
 tasks each run <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--task</span></code>, submits it with <code class="docutils literal notranslate"><span class="pre">sbatch</span></code>, and
 returns the job id at once. With <code class="docutils literal notranslate"><span class="pre">backend:</span> <span class="pre">kubernetes</span></code> it makes an
 indexed Job instead (<a class="reference internal" href="_api/runtraj.execution.kubernetes.job_manifest.html#runtraj.execution.kubernetes.job_manifest" title="runtraj.execution.kubernetes.job_manifest"><code class="xref py py-func docutils literal notranslate"><span class="pre">job_manifest()</span></code></a>)
@@ -1021,8 +1046,8 @@ process or in a process pool.</p></li>
 run happens in this process. A program that starts the tasks itself, on
 another scheduler, writes <a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-func docutils literal notranslate"><span class="pre">pending()</span></code></a> to the
 <code class="docutils literal notranslate"><span class="pre">releases.txt</span></code> each task reads (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span> <span class="pre">--releases</span></code>;
-<a class="reference internal" href="../guides/any_scheduler.html"><span class="doc">On Any Scheduler</span></a>); <a class="reference internal" href="_api/runtraj.execution.wait.html#runtraj.execution.wait" title="runtraj.execution.wait"><code class="xref py py-func docutils literal notranslate"><span class="pre">wait()</span></code></a> waits
-for a Slurm job array by its id.</p>
+<a class="reference internal" href="../guides/any_scheduler.html"><span class="doc">On Any Scheduler</span></a>);
+<a class="reference internal" href="_api/runtraj.execution.slurm.wait.html#runtraj.execution.slurm.wait" title="runtraj.execution.slurm.wait"><code class="xref py py-func docutils literal notranslate"><span class="pre">wait()</span></code></a> waits for a Slurm job array by its id.</p>
 <section id="running">
 <h2>Running<a class="headerlink" href="#running" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
@@ -1034,12 +1059,9 @@ for a Slurm job array by its id.</p>
 <td><p>Submit every simulation of a project that has not finished to Slurm, Kubernetes or another backend.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.pending</span></code></a></p></td>
-<td><p>Return the ids of the releases a run would run, each once, in project order.</p></td>
+<td><p>Return the ids of the releases a run would run, each once.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.wait.html#runtraj.execution.wait" title="runtraj.execution.wait"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.wait</span></code></a></p></td>
-<td><p>Wait until every task of a Slurm job array has ended, and return how each ended.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.task_share</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.task_share</span></code></a></p></td>
 <td><p>Return task <em>task</em>'s share of <em>release_ids</em>, split <em>n_tasks</em> ways.</p></td>
 </tr>
 </tbody>
@@ -1101,7 +1123,7 @@ names them. A backend that sets <code class="docutils literal notranslate"><span
 <a class="reference internal" href="_api/runtraj.execution.Backend.run.html#runtraj.execution.Backend.run" title="runtraj.execution.Backend.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> waits for them, so <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code>
 can use it; one that writes <a class="reference internal" href="_api/runtraj.execution.Backend.jobs.html#runtraj.execution.Backend.jobs" title="runtraj.execution.Backend.jobs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs()</span></code></a> lists
 them in <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">status</span></code>. The tasks need nothing else: every task splits
-the releases the same way (<a class="reference internal" href="_api/runtraj.execution.task_share.html#runtraj.execution.task_share" title="runtraj.execution.task_share"><code class="xref py py-func docutils literal notranslate"><span class="pre">task_share()</span></code></a>), skips
+the releases the same way (<a class="reference internal" href="_api/runtraj.execution.pending.html#runtraj.execution.pending" title="runtraj.execution.pending"><code class="xref py py-func docutils literal notranslate"><span class="pre">pending()</span></code></a>), skips
 what is complete, and exits with a code that says whether to try it again
 (<a class="reference internal" href="../guides/any_scheduler.html#exit-codes"><span class="std std-ref">Exit codes</span></a>).</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
@@ -1135,17 +1157,20 @@ what is complete, and exits with a code that says whether to try it again
 <h2>Slurm job arrays<a class="headerlink" href="#slurm-job-arrays" title="Link to this heading">#</a></h2>
 <p>The Slurm backend is <code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.execution.slurm</span></code>: it writes the job
 array and fetch scripts, submits them with <code class="docutils literal notranslate"><span class="pre">sbatch</span></code>, follows the tasks
-with <code class="docutils literal notranslate"><span class="pre">sacct</span></code>. The job array script requeues a task that Slurm stops
+with <code class="docutils literal notranslate"><span class="pre">sacct</span></code> (<code class="docutils literal notranslate"><span class="pre">squeue</span></code> where it does not answer). The job array script requeues a task that Slurm stops
 near its time limit or preempts; the worker only stops, and exits with 3.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.job_script.html#runtraj.execution.job_script" title="runtraj.execution.job_script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.job_script</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.job_script.html#runtraj.execution.slurm.job_script" title="runtraj.execution.slurm.job_script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.job_script</span></code></a></p></td>
 <td><p>Return the <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> script of a job array whose tasks each run a share of the releases.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.fetch_script.html#runtraj.execution.fetch_script" title="runtraj.execution.fetch_script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.fetch_script</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.fetch_script.html#runtraj.execution.slurm.fetch_script" title="runtraj.execution.slurm.fetch_script"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.fetch_script</span></code></a></p></td>
 <td><p>Return the <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> script of the job that gets the met files before a job array.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html#runtraj.execution.slurm.submit_array" title="runtraj.execution.slurm.submit_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.submit_array</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.wait.html#runtraj.execution.slurm.wait" title="runtraj.execution.slurm.wait"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.wait</span></code></a></p></td>
+<td><p>Wait until every task of a Slurm job array has ended, and return how each ended.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html#runtraj.execution.slurm.submit_array" title="runtraj.execution.slurm.submit_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.execution.slurm.submit_array</span></code></a></p></td>
 <td><p>Write a submission folder for <em>pending</em> releases, submit its job array, and return its job id and cluster.</p></td>
 </tr>
 </tbody>
@@ -1256,11 +1281,12 @@ script, submits it with <code class="docutils literal notranslate"><span class="
 <section id="transport-model">
 <h2>Transport model<a class="headerlink" href="#transport-model" title="Link to this heading">#</a></h2>
 <p>The worker runs a simulation through the transport model its settings name.
-HYSPLIT is the one built in, and CONTRIBUTING describes how to add
-another, named by its import path.
+runtraj supports HYSPLIT 5.0 and later (<a class="reference internal" href="hysplit.html"><span class="doc">HYSPLIT Integration</span></a>) and FLEXPART 11 (<a class="reference internal" href="flexpart.html"><span class="doc">FLEXPART Integration</span></a>),
+and has no default: <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> names the model in its
+<code class="docutils literal notranslate"><span class="pre">models</span></code> block. CONTRIBUTING describes how to add another, named by its import path.
 A model fails a run that its meteorology does not cover, as
 <code class="docutils literal notranslate"><span class="pre">MET_COVERAGE</span></code>. Particles that all leave the met’s domain before the end
-of the run are a complete run. Use <a class="reference internal" href="_api/runtraj.models.check_model.html#runtraj.models.check_model" title="runtraj.models.check_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_model()</span></code></a> in
+of the run are a complete run. Use <a class="reference internal" href="_api/runtraj.testing.check_model.html#runtraj.testing.check_model" title="runtraj.testing.check_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_model()</span></code></a> in
 the tests of a model of your own.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
@@ -1279,17 +1305,20 @@ the tests of a model of your own.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.run_model.html#runtraj.models.run_model" title="runtraj.models.run_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.run_model</span></code></a></p></td>
 <td><p>Run the transport model called <em>name</em> for one release, and finish its result.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.run_model_many.html#runtraj.models.run_model_many" title="runtraj.models.run_model_many"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.run_model_many</span></code></a></p></td>
-<td><p>Run a batched transport model once for many releases, and finish each one's particles.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.MetConfig.html#runtraj.models.MetConfig" title="runtraj.models.MetConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.MetConfig</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.MetConfig.html#runtraj.models.MetConfig" title="runtraj.models.MetConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.MetConfig</span></code></a></p></td>
 <td><p>The base of every transport model's met config: one entry under <code class="docutils literal notranslate"><span class="pre">mets:</span></code> and what is done with its files.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.check_model.html#runtraj.models.check_model" title="runtraj.models.check_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.check_model</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.testing.check_model.html#runtraj.testing.check_model" title="runtraj.testing.check_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.testing.check_model</span></code></a></p></td>
 <td><p>Check that <em>model</em> keeps the promises runtraj relies on, for one <em>config</em>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html#runtraj.models.hysplit.HysplitModel" title="runtraj.models.hysplit.HysplitModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitModel</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html#runtraj.models.hysplit.HysplitModel" title="runtraj.models.hysplit.HysplitModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitModel</span></code></a></p></td>
 <td><p>HYSPLIT as a transport model, the object <code class="docutils literal notranslate"><span class="pre">get_model(&quot;hysplit&quot;)</span></code> returns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.html#runtraj.models.flexpart.FlexpartModel" title="runtraj.models.flexpart.FlexpartModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.flexpart.FlexpartModel</span></code></a></p></td>
+<td><p>FLEXPART 11 as a transport model, the object <code class="docutils literal notranslate"><span class="pre">get_model(&quot;flexpart&quot;)</span></code> returns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.flexpart.read_partoutput.html#runtraj.models.flexpart.read_partoutput" title="runtraj.models.flexpart.read_partoutput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.flexpart.read_partoutput</span></code></a></p></td>
+<td><p>Read FLEXPART 11 <code class="docutils literal notranslate"><span class="pre">partoutput</span></code> files as one particle table.</p></td>
 </tr>
 </tbody>
 </table>

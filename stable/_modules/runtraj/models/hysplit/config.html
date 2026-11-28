@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.models.hysplit.config &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.models.hysplit.config &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -430,9 +430,6 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../../models.html" class="nav-link">runtraj.models</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.hysplit.config</span></li>
   </ul>
 </nav>
@@ -472,6 +469,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransportConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles</span><span class="w"> </span><span class="kn">import</span> <span class="n">PARTICLE_SCHEMA</span>
 
 <span class="c1">#: Most hourly ZICONTROL factors HYSPLIT can hold (``ZIPRESC(150)`` in</span>
 <span class="c1">#: hymodelc.F); it reads more without a bounds check.</span>
@@ -509,13 +507,13 @@
 <span class="p">)</span>
 
 <span class="c1">#: ``SETUP.CFG`` entries written with the same value in every run of the</span>
-<span class="c1">#: particles mode, which no setting changes. ``ICHEM=8`` is HYSPLIT's particle</span>
+<span class="c1">#: particle mode, which no setting changes. ``ICHEM=8`` is HYSPLIT's particle</span>
 <span class="c1">#: output mode, the only mode in which ``hycs_std`` opens the particle file</span>
 <span class="c1">#: runtraj reads, and ``IDSP=2`` is the dispersion scheme that writes its rows:</span>
 <span class="c1">#: with ``IDSP=1`` the file holds only its header (HYSPLIT 5.1.0 and a 2026 build).</span>
 <span class="n">FIXED_SETUP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ichem"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"idsp"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 
-<span class="c1">#: The ``ICHEM`` of the particles mode, the only value with which</span>
+<span class="c1">#: The ``ICHEM`` of the particle mode, the only value with which</span>
 <span class="c1">#: ``hycs_std`` writes the particle file.</span>
 <span class="n">PARTICLES_ICHEM</span> <span class="o">=</span> <span class="mi">8</span>
 
@@ -548,7 +546,7 @@
         <span class="s2">"momentum fluxes in the met files"</span>
     <span class="p">),</span>
     <span class="mi">8</span><span class="p">:</span> <span class="p">(</span>
-        <span class="s2">"it is HYSPLIT's particle output, which is mode: particles; a "</span>
+        <span class="s2">"it is HYSPLIT's particle output, which is mode: particle; a "</span>
         <span class="s2">"concentration run that sets it would write no particles"</span>
     <span class="p">),</span>
     <span class="mi">11</span><span class="p">:</span> <span class="p">(</span>
@@ -558,7 +556,20 @@
 <span class="p">}</span>
 
 
-<span class="c1">#: Settings only the particles mode reads: the particle file's variables</span>
+<span class="c1">#: HYSPLIT's names for the columns the particle table names otherwise</span>
+<span class="c1">#: (:data:`runtraj.particles.PARTICLE_SCHEMA`); the rest keep HYSPLIT's.</span>
+<span class="n">PARTICLE_COLUMNS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"indx"</span><span class="p">:</span> <span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">:</span> <span class="s2">"age"</span><span class="p">,</span> <span class="s2">"long"</span><span class="p">:</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lati"</span><span class="p">:</span> <span class="s2">"lat"</span><span class="p">}</span>
+
+
+<span class="c1">#: The ``varsiwant`` codes a particle run must write: the particle table's</span>
+<span class="c1">#: columns (:data:`runtraj.particles.PARTICLE_SCHEMA`) under HYSPLIT's names.</span>
+<span class="n">PARTICLE_REQUIRED</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">PARTICLE_COLUMNS</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">PARTICLE_SCHEMA</span><span class="o">.</span><span class="n">names</span>
+<span class="p">]</span>
+
+
+<span class="c1">#: Settings only the particle mode reads: the particle file's variables</span>
 <span class="c1">#: and interval, the height of ``foot`` (``veght``), and the release's length (in the</span>
 <span class="c1">#: concentration mode each pollutant has its own ``hours``). A concentration</span>
 <span class="c1">#: run leaves them out: neither written nor recorded, so a ``hysplit`` block</span>
@@ -578,7 +589,7 @@
 <span class="c1">#: it in the trajectory file, and the column of the trajectory table.</span>
 <span class="n">TRAJECTORY_DIAGNOSTICS</span> <span class="o">=</span> <span class="p">(</span>
     <span class="p">(</span><span class="s2">"tm_tpot"</span><span class="p">,</span> <span class="s2">"THETA"</span><span class="p">,</span> <span class="s2">"tpot"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"tm_tamb"</span><span class="p">,</span> <span class="s2">"AIR_TEMP"</span><span class="p">,</span> <span class="s2">"temp"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_tamb"</span><span class="p">,</span> <span class="s2">"AIR_TEMP"</span><span class="p">,</span> <span class="s2">"temz"</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">"tm_rain"</span><span class="p">,</span> <span class="s2">"RAINFALL"</span><span class="p">,</span> <span class="s2">"rain"</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">"tm_mixd"</span><span class="p">,</span> <span class="s2">"MIXDEPTH"</span><span class="p">,</span> <span class="s2">"mlht"</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">"tm_relh"</span><span class="p">,</span> <span class="s2">"RELHUMID"</span><span class="p">,</span> <span class="s2">"relh"</span><span class="p">),</span>
@@ -921,9 +932,11 @@
 <span class="sd">    ``horcoruverr``) perturbs the particles' winds, and the mixed-layer group</span>
 <span class="sd">    (``sigzierr``, ``tlzierr``, ``horcorzierr``) perturbs each particle's</span>
 <span class="sd">    ``foot`` by a random mixed-layer height error. Each group is set in full</span>
-<span class="sd">    or not at all.</span>
+<span class="sd">    or not at all. The wind-error group acts in the concentration mode</span>
+<span class="sd">    only on HYSPLIT 5.2.3 and earlier: later versions apply it only with</span>
+<span class="sd">    ``IDSP=2``, so a run there is refused.</span>
 
-<span class="sd">    In the particles mode runtraj always writes ``ICHEM=8`` and ``IDSP=2``</span>
+<span class="sd">    In the particle mode runtraj always writes ``ICHEM=8`` and ``IDSP=2``</span>
 <span class="sd">    (:data:`FIXED_SETUP`), the only values with which HYSPLIT writes</span>
 <span class="sd">    particles: ``idsp`` is not a setting, and ``ichem`` may be 8 or left</span>
 <span class="sd">    out there. Some settings act only together with</span>
@@ -940,7 +953,7 @@
 <span class="sd">    default: an unset setting is not written, and HYSPLIT chooses.</span>
 <span class="sd">    ``n_hours`` has no default.</span>
 
-<span class="sd">    ``mode`` says what a run makes. ``particles`` (the default) is the</span>
+<span class="sd">    ``mode`` says what a run makes. ``particle`` (the default) is the</span>
 <span class="sd">    particle table, from HYSPLIT's particle output (``ICHEM=8``). ``concentration`` is</span>
 <span class="sd">    HYSPLIT's own concentration grids, one grid of each of</span>
 <span class="sd">    ``grids`` with a variable for each of ``pollutants``. There ``ichem``</span>
@@ -951,7 +964,7 @@
 <span class="sd">    run leaves out the particle file's settings</span>
 <span class="sd">    (:data:`PARTICLES_SETTINGS`), which a ``hysplit`` block may set for</span>
 <span class="sd">    its particle variants; ``pollutants``, ``grids`` and ``conversions``</span>
-<span class="sd">    without ``mode: concentration`` are refused. A particles-mode run</span>
+<span class="sd">    without ``mode: concentration`` are refused. A particle-mode run</span>
 <span class="sd">    records no ``mode``, ``pollutants`` or ``grids``, so its settings</span>
 <span class="sd">    folder is the one it had before the mode existed.</span>
 
@@ -976,10 +989,10 @@
     <span class="c1">#: table.</span>
     <span class="n">UNRECORDED</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"directory"</span><span class="p">})</span>
 
-    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"particles"</span><span class="p">,</span> <span class="s2">"concentration"</span><span class="p">,</span> <span class="s2">"trajectory"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="s2">"particles"</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"concentration"</span><span class="p">,</span> <span class="s2">"trajectory"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"particle"</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"What HYSPLIT makes: ``particles``, the particle table; "</span>
+            <span class="s2">"What HYSPLIT makes: ``particle``, the particle table; "</span>
             <span class="s2">"``concentration``, grids of each pollutant's concentration "</span>
             <span class="s2">"(``grids`` and ``pollutants``); or ``trajectory``, the "</span>
             <span class="s2">"trajectory table, from HYSPLIT's trajectory program "</span>
@@ -1018,7 +1031,7 @@
             <span class="s2">"(``conversions``); 5 deposition of whole particles by "</span>
             <span class="s2">"probability; 6 mass divided by air density; 9 a lowest level "</span>
             <span class="s2">"that follows the mixed layer; 10 a grid for each emission "</span>
-            <span class="s2">"cycle (``qcycle``). The particles mode is ``ICHEM=8``, the only "</span>
+            <span class="s2">"cycle (``qcycle``). The particle mode is ``ICHEM=8``, the only "</span>
             <span class="s2">"value it takes, and a trajectory run reads none."</span>
         <span class="p">),</span>
     <span class="p">)</span>
@@ -1081,9 +1094,12 @@
             <span class="s2">"Particle variables ``hycs_std`` writes to the trajectory output, "</span>
             <span class="s2">"by the lowercase four-letter names HYSPLIT reads. Each is a "</span>
             <span class="s2">"column of the particles under the same name, except ``indx``, "</span>
-            <span class="s2">"``time``, ``long``, and ``lati``. ``zcfx`` is the vertical "</span>
+            <span class="s2">"``time``, ``long``, and ``lati``. In ``mode: particle`` it must "</span>
+            <span class="s2">"hold ``time``, ``indx``, ``long``, ``lati``, and ``zagl``, which "</span>
+            <span class="s2">"the particle table needs; the other modes do not read it. ``zcfx`` is the vertical "</span>
             <span class="s2">"displacement by convective flux along the trajectory, in m. "</span>
-            <span class="s2">"The default is HYSPLIT's own list of 20."</span>
+            <span class="s2">"``SETUP.CFG`` gets ``dswf`` as ``DSWF``, as HYSPLIT 5.2 and later "</span>
+            <span class="s2">"fills it only then. The default is HYSPLIT's own list of 20."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">capemin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1288,7 +1304,8 @@
             <span class="s2">"mode that uses ``seed``. 3 uses no random numbers (a diagnostic "</span>
             <span class="s2">"mode). 4 draws them during the run from a clock-based seed, so "</span>
             <span class="s2">"every run differs; there are about 5000 possible seeds. 10 to 13 "</span>
-            <span class="s2">"are modes 0 to 3 with a random initial seed. HYSPLIT does not "</span>
+            <span class="s2">"are modes 0 to 3 with a random initial seed, new in HYSPLIT "</span>
+            <span class="s2">"5.1.0 and refused before it. HYSPLIT does not "</span>
             <span class="s2">"check this value and other values silently break the turbulence, "</span>
             <span class="s2">"so runtraj rejects them."</span>
         <span class="p">),</span>
@@ -1299,7 +1316,9 @@
             <span class="s2">"Random seed for a reproducible run. Different seeds give "</span>
             <span class="s2">"different runs. Requires ``krand: 2``. HYSPLIT 5.1.0 "</span>
             <span class="s2">"ignores the seed under ``krand`` 4 and 10 to 13, and under 1 uses "</span>
-            <span class="s2">"it only for the initial turbulent velocity. Must be 0 or more: "</span>
+            <span class="s2">"it only for the initial turbulent velocity. HYSPLIT 5.0.x never seeds "</span>
+            <span class="s2">"the random numbers of a column release or an ``ichem: 5`` run, so "</span>
+            <span class="s2">"the seed does not reach them there. Must be 0 or more: "</span>
             <span class="s2">"runtraj writes it to ``SETUP.CFG`` as ``-(seed + 1)``, because "</span>
             <span class="s2">"HYSPLIT reseeds its generator only from a negative value and "</span>
             <span class="s2">"gives every ``SEED`` of 0 or more the same stream, so a seed "</span>
@@ -1346,7 +1365,8 @@
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Maximum number of particles in a simulation. Unset gives every "</span>
             <span class="s2">"release location its full share: ``numpar`` for one location, "</span>
-            <span class="s2">"``n * (numpar // n + 1)`` for n; and a concentration run, which "</span>
+            <span class="s2">"``n * (numpar // n + 1)`` for n, more when ``emisshrs`` spans "</span>
+            <span class="s2">"several time steps; and a concentration run, which "</span>
             <span class="s2">"releases over many time steps, ``numpar`` and HYSPLIT's rounding "</span>
             <span class="s2">"for each emission cycle. A set value that stops a "</span>
             <span class="s2">"multipoint release before its last location fails the run."</span>
@@ -1498,7 +1518,7 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Write the air temperature along each trajectory (1), as "</span>
-            <span class="s2">"``temp``, in K. In ``mode: trajectory`` only."</span>
+            <span class="s2">"``temz``, in K. In ``mode: trajectory`` only."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">tm_rain</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
@@ -1689,12 +1709,7 @@
 
 <span class="sd">        Both mean the same factors, so they must hash the same.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">"Per-simulation ziscale lists are not supported. Pass one shared "</span>
-                    <span class="s2">"list of hourly factors for all simulations."</span>
-                <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">value</span>
 
@@ -1737,11 +1752,21 @@
                     <span class="sa">f</span><span class="s2">"concentration, and this config's mode is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2">. Set "</span>
                     <span class="s2">"mode: concentration, or leave them out."</span>
                 <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particle"</span><span class="p">:</span>
+            <span class="n">lacking</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">PARTICLE_REQUIRED</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">lacking</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"varsiwant lacks </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">lacking</span><span class="p">))</span><span class="si">}</span><span class="s2">, which the "</span>
+                    <span class="sa">f</span><span class="s2">"particle table needs (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PARTICLE_REQUIRED</span><span class="p">)</span><span class="si">}</span><span class="s2">): "</span>
+                    <span class="s2">"HYSPLIT writes only the columns varsiwant names. Add "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'it'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'them'</span><span class="si">}</span><span class="s2">, or leave varsiwant "</span>
+                    <span class="s2">"out for the default."</span>
+                <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_validate_trajectory</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">PARTICLES_ICHEM</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particle"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ichem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">PARTICLES_ICHEM</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"ichem=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ichem</span><span class="si">}</span><span class="s2"> is not a setting of mode: particles, "</span>
+                <span class="sa">f</span><span class="s2">"ichem=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ichem</span><span class="si">}</span><span class="s2"> is not a setting of mode: particle, "</span>
                 <span class="sa">f</span><span class="s2">"which is HYSPLIT's ICHEM=</span><span class="si">{</span><span class="n">PARTICLES_ICHEM</span><span class="si">}</span><span class="s2">: with another "</span>
                 <span class="s2">"value HYSPLIT writes no particles. Set mode: concentration "</span>
                 <span class="s2">"on the variant that counts on a grid, with ichem there, or "</span>
@@ -1897,7 +1922,7 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return what a run records of this config: the settings of its mode.</span>
 
-<span class="sd">        A particles-mode record has no ``mode``, ``ichem``, ``pollutants``,</span>
+<span class="sd">        A particle-mode record has no ``mode``, ``ichem``, ``pollutants``,</span>
 <span class="sd">        ``grids``, ``conversions`` or ``tm_`` setting, so it is the record (and the settings folder) a</span>
 <span class="sd">        run had before the modes existed. A concentration-mode record has</span>
 <span class="sd">        no :data:`PARTICLES_SETTINGS`, and a trajectory-mode record only</span>
@@ -1908,7 +1933,7 @@
             <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">record</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">TRAJECTORY_SETTINGS</span><span class="p">}</span>
         <span class="n">drop</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="s2">"ichem"</span><span class="p">,</span> <span class="o">*</span><span class="n">CONCENTRATION_ONLY_SETTINGS</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particle"</span>
             <span class="k">else</span> <span class="n">PARTICLES_SETTINGS</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">drop</span><span class="p">,</span> <span class="o">*</span><span class="n">TRAJECTORY_ONLY_SETTINGS</span><span class="p">):</span>
@@ -1980,8 +2005,9 @@
 <span class="sd">        its rounding often raises by one, and stops releasing when it reaches</span>
 <span class="sd">        ``MAXPAR``. A set ``maxpar`` is used as given. Unset, one location</span>
 <span class="sd">        gets ``numpar`` (HYSPLIT may ask for one more and keeps ``numpar``),</span>
-<span class="sd">        and several get ``locations * (numpar // locations + 1)``, so the</span>
-<span class="sd">        last locations are not left short.</span>
+<span class="sd">        and several get what each releases over the ``emisshrs`` of the</span>
+<span class="sd">        release, every one-minute time step of it (at least</span>
+<span class="sd">        ``numpar // locations + 1``), so the last locations are not left short.</span>
 
 <span class="sd">        A concentration run releases over many time steps, each pollutant</span>
 <span class="sd">        for its ``hours``, and again every ``qcycle`` hours. HYSPLIT</span>
@@ -2017,7 +2043,11 @@
             <span class="k">return</span> <span class="n">cycles</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">locations</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">rounding</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">locations</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">numpar</span>
-        <span class="k">return</span> <span class="n">locations</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">//</span> <span class="n">locations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.releases</span><span class="w"> </span><span class="kn">import</span> <span class="n">particles_per_step</span>
+
+        <span class="n">steps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">emisshrs</span> <span class="o">*</span> <span class="mi">60</span><span class="p">))</span>
+        <span class="n">each</span> <span class="o">=</span> <span class="n">steps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbptyp</span> <span class="o">*</span> <span class="n">particles_per_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">locations</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">locations</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpar</span> <span class="o">//</span> <span class="n">locations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">each</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HysplitConfig.hourly_ziscale">
@@ -2035,7 +2065,11 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return *n* realizations of this config, realization ``k`` with ``seed + k``.</span>
 
-<span class="sd">        Realization 0 uses the configured seed.</span>
+<span class="sd">        Realization 0 uses the configured seed. Under ``krand=4``, which takes</span>
+<span class="sd">        no seed, realization ``k`` runs with seed ``k``: HYSPLIT 5.4.2 and</span>
+<span class="sd">        earlier ignore it and seed each run from the clock, and the</span>
+<span class="sd">        development branch (the coming 5.5), outside ``ichem=8``, reseeds</span>
+<span class="sd">        from ``SEED`` and would repeat a run with the same one.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -2060,7 +2094,10 @@
                 <span class="s2">"realization its own seed. Any other mode would repeat the same "</span>
                 <span class="s2">"perturbation."</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">realizations</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
+        <span class="n">configs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">realizations</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">krand</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span><span class="n">update</span><span class="o">=</span><span class="p">{</span><span class="s2">"seed"</span><span class="p">:</span> <span class="n">k</span><span class="p">})</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">configs</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">configs</span></div>
 </div>
 
 
@@ -2081,6 +2118,8 @@
     <span class="s2">"TRAJECTORY_SETTINGS"</span><span class="p">,</span>
     <span class="s2">"TRAJECTORY_SETUP_SETTINGS"</span><span class="p">,</span>
     <span class="s2">"PARTICLES_SETTINGS"</span><span class="p">,</span>
+    <span class="s2">"PARTICLE_COLUMNS"</span><span class="p">,</span>
+    <span class="s2">"PARTICLE_REQUIRED"</span><span class="p">,</span>
     <span class="s2">"SAMPLING_TYPES"</span><span class="p">,</span>
     <span class="s2">"ConcentrationGrid"</span><span class="p">,</span>
     <span class="s2">"Conversion"</span><span class="p">,</span>

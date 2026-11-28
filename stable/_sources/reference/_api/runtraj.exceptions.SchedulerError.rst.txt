@@ -1,0 +1,6 @@
+﻿runtraj.exceptions.SchedulerError
+=================================
+
+.. currentmodule:: runtraj.exceptions
+
+.. autoexception:: SchedulerError

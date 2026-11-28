@@ -1,0 +1,6 @@
+﻿runtraj.results.model\_result
+=============================
+
+.. currentmodule:: runtraj.results
+
+.. autofunction:: model_result

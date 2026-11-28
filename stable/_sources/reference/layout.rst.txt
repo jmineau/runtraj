@@ -50,7 +50,11 @@ results of one set of settings, split by the release's date:
 
 A settings folder is named ``<variant>-<six characters>``. The variant is
 the name in ``config.yaml`` that first made the folder, and the six
-characters are the start of its settings hash (below). The date is the
+characters are the start of its settings hash (below). Beside the folders,
+a hidden file ``.hash-<settings hash>`` holds the name of the folder its
+hash was given first, so two projects that share an output directory and
+start the same settings at once, under different variant names, write to
+one folder. The date is the
 release's release date in UTC. An ensemble (``realizations: N``) has a
 ``realization=k`` folder between the settings folder and the dates.
 
@@ -71,7 +75,8 @@ transport model's particle file, and with ``keep_workdir: true`` under
 ``execution:`` every run's is, whole.
 
 The ``particles/``, ``trajectories/`` and ``footprint/`` trees hold only
-Parquet files and ``_settings.yaml``, so each reads as one dataset. ``concentration/`` holds
+Parquet files, ``_settings.yaml`` and the hidden ``.hash-`` files, so each
+reads as one dataset. ``concentration/`` holds
 one NetCDF file per release, a group per grid (:doc:`concentration`). A stage from another
 package has a tree under its own name, with files in the format and with
 the extension that stage chooses.
@@ -109,6 +114,9 @@ Every settings folder holds a ``_settings.yaml``. A particles folder's:
        sha256: 37346bee81a62f31d2f273c9813d53a76c54d59cfd5adbf3f76a7f870e3f49f9
      n_hours: -24
      # ...
+
+A met with a ``label`` records it under ``met`` as ``label: mynn``; a met
+without one records no ``label``.
 
 A stage's folder, such as a footprint's, names its stage and what its files
 were made from:
@@ -204,11 +212,13 @@ column means.
      - :func:`runtraj.read_particles` gives it back as float64.
    * - ``age``
      - int32
-     - Minutes since release, negative for a backward run. Read back as
+     - Seconds since release, negative for a backward run. Read back as
        float64.
    * - ``lon``, ``lat``, ``zagl``, and the rest
-     - float64
-     - The columns ``varsiwant`` asked HYSPLIT for, plus ``release_height``
+     - float32 or float64
+     - As the model computed them: HYSPLIT's are float64, FLEXPART's
+       float32. :func:`runtraj.read_particles` gives them back as float64.
+       The columns ``varsiwant`` asked HYSPLIT for, plus ``release_height``
        for a column or multipoint release.
 
 ``time`` is not stored: it is the release time plus ``age``.
@@ -228,6 +238,11 @@ The file's metadata (Parquet key-value metadata):
        ``_settings.yaml``.
    * - ``runtraj:met_files``
      - The met files the run read, a JSON list of paths.
+   * - ``runtraj:internal_grid``
+     - HYSPLIT's internal levels as the run printed them in ``MESSAGE``, a
+       JSON list ``[nlvl, aa, bb, cc]``; level ``k`` is ``aa k**2 + bb k +
+       cc`` meters. Only a HYSPLIT run that printed it. It is read back
+       into ``attrs["internal_grid"]``.
    * - ``runtraj:hash``
      - The folder's settings hash.
    * - ``runtraj:version``

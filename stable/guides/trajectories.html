@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Trajectories &#8212; runtraj 0.1.0a5</title>
+    <title>Trajectories &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -525,20 +525,20 @@ back from 10 m above Salt Lake Valley:</p>
     <span class="n">time</span><span class="o">=</span><span class="s2">"2021-07-15 10:30"</span><span class="p">,</span> <span class="n">longitude</span><span class="o">=-</span><span class="mf">112.0</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="mf">40.5</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="mi">10</span>
 <span class="p">)</span>
 <span class="n">trajectories</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-    <span class="n">release</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=-</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span>
+    <span class="n">release</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=-</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span>
 <span class="p">)</span>
 <span class="n">trajectories</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   trajectory                      time  age      lon     lat   zagl   pres
-0           1 2021-07-15 10:30:00+00:00    0 -112.000  40.500   10.0  853.1
-1           1 2021-07-15 09:30:00+00:00  -60 -111.851  40.310    0.1  863.8
-2           1 2021-07-15 08:30:00+00:00 -120 -111.865  40.049  280.5  834.0
-3           1 2021-07-15 07:30:00+00:00 -180 -112.114  39.738  720.8  750.4
-4           1 2021-07-15 06:30:00+00:00 -240 -112.340  39.480  250.0  831.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   trajectory                      time    age      lon     lat   zagl   pres
+0           1 2021-07-15 10:30:00+00:00      0 -112.000  40.500   10.0  853.1
+1           1 2021-07-15 09:30:00+00:00  -3600 -111.851  40.310    0.1  863.8
+2           1 2021-07-15 08:30:00+00:00  -7200 -111.865  40.049  280.5  834.0
+3           1 2021-07-15 07:30:00+00:00 -10800 -112.114  39.738  720.8  750.4
+4           1 2021-07-15 06:30:00+00:00 -14400 -112.340  39.480  250.0  831.0
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">age</span></code> is minutes since the release, negative going back, and the row at
+<p><code class="docutils literal notranslate"><span class="pre">age</span></code> is seconds since the release, negative going back, and the row at
 <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code> is the release itself. <code class="docutils literal notranslate"><span class="pre">zagl</span></code> is the height above ground in
 meters, and <code class="docutils literal notranslate"><span class="pre">pres</span></code> the pressure in hPa, which HYSPLIT always writes.</p>
 <p>This trajectory has 4 hours of rows, not 6: it left the met files’ domain,
@@ -572,7 +572,7 @@ setting its <code class="docutils literal notranslate"><span class="pre">tm_</sp
 <td><p>Potential temperature, K</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tm_tamb</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">temp</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">temz</span></code></p></td>
 <td><p>Air temperature, K</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tm_rain</span></code></p></td>
@@ -621,18 +621,18 @@ at one place, at different heights, which is how you compare levels:</p>
     <span class="n">altitudes</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
 <span class="p">)</span>
 <span class="n">trajectories</span> <span class="o">=</span> <span class="n">runtraj</span><span class="o">.</span><span class="n">run_trajectories</span><span class="p">(</span>
-    <span class="n">levels</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span><span class="p">,</span> <span class="n">tout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">tm_tpot</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tm_mixd</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">levels</span><span class="p">,</span> <span class="s2">"/data/hrrr"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"hysplit"</span><span class="p">,</span> <span class="n">n_hours</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"trajectory"</span><span class="p">,</span> <span class="n">tout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">tm_tpot</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tm_mixd</span><span class="o">=</span><span class="mi">1</span>
 <span class="p">)</span>
 <span class="n">trajectories</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   trajectory                      time  age  ...   pres   tpot    mlht
-0           1 2021-07-15 02:00:00+00:00    0  ...  851.4  316.8   354.5
-1           2 2021-07-15 02:00:00+00:00    0  ...  805.6  318.6   354.5
-2           3 2021-07-15 02:00:00+00:00    0  ...  817.1  319.7  3653.8
-3           1 2021-07-15 02:30:00+00:00   30  ...  856.7  315.8   386.2
-4           2 2021-07-15 02:30:00+00:00   30  ...  813.8  318.0   486.9
-5           3 2021-07-15 02:30:00+00:00   30  ...  796.8  319.7  3253.2
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   trajectory                      time   age  ...   pres   tpot    mlht
+0           1 2021-07-15 02:00:00+00:00     0  ...  851.4  316.8   354.5
+1           2 2021-07-15 02:00:00+00:00     0  ...  805.6  318.6   354.5
+2           3 2021-07-15 02:00:00+00:00     0  ...  817.1  319.7  3653.8
+3           1 2021-07-15 02:30:00+00:00  1800  ...  856.7  315.8   386.2
+4           2 2021-07-15 02:30:00+00:00  1800  ...  813.8  318.0   486.9
+5           3 2021-07-15 02:30:00+00:00  1800  ...  796.8  319.7  3253.2
 </pre></div>
 </div>
 <p>How high did each get?</p>

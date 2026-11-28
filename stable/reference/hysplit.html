@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>HYSPLIT Integration &#8212; runtraj 0.1.0a5</title>
+    <title>HYSPLIT Integration &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -692,7 +692,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.pending.html">runtraj.execution.pending</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.wait.html">runtraj.execution.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.task_share.html">runtraj.execution.task_share</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.runner.resolve_compute_root.html">runtraj.execution.runner.resolve_compute_root</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.worker.run_result.html">runtraj.execution.worker.run_result</a></li>
@@ -751,8 +750,9 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.job_script.html">runtraj.execution.slurm.job_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.fetch_script.html">runtraj.execution.slurm.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.wait.html">runtraj.execution.slurm.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.pbs.job_script.html">runtraj.execution.pbs.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.pbs.submit_array.html">runtraj.execution.pbs.submit_array</a></li>
@@ -780,7 +780,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
@@ -791,7 +790,6 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run_many.html">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
 </ul>
@@ -805,7 +803,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.ModelRun.html">runtraj.models.ModelRun</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.get_model.html">runtraj.models.get_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model.html">runtraj.models.run_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.MetConfig.html">runtraj.models.MetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.check.html">runtraj.models.MetConfig.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.downloads.html">runtraj.models.MetConfig.downloads</a></li>
@@ -814,7 +811,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.settings.html">runtraj.models.MetConfig.settings</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.check_model.html">runtraj.models.check_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.testing.check_model.html">runtraj.testing.check_model</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.name.html">runtraj.models.hysplit.HysplitModel.name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
@@ -827,6 +824,16 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.version.html">runtraj.models.hysplit.HysplitModel.version</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.html">runtraj.models.flexpart.FlexpartModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.name.html">runtraj.models.flexpart.FlexpartModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.check_releases.html">runtraj.models.flexpart.FlexpartModel.check_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.release_rows.html">runtraj.models.flexpart.FlexpartModel.release_rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.run.html">runtraj.models.flexpart.FlexpartModel.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.sha256.html">runtraj.models.flexpart.FlexpartModel.sha256</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartModel.version.html">runtraj.models.flexpart.FlexpartModel.version</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.flexpart.read_partoutput.html">runtraj.models.flexpart.read_partoutput</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.stages.Stage.html">runtraj.stages.Stage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.stages.Stage.config_class.html">runtraj.stages.Stage.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.stages.Stage.name.html">runtraj.stages.Stage.name</a></li>
@@ -855,7 +862,6 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="project.html">Project And Output</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.output.Output.html">runtraj.output.Output</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.clear_failure.html">runtraj.output.Output.clear_failure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.complete.html">runtraj.output.Output.complete</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.failure.html">runtraj.output.Output.failure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.failures.html">runtraj.output.Output.failures</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.output.Output.folder.html">runtraj.output.Output.folder</a></li>
@@ -908,7 +914,25 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.releases.particles_per_step.html">runtraj.models.hysplit.releases.particles_per_step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="flexpart.html">FLEXPART Integration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.html">runtraj.models.flexpart.FlexpartConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.checkout.html">runtraj.models.flexpart.FlexpartConfig.checkout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.executable.html">runtraj.models.flexpart.FlexpartConfig.executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartConfig.UNRECORDED.html">runtraj.models.flexpart.FlexpartConfig.UNRECORDED</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.html">runtraj.models.flexpart.FlexpartMetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.model_post_init.html">runtraj.models.flexpart.FlexpartMetConfig.model_post_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.open.html">runtraj.models.flexpart.FlexpartMetConfig.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.settings.html">runtraj.models.flexpart.FlexpartMetConfig.settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.flexpart.FlexpartMetConfig.source.html">runtraj.models.flexpart.FlexpartMetConfig.source</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.flexpart.flexpart_version.html">runtraj.models.flexpart.flexpart_version</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="exceptions.html">Exceptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -918,6 +942,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.WorkerDied.html">runtraj.exceptions.WorkerDied</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.HYSPLITNotFoundError.html">runtraj.exceptions.HYSPLITNotFoundError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.MissingClass.html">runtraj.exceptions.MissingClass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.exceptions.SchedulerError.html">runtraj.exceptions.SchedulerError</a></li>
 </ul>
 </details></li>
 </ul>
@@ -982,8 +1007,7 @@
                   
   <section id="hysplit-integration">
 <h1>HYSPLIT Integration<a class="headerlink" href="#hysplit-integration" title="Link to this heading">#</a></h1>
-<p>HYSPLIT is the transport model behind every simulation, unless a variant
-names another. The worker gets it as
+<p>A variant whose model block is <code class="docutils literal notranslate"><span class="pre">hysplit</span></code> runs <a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT.php">HYSPLIT</a>. The worker gets it as
 <a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.html#runtraj.models.hysplit.HysplitModel" title="runtraj.models.hysplit.HysplitModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.models.hysplit.HysplitModel</span></code></a> (see <a class="reference internal" href="execution.html"><span class="doc">Execution</span></a>), which
 picks the met files, writes HYSPLIT’s input files, runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>, and
 reads the particles it writes, or, with <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">concentration</span></code>, its
@@ -1030,11 +1054,47 @@ run uses, from the <code class="docutils literal notranslate"><span class="pre">
 </table>
 </div>
 </section>
+<section id="hysplit-versions">
+<span id="id1"></span><h2>HYSPLIT versions<a class="headerlink" href="#hysplit-versions" title="Link to this heading">#</a></h2>
+<p>runtraj supports HYSPLIT 5.0 and later. It runs the <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> you give
+it and reads the version it prints (<a class="reference internal" href="_api/runtraj.models.hysplit.HysplitModel.version.html#runtraj.models.hysplit.HysplitModel.version" title="runtraj.models.hysplit.HysplitModel.version"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HysplitModel.version</span></code></a>); a version it cannot read is
+taken to be the oldest. Between versions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">krand</span></code> 10 to 13 are new in HYSPLIT 5.1.0. Before it, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> runs
+them as <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">4</span></code> without a word, so a run with one of them on an older
+<code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> is refused (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> lists it as <code class="docutils literal notranslate"><span class="pre">setting_refused</span></code>,
+and a run fails as <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code> before <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> starts) instead of
+getting the clock-seeded draw.</p></li>
+<li><p>HYSPLIT 5.0.x never seeds the random numbers behind a column release and
+an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run (the generator of Fortran’s <code class="docutils literal notranslate"><span class="pre">RANDOM_NUMBER</span></code>;
+HYSPLIT 5.1.0 seeds it from <code class="docutils literal notranslate"><span class="pre">seed</span></code>). On 5.0.x those runs differ from one
+run to the next, whatever <code class="docutils literal notranslate"><span class="pre">seed</span></code> is, and runtraj cannot change that. A
+point release with <code class="docutils literal notranslate"><span class="pre">krand:</span> <span class="pre">2</span></code> and a <code class="docutils literal notranslate"><span class="pre">seed</span></code> repeats on 5.0.x as on every
+later version, and 5.0.2 gave the same files as 5.1.0 in 48 of
+runtraj’s 50 recorded cases, the two others being a column release
+and an <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run. runtraj does not warn about it when it runs: use
+HYSPLIT 5.1.0 or later for a column release or <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">5</span></code> run you need
+to repeat.</p></li>
+<li><p>From HYSPLIT 5.3.0, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> adds 2 to <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> once it has read
+<code class="docutils literal notranslate"><span class="pre">ZICONTROL</span></code> (below).</p></li>
+</ul>
+</section>
 <section id="running-hysplit">
 <h2>Running HYSPLIT<a class="headerlink" href="#running-hysplit" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="_api/runtraj.models.hysplit.write_inputs.html#runtraj.models.hysplit.write_inputs" title="runtraj.models.hysplit.write_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_inputs()</span></code></a> writes everything
 <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> reads into a folder: <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code>, <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code>, and the error
-and mixed-layer files when the settings call for them. It takes what
+and mixed-layer files when the settings call for them. With <code class="docutils literal notranslate"><span class="pre">ziscale</span></code>
+set it first asks <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> for its version: from HYSPLIT 5.3.0,
+<code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> adds 2 to <code class="docutils literal notranslate"><span class="pre">SETUP.CFG</span></code>’s <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> once it has read
+<code class="docutils literal notranslate"><span class="pre">ZICONTROL</span></code>, so <code class="docutils literal notranslate"><span class="pre">WINDERRTF</span></code> is written 2 less there (-2 with no
+error settings), and each version applies the errors the settings ask
+for. A <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> that prints no version gets the value as HYSPLIT
+5.2 reads it. In the concentration mode the wind error settings need the
+version too: from HYSPLIT 5.3.0, <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> applies the wind error only
+with <code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, which that mode does not set, so the settings are refused
+there (<code class="docutils literal notranslate"><span class="pre">setting_refused</span></code> in <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code>, and <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code> in a
+run) instead of running without it (the particles mode sets <code class="docutils literal notranslate"><span class="pre">IDSP=2</span></code>, and
+5.2.3 and earlier apply the error). It takes what
 <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> starts from: a release time and release locations (longitude,
 latitude and height, like <code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>; the <code class="docutils literal notranslate"><span class="pre">CONTROL</span></code> file lists
 each latitude first, and the writer swaps them), with <code class="docutils literal notranslate"><span class="pre">kmsl</span></code> 0 for heights
@@ -1043,10 +1103,12 @@ above ground and 1 above sea level, as <code class="docutils literal notranslate
 release points (<code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>) and <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>.
 <a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html#runtraj.models.hysplit.run_hycs_std" title="runtraj.models.hysplit.run_hycs_std"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_hycs_std()</span></code></a> runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> in the
 folder, and <a class="reference internal" href="_api/runtraj.models.hysplit.read_particle_dat.html#runtraj.models.hysplit.read_particle_dat" title="runtraj.models.hysplit.read_particle_dat"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_particle_dat()</span></code></a> reads its
-particle file as a particle table. Use them to look at or change
+particle file as a particle table, with HYSPLIT’s minutes (<code class="docutils literal notranslate"><span class="pre">time</span></code>, which
+becomes <code class="docutils literal notranslate"><span class="pre">age</span></code>, and <code class="docutils literal notranslate"><span class="pre">samt</span></code>) in seconds. Use them to look at or change
 the input files of a run. A project run then adds the release heights
 (<a class="reference internal" href="particles.html"><span class="doc">The Particle Table</span></a>); by hand:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_release_heights</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -1069,7 +1131,9 @@ the input files of a run. A project run then adds the release heights
 <span class="p">)</span>
 <span class="n">run_hycs_std</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"run"</span><span class="p">))</span>
 <span class="n">particles</span> <span class="o">=</span> <span class="n">read_particle_dat</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"run"</span><span class="p">)</span> <span class="o">/</span> <span class="n">PARTICLE_FILE</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>
-<span class="n">particles</span> <span class="o">=</span> <span class="n">add_release_heights</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">HysplitModel</span><span class="p">()</span><span class="o">.</span><span class="n">release_rows</span><span class="p">)</span>
+<span class="n">particles</span> <span class="o">=</span> <span class="n">add_release_heights</span><span class="p">(</span>
+    <span class="n">particles</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">HysplitModel</span><span class="p">()</span><span class="o">.</span><span class="n">release_rows</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
@@ -1213,7 +1277,7 @@ builds; 7 needs momentum fluxes in the met files; 11 needs a
 <code class="docutils literal notranslate"><span class="pre">DAUGHTER.TXT</span></code> from HYSPLIT’s preprocessor.</p></td>
 </tr>
 <tr class="row-odd"><td><p>8</p></td>
-<td><p>Refused here: it is <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">particles</span></code>, which takes <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">8</span></code>
+<td><p>Refused here: it is <code class="docutils literal notranslate"><span class="pre">mode:</span> <span class="pre">particle</span></code>, which takes <code class="docutils literal notranslate"><span class="pre">ichem:</span> <span class="pre">8</span></code>
 or none.</p></td>
 </tr>
 <tr class="row-even"><td><p>others</p></td>
@@ -1296,6 +1360,17 @@ trajectories, and runtraj does not read a split run’s file.</p>
 multipoint release may hold two points at one place, which <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>
 would join into a line source. A column release is refused
 (<code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code>), since there is no line source to make of it.</p>
+<p>Before HYSPLIT 5.4.0, <code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> ends the first hour of a run that
+starts off the hour at the next clock hour, then runs the other hours in
+full, so the run comes up short of <code class="docutils literal notranslate"><span class="pre">n_hours</span></code> (a backward run from 10:30
+with <code class="docutils literal notranslate"><span class="pre">n_hours:</span> <span class="pre">-3</span></code> and <code class="docutils literal notranslate"><span class="pre">tout:</span> <span class="pre">30</span></code> reaches -2.5 hours, not -3) and it
+writes where the clock minutes are a multiple of <code class="docutils literal notranslate"><span class="pre">tout</span></code>, not every
+<code class="docutils literal notranslate"><span class="pre">tout</span></code> from the release. 5.4.0 made every hour a full hour. So with a
+<code class="docutils literal notranslate"><span class="pre">hyts_std</span></code> older than 5.4.0, or one that prints no version, a release
+whose time is not on the hour is refused before the run
+(<code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code>, and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code>): release on the hour, or use
+HYSPLIT 5.4.0 or later. Releases on the hour, and every release from
+5.4.0, are unchanged.</p>
 <p><a class="reference internal" href="_api/runtraj.models.hysplit.read_tdump.html#runtraj.models.hysplit.read_tdump" title="runtraj.models.hysplit.read_tdump"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_tdump()</span></code></a> reads the file by the widths of
 its fields. A run fails as <code class="docutils literal notranslate"><span class="pre">NO_TRAJECTORIES_DATA</span></code> when there is no file
 or no row in it, and as <code class="docutils literal notranslate"><span class="pre">MET_COVERAGE</span></code> when it holds fewer trajectories
@@ -1339,19 +1414,23 @@ line source, so it refuses a multipoint release whose points share a
 horizontal location
 (<a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html#runtraj.models.hysplit.releases.check_releases" title="runtraj.models.hysplit.releases.check_releases"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_releases()</span></code></a>): <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code>
 lists it, and its run fails as <code class="docutils literal notranslate"><span class="pre">RELEASE_REFUSED</span></code> before <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code>
-starts. HYSPLIT 5.1.0
-writes no particle row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>, so
+starts. HYSPLIT 5.1.0 to 5.4.2
+write no particle row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>, so
 <a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html#runtraj.models.hysplit.releases.release_rows" title="runtraj.models.hysplit.releases.release_rows"><code class="xref py py-func docutils literal notranslate"><span class="pre">release_rows()</span></code></a> says where each
-particle of a column or multipoint release started: particle <code class="docutils literal notranslate"><span class="pre">k</span></code> of a
-column in slab <code class="docutils literal notranslate"><span class="pre">k</span></code>, and a multipoint release’s particles matched to a
-point from their first row (<a class="reference internal" href="particles.html"><span class="doc">The Particle Table</span></a>).</p>
+particle of a column or multipoint release started: a column’s particles
+from their numbers, <a class="reference internal" href="_api/runtraj.models.hysplit.releases.particles_per_step.html#runtraj.models.hysplit.releases.particles_per_step" title="runtraj.models.hysplit.releases.particles_per_step"><code class="xref py py-func docutils literal notranslate"><span class="pre">particles_per_step()</span></code></a>
+of them up the column at each minute of <code class="docutils literal notranslate"><span class="pre">emisshrs</span></code>, and a multipoint
+release’s particles matched to a point from their first row (<a class="reference internal" href="particles.html"><span class="doc">The Particle Table</span></a>).</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.releases.check_releases.html#runtraj.models.hysplit.releases.check_releases" title="runtraj.models.hysplit.releases.check_releases"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.releases.check_releases</span></code></a></p></td>
 <td><p>Return the releases HYSPLIT cannot run, one row each, with <code class="docutils literal notranslate"><span class="pre">check</span></code>, <code class="docutils literal notranslate"><span class="pre">release</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.releases.release_rows.html#runtraj.models.hysplit.releases.release_rows" title="runtraj.models.hysplit.releases.release_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.releases.release_rows</span></code></a></p></td>
-<td><p>Return where each particle of a HYSPLIT run started, for a run that wrote no row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></td>
+<td><p>Return where each particle of a HYSPLIT run started, from its number and its first row.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_api/runtraj.models.hysplit.releases.particles_per_step.html#runtraj.models.hysplit.releases.particles_per_step" title="runtraj.models.hysplit.releases.particles_per_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtraj.models.hysplit.releases.particles_per_step</span></code></a></p></td>
+<td><p>Return how many particles HYSPLIT releases from one location in one block of a time step of a particle run.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1392,7 +1471,7 @@ release time to just after <code class="docutils literal notranslate"><span clas
 <span class="pre">step</span> <span class="pre">between</span> <span class="pre">...</span></code>: a file is there but cut short, written
 partway, or has records lost to null bytes, so it lacks hours the
 run needs. Download or crop it again. runtraj checks each file
-before HYSPLIT runs (<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.File.check.html#arlmet.File.check" title="(in arl-met v0.1.0b14)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">arlmet.File.check()</span></code></a>).</p></li>
+before HYSPLIT runs (<a class="reference external" href="https://jmineau.github.io/arl-met/stable/_autosummary/arlmet.File.check.html#arlmet.File.check" title="(in arl-met v0.1.0b15)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">arlmet.File.check()</span></code></a>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">The</span> <span class="pre">met</span> <span class="pre">file</span> <span class="pre">...</span> <span class="pre">holds</span> <span class="pre">one</span> <span class="pre">time</span> <span class="pre">period</span></code>: HYSPLIT cannot read a
 file with one time period. Use files that each hold at least two
 (<code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">check</span></code> finds this before a run).</p></li>
@@ -1535,6 +1614,7 @@ reporting.</p></td>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#config">Config</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-hysplit-build">The HYSPLIT build</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hysplit-versions">HYSPLIT versions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-hysplit">Running HYSPLIT</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-concentration-mode">The concentration mode</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-trajectory-mode">The trajectory mode</a></li>

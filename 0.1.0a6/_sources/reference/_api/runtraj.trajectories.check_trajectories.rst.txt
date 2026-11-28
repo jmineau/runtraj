@@ -1,0 +1,6 @@
+﻿runtraj.trajectories.check\_trajectories
+========================================
+
+.. currentmodule:: runtraj.trajectories
+
+.. autofunction:: check_trajectories

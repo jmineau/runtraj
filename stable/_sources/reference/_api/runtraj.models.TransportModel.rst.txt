@@ -22,7 +22,6 @@ Attributes
    :toctree:
    :nosignatures:
 
-   ~TransportModel.batched
    ~TransportModel.config_class
    ~TransportModel.met_config_class
    ~TransportModel.name
@@ -42,7 +41,6 @@ Methods
    ~TransportModel.result
    ~TransportModel.result_files
    ~TransportModel.run
-   ~TransportModel.run_many
    ~TransportModel.sha256
    ~TransportModel.version
 

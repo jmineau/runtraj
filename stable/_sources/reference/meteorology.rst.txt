@@ -81,7 +81,10 @@ folders are not deleted. The crops have a catalog of their own, so a crop
 serves a run by the hours its header holds, whatever it is named and
 whether or not the archive still has its source. A crop that holds fewer
 hours than the archive file it shares a name with is made again when a run
-needs the hours it lacks. A run records the files it was given: the
+needs the hours it lacks. Where the new crop cannot replace it, as on Windows
+while another run reads the short crop, the new one is kept beside it under a
+hidden name (a leading dot, then the number of time steps it holds), which the
+catalogs skip and later runs that need those hours read. A run records the files it was given: the
 archive's, or the crops that held its hours.
 
 What a run records
@@ -92,6 +95,10 @@ first file in ``directory`` (a download's comes from its archive) when the
 project's settings folders are first needed, to run or to read results. So
 ``directory`` must hold the files on the machine that opens the project
 (:meth:`HysplitMetConfig.settings <runtraj.models.hysplit.HysplitMetConfig.settings>`).
+A met's ``label`` is recorded beside them when it is set, and not at all
+when it is not (:attr:`Variant.met_settings <runtraj.config.Variant.met_settings>`).
+``runtraj check`` lists two mets of one transport model that record the
+same settings, as ``met_label``, and a run refuses them: give each a label.
 
 Wind-error statistics
 ---------------------

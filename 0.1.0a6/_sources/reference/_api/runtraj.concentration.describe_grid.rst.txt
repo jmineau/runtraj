@@ -1,0 +1,6 @@
+﻿runtraj.concentration.describe\_grid
+====================================
+
+.. currentmodule:: runtraj.concentration
+
+.. autofunction:: describe_grid

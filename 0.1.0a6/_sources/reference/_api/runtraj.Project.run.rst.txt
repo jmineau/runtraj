@@ -1,0 +1,5 @@
+runtraj.Project.run
+===================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.run

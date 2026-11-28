@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Architecture &#8212; runtraj 0.1.0a5</title>
+    <title>Architecture &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -502,9 +502,10 @@ model subclasses <a class="reference internal" href="../reference/_api/runtraj.m
 makes one file per release after the model runs, subclasses
 <a class="reference internal" href="../reference/_api/runtraj.stages.Stage.html#runtraj.stages.Stage" title="runtraj.stages.Stage"><code class="xref py py-class docutils literal notranslate"><span class="pre">runtraj.stages.Stage</span></code></a>. Each base class implements every optional
 member with its default, so runtraj calls them directly and a plug-in
-overrides only what it does differently. HYSPLIT is the model built in, and its
-package (<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models.hysplit</span></code>) is the only code that knows
-HYSPLIT’s files.</p>
+overrides only what it does differently. HYSPLIT and FLEXPART are the
+models runtraj supports, and each one’s package (<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models.hysplit</span></code>,
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.models.flexpart</span></code>) is the only code that knows that model’s
+files.</p>
 </section>
 <section id="module-map">
 <h2>Module map<a class="headerlink" href="#module-map" title="Link to this heading">#</a></h2>
@@ -518,10 +519,10 @@ HYSPLIT’s files.</p>
   config.py       ProjectConfig and Variant
   identity.py     settings records and hashes
   stages.py       the Stage base class, get_stage, check_stage
-  testing.py      run_stage: a stage end to end in a project, on the replay model
+  testing.py      run_stage: a stage end to end in a project, on the replay model; check_model
   releases/       release classes, releases.csv, shared validation
   particles/      the particle table and files, release heights, particles.runtraj
-  models/         the TransportModel and TransportConfig base classes, MODELS, get_model, check_model
+  models/         base (the TransportModel and TransportConfig base classes), registry (MODELS, get_model), run (run_model)
     hysplit/      config, met, driver, CONTROL and SETUP.CFG writers, failures
   execution/      ExecutionConfig, the runner (plan, local run), slurm (the job array, whose script requeues a stopped task), pbs (the job array), the worker,
                   kubernetes (the indexed Job, the hourly CronJob), inputs (copies to a bucket, the lock), schedule

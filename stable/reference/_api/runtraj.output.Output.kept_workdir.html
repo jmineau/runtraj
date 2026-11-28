@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtraj.output.Output.kept_workdir &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.output.Output.kept_workdir &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -692,7 +692,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pending.html">runtraj.execution.pending</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.wait.html">runtraj.execution.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.task_share.html">runtraj.execution.task_share</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.runner.resolve_compute_root.html">runtraj.execution.runner.resolve_compute_root</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_result.html">runtraj.execution.worker.run_result</a></li>
@@ -751,8 +750,9 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.job_script.html">runtraj.execution.slurm.job_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.fetch_script.html">runtraj.execution.slurm.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.wait.html">runtraj.execution.slurm.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.job_script.html">runtraj.execution.pbs.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.submit_array.html">runtraj.execution.pbs.submit_array</a></li>
@@ -780,7 +780,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
@@ -791,7 +790,6 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.run_many.html">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
 </ul>
@@ -805,7 +803,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.ModelRun.html">runtraj.models.ModelRun</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.get_model.html">runtraj.models.get_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model.html">runtraj.models.run_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.MetConfig.html">runtraj.models.MetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.MetConfig.check.html">runtraj.models.MetConfig.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.MetConfig.downloads.html">runtraj.models.MetConfig.downloads</a></li>
@@ -814,7 +811,7 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.MetConfig.settings.html">runtraj.models.MetConfig.settings</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.models.check_model.html">runtraj.models.check_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.testing.check_model.html">runtraj.testing.check_model</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.html">runtraj.models.hysplit.HysplitModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.name.html">runtraj.models.hysplit.HysplitModel.name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.check_releases.html">runtraj.models.hysplit.HysplitModel.check_releases</a></li>
@@ -827,6 +824,16 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.hysplit.HysplitModel.version.html">runtraj.models.hysplit.HysplitModel.version</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.html">runtraj.models.flexpart.FlexpartModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.name.html">runtraj.models.flexpart.FlexpartModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.check_releases.html">runtraj.models.flexpart.FlexpartModel.check_releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.release_rows.html">runtraj.models.flexpart.FlexpartModel.release_rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.run.html">runtraj.models.flexpart.FlexpartModel.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.sha256.html">runtraj.models.flexpart.FlexpartModel.sha256</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.version.html">runtraj.models.flexpart.FlexpartModel.version</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.flexpart.read_partoutput.html">runtraj.models.flexpart.read_partoutput</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.stages.Stage.html">runtraj.stages.Stage</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.config_class.html">runtraj.stages.Stage.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.stages.Stage.name.html">runtraj.stages.Stage.name</a></li>
@@ -855,7 +862,6 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../project.html">Project And Output</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.output.Output.html">runtraj.output.Output</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.clear_failure.html">runtraj.output.Output.clear_failure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.complete.html">runtraj.output.Output.complete</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.failure.html">runtraj.output.Output.failure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.failures.html">runtraj.output.Output.failures</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.output.Output.folder.html">runtraj.output.Output.folder</a></li>
@@ -908,7 +914,25 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.read_namelist.html">runtraj.models.hysplit.read_namelist</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.check_releases.html">runtraj.models.hysplit.releases.check_releases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.release_rows.html">runtraj.models.hysplit.releases.release_rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.releases.particles_per_step.html">runtraj.models.hysplit.releases.particles_per_step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.hysplit.FailureReason.html">runtraj.models.hysplit.FailureReason</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../flexpart.html">FLEXPART Integration</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.flexpart.FlexpartConfig.html">runtraj.models.flexpart.FlexpartConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartConfig.checkout.html">runtraj.models.flexpart.FlexpartConfig.checkout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartConfig.executable.html">runtraj.models.flexpart.FlexpartConfig.executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartConfig.UNRECORDED.html">runtraj.models.flexpart.FlexpartConfig.UNRECORDED</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.flexpart.FlexpartMetConfig.html">runtraj.models.flexpart.FlexpartMetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartMetConfig.model_post_init.html">runtraj.models.flexpart.FlexpartMetConfig.model_post_init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartMetConfig.open.html">runtraj.models.flexpart.FlexpartMetConfig.open</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartMetConfig.settings.html">runtraj.models.flexpart.FlexpartMetConfig.settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartMetConfig.source.html">runtraj.models.flexpart.FlexpartMetConfig.source</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.models.flexpart.flexpart_version.html">runtraj.models.flexpart.flexpart_version</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../exceptions.html">Exceptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -918,6 +942,7 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.exceptions.WorkerDied.html">runtraj.exceptions.WorkerDied</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.exceptions.HYSPLITNotFoundError.html">runtraj.exceptions.HYSPLITNotFoundError</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.exceptions.MissingClass.html">runtraj.exceptions.MissingClass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.exceptions.SchedulerError.html">runtraj.exceptions.SchedulerError</a></li>
 </ul>
 </details></li>
 </ul>

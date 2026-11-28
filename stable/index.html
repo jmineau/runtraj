@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtraj &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="_static/documentation_options.js?v=823c7775"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -65,7 +65,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="_static/searchtools.js"></script>
@@ -435,10 +435,15 @@ places particles are released from, some meteorology, and the settings to
 run under, and it runs the transport model once for each, on your computer
 or as a Slurm job array, and keeps the particles where you can find them
 again.</p>
-<p><a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT.php">HYSPLIT</a> is the transport model
-built in. Another model, and what is made from the particles after a run
-(a stage), plug in by the import path of a class. The footprints of
-<a class="reference external" href="https://jmineau.github.io/PYSTILT/">PYSTILT</a> are made by such a stage.</p>
+<p>You choose the transport model and install it yourself. runtraj supports
+two:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.ready.noaa.gov/HYSPLIT.php">HYSPLIT</a> (<a class="reference internal" href="reference/hysplit.html"><span class="doc">HYSPLIT Integration</span></a>)</p></li>
+<li><p><a class="reference external" href="https://www.flexpart.eu">FLEXPART 11</a> (<a class="reference internal" href="reference/flexpart.html"><span class="doc">FLEXPART Integration</span></a>)</p></li>
+</ul>
+<p>Another model, and what is made from the particles after a run (a stage),
+plug in by the import path of a class. PYSTILT’s footprint
+(<code class="docutils literal notranslate"><span class="pre">stilt.footprint.FootprintStage</span></code>) is one such stage.</p>
 <p>The particles follow the air, backward from a measurement or forward from
 a source, over hours to days, at the resolution of the meteorology you give
 it. They carry no mass and do not settle. A transform weights each

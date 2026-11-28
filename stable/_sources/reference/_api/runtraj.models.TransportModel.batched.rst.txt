@@ -1,6 +1,0 @@
-runtraj.models.TransportModel.batched
-=====================================
-
-.. currentmodule:: runtraj.models
-
-.. autoattribute:: TransportModel.batched

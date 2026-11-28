@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>runtraj.models.flexpart.config &#8212; runtraj 0.1.0a6</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=a2d71c7f" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
+
+    <script src="../../../../_static/documentation_options.js?v=823c7775"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/runtraj/models/flexpart/config';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="icon" href="../../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.0a6" />
+  
+    
+    <script src="../../../../_static/searchtools.js"></script>
+    <script src="../../../../_static/language_data.js"></script>
+    <script src="../../../../searchindex.js"></script>
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="runtraj">
+  <meta property="og:title" content="runtraj.models.flexpart.config">
+  <meta property="og:description" content="Run particle dispersion models at scale.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+<aside class="bd-header-announcement" aria-label="Announcement">
+  <div class="bd-header-announcement__content">runtraj is in alpha: names and options may change between releases.</div>
+</aside>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/logo.svg" class="logo__image only-light" alt="runtraj"/>
+    <img src="../../../../_static/logo_dark.svg" class="logo__image only-dark pst-js-only" alt="runtraj"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../guides/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../guides/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Development
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/runtraj" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.flexpart.config</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for runtraj.models.flexpart.config</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">FLEXPART's settings and its met.</span>
+
+<span class="sd">Settings keep FLEXPART's own names, lowercase (``loutstep``, ``ctl``,</span>
+<span class="sd">``lconvection``), as they appear in its ``COMMAND`` file, so a FLEXPART</span>
+<span class="sd">user finds them where they expect.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConfigDict</span><span class="p">,</span>
+    <span class="n">Field</span><span class="p">,</span>
+    <span class="n">PrivateAttr</span><span class="p">,</span>
+    <span class="n">field_validator</span><span class="p">,</span>
+    <span class="n">model_validator</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetConfig</span><span class="p">,</span> <span class="n">TransportConfig</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bounds</span>
+
+
+<div class="viewcode-block" id="FlexpartConfig">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.flexpart.FlexpartConfig.html#runtraj.models.flexpart.FlexpartConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FlexpartConfig</span><span class="p">(</span><span class="n">TransportConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    FLEXPART 11's settings for a runtraj run.</span>
+
+<span class="sd">    runtraj runs the executable of a FLEXPART checkout you built</span>
+<span class="sd">    (``directory``) and never ships FLEXPART, which is GPL-3. Each run</span>
+<span class="sd">    writes FLEXPART's input files into its workdir, with particle output</span>
+<span class="sd">    every ``loutstep`` seconds and no gridded output. The SHA-256 of the</span>
+<span class="sd">    executable is part of the run's identity, as ``hycs_std``'s is for</span>
+<span class="sd">    HYSPLIT; the checkout's version is recorded beside it.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">)</span>
+
+    <span class="c1">#: Where the build is changes no particle; its SHA-256 is hashed instead.</span>
+    <span class="n">UNRECORDED</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">"directory"</span><span class="p">})</span>
+
+    <span class="n">directory</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Your FLEXPART 11 checkout: runtraj runs ``src/FLEXPART`` (built "</span>
+            <span class="s2">"with ``make eta=no``) or ``src/FLEXPART_ETA`` (``make eta=yes``), "</span>
+            <span class="s2">"and links the land-use and species files FLEXPART reads from "</span>
+            <span class="s2">"``options/``. Needed to run; a stored run's settings leave it out."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">eta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Run the eta build, ``src/FLEXPART_ETA``, which keeps particles on "</span>
+            <span class="s2">"ECMWF's model levels and is the build FLEXPART's documentation "</span>
+            <span class="s2">"intends for ECMWF input (ERA5 from flex_extract). Off runs "</span>
+            <span class="s2">"``src/FLEXPART``, the meter build, which reads ERA5 too. Either "</span>
+            <span class="s2">"build needs ``numpf = 3`` in "</span>
+            <span class="s2">"``par_mod.f90`` to read flex_extract's three precipitation fields."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">numpar</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Number of particles released. A multipoint release splits them "</span>
+            <span class="s2">"between its points."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">loutstep</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">3600</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span><span class="s2">"Seconds between particle outputs (``LOUTSTEP``)."</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">lsynctime</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">900</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Seconds between the times all particles are synchronized "</span>
+            <span class="s2">"(``LSYNCTIME``). It must divide ``loutstep`` at least twice."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">ctl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">-</span><span class="mf">5.0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Time step control (``CTL``): above 1, the boundary-layer time "</span>
+            <span class="s2">"step is the Lagrangian time scale over ``ctl``; negative uses "</span>
+            <span class="s2">"``lsynctime``."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">ifine</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">4</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Reduction of the time step for vertical motion (``IFINE``), used "</span>
+            <span class="s2">"only when ``ctl`` is above 1."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">lconvection</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Convection scheme (``LCONVECTION``): 1 on, 0 off."</span>
+    <span class="p">)</span>
+    <span class="n">lturbulence</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Turbulence scheme (``LTURBULENCE``): 1 on, 0 off."</span>
+    <span class="p">)</span>
+    <span class="n">lsubgrid</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Raise the mixed layer for subgrid terrain (``LSUBGRID``): 1 on, 0 off."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">cblflag</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Skewed rather than Gaussian turbulence in the convective boundary "</span>
+            <span class="s2">"layer (``CBLFLAG``): 1 on, 0 off. It needs short time steps: "</span>
+            <span class="s2">"``ctl`` of 5 or more, ``ctl`` times ``ifine`` of 50 or more, and "</span>
+            <span class="s2">"``lsynctime`` of 1200 s or less. FLEXPART changes the three "</span>
+            <span class="s2">"itself otherwise, so runtraj refuses them."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"OpenMP threads. FLEXPART seeds each thread's random numbers with "</span>
+            <span class="s2">"a fixed number, so the thread count changes the particles and is "</span>
+            <span class="s2">"recorded with the run. A run with one thread repeats exactly; "</span>
+            <span class="s2">"a run with several repeats only in distribution. Each release runs FLEXPART with this many "</span>
+            <span class="s2">"threads, whatever ``OMP_NUM_THREADS`` is, so ask for ``threads`` "</span>
+            <span class="s2">"cores for every release that runs at once (``cpus``)."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"seed"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_no_seed</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a seed, which FLEXPART has no setting for."""</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"FLEXPART has no seed: it seeds each OpenMP thread with a fixed "</span>
+                <span class="s2">"number, so a run with threads: 1 repeats exactly."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">seed</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"numpar"</span><span class="p">,</span> <span class="s2">"loutstep"</span><span class="p">,</span> <span class="s2">"lsynctime"</span><span class="p">,</span> <span class="s2">"threads"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_positive</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Refuse a count or a step that is not positive."""</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"must be 1 or more."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"after"</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FlexpartConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Check that ``loutstep`` is a multiple of ``lsynctime`` of at least two, and that ``cblflag`` has the time steps FLEXPART would force."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loutstep</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">lsynctime</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"lsynctime (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lsynctime</span><span class="si">}</span><span class="s2"> s) must divide loutstep "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">loutstep</span><span class="si">}</span><span class="s2"> s)."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loutstep</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lsynctime</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"loutstep (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">loutstep</span><span class="si">}</span><span class="s2"> s) must be at least twice lsynctime "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lsynctime</span><span class="si">}</span><span class="s2"> s): FLEXPART stops with 'INTERVAL BETWEEN "</span>
+                <span class="s2">"CONCENTRATION FIELDS MUST BE AT LEAST TWICE THE SYNCHRONISATION "</span>
+                <span class="s2">"INTERVAL'."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cblflag</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctl</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctl</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ifine</span> <span class="o">&lt;</span> <span class="mi">50</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">lsynctime</span> <span class="o">&gt;</span> <span class="mi">1200</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"cblflag: 1 needs ctl of 5 or more, ctl * ifine of 50 or more, "</span>
+                <span class="s2">"and lsynctime of 1200 s or less (such as ctl: 5, ifine: 10). "</span>
+                <span class="s2">"FLEXPART changes them itself otherwise, and the run's settings "</span>
+                <span class="s2">"would not be the ones it ran with."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">checkout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The FLEXPART checkout, ``directory``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If ``directory`` is not set.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Set directory to your FLEXPART 11 checkout to run FLEXPART."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">executable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The FLEXPART build this config runs: ``src/FLEXPART_ETA`` with ``eta``, else ``src/FLEXPART``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkout</span> <span class="o">/</span> <span class="s2">"src"</span> <span class="o">/</span> <span class="p">(</span><span class="s2">"FLEXPART_ETA"</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="k">else</span> <span class="s2">"FLEXPART"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="flexpart_version">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.flexpart.flexpart_version.html#runtraj.models.flexpart.flexpart_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flexpart_version</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the version of the FLEXPART checkout in *directory*.</span>
+
+<span class="sd">    A ``version`` file in the checkout wins; otherwise the git commit, with</span>
+<span class="sd">    ``-dirty`` when the source has uncommitted changes. It is recorded with</span>
+<span class="sd">    a run but not hashed: the executable's SHA-256 is.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    FileNotFoundError</span>
+<span class="sd">        If the checkout has neither a ``version`` file nor git history.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">"version"</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="s2">"version"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">commit</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="p">),</span> <span class="s2">"describe"</span><span class="p">,</span> <span class="s2">"--always"</span><span class="p">,</span> <span class="s2">"--dirty"</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="si">}</span><span class="s2"> has no 'version' file and is not a git checkout. Put a "</span>
+            <span class="s2">"'version' file in it holding the FLEXPART version (such as "</span>
+            <span class="s2">"11.0), so its runs are told apart from other builds'."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"git </span><span class="si">{</span><span class="n">commit</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<span class="c1">#: Why a ``flexpart`` block refuses GFS. FLEXPART 11 works out GFS's surface</span>
+<span class="c1">#: heat flux and stress from the 2 m and 10 m values against its lowest</span>
+<span class="c1">#: level, which GFS diagnoses from that same layer, so they come out near</span>
+<span class="c1">#: zero: at a mountain site at midday, 0 W m-2 and 0.0001 N m-2 against</span>
+<span class="c1">#: ERA5's -228 W m-2 and 0.40 N m-2. With no turbulence the particles</span>
+<span class="c1">#: stayed at a median 8 m in a 1000 m mixed layer.</span>
+<span class="n">GFS_REFUSED</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"On current GFS pgrb2 files FLEXPART 11 derives the surface heat flux and "</span>
+    <span class="s2">"stress near zero (the files hold no surface fluxes, so it derives them from "</span>
+    <span class="s2">"the 2 m and 10 m values), so particles released near the ground stay near "</span>
+    <span class="s2">"it. Use ERA5, as flex_extract writes it."</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="FlexpartMetConfig">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.flexpart.FlexpartMetConfig.html#runtraj.models.flexpart.FlexpartMetConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FlexpartMetConfig</span><span class="p">(</span><span class="n">MetConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The meteorology FLEXPART reads: a directory of GRIB files.</span>
+
+<span class="sd">    FLEXPART reads each file as ``AVAILABLE`` lists it, by valid time; runtraj</span>
+<span class="sd">    reads the valid time from each file's first message, so the names do</span>
+<span class="sd">    not matter. Which weather model the files come from is read from the</span>
+<span class="sd">    first file too (:meth:`source`): ERA5 as flex_extract writes it (``EA*``</span>
+<span class="sd">    files on model levels) runs, and GFS is refused, because on current GFS</span>
+<span class="sd">    ``pgrb2`` files FLEXPART 11 derives the surface heat flux and stress near</span>
+<span class="sd">    zero, so particles released near the ground stay near it</span>
+<span class="sd">    (:doc:`/reference/flexpart`).</span>
+
+<span class="sd">    A string in ``config.yaml`` is the ``directory``: ``era5: /path/to/era5``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">"forbid"</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">directory</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Directory of the GRIB files. A relative path starts from the "</span>
+            <span class="s2">"project directory."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"*"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"Glob that picks the GRIB files in ``directory``. A file that "</span>
+            <span class="s2">"holds no GRIB message, such as an index cfgrib wrote, is left out."</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"before"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_folder</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Take a bare string or path as the directory."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">"directory"</span><span class="p">:</span> <span class="n">data</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_first_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the first GRIB file that matches ``pattern`` in ``directory``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If ``directory`` holds no GRIB file that matches ``pattern``.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.flexpart.met</span><span class="w"> </span><span class="kn">import</span> <span class="n">holds_grib</span>
+
+        <span class="n">files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">holds_grib</span><span class="p">(</span><span class="n">p</span><span class="p">)),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">first</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"No GRIB files match </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">first</span>
+
+<div class="viewcode-block" id="FlexpartMetConfig.source">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.flexpart.FlexpartMetConfig.source.html#runtraj.models.flexpart.FlexpartMetConfig.source">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the weather model the files come from, ``era5``, read from the first file once, and kept.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If ``directory`` holds no GRIB file that matches ``pattern``.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the files are GFS (FLEXPART 11 derives its surface fluxes</span>
+<span class="sd">            near zero), or are not ERA5.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.flexpart.met</span><span class="w"> </span><span class="kn">import</span> <span class="n">grib_source</span>
+
+            <span class="n">source</span> <span class="o">=</span> <span class="n">grib_source</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_first_file</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">"gfs"</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="si">}</span><span class="s2"> holds GFS. </span><span class="si">{</span><span class="n">GFS_REFUSED</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span></div>
+
+
+<div class="viewcode-block" id="FlexpartMetConfig.settings">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.flexpart.FlexpartMetConfig.settings.html#runtraj.models.flexpart.FlexpartMetConfig.settings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return what a run records of this met: its source and its grid.</span>
+
+<span class="sd">        Both are read from the first GRIB file: the source by :meth:`source`,</span>
+<span class="sd">        and the grid, such as ``0.5x0.5 deg, 720x361``, so ERA5 on two grids</span>
+<span class="sd">        runs in different settings folders. Where the files are kept is not</span>
+<span class="sd">        recorded.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If ``directory`` holds no GRIB file that matches ``pattern``.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the files are not ERA5 (:meth:`source`).</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.flexpart.met</span><span class="w"> </span><span class="kn">import</span> <span class="n">grib_grid</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">(),</span> <span class="s2">"grid"</span><span class="p">:</span> <span class="n">grib_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_first_file</span><span class="p">())}</span></div>
+
+
+<div class="viewcode-block" id="FlexpartMetConfig.open">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.flexpart.FlexpartMetConfig.open.html#runtraj.models.flexpart.FlexpartMetConfig.open">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">files</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">bounds</span><span class="p">:</span> <span class="n">Bounds</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the GRIB *files* a run read as one Dataset in :func:`arlmet.open_dataset`'s layout.</span>
+
+<span class="sd">        The met is read at the particles this way (:mod:`runtraj.sampling`).</span>
+<span class="sd">        The files are ERA5, since this config refuses any other. ERA5 files,</span>
+<span class="sd">        as flex_extract writes them, are converted with</span>
+<span class="sd">        :func:`arlmet.converters.from_flex_extract`</span>
+<span class="sd">        (:func:`~runtraj.models.flexpart.met.open_era5`); they are already</span>
+<span class="sd">        cropped to their domain, so *bounds* is not used, and they hold no</span>
+<span class="sd">        boundary layer height.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.flexpart.met</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_era5</span>
+
+        <span class="k">return</span> <span class="n">open_era5</span><span class="p">(</span><span class="n">files</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"FlexpartConfig"</span><span class="p">,</span> <span class="s2">"FlexpartMetConfig"</span><span class="p">,</span> <span class="s2">"flexpart_version"</span><span class="p">]</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.24.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

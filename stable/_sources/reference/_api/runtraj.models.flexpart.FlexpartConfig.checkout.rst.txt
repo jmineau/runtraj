@@ -1,0 +1,6 @@
+runtraj.models.flexpart.FlexpartConfig.checkout
+===============================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+.. autoproperty:: FlexpartConfig.checkout

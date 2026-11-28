@@ -1,0 +1,5 @@
+runtraj.execution.Backend.describe
+==================================
+
+.. currentmodule:: runtraj.execution
+.. automethod:: Backend.describe

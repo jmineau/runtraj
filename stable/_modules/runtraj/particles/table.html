@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.particles.table &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.particles.table &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -479,10 +479,12 @@
 
 <span class="c1">#: The columns every particle table has, as a particle file stores them:</span>
 <span class="c1">#: what a transport model's run must return. ``particle`` is the number the</span>
-<span class="c1">#: transport model gives the particle, ``age`` the minutes since release (negative for a</span>
+<span class="c1">#: transport model gives the particle, ``age`` the seconds since release (negative for a</span>
 <span class="c1">#: backward run), ``lon`` and ``lat`` the position in degrees, and ``zagl``</span>
-<span class="c1">#: the height above ground in meters. The reference page on the particle</span>
-<span class="c1">#: table says what the other columns are.</span>
+<span class="c1">#: the height above ground in meters. ``particle`` and ``age`` are int32; the</span>
+<span class="c1">#: float columns are float32 or float64, as the transport model computed</span>
+<span class="c1">#: them (float64 here, which is what a read gives back). The reference page</span>
+<span class="c1">#: on the particle table says what the other columns are.</span>
 <span class="n">PARTICLE_SCHEMA</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span>
     <span class="p">[</span>
         <span class="p">(</span><span class="s2">"particle"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">()),</span>
@@ -495,6 +497,17 @@
 
 <span class="c1">#: Particle columns stored as int32 rather than float64.</span>
 <span class="n">_INT_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"age"</span><span class="p">,</span> <span class="s2">"particle"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">float64_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Schema</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Schema</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return *schema* with each float32 column float64, as a read gives it."""</span>
+    <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">with_type</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">float64</span><span class="p">())</span> <span class="k">if</span> <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_float32</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">type</span><span class="p">)</span> <span class="k">else</span> <span class="n">f</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">schema</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -652,6 +665,32 @@
 <span class="p">)</span>
 
 
+<span class="c1">#: The message for a stored file whose ``temp`` is not the lowest-level temperature.</span>
+<span class="n">OLD_TEMP</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"</span><span class="si">{what}</span><span class="s2"> holds the air temperature at the particle or trajectory as "</span>
+    <span class="s2">"``temp``, as files were written before it was named ``temz`` (``temp`` "</span>
+    <span class="s2">"is the lowest model level), and is not read. Delete it and run again to make it with "</span>
+    <span class="s2">"the current names: its settings folder is the same, so the simulation "</span>
+    <span class="s2">"counts as unfinished once the file is gone."</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_temp_name</span><span class="p">(</span>
+    <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Refuse a FLEXPART particle file that names the particle's temperature ``temp``.</span>
+
+<span class="sd">    Files written before ``temz`` hold it as ``temp``, where a HYSPLIT file's</span>
+<span class="sd">    ``temp`` is the lowest model level: reading one as the other would be</span>
+<span class="sd">    wrong without a sign. A FLEXPART file has no other ``temp`` than that.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"temp"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"runtraj:settings"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">])</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"flexpart"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">OLD_TEMP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="n">what</span><span class="p">))</span>
+
+
 <div class="viewcode-block" id="read_particles">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.read_particles.html#runtraj.particles.read_particles">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_particles</span><span class="p">(</span>
@@ -661,9 +700,12 @@
 <span class="sd">    Read a particle file.</span>
 
 <span class="sd">    It needs nothing but the file: the release time in its metadata gives</span>
-<span class="sd">    the ``time`` column (UTC) back, from ``age``. ``age`` and ``particle`` come back as</span>
-<span class="sd">    float64, as HYSPLIT writes them. :func:`particles_metadata` reads the</span>
-<span class="sd">    release and settings.</span>
+<span class="sd">    the ``time`` column (UTC) back, from ``age``. ``age``, ``particle``, and any</span>
+<span class="sd">    float32 column come back as float64, whatever the model stored.</span>
+<span class="sd">    :func:`particles_metadata` reads the release and settings. A HYSPLIT</span>
+<span class="sd">    run's internal grid, which the file records, comes back in</span>
+<span class="sd">    ``attrs["internal_grid"]`` (``(nlvl, aa, bb, cc)``), where</span>
+<span class="sd">    :func:`runtraj.sampling.sample_met` reads it.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -685,6 +727,8 @@
     <span class="k">with</span> <span class="n">readable</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
         <span class="n">pf</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">ParquetFile</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="n">stored</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">names</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">check_temp_name</span><span class="p">(</span><span class="n">stored</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"The file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="c1"># The output directory adds a ``release`` column for scans of the</span>
         <span class="c1"># whole tree. One file is one release, so it is not read here.</span>
         <span class="n">wanted</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="n">stored</span> <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">columns</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s2">"release"</span><span class="p">]</span>
@@ -692,15 +736,17 @@
         <span class="n">read</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">wanted</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">stored</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">want_time</span> <span class="ow">and</span> <span class="s2">"age"</span> <span class="ow">in</span> <span class="n">stored</span> <span class="ow">and</span> <span class="s2">"age"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">read</span><span class="p">:</span>
             <span class="n">read</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"age"</span><span class="p">)</span>  <span class="c1"># time is built from it</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">read</span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+        <span class="n">stored_table</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">read</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">stored_table</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">float64_schema</span><span class="p">(</span><span class="n">stored_table</span><span class="o">.</span><span class="n">schema</span><span class="p">))</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_INT_COLUMNS</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"float64"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="sa">b</span><span class="s2">"runtraj:internal_grid"</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"internal_grid"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="sa">b</span><span class="s2">"runtraj:internal_grid"</span><span class="p">]))</span>
     <span class="k">if</span> <span class="n">want_time</span> <span class="ow">and</span> <span class="s2">"age"</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">release</span> <span class="o">=</span> <span class="n">stored_release</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="n">data</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span>
-            <span class="n">data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"min"</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"s"</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span></div>
 
@@ -736,8 +782,42 @@
         <span class="n">release_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">([</span><span class="n">parse_release_id</span><span class="p">(</span><span class="n">r</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">])</span>
         <span class="n">data</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
             <span class="n">release_time</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">codes</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">index</span>
-        <span class="p">)</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"min"</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"s"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">write_release_file</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">release</span><span class="p">:</span> <span class="n">Release</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">met_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="n">UPath</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Write *data*, one release's rows, to a Parquet file that holds the release, the settings and the met files.</span>
+
+<span class="sd">    A ``release`` column, first, holds the release id, so a scan of many</span>
+<span class="sd">    files can tell releases apart. The release, the run's *settings* and</span>
+<span class="sd">    the *met_files* go in the file's metadata, with *metadata*. The path</span>
+<span class="sd">    written to is returned.</span>
+<span class="sd">    """</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">preserve_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"release"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">dictionary</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">(),</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">())),</span>
+        <span class="n">pa</span><span class="o">.</span><span class="n">DictionaryArray</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
+            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">release_metadata</span><span class="p">(</span><span class="n">release</span><span class="p">),</span>
+        <span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+        <span class="sa">b</span><span class="s2">"runtraj:met_files"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">met_files</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+        <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">write_parquet</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">replace_schema_metadata</span><span class="p">(</span><span class="n">meta</span><span class="p">),</span> <span class="n">location</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="write_particles">
@@ -754,10 +834,12 @@
 <span class="sd">    Write a particle table to a Parquet file that :func:`read_particles` reads alone.</span>
 
 <span class="sd">    ``age`` and ``particle`` are stored as int32, and ``time`` is left out</span>
-<span class="sd">    since it is the release time plus ``age``. A ``release`` column holds</span>
+<span class="sd">    since it is the release time plus ``age``. Float columns are stored as</span>
+<span class="sd">    the model computed them, float32 or float64. A ``release`` column holds</span>
 <span class="sd">    the release id, so a scan of many files can tell releases apart. The</span>
 <span class="sd">    release, the run's settings, and the met files go in the file's</span>
-<span class="sd">    metadata, so the file reads alone.</span>
+<span class="sd">    metadata, so the file reads alone, and so does ``particles.attrs["internal_grid"]``</span>
+<span class="sd">    when it is there (a HYSPLIT run's, :func:`read_particles`).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -786,29 +868,20 @@
 <span class="sd">        If ``age`` or ``particle`` holds a value that is not a whole number.</span>
 <span class="sd">    """</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">particles</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"internal_grid"</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">b</span><span class="s2">"runtraj:internal_grid"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">particles</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"internal_grid"</span><span class="p">])</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+            <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>
+        <span class="p">}</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_INT_COLUMNS</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Particle column </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is not whole numbers."</span><span class="p">)</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)})</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">preserve_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span>
-        <span class="mi">0</span><span class="p">,</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"release"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">dictionary</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">(),</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">())),</span>
-        <span class="n">pa</span><span class="o">.</span><span class="n">DictionaryArray</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
-            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)),</span>
-            <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">)]),</span>
-        <span class="p">),</span>
-    <span class="p">)</span>
-    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="o">**</span><span class="n">release_metadata</span><span class="p">(</span><span class="n">release</span><span class="p">),</span>
-        <span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
-        <span class="sa">b</span><span class="s2">"runtraj:met_files"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">met_files</span><span class="p">])</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
-        <span class="o">**</span><span class="p">(</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}),</span>
-    <span class="p">}</span>
-    <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">replace_schema_metadata</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">write_parquet</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">location</span><span class="p">(</span><span class="n">path</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">write_release_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">met_files</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span></div>
 
 
 
@@ -862,6 +935,32 @@
 <span class="n">RELEASE_ROW_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"height"</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">column_release_rows</span><span class="p">(</span>
+    <span class="n">release</span><span class="p">:</span> <span class="n">ColumnRelease</span><span class="p">,</span> <span class="n">n_particles</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_slabs</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the release rows of a column's particles ``1`` to *n_particles*, released bottom to top.</span>
+
+<span class="sd">    The column is split into *n_slabs* slabs of equal depth, and particle</span>
+<span class="sd">    *k* starts at the center of slab ``(k - 1) % n_slabs`` (counted from</span>
+<span class="sd">    the bottom): a transport model that releases the slabs once, as</span>
+<span class="sd">    FLEXPART does, has *n_slabs* equal to *n_particles*, and one that</span>
+<span class="sd">    releases them at every time step, as HYSPLIT does, fewer.</span>
+<span class="sd">    """</span>
+    <span class="n">particle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_particles</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">slab</span> <span class="o">=</span> <span class="p">(</span><span class="n">particle</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">n_slabs</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">top</span> <span class="o">-</span> <span class="n">release</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_slabs</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"particle"</span><span class="p">:</span> <span class="n">particle</span><span class="p">,</span>
+            <span class="s2">"lon"</span><span class="p">:</span> <span class="n">release</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span>
+            <span class="s2">"lat"</span><span class="p">:</span> <span class="n">release</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span>
+            <span class="s2">"height"</span><span class="p">:</span> <span class="n">release</span><span class="o">.</span><span class="n">bottom</span> <span class="o">+</span> <span class="p">(</span><span class="n">slab</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">depth</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">RELEASE_ROW_COLUMNS</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="add_release_heights">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.particles.add_release_heights.html#runtraj.particles.add_release_heights">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">add_release_heights</span><span class="p">(</span>
@@ -880,9 +979,13 @@
 <span class="sd">    at. For a column release it is the center of the particle's slab: the</span>
 <span class="sd">    column is split into slabs of equal depth, one per release row, and the</span>
 <span class="sd">    slab is what the particle stands for, not the random height inside it.</span>
-<span class="sd">    So the release rows must hold every particle released, including any</span>
-<span class="sd">    missing from *particles*, such as one that left the met's domain before</span>
-<span class="sd">    its first row.</span>
+<span class="sd">    A column's rows come from *release_rows* whenever it is given, even when</span>
+<span class="sd">    the particles have rows at ``age = 0``: a particle does not start at the</span>
+<span class="sd">    height its row at ``age = 0`` reports, so near a slab's edge that row can</span>
+<span class="sd">    fall in the next slab, which then holds two particles while its own</span>
+<span class="sd">    holds none. So the release rows must hold every particle released,</span>
+<span class="sd">    including any missing from *particles*, such as one that left the met's</span>
+<span class="sd">    domain before its first row.</span>
 
 <span class="sd">    A point release's particles are returned as they are.</span>
 
@@ -897,9 +1000,10 @@
 <span class="sd">        :data:`RELEASE_ROW_COLUMNS`, one row per particle released: where it</span>
 <span class="sd">        started, its ``height`` in the release's vertical reference. It</span>
 <span class="sd">        holds each particle of *particles* once, and may hold particles</span>
-<span class="sd">        released but not in *particles*. Used when the particles have no</span>
-<span class="sd">        row at ``age = 0``, or their heights above sea level cannot be known</span>
-<span class="sd">        without ``zsfc``. It returns ``None`` when it does not know, as</span>
+<span class="sd">        released but not in *particles*. Used for a column always, and for</span>
+<span class="sd">        a multipoint release when the particles have no row at ``age = 0``,</span>
+<span class="sd">        or their heights above sea level cannot be known without ``zsfc``.</span>
+<span class="sd">        It returns ``None`` when it does not know, as</span>
 <span class="sd">        :meth:`runtraj.models.TransportModel.release_rows` does by default.</span>
 
 <span class="sd">    Raises</span>
@@ -932,6 +1036,12 @@
     <span class="n">release_rows</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">Release</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return each particle's release row, with :data:`RELEASE_ROW_COLUMNS`."""</span>
+    <span class="c1"># A column's slab is its particle's number, which the model's release_rows</span>
+    <span class="c1"># knows; a row at age = 0 is only near the height the model chose.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">release</span><span class="p">,</span> <span class="n">ColumnRelease</span><span class="p">)</span> <span class="ow">and</span> <span class="n">release_rows</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">given</span> <span class="o">=</span> <span class="n">release_rows</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">release</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">given</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_checked_rows</span><span class="p">(</span><span class="n">given</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">release_rows</span><span class="p">)</span>
     <span class="n">released</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s2">"particle"</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">released</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">released</span><span class="p">)</span> <span class="o">==</span> <span class="n">p</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">():</span>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.models.hysplit.tdump &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.models.hysplit.tdump &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -430,9 +430,6 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../../models.html" class="nav-link">runtraj.models</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.hysplit.tdump</span></li>
   </ul>
 </nav>
@@ -468,9 +465,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">TRAJECTORY_DIAGNOSTICS</span>
-
-<span class="c1">#: What :func:`read_tdump` resolves a two-digit year with: years below this are 20YY, the rest 19YY.</span>
-<span class="n">_CENTURY_PIVOT</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.control</span><span class="w"> </span><span class="kn">import</span> <span class="n">_year</span>
 
 <span class="c1">#: The trajectory table's column for each of HYSPLIT's labels in the file.</span>
 <span class="c1">#: A label not listed here keeps HYSPLIT's name, in lowercase.</span>
@@ -505,7 +500,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    pandas.DataFrame</span>
 <span class="sd">        One row per trajectory per output time, in the file's order, with</span>
-<span class="sd">        ``trajectory``, ``time`` (UTC), ``age`` (minutes since the</span>
+<span class="sd">        ``trajectory``, ``time`` (UTC), ``age`` (seconds since the</span>
 <span class="sd">        trajectory's first row, which is where it started), ``lon``,</span>
 <span class="sd">        ``lat``, ``zagl``, ``pres`` (hPa), and a column for each other</span>
 <span class="sd">        value the run wrote (:data:`TDUMP_COLUMNS`). Its ``attrs`` hold</span>
@@ -556,10 +551,9 @@
     <span class="n">raw</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">widths</span><span class="p">)))</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
         <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"coerce"</span>
     <span class="p">)</span>
-    <span class="n">year</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
     <span class="n">time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span>
         <span class="p">{</span>
-            <span class="s2">"year"</span><span class="p">:</span> <span class="n">year</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">year</span> <span class="o">&lt;</span> <span class="n">_CENTURY_PIVOT</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">1900</span><span class="p">),</span>
+            <span class="s2">"year"</span><span class="p">:</span> <span class="n">raw</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_year</span><span class="p">),</span>
             <span class="s2">"month"</span><span class="p">:</span> <span class="n">raw</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
             <span class="s2">"day"</span><span class="p">:</span> <span class="n">raw</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
             <span class="s2">"hour"</span><span class="p">:</span> <span class="n">raw</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
@@ -569,7 +563,7 @@
     <span class="p">)</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"trajectory"</span><span class="p">:</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span> <span class="s2">"time"</span><span class="p">:</span> <span class="n">time</span><span class="p">})</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"trajectory"</span><span class="p">)[</span><span class="s2">"time"</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s2">"first"</span><span class="p">)</span>
-    <span class="n">table</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">table</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)</span>
+    <span class="n">table</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">"lon"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">"zagl"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.models.hysplit.driver &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.models.hysplit.driver &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -430,9 +430,6 @@
     
     <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../../models.html" class="nav-link">runtraj.models</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.models.hysplit.driver</span></li>
   </ul>
 </nav>
@@ -464,25 +461,29 @@
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">functools</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj._process</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_log</span><span class="p">,</span> <span class="n">run_program</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">HYSPLITNotFoundError</span><span class="p">,</span> <span class="n">SimulationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit.config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CONCENTRATION_ONLY_SETTINGS</span><span class="p">,</span>
     <span class="n">FIXED_SETUP</span><span class="p">,</span>
     <span class="n">FIXED_TRAJECTORY_SETUP</span><span class="p">,</span>
+    <span class="n">PARTICLE_COLUMNS</span><span class="p">,</span>
     <span class="n">PARTICLES_SETTINGS</span><span class="p">,</span>
     <span class="n">TRAJECTORY_ONLY_SETTINGS</span><span class="p">,</span>
     <span class="n">TRAJECTORY_SETUP_SETTINGS</span><span class="p">,</span>
@@ -497,6 +498,7 @@
     <span class="n">failure_in</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.hysplit.namelist</span><span class="w"> </span><span class="kn">import</span> <span class="n">NameList</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.releases.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">_EXACT_FLOATS</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">arlmet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Grid</span>
@@ -518,6 +520,22 @@
 <span class="n">WINDERR_FILE</span> <span class="o">=</span> <span class="s2">"WINDERR"</span>
 <span class="n">ZIERR_FILE</span> <span class="o">=</span> <span class="s2">"ZIERR"</span>
 <span class="n">ZICONTROL_FILE</span> <span class="o">=</span> <span class="s2">"ZICONTROL"</span>
+<span class="c1">#: The first HYSPLIT version whose ``hycs_std`` adds 2 to ``WINDERRTF`` once</span>
+<span class="c1">#: it has read ``ZICONTROL`` (:func:`winderrtf`).</span>
+<span class="n">ZICONTROL_ADDS_TWO</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="c1">#: The first HYSPLIT version whose ``hyts_std`` makes every hour of a run a full</span>
+<span class="c1">#: hour and writes every ``TOUT`` minutes from the start. Before it, a run that</span>
+<span class="c1">#: starts off the hour ends its first hour at the next clock hour (5.4.0 changed</span>
+<span class="c1">#: ``hymodelt.F``).</span>
+<span class="n">TRAJECTORY_FULL_HOURS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="c1">#: The first HYSPLIT version whose ``hycs_std`` checks ``WINDERRTF`` against</span>
+<span class="c1">#: ``IDSP`` before the run, and sets ``WINDERRTF`` to 0 (the wind errors off)</span>
+<span class="c1">#: unless ``IDSP`` is 2 (:func:`wind_error_refusal`).</span>
+<span class="n">WINDERR_NEEDS_IDSP</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="c1">#: The first HYSPLIT version with ``KRAND`` 10 to 13 (``hymodelc.F:979-980`` in</span>
+<span class="c1">#: 5.1.0). Before it ``hycs_std`` draws them as ``KRAND=4`` without saying so</span>
+<span class="c1">#: (:func:`krand_refusal`).</span>
+<span class="n">KRAND_10_TO_13</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 <span class="c1">#: The file ``hycs_std`` reads the conversions of ``ICHEM=2`` from.</span>
 <span class="n">CHEMRATE_FILE</span> <span class="o">=</span> <span class="s2">"CHEMRATE.TXT"</span>
 <span class="n">LOG_FILE</span> <span class="o">=</span> <span class="s2">"hysplit.log"</span>
@@ -525,6 +543,11 @@
 <span class="n">WARNING_FILE</span> <span class="o">=</span> <span class="s2">"WARNING"</span>
 <span class="c1">#: HYSPLIT's own file of progress and error messages.</span>
 <span class="n">MESSAGE_FILE</span> <span class="o">=</span> <span class="s2">"MESSAGE"</span>
+<span class="c1">#: The line ``MESSAGE`` holds for the run's internal levels, in the same form</span>
+<span class="c1">#: from HYSPLIT 5.0.2 to 5.4.2: ``nlvl, aa, bb, cc``.</span>
+<span class="n">_INTERNAL_GRID_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"Internal grid parameters \(nlvl,aa,bb,cc\):\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)"</span>
+<span class="p">)</span>
 <span class="c1">#: How many lines of ``MESSAGE`` a run that ended badly adds to its log.</span>
 <span class="n">MESSAGE_TAIL_LINES</span> <span class="o">=</span> <span class="mi">20</span>
 
@@ -632,6 +655,80 @@
 
 
 
+<span class="c1">#: What ``hycs_std`` prints on its first lines: ``HYSPLIT version: hysplit.v5.1.0``.</span>
+<span class="n">_VERSION_LINE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"HYSPLIT version:\s*(\S+)"</span><span class="p">)</span>
+
+<span class="c1">#: Seconds ``hycs_std`` gets to print its version; it stops at once without ``CONTROL``.</span>
+<span class="n">_VERSION_TIMEOUT</span> <span class="o">=</span> <span class="mi">30</span>
+
+<span class="c1">#: The release number in a version ``hycs_std`` prints, such as ``5.1.0`` in ``hysplit.v5.1.0``.</span>
+<span class="n">_VERSION_NUMBER</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(\d+)\.(\d+)\.(\d+)"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hysplit_version</span><span class="p">(</span>
+    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">program</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hycs_std"</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the version the ``hycs_std`` of *directory*, or else on ``PATH``, prints when it starts.</span>
+
+<span class="sd">    *program* names another HYSPLIT program to ask, such as ``hyts_std``,</span>
+<span class="sd">    which prints the same line.</span>
+
+<span class="sd">    ``hycs_std`` prints a line such as ``HYSPLIT version: hysplit.v5.1.0``</span>
+<span class="sd">    before it reads its input; this returns ``hysplit.v5.1.0``. It runs the</span>
+<span class="sd">    binary for a moment in an empty temporary directory, where it stops for</span>
+<span class="sd">    want of a ``CONTROL`` file. The version is recorded with a run's</span>
+<span class="sd">    settings, but it is not what tells two builds apart: the SHA-256 of</span>
+<span class="sd">    ``hycs_std`` is (:meth:`~runtraj.models.hysplit.HysplitModel.sha256`). Two builds of one</span>
+<span class="sd">    release print the same version, and CHPC's ``hysplit/5.2.3`` module</span>
+<span class="sd">    prints ``hysplit.v5.2.2``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        The version, or ``None`` when ``hycs_std`` printed none or could</span>
+<span class="sd">        not be run here.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HYSPLITNotFoundError</span>
+<span class="sd">        If there is no such program (:func:`find_program`).</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">directory</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stamp</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return *path*, resolved, with its modification time and size, the key of the caches that read a program once."""</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="n">stat</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_mtime_ns</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span>
+
+
+<span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_printed_version</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mtime_ns</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the version the ``hycs_std`` at *path* prints, read once per file."""</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"runtraj-version-"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">path</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="n">tmp</span><span class="p">,</span>
+                <span class="n">env</span><span class="o">=</span><span class="n">hysplit_environment</span><span class="p">(),</span>
+                <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>  <span class="c1"># not executable here, such as another platform's build</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">_VERSION_TIMEOUT</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_VERSION_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="kc">None</span>
+
+
 <div class="viewcode-block" id="find_hycs_std">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.find_hycs_std.html#runtraj.models.hysplit.find_hycs_std">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_hycs_std</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -706,16 +803,39 @@
     <span class="k">return</span> <span class="sa">b</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
 
-<span class="c1">#: HYSPLIT's names for the columns the particle table names otherwise</span>
-<span class="c1">#: (:data:`runtraj.particles.PARTICLE_SCHEMA`); the rest keep HYSPLIT's.</span>
-<span class="n">PARTICLE_COLUMNS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"indx"</span><span class="p">:</span> <span class="s2">"particle"</span><span class="p">,</span> <span class="s2">"time"</span><span class="p">:</span> <span class="s2">"age"</span><span class="p">,</span> <span class="s2">"long"</span><span class="p">:</span> <span class="s2">"lon"</span><span class="p">,</span> <span class="s2">"lati"</span><span class="p">:</span> <span class="s2">"lat"</span><span class="p">}</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_internal_grid</span><span class="p">(</span><span class="n">workdir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return ``(nlvl, aa, bb, cc)``, the internal grid a run in *workdir* printed in ``MESSAGE``, or ``None``.</span>
 
-<span class="c1"># Before pandas 3 the C reader's default float parser can differ from Python's</span>
-<span class="c1"># in the last digit, and ``round_trip`` reads every value exactly; pandas 3</span>
-<span class="c1"># parses exactly by default and deprecates the argument.</span>
-<span class="n">_EXACT_FLOATS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="p">{</span><span class="s2">"float_precision"</span><span class="p">:</span> <span class="s2">"round_trip"</span><span class="p">}</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">__version__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="p">{}</span>
-<span class="p">)</span>
+<span class="sd">    Level ``k`` of ``nlvl`` is ``aa k**2 + bb k + cc`` meters above the</span>
+<span class="sd">    ground. The grid depends on the HYSPLIT version for a model top below</span>
+<span class="sd">    about 1.1 km, so the run's own is the one to sample the met on. ``None``</span>
+<span class="sd">    when there is no ``MESSAGE`` or it has no such line.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import tempfile</span>
+<span class="sd">    &gt;&gt;&gt; with tempfile.TemporaryDirectory() as tmp:</span>
+<span class="sd">    ...     _ = (Path(tmp) / "MESSAGE").write_text(</span>
+<span class="sd">    ...         " Internal grid parameters (nlvl,aa,bb,cc):  11  2.5  2.5  0.0\n"</span>
+<span class="sd">    ...     )</span>
+<span class="sd">    ...     read_internal_grid(tmp)</span>
+<span class="sd">    (11, 2.5, 2.5, 0.0)</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">workdir</span><span class="p">)</span> <span class="o">/</span> <span class="n">MESSAGE_FILE</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_INTERNAL_GRID_LINE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">nlvl</span><span class="p">,</span> <span class="n">aa</span><span class="p">,</span> <span class="n">bb</span><span class="p">,</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">found</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">nlvl</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">aa</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">bb</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+
+
+<span class="c1">#: The particle table's columns that HYSPLIT writes in minutes and</span>
+<span class="c1">#: :func:`read_particle_dat` reads as seconds: ``age`` (HYSPLIT's ``time``)</span>
+<span class="c1">#: and ``samt``, the time spent in the surface layer.</span>
+<span class="n">MINUTE_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"age"</span><span class="p">,</span> <span class="s2">"samt"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="read_particle_dat">
@@ -726,7 +846,9 @@
 
 <span class="sd">    The ``varsiwant`` codes ``indx``, ``time``, ``long``, and ``lati``</span>
 <span class="sd">    become the particle table's ``particle``, ``age``, ``lon``, and ``lat``</span>
-<span class="sd">    (:data:`PARTICLE_COLUMNS`).</span>
+<span class="sd">    (:data:`PARTICLE_COLUMNS`). HYSPLIT writes ``time`` and ``samt`` in</span>
+<span class="sd">    minutes; they are read as seconds (:data:`MINUTE_COLUMNS`), the particle</span>
+<span class="sd">    table's one time unit.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -770,6 +892,9 @@
             <span class="sa">f</span><span class="s2">"from varsiwant=</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span><span class="si">!r}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="n">particles</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">MINUTE_COLUMNS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">particles</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">60.0</span>
     <span class="k">return</span> <span class="n">particles</span></div>
 
 
@@ -781,12 +906,13 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the ``SETUP.CFG`` namelist entries of *params*, leaving out unset ones.</span>
 
-<span class="sd">    In the particles mode the entries of :data:`FIXED_SETUP` come first.</span>
+<span class="sd">    In the particle mode the entries of :data:`FIXED_SETUP` come first.</span>
 <span class="sd">    Then every setting not in :data:`NOT_IN_SETUP`, in declaration order,</span>
-<span class="sd">    under their own names; the concentration mode leaves out the particle</span>
+<span class="sd">    under their own names (``DSWF`` in ``VARSIWANT`` in upper case, which</span>
+<span class="sd">    ``hycs_std`` 5.2 and later needs to fill it); the concentration mode leaves out the particle</span>
 <span class="sd">    file's settings (:data:`PARTICLES_SETTINGS`), and its ``ICHEM`` is the</span>
 <span class="sd">    config's ``ichem``, 0 unless set. The driver adds</span>
-<span class="sd">    ``KMSL``, ``IVMAX`` (in the particles mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``</span>
+<span class="sd">    ``KMSL``, ``IVMAX`` (in the particle mode), and ``WINDERRTF``, and ``MAXPAR`` when ``maxpar``</span>
 <span class="sd">    is unset, which depend on the release locations or follow from other</span>
 <span class="sd">    settings.</span>
 
@@ -803,7 +929,7 @@
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">entries</span>
-    <span class="n">particles</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span>
+    <span class="n">particles</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particle"</span>
     <span class="n">entries</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">FIXED_SETUP</span><span class="p">)</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="p">{}</span>
     <span class="n">skip</span> <span class="o">=</span> <span class="n">NOT_IN_SETUP</span> <span class="k">if</span> <span class="n">particles</span> <span class="k">else</span> <span class="n">NOT_IN_SETUP</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">PARTICLES_SETTINGS</span><span class="p">)</span>
     <span class="n">entries</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
@@ -812,6 +938,13 @@
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="p">)</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"zicontroltf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">zicontroltf</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"varsiwant"</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="c1"># From 5.2.0 hycs_std turns the shortwave flux on by a case-sensitive</span>
+        <span class="c1"># comparison to 'DSWF': in lower case the column is written as 0. Every</span>
+        <span class="c1"># other name stays lower case, which 'zcfx' needs ('ZCFX' is unknown).</span>
+        <span class="n">entries</span><span class="p">[</span><span class="s2">"varsiwant"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">"DSWF"</span> <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"dswf"</span> <span class="k">else</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">varsiwant</span>
+        <span class="p">]</span>
     <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">entries</span><span class="p">[</span><span class="s2">"seed"</span><span class="p">]</span> <span class="o">=</span> <span class="n">setup_seed</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">entries</span>
@@ -967,14 +1100,14 @@
         <span class="k">return</span>
     <span class="n">reach</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
     <span class="n">stop</span> <span class="o">=</span> <span class="n">reach</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">stop</span> <span class="o">&gt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">stop</span> <span class="o">&gt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">:</span>
         <span class="k">return</span>
     <span class="n">last</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="n">reach</span> <span class="o">==</span> <span class="n">stop</span><span class="p">]</span>
     <span class="n">inside</span> <span class="o">=</span> <span class="n">cells_from_edge</span><span class="p">(</span><span class="n">last</span><span class="p">[</span><span class="s2">"lon"</span><span class="p">],</span> <span class="n">last</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">],</span> <span class="n">grid</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">inside</span> <span class="o">&gt;</span> <span class="n">MET_STOP_CELLS</span><span class="p">:</span>
         <span class="n">share</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">last</span><span class="p">)</span> <span class="o">/</span> <span class="n">particles</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
         <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"The particles stopped </span><span class="si">{</span><span class="n">stop</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> h into the </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span><span class="si">}</span><span class="s2"> h "</span>
+            <span class="sa">f</span><span class="s2">"The particles stopped </span><span class="si">{</span><span class="n">stop</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> h into the </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span><span class="si">}</span><span class="s2"> h "</span>
             <span class="sa">f</span><span class="s2">"run, up to </span><span class="si">{</span><span class="n">inside</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> grid cells inside the met's domain, not "</span>
             <span class="sa">f</span><span class="s2">"at its edge: the met ran out (</span><span class="si">{</span><span class="n">share</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> of the particles were "</span>
             <span class="s2">"still in the air)."</span><span class="p">,</span>
@@ -1031,9 +1164,150 @@
     <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">values</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">winderrtf</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return HYSPLIT's ``WINDERRTF`` flag: 1 for wind errors, 2 for mixed-layer errors, 3 for both."""</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">zierr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">winderrtf</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the ``WINDERRTF`` to write for *params* to a ``hycs_std`` that prints *version*.</span>
+
+<span class="sd">    HYSPLIT applies wind errors at 1, mixed-layer errors at 2, and both at</span>
+<span class="sd">    3. From HYSPLIT 5.3.0 (:data:`ZICONTROL_ADDS_TWO`), ``hycs_std`` adds 2</span>
+<span class="sd">    to the value it read once it has read ``ZICONTROL``, so with</span>
+<span class="sd">    ``ziscale`` set the value written is 2 less, and the run gets the</span>
+<span class="sd">    errors its settings ask for: -2 for none, -1 for wind errors alone. A</span>
+<span class="sd">    *version* runtraj cannot read, or none, is taken to be older.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; zi = {"ziscale": 0.8, "sigzierr": 20.0, "tlzierr": 60.0, "horcorzierr": 40.0}</span>
+<span class="sd">    &gt;&gt;&gt; config = HysplitConfig(n_hours=-24, **zi)</span>
+<span class="sd">    &gt;&gt;&gt; winderrtf(config, "hysplit.v5.2.3"), winderrtf(config, "hysplit.v5.4.2")</span>
+<span class="sd">    (2, 0)</span>
+<span class="sd">    """</span>
+    <span class="n">flag</span> <span class="o">=</span> <span class="p">(</span><span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">zierr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">zicontroltf</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">and</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">ZICONTROL_ADDS_TWO</span><span class="p">):</span>
+        <span class="n">flag</span> <span class="o">-=</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">flag</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">version_at_least</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">minimum</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return whether *version*, as ``hycs_std`` prints it, is *minimum* or later.</span>
+
+<span class="sd">    A *version* without a number, or ``None``, is taken to be the oldest.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; version_at_least("hysplit.v5.4.2", (5, 3, 0))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; version_at_least("hysplit.v5.2.3", (5, 3, 0)), version_at_least(None, (5, 3, 0))</span>
+<span class="sd">    (False, False)</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_VERSION_NUMBER</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">version</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">groups</span><span class="p">()))</span> <span class="o">&gt;=</span> <span class="n">minimum</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">setting_refusals</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return why a ``hycs_std`` cannot run *params*, one message for each setting it would ignore or change without a word.</span>
+
+<span class="sd">    The settings are ``krand`` 10 to 13 and the wind error in the concentration</span>
+<span class="sd">    mode (:func:`krand_refusal`, :func:`wind_error_refusal`). *version* returns</span>
+<span class="sd">    the version the program prints; it is called only when a setting depends</span>
+<span class="sd">    on it, and at most once for each of them (the program is asked once per</span>
+<span class="sd">    file). The trajectory mode has neither setting.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; config = HysplitConfig(n_hours=-24, krand=10)</span>
+<span class="sd">    &gt;&gt;&gt; setting_refusals(config, lambda: "hysplit.v5.1.0")</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; setting_refusals(config, lambda: "hysplit.v5.0.2")</span>
+<span class="sd">    ['krand=10 is new in HYSPLIT 5.1.0: ...']</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">(</span><span class="n">krand_refusal</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">version</span><span class="p">),</span> <span class="n">wind_error_refusal</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">version</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">message</span> <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="n">message</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">krand_refusal</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return why a ``hycs_std`` that prints *version* cannot run ``krand`` 10 to 13, or ``None``.</span>
+
+<span class="sd">    They are new in HYSPLIT 5.1.0 (:data:`KRAND_10_TO_13`). Before it,</span>
+<span class="sd">    ``hycs_std`` takes them for ``KRAND=4`` without a word, so a run asked</span>
+<span class="sd">    for one of the random-seeded modes 0 to 3 would get the clock-seeded</span>
+<span class="sd">    draw of 4. A version runtraj cannot read, or none, is taken to be older.</span>
+<span class="sd">    *version* is called only when ``krand`` is 10 to 13.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; config = HysplitConfig(n_hours=-24, krand=10)</span>
+<span class="sd">    &gt;&gt;&gt; krand_refusal(config, lambda: "hysplit.v5.1.0") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; krand_refusal(config, lambda: "hysplit.v5.0.2")</span>
+<span class="sd">    'krand=10 is new in HYSPLIT 5.1.0: ... hysplit.v5.0.2 ...'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">krand</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">version</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">KRAND_10_TO_13</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"krand=</span><span class="si">{</span><span class="n">params</span><span class="o">.</span><span class="n">krand</span><span class="si">}</span><span class="s2"> is new in HYSPLIT 5.1.0: the hycs_std here "</span>
+        <span class="sa">f</span><span class="s2">"prints </span><span class="si">{</span><span class="n">found</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'no version'</span><span class="si">}</span><span class="s2"> and would run it as krand=4, "</span>
+        <span class="s2">"with a seed drawn from the clock. Use krand 0 to 4, or HYSPLIT "</span>
+        <span class="s2">"5.1.0 or later."</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">wind_error_refusal</span><span class="p">(</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">HysplitConfig</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return why a ``hycs_std`` that prints *version* cannot run the wind error settings in the concentration mode, or ``None``.</span>
+
+<span class="sd">    From HYSPLIT 5.3.0 (:data:`WINDERR_NEEDS_IDSP`), ``hycs_std`` applies the</span>
+<span class="sd">    wind error only with ``IDSP=2``, which the concentration mode does not</span>
+<span class="sd">    set, and otherwise prints ``IDSP must be set to 2 to use WINDERRTF=1``</span>
+<span class="sd">    and runs without it, so the settings would do nothing. Earlier versions</span>
+<span class="sd">    apply it, and the particles mode sets ``IDSP=2``. A version runtraj</span>
+<span class="sd">    cannot read, or none, is taken to be older. *version* is called only</span>
+<span class="sd">    when *params* set the wind error in the concentration mode.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; grid = {"name": "g", "spacing_lat": 0.05, "spacing_lon": 0.05, "levels": [0]}</span>
+<span class="sd">    &gt;&gt;&gt; config = HysplitConfig(</span>
+<span class="sd">    ...     n_hours=-24,</span>
+<span class="sd">    ...     mode="concentration",</span>
+<span class="sd">    ...     pollutants=[{"name": "TRCA"}],</span>
+<span class="sd">    ...     grids=[grid],</span>
+<span class="sd">    ...     siguverr=1.5,</span>
+<span class="sd">    ...     tluverr=60.0,</span>
+<span class="sd">    ...     zcoruverr=500.0,</span>
+<span class="sd">    ...     horcoruverr=40.0,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; wind_error_refusal(config, lambda: "hysplit.v5.2.3") is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; wind_error_refusal(config, lambda: "hysplit.v5.4.2")</span>
+<span class="sd">    'The wind error settings (siguverr, ... on hysplit.v5.4.2: ...'</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">params</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s2">"concentration"</span> <span class="ow">or</span> <span class="n">winderr</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">version</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">version_at_least</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">WINDERR_NEEDS_IDSP</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"The wind error settings (</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">WIND_ERROR_SETTINGS</span><span class="p">)</span><span class="si">}</span><span class="s2">) do "</span>
+        <span class="sa">f</span><span class="s2">"nothing in the concentration mode on </span><span class="si">{</span><span class="n">found</span><span class="si">}</span><span class="s2">: HYSPLIT 5.3.0 "</span>
+        <span class="s2">"and later apply the wind error only with IDSP=2, which this "</span>
+        <span class="s2">"mode does not set, so the run would go on without it. Remove "</span>
+        <span class="s2">"them, use the particles mode, or run HYSPLIT 5.2.3 or earlier."</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_write_values</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1061,7 +1335,13 @@
 <span class="sd">    :func:`find_program`) and HYSPLIT's data tables</span>
 <span class="sd">    (:func:`data_tables`), and writes ``CONTROL`` and ``SETUP.CFG``, plus</span>
 <span class="sd">    ``ZICONTROL``, ``WINDERR``, and ``ZIERR`` when the settings call for</span>
-<span class="sd">    them. *workdir* is created if needed, and should be empty.</span>
+<span class="sd">    them. *workdir* is created if needed, and should be empty. With</span>
+<span class="sd">    ``ziscale`` set, ``WINDERRTF`` depends on the version the program</span>
+<span class="sd">    prints (:func:`winderrtf`), which is read once per program. It does</span>
+<span class="sd">    not check the settings a version refuses (:func:`setting_refusals`):</span>
+<span class="sd">    :meth:`HysplitModel.check_releases</span>
+<span class="sd">    &lt;runtraj.models.hysplit.HysplitModel.check_releases&gt;` does, before a</span>
+<span class="sd">    run gets here.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1093,6 +1373,9 @@
     <span class="n">program</span> <span class="o">=</span> <span class="n">program_name</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
     <span class="n">trajectory</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"trajectory"</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">find_program</span><span class="p">(</span><span class="n">program</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span>
+    <span class="c1"># Read only where a setting depends on it: the program is run for it.</span>
+    <span class="n">needs_version</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">trajectory</span> <span class="ow">and</span> <span class="n">ziscale_factors</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">_printed_version</span><span class="p">(</span><span class="o">*</span><span class="n">_stamp</span><span class="p">(</span><span class="n">found</span><span class="p">))</span> <span class="k">if</span> <span class="n">needs_version</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="c1"># On Windows the link keeps the program's extension, which finds it again.</span>
     <span class="n">linked</span> <span class="o">=</span> <span class="n">program</span> <span class="o">+</span> <span class="n">found</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span> <span class="k">else</span> <span class="n">program</span>
     <span class="n">links</span> <span class="o">=</span> <span class="p">{</span><span class="n">linked</span><span class="p">:</span> <span class="n">found</span><span class="p">}</span>
@@ -1125,9 +1408,9 @@
         <span class="n">setup</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">SETUP_FILE</span><span class="p">)</span>
         <span class="k">return</span>
     <span class="n">entries</span><span class="p">[</span><span class="s2">"maxpar"</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">maxpar_for</span><span class="p">(</span><span class="n">release_locations</span><span class="p">(</span><span class="n">locations</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"particle"</span><span class="p">:</span>
         <span class="n">entries</span><span class="p">[</span><span class="s2">"ivmax"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">varsiwant</span><span class="p">)</span>  <span class="c1"># number of output variables</span>
-    <span class="n">entries</span><span class="p">[</span><span class="s2">"winderrtf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">winderrtf</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">entries</span><span class="p">[</span><span class="s2">"winderrtf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">winderrtf</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
     <span class="n">setup</span> <span class="o">=</span> <span class="n">NameList</span><span class="p">(</span><span class="s2">"SETUP"</span><span class="p">)</span>
     <span class="n">setup</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
     <span class="n">setup</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">SETUP_FILE</span><span class="p">)</span>
@@ -1170,6 +1453,18 @@
         <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">hysplit_environment</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return this process's environment without the ``HYSF_*`` variables.</span>
+
+<span class="sd">    HYSPLIT 5.4 reads ``HYSF_CONTROL``, ``HYSF_PARTICLE_STILT`` and others to</span>
+<span class="sd">    rename its input and output files, which would move them out of the</span>
+<span class="sd">    working directory runtraj reads them from. The programs get this</span>
+<span class="sd">    environment.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"HYSF_"</span><span class="p">)}</span>
+
+
 <div class="viewcode-block" id="run_hycs_std">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.run_hycs_std.html#runtraj.models.hysplit.run_hycs_std">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_hycs_std</span><span class="p">(</span>
@@ -1198,33 +1493,20 @@
 <span class="sd">        domain are not a failure.</span>
 <span class="sd">    """</span>
     <span class="n">log_path</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span>
-    <span class="k">with</span> <span class="p">(</span>
-        <span class="n">log_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"w"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">,</span>
-        <span class="n">_ended_if_this_process_dies</span><span class="p">()</span> <span class="k">as</span> <span class="n">watch</span><span class="p">,</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">run_program</span><span class="p">(</span>
             <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">program_file</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">program</span><span class="p">))],</span>
             <span class="n">cwd</span><span class="o">=</span><span class="n">workdir</span><span class="p">,</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">handle</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">_own_group</span><span class="p">(),</span>
-        <span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="n">watch</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">_terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"HYSPLIT ran longer than the </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> s timeout."</span><span class="p">,</span>
-                <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">,</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-            <span class="c1"># Ctrl-C, or a worker told to stop: HYSPLIT runs in a session of</span>
-            <span class="c1"># its own (a process group on Windows), so no signal reached it and</span>
-            <span class="c1"># it would run on, unseen.</span>
-            <span class="n">_terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
-            <span class="k">raise</span>
-    <span class="n">messages</span> <span class="o">=</span> <span class="n">log_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+            <span class="n">log_path</span><span class="o">=</span><span class="n">log_path</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">hysplit_environment</span><span class="p">(),</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"HYSPLIT ran longer than the </span><span class="si">{</span><span class="n">timeout</span><span class="si">}</span><span class="s2"> s timeout."</span><span class="p">,</span>
+            <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">,</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+    <span class="n">messages</span> <span class="o">=</span> <span class="n">read_log</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span>
     <span class="n">warnings</span> <span class="o">=</span> <span class="n">workdir</span> <span class="o">/</span> <span class="n">WARNING_FILE</span>
     <span class="k">if</span> <span class="n">warnings</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
         <span class="n">messages</span> <span class="o">+=</span> <span class="n">warnings</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
@@ -1232,8 +1514,8 @@
     <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">reason</span><span class="p">,</span> <span class="n">line</span> <span class="o">=</span> <span class="n">found</span>
         <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"HYSPLIT: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">_exit_status_error</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">status</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">_exit_status_error</span><span class="p">(</span><span class="n">workdir</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span></div>
 
 
 
@@ -1261,211 +1543,6 @@
         <span class="k">with</span> <span class="p">(</span><span class="n">workdir</span> <span class="o">/</span> <span class="n">LOG_FILE</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">log</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">runtraj: HYSPLIT </span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">. The end of </span><span class="si">{</span><span class="n">MESSAGE_FILE</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">tail</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">SimulationError</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">FailureReason</span><span class="o">.</span><span class="n">EXIT_STATUS</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_own_group</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return the ``Popen`` arguments that start HYSPLIT in a session of its own (a new process group on Windows)."""</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">"creationflags"</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CREATE_NEW_PROCESS_GROUP</span><span class="p">}</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"start_new_session"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
-
-
-<span class="c1">#: The watchdog of a HYSPLIT run on POSIX: it reads the process group to</span>
-<span class="c1">#: kill, then waits for its standard input to close, which happens when the</span>
-<span class="c1">#: process that started it ends however it ends, and kills the group. ``kill</span>
-<span class="c1">#: -9 -PGID`` is the form both bash and dash read as a group.</span>
-<span class="n">_WATCHDOG</span> <span class="o">=</span> <span class="s1">'read group &amp;&amp; read line; kill -9 -"$group" 2&gt;/dev/null'</span>
-
-
-<span class="nd">@contextmanager</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_ended_if_this_process_dies</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Yield a call that makes HYSPLIT end if this process dies while the block runs, even when it is killed outright.</span>
-
-<span class="sd">    A worker the out-of-memory killer or ``kill -9`` ends runs no</span>
-<span class="sd">    ``finally`` block, and HYSPLIT, in a session of its own, would run on.</span>
-<span class="sd">    Call the yielded function with HYSPLIT's process as soon as it starts.</span>
-<span class="sd">    On POSIX a watchdog shell, started before HYSPLIT and in a session of</span>
-<span class="sd">    its own, is sent HYSPLIT's process group, then reads a pipe from this</span>
-<span class="sd">    process, which the system closes when this process dies; it then kills</span>
-<span class="sd">    the group. On Windows HYSPLIT is put in a job object that ends it when</span>
-<span class="sd">    the job's one handle, held here, closes. A process killed between</span>
-<span class="sd">    HYSPLIT's start and the call still leaves it running. Where neither can</span>
-<span class="sd">    be set up, HYSPLIT runs without it, with a warning.</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>
-        <span class="n">jobs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">join_job</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">job</span> <span class="o">=</span> <span class="n">_job_that_ends</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">job</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">join_job</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
-                <span class="n">_close_handle</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>  <span class="c1"># HYSPLIT has ended, or is ended now</span>
-        <span class="k">return</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">watchdog</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-            <span class="p">[</span><span class="s2">"/bin/sh"</span><span class="p">,</span> <span class="s2">"-c"</span><span class="p">,</span> <span class="n">_WATCHDOG</span><span class="p">],</span>
-            <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-            <span class="n">start_new_session</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># so Ctrl-C to this process leaves it</span>
-        <span class="p">)</span>
-    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"HYSPLIT runs without a watchdog: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="k">lambda</span> <span class="n">proc</span><span class="p">:</span> <span class="kc">None</span>
-        <span class="k">return</span>
-    <span class="n">pipe</span> <span class="o">=</span> <span class="n">watchdog</span><span class="o">.</span><span class="n">stdin</span>
-    <span class="k">assert</span> <span class="n">pipe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">tell_watchdog</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">pipe</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
-            <span class="n">pipe</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># the watchdog has ended</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"HYSPLIT runs without a watchdog: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">yield</span> <span class="n">tell_watchdog</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">watchdog</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>  <span class="c1"># before its pipe closes, so it kills nothing</span>
-        <span class="n">watchdog</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-        <span class="n">pipe</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>  <span class="c1"># Windows' job objects, through ctypes</span>
-    <span class="c1">#: The limit that ends a job's processes when its last handle closes (``JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE``).</span>
-    <span class="n">_KILL_ON_JOB_CLOSE</span> <span class="o">=</span> <span class="mh">0x2000</span>
-    <span class="c1">#: The class of ``SetInformationJobObject`` the limit is in (``JobObjectExtendedLimitInformation``).</span>
-    <span class="n">_EXTENDED_LIMITS</span> <span class="o">=</span> <span class="mi">9</span>
-    <span class="c1">#: The access to a process that putting it in a job needs (``PROCESS_SET_QUOTA | PROCESS_TERMINATE``).</span>
-    <span class="n">_JOIN_ACCESS</span> <span class="o">=</span> <span class="mh">0x0101</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_job_that_ends</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Put the Windows process *pid* in a new job object that ends it when the job closes; return the job's handle.</span>
-
-<span class="sd">        The job closes when its last handle does, and its one handle is held by</span>
-<span class="sd">        this process, so the system ends *pid* when this process ends, however</span>
-<span class="sd">        it ends. Returns ``None`` where the job cannot be made.</span>
-<span class="sd">        """</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">ctypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">wintypes</span>
-
-        <span class="k">class</span><span class="w"> </span><span class="nc">BasicLimits</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-            <span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">(</span><span class="s2">"PerProcessUserTimeLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PerJobUserTimeLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int64</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"LimitFlags"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"MinimumWorkingSetSize"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"MaximumWorkingSetSize"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"ActiveProcessLimit"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"Affinity"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PriorityClass"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"SchedulingClass"</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">),</span>
-            <span class="p">]</span>
-
-        <span class="k">class</span><span class="w"> </span><span class="nc">ExtendedLimits</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">Structure</span><span class="p">):</span>
-            <span class="n">_fields_</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">(</span><span class="s2">"BasicLimitInformation"</span><span class="p">,</span> <span class="n">BasicLimits</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"IoInfo"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_uint64</span> <span class="o">*</span> <span class="mi">6</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"ProcessMemoryLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"JobMemoryLimit"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PeakProcessMemoryUsed"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-                <span class="p">(</span><span class="s2">"PeakJobMemoryUsed"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">c_size_t</span><span class="p">),</span>
-            <span class="p">]</span>
-
-        <span class="n">kernel32</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">WinDLL</span><span class="p">(</span><span class="s2">"kernel32"</span><span class="p">,</span> <span class="n">use_last_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateJobObjectW</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">OpenProcess</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">SetInformationJobObject</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">,</span>
-            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_int</span><span class="p">,</span>
-            <span class="n">ctypes</span><span class="o">.</span><span class="n">c_void_p</span><span class="p">,</span>
-            <span class="n">wintypes</span><span class="o">.</span><span class="n">DWORD</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">AssignProcessToJobObject</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">,</span> <span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">]</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">]</span>
-        <span class="n">job</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">CreateJobObjectW</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">job</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">"HYSPLIT runs outside a job object: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
-                <span class="n">ctypes</span><span class="o">.</span><span class="n">WinError</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">get_last_error</span><span class="p">()),</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="n">limits</span> <span class="o">=</span> <span class="n">ExtendedLimits</span><span class="p">()</span>
-        <span class="n">limits</span><span class="o">.</span><span class="n">BasicLimitInformation</span><span class="o">.</span><span class="n">LimitFlags</span> <span class="o">=</span> <span class="n">_KILL_ON_JOB_CLOSE</span>
-        <span class="n">process</span> <span class="o">=</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">OpenProcess</span><span class="p">(</span><span class="n">_JOIN_ACCESS</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">pid</span><span class="p">)</span>
-        <span class="n">joined</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">process</span>
-            <span class="ow">and</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">SetInformationJobObject</span><span class="p">(</span>
-                <span class="n">job</span><span class="p">,</span> <span class="n">_EXTENDED_LIMITS</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">byref</span><span class="p">(</span><span class="n">limits</span><span class="p">),</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">sizeof</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="ow">and</span> <span class="n">kernel32</span><span class="o">.</span><span class="n">AssignProcessToJobObject</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">process</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">error</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">get_last_error</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">process</span><span class="p">:</span>
-            <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">process</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">joined</span><span class="p">:</span>
-            <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">"HYSPLIT runs outside a job object: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">WinError</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="n">job</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_close_handle</span><span class="p">(</span><span class="n">handle</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Close a Windows handle."""</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">ctypes</span><span class="w"> </span><span class="kn">import</span> <span class="n">wintypes</span>
-
-        <span class="n">kernel32</span> <span class="o">=</span> <span class="n">ctypes</span><span class="o">.</span><span class="n">WinDLL</span><span class="p">(</span><span class="s2">"kernel32"</span><span class="p">,</span> <span class="n">use_last_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="o">.</span><span class="n">argtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">wintypes</span><span class="o">.</span><span class="n">HANDLE</span><span class="p">]</span>
-        <span class="n">kernel32</span><span class="o">.</span><span class="n">CloseHandle</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_terminate</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Stop a HYSPLIT process (its group, on POSIX) with SIGTERM, then SIGKILL if it does not exit."""</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_signal_group</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-        <span class="k">return</span>
-    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
-        <span class="k">pass</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_signal_group</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">hard</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
-        <span class="k">return</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">TimeoutExpired</span><span class="p">:</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_signal_group</span><span class="p">(</span><span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">hard</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Send SIGKILL (*hard*) or SIGTERM to *proc*'s process group.</span>
-
-<span class="sd">    Windows has no process group to signal: ``terminate`` and ``kill`` end</span>
-<span class="sd">    the process alone, which is all HYSPLIT is (it starts no other).</span>
-<span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">"win32"</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">hard</span><span class="p">:</span>
-                <span class="n">proc</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># the process has already ended</span>
-            <span class="k">raise</span> <span class="ne">ProcessLookupError</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-        <span class="k">return</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGKILL</span> <span class="k">if</span> <span class="n">hard</span> <span class="k">else</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
 </pre></div>
 
                 </article>

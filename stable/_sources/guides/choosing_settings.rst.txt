@@ -56,7 +56,7 @@ particle:
    project = runtraj.Project("./my_project")
    sim = project.simulation("202101150800_-111.848_40.766_10", "hrrr")
    ends = sim.particles.runtraj.endpoints()
-   print(f"the longest particle ran {ends['age'].abs().max() / 60:.1f} of 24 hours")
+   print(f"the longest particle ran {ends['age'].abs().max() / 3600:.1f} of 24 hours")
 
 These particles stopped before 24 hours because they left the small crop of
 met files these pages run on. The met's domain, not ``n_hours``, limited this
@@ -114,6 +114,13 @@ own draws. A ``seed`` must be 0 or more, because HYSPLIT would run a seed and
 its negative the same. ``krand: 4`` seeds each run from the clock instead, so every run
 differs and cannot be made again. ``krand`` in
 :doc:`../reference/configuration` lists every mode.
+
+.. note::
+
+   HYSPLIT 5.0.x never seeds the random numbers of a column release or of
+   an ``ichem: 5`` run, so on it those runs differ every time whatever
+   ``seed`` is. Use HYSPLIT 5.1.0 or later to repeat them
+   (:ref:`hysplit-versions`).
 
 What HYSPLIT chooses for you
 ----------------------------

@@ -16,6 +16,8 @@ Every exception runtraj raises is a :class:`runtraj.RuntrajError`, so one
 Each one also subclasses the builtin that describes it. A
 :class:`~runtraj.exceptions.SimulationError` is a ``RuntimeError``, and a
 :class:`~runtraj.exceptions.HYSPLITNotFoundError` is a ``FileNotFoundError``.
+A :class:`~runtraj.exceptions.SchedulerError`, raised when ``sbatch``, ``qsub``
+or ``kubectl`` refuses a job or is missing, is a ``RuntimeError``.
 A :class:`~runtraj.exceptions.MeteorologyError`, raised when a met's files
 cannot be found, is both. An ``except`` for the builtin catches it too. Plain input checks, such as
 a negative particle count, raise ``ValueError``.
@@ -88,3 +90,4 @@ install, and the ``runtraj`` commands exit with 2.
 
    runtraj.exceptions.HYSPLITNotFoundError
    runtraj.exceptions.MissingClass
+   runtraj.exceptions.SchedulerError

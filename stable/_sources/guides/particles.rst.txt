@@ -55,8 +55,8 @@ step. The columns you are most likely to use:
    * - ``particle``
      - Particle number, from 1 to ``numpar`` (HYSPLIT's ``indx``)
    * - ``age``
-     - Minutes since release, negative for a backward run (HYSPLIT's
-       ``time``)
+     - Seconds since release, negative for a backward run (HYSPLIT's
+       ``time``, which it writes in minutes)
    * - ``time``
      - Time of the row, UTC, built from ``age`` when the table is read
    * - ``lon`` / ``lat``
@@ -137,7 +137,7 @@ of a tracer with a 24-hour lifetime that survives to the release.
    from runtraj.transforms import FirstOrderLifetime, apply_transforms
 
    weighted = apply_transforms(particles, [FirstOrderLifetime(lifetime_hours=24)])
-   weighted.groupby(weighted.age // 60)["weight"].mean().tail()
+   weighted.groupby(weighted.age // 3600)["weight"].mean().tail()
 
 The built-in transforms are an averaging kernel and pressure weighting for
 a column measurement, a first-order lifetime, dry deposition, and
@@ -242,7 +242,7 @@ or its own shell, a question about thousands of simulations is one query:
    GROUP BY release, particle;
 
    -- the time of each row, UTC: the release id starts with the release time
-   SELECT *, strptime(left(release, 12), '%Y%m%d%H%M') + to_minutes(age::INTEGER) AS time
+   SELECT *, strptime(left(release, 12), '%Y%m%d%H%M') + to_seconds(age::INTEGER) AS time
    FROM read_parquet('output/particles/settings=hrrr-a3f9c2/date=2021-01-15/*.parquet');
 
 In R, the ``arrow`` package opens the same tree:
@@ -252,7 +252,7 @@ In R, the ``arrow`` package opens the same tree:
    library(arrow)
    particles <- open_dataset("output/particles")   # settings and date are columns
 
-A file stores no ``time``; ``age`` is minutes from the release time, which
+A file stores no ``time``; ``age`` is seconds from the release time, which
 the release id begins with and the file's metadata holds. An ensemble's folders have a ``realization=k``
 level as well, so its files are one folder deeper (``*/*/*/*.parquet``)
 and ``realization`` is a column. :doc:`../reference/layout` describes every
@@ -301,7 +301,7 @@ values. Write it with :meth:`xarray.Dataset.to_netcdf`:
    ds = xr.open_dataset("trajectories.nc", decode_timedelta=False)
    ds.traj.plot()
 
-``decode_timedelta=False`` keeps ``age`` in minutes rather than reading it
+``decode_timedelta=False`` keeps ``age`` in seconds rather than reading it
 as a duration. A table with several realizations is refused: select one
 first, ``particles[particles.realization == k]``. The particles of
 :func:`runtraj.run_trajectories` convert the same way.

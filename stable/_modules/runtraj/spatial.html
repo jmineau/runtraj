@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.spatial &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.spatial &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -653,15 +653,13 @@
 <span class="sd">    Return whether ``crs`` is geographic (longitude/latitude degrees).</span>
 
 <span class="sd">    This is the one test runtraj uses, for grids, meshes, and plots alike.</span>
-<span class="sd">    PROJ strings are read by eye; other forms, such as ``EPSG:4326``, by</span>
-<span class="sd">    pyproj.</span>
+<span class="sd">    ``+proj=longlat`` and the common names are read by eye; every other form,</span>
+<span class="sd">    such as ``+proj=latlong`` or ``EPSG:4326``, is left to pyproj.</span>
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="s2">"+proj=longlat"</span> <span class="ow">in</span> <span class="n">crs</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
     <span class="k">if</span> <span class="n">crs</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="s2">"WGS84"</span><span class="p">,</span> <span class="s2">"OGC:CRS84"</span><span class="p">}:</span>
         <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">if</span> <span class="n">crs</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"+"</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">False</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">CRS</span>
 

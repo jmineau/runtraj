@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.execution.slurm &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.execution.slurm &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -457,7 +457,7 @@
 <span class="sd">run --task``, so a task is a command line that can be read, and run again,</span>
 <span class="sd">by hand. When a met downloads, a job that runs ``runtraj fetch`` goes first</span>
 <span class="sd">and the array waits for it. :func:`wait` follows the tasks with ``sacct``</span>
-<span class="sd">until they end. A task that Slurm stops near its time limit, or preempts,</span>
+<span class="sd">(``squeue`` where ``sacct`` does not answer) until they end. A task that Slurm stops near its time limit, or preempts,</span>
 <span class="sd">is requeued by its job script, which runs ``runtraj run`` as a child: the</span>
 <span class="sd">worker itself knows nothing of Slurm, and stops with exit code 3 on</span>
 <span class="sd">SIGTERM as it does on every backend.</span>
@@ -474,14 +474,15 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backend</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">SchedulerError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">SILENT_SCHEDULER_SECONDS</span><span class="p">,</span> <span class="n">Backend</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">FetchConfig</span><span class="p">,</span> <span class="n">SlurmConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_project_slug</span><span class="p">,</span>
     <span class="n">_to_fetch</span><span class="p">,</span>
     <span class="n">array_size</span><span class="p">,</span>
-    <span class="n">resolve_compute_root</span><span class="p">,</span>
     <span class="n">status_after_job</span><span class="p">,</span>
+    <span class="n">task_command</span><span class="p">,</span>
     <span class="n">write_submission</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -546,7 +547,7 @@
 
 
 <div class="viewcode-block" id="job_script">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.job_script.html#runtraj.execution.job_script">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.job_script.html#runtraj.execution.slurm.job_script">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">job_script</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
@@ -601,29 +602,17 @@
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">slurm</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">options</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="n">command</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
-        <span class="s2">"-m"</span><span class="p">,</span>
-        <span class="s2">"runtraj"</span><span class="p">,</span>
-        <span class="s2">"run"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
-        <span class="s2">"--releases"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"releases.parquet"</span><span class="p">),</span>
-        <span class="s2">"--task"</span><span class="p">,</span>
-        <span class="sa">f</span><span class="s2">"$SLURM_ARRAY_TASK_ID/</span><span class="si">{</span><span class="n">n_tasks</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
-        <span class="s2">"--execution"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="s2">"execution.yaml"</span><span class="p">),</span>
-        <span class="c1"># A task runs its share here, so it is told the array's cpus.</span>
-        <span class="s2">"--cpus"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">slurm</span><span class="o">.</span><span class="n">cpus</span><span class="p">),</span>
-        <span class="c1"># The output the submitting process uses, which may not be config.yaml's.</span>
-        <span class="s2">"--output"</span><span class="p">,</span>
-        <span class="nb">str</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span>
-    <span class="p">]</span>
-    <span class="k">if</span> <span class="n">compute_root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"--compute-root"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resolve_compute_root</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">compute_root</span><span class="p">))]</span>
-    <span class="c1"># $SLURM_ARRAY_TASK_ID must expand, so that word is quoted with "".</span>
-    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">w</span><span class="si">}</span><span class="s1">"'</span> <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"$"</span><span class="p">)</span> <span class="k">else</span> <span class="n">shlex</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">command</span><span class="p">]</span>
+    <span class="n">skip_lines</span><span class="p">,</span> <span class="n">command</span> <span class="o">=</span> <span class="n">task_command</span><span class="p">(</span>
+        <span class="n">project</span><span class="p">,</span>
+        <span class="n">folder</span><span class="p">,</span>
+        <span class="n">n_tasks</span><span class="p">,</span>
+        <span class="n">index</span><span class="o">=</span><span class="s2">"$SLURM_ARRAY_TASK_ID"</span><span class="p">,</span>
+        <span class="n">cpus</span><span class="o">=</span><span class="n">slurm</span><span class="o">.</span><span class="n">cpus</span><span class="p">,</span>
+        <span class="n">compute_root</span><span class="o">=</span><span class="n">compute_root</span><span class="p">,</span>
+        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+        <span class="c1"># A requeued task keeps what it finished before.</span>
+        <span class="n">restarted</span><span class="o">=</span><span class="s1">'[ "$</span><span class="si">{SLURM_RESTART_COUNT:-0}</span><span class="s1">" -gt 0 ]'</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="c1"># A task's log starts with where and when it ran, again after a requeue,</span>
     <span class="c1"># so a task on a bad node can be found from its log.</span>
     <span class="n">header</span> <span class="o">=</span> <span class="p">(</span>
@@ -642,13 +631,7 @@
         <span class="n">threads</span><span class="p">,</span>
         <span class="o">*</span><span class="n">slurm</span><span class="o">.</span><span class="n">setup</span><span class="p">,</span>
     <span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_existing</span><span class="p">:</span>
-        <span class="c1"># A requeued task keeps what it finished before.</span>
-        <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
-            <span class="s1">'skip="--no-skip"'</span><span class="p">,</span>
-            <span class="s1">'[ "$</span><span class="si">{SLURM_RESTART_COUNT:-0}</span><span class="s1">" -gt 0 ] &amp;&amp; skip=""'</span><span class="p">,</span>
-        <span class="p">]</span>
-        <span class="n">words</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"$skip"</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">+=</span> <span class="n">skip_lines</span>
     <span class="n">lines</span> <span class="o">+=</span> <span class="p">[</span>
         <span class="s2">"# The task runs as a child, so this script can requeue it. Slurm sends"</span><span class="p">,</span>
         <span class="sa">f</span><span class="s2">"# this script USR1 </span><span class="si">{</span><span class="n">NOTICE_SECONDS</span><span class="si">}</span><span class="s2"> s before the time limit, which it passes"</span><span class="p">,</span>
@@ -657,7 +640,7 @@
         <span class="s2">"on_cluster=${SLURM_CLUSTER_NAME:+-M $SLURM_CLUSTER_NAME}"</span><span class="p">,</span>
         <span class="s2">"trap 'notice=1; trapped=1; kill -TERM </span><span class="se">\"</span><span class="s2">$pid</span><span class="se">\"</span><span class="s2"> 2&gt;/dev/null' USR1"</span><span class="p">,</span>
         <span class="s2">"trap 'trapped=1; kill -TERM </span><span class="se">\"</span><span class="s2">$pid</span><span class="se">\"</span><span class="s2"> 2&gt;/dev/null' TERM INT"</span><span class="p">,</span>
-        <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" &amp;"</span><span class="p">,</span>
+        <span class="n">command</span> <span class="o">+</span> <span class="s2">" &amp;"</span><span class="p">,</span>
         <span class="s2">"pid=$!"</span><span class="p">,</span>
         <span class="s2">"# wait returns early when a trapped signal arrives; wait again then."</span><span class="p">,</span>
         <span class="s2">"while :; do"</span><span class="p">,</span>
@@ -686,7 +669,7 @@
 
 
 <div class="viewcode-block" id="fetch_script">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.fetch_script.html#runtraj.execution.fetch_script">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.fetch_script.html#runtraj.execution.slurm.fetch_script">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">fetch_script</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
@@ -746,14 +729,17 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_sbatch</span><span class="p">(</span><span class="n">script</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="n">extra</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Submit *script* with ``sbatch --parsable`` and return its job id and cluster (``None`` for the default one)."""</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">"sbatch"</span><span class="p">,</span> <span class="s2">"--parsable"</span><span class="p">,</span> <span class="o">*</span><span class="n">extra</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">script</span><span class="p">)],</span>
-        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"sbatch"</span><span class="p">,</span> <span class="s2">"--parsable"</span><span class="p">,</span> <span class="o">*</span><span class="n">extra</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">script</span><span class="p">)],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SchedulerError</span><span class="p">(</span><span class="s2">"sbatch is not installed, or not on PATH."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+        <span class="k">raise</span> <span class="n">SchedulerError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"sbatch refused </span><span class="si">{</span><span class="n">script</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
     <span class="c1"># --parsable prints "&lt;id&gt;", or "&lt;id&gt;;&lt;cluster&gt;" for a job on another cluster.</span>
@@ -762,7 +748,7 @@
 
 
 <div class="viewcode-block" id="submit_array">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.submit_array.html#runtraj.execution.submit_array">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.submit_array.html#runtraj.execution.slurm.submit_array">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">submit_array</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="n">pending</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -821,7 +807,7 @@
             <span class="n">after</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--clusters=</span><span class="si">{</span><span class="n">fetch_cluster</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span> <span class="o">=</span> <span class="n">_sbatch</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">after</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+    <span class="k">except</span> <span class="n">SchedulerError</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">fetch_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Nothing waits for the fetch job now: do not leave it downloading.</span>
             <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
@@ -908,8 +894,26 @@
     <span class="k">return</span> <span class="n">states</span> <span class="ow">or</span> <span class="kc">None</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_queued</span><span class="p">(</span><span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cluster</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Say whether ``squeue`` lists a task of the job, or ``None`` when it cannot answer.</span>
+
+<span class="sd">    ``squeue`` answers on every cluster, with or without the accounting</span>
+<span class="sd">    database. A job it no longer knows has ended.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[</span><span class="s2">"squeue"</span><span class="p">,</span> <span class="o">*</span><span class="n">_on_cluster</span><span class="p">(</span><span class="n">cluster</span><span class="p">),</span> <span class="s2">"-h"</span><span class="p">,</span> <span class="s2">"-j"</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="s2">"-o"</span><span class="p">,</span> <span class="s2">"%T"</span><span class="p">],</span>
+        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span> <span class="k">if</span> <span class="s2">"Invalid job id"</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+
 <div class="viewcode-block" id="wait">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.wait.html#runtraj.execution.wait">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.wait.html#runtraj.execution.slurm.wait">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">wait</span><span class="p">(</span>
     <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">poll</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cluster</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
@@ -919,7 +923,13 @@
 <span class="sd">    Polls ``sacct`` every *poll* seconds. A task that ended other than</span>
 <span class="sd">    complete, or with failed simulations (exit 1) or interrupted ones</span>
 <span class="sd">    (exit 3), is logged with its state; its simulations stay pending in the</span>
-<span class="sd">    status table.</span>
+<span class="sd">    status table. When ``sacct`` gives no answer, as on a cluster without</span>
+<span class="sd">    Slurm's accounting database, it asks ``squeue``: while that lists a</span>
+<span class="sd">    task it goes on waiting, and when it lists none the job has ended and</span>
+<span class="sd">    this returns ``{}``, the status table saying what finished. When</span>
+<span class="sd">    neither answers for</span>
+<span class="sd">    :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS` it stops</span>
+<span class="sd">    waiting with an error; the job itself runs on.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -935,10 +945,35 @@
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
 <span class="sd">        ``{task: (state, exit code)}`` as ``sacct`` gives them, such as</span>
-<span class="sd">        ``{"123_0": ("COMPLETED", "0:0")}``.</span>
+<span class="sd">        ``{"123_0": ("COMPLETED", "0:0")}``; empty when only ``squeue``</span>
+<span class="sd">        answered.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    SchedulerError</span>
+<span class="sd">        If neither ``sacct`` nor ``squeue`` gave an answer about the job for</span>
+<span class="sd">        :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`.</span>
 <span class="sd">    """</span>
+    <span class="n">answered</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
     <span class="n">states</span> <span class="o">=</span> <span class="n">_task_states</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">)</span>
-    <span class="k">while</span> <span class="n">states</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">_ACTIVE</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">states</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">active</span> <span class="o">=</span> <span class="n">_queued</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">active</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">active</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="ow">in</span> <span class="n">_ACTIVE</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">states</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">active</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">active</span><span class="p">:</span>
+            <span class="n">answered</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">answered</span> <span class="o">&gt;=</span> <span class="n">SILENT_SCHEDULER_SECONDS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SchedulerError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"sacct and squeue have said nothing about job </span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2"> for "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SILENT_SCHEDULER_SECONDS</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">}</span><span class="s2"> minutes, so runtraj stopped "</span>
+                <span class="s2">"waiting for it. The job may still be running: see squeue, and "</span>
+                <span class="s2">"runtraj status once it ends."</span>
+            <span class="p">)</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">poll</span><span class="p">)</span>
         <span class="n">states</span> <span class="o">=</span> <span class="n">_task_states</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">task</span><span class="p">,</span> <span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">code</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">states</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
@@ -952,7 +987,7 @@
 
 
 <div class="viewcode-block" id="SlurmBackend">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.html#runtraj.execution.SlurmBackend">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.html#runtraj.execution.slurm.SlurmBackend">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SlurmBackend</span><span class="p">(</span><span class="n">Backend</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The ``slurm`` backend: the releases as the tasks of one Slurm job array (:func:`submit_array`).</span>
@@ -968,7 +1003,7 @@
     <span class="n">waits</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="SlurmBackend.submit">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.submit.html#runtraj.execution.SlurmBackend.submit">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.submit.html#runtraj.execution.slurm.SlurmBackend.submit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
@@ -986,7 +1021,7 @@
 
 
 <div class="viewcode-block" id="SlurmBackend.run">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.run.html#runtraj.execution.SlurmBackend.run">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.run.html#runtraj.execution.slurm.SlurmBackend.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
@@ -1005,7 +1040,7 @@
 
 
 <div class="viewcode-block" id="SlurmBackend.describe">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.describe.html#runtraj.execution.SlurmBackend.describe">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.describe.html#runtraj.execution.slurm.SlurmBackend.describe">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waits</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the line ``runtraj run`` or ``runtraj submit`` prints before it submits."""</span>
         <span class="k">if</span> <span class="n">waits</span><span class="p">:</span>

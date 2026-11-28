@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>On Any Scheduler &#8212; runtraj 0.1.0a5</title>
+    <title>On Any Scheduler &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../_static/documentation_options.js?v=823c7775"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -512,10 +512,14 @@ Each start runs one task, and the tasks need nothing from each other.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>runtraj<span class="w"> </span>run<span class="w"> </span>./my_project<span class="w"> </span>--task<span class="w"> </span>I/N
 </pre></div>
 </div>
-<p>Task <code class="docutils literal notranslate"><span class="pre">I</span></code> runs every <code class="docutils literal notranslate"><span class="pre">N</span></code>-th release of the project, in the order of
-<code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>, starting at <code class="docutils literal notranslate"><span class="pre">I</span></code>: with <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">=</span> <span class="pre">4</span></code>, task 1 runs releases
-1, 5, 9, and so on. Every task splits the releases the same way, whether
-they are finished or not, and then skips those whose results all exist.
+<p>Task <code class="docutils literal notranslate"><span class="pre">I</span></code> runs every <code class="docutils literal notranslate"><span class="pre">N</span></code>-th release of the project, starting at
+<code class="docutils literal notranslate"><span class="pre">I</span></code>, with the releases put in the order of a hash of their ids: with
+<code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">=</span> <span class="pre">4</span></code>, task 1 runs the 2nd, 6th, 10th, and so on, of that order. The
+order is unrelated to <code class="docutils literal notranslate"><span class="pre">releases.csv</span></code>’s, so the releases left to run
+spread over the tasks even when they lie together in the file, such as
+one site’s hours among many sites’. Every task splits the releases the
+same way, whether they are finished or not, and then skips those whose
+results all exist.
 <code class="docutils literal notranslate"><span class="pre">--cpus</span></code> sets how many of its releases a task runs at once (1 unless the
 <code class="docutils literal notranslate"><span class="pre">local</span></code> block of <code class="docutils literal notranslate"><span class="pre">execution</span></code> says otherwise). The task runs here, in
 this process, whatever <code class="docutils literal notranslate"><span class="pre">execution.backend</span></code> says.</p>

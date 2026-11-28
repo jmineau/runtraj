@@ -1,0 +1,5 @@
+runtraj.models.flexpart.FlexpartMetConfig.model\_post\_init
+===========================================================
+
+.. currentmodule:: runtraj.models.flexpart
+.. automethod:: FlexpartMetConfig.model_post_init

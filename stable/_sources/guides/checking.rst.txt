@@ -74,6 +74,14 @@ looks at share its rows. The command exits with 0 when it finds nothing and
        ``RELEASE_REFUSED``.
      - For HYSPLIT, use a ``ColumnRelease`` for a vertical column, or one
        ``PointRelease`` per height (:doc:`releases`).
+   * - ``setting_refused``
+     - A setting the HYSPLIT build here would ignore or change without a
+       word, which refuses every release (``release`` is empty): ``krand``
+       10 to 13 before HYSPLIT 5.1.0, and the wind error settings in the
+       concentration mode from 5.3.0. A build that prints no version is
+       taken to be the oldest. Such a run fails as ``RELEASE_REFUSED``.
+     - Change the setting, or use another HYSPLIT build
+       (:ref:`hysplit-versions`).
    * - ``met_directory``
      - A met's ``directory`` does not exist or holds no ARL file.
      - Correct ``directory`` under ``mets:``. A met with ``download`` makes
@@ -95,6 +103,11 @@ looks at share its rows. The command exits with 0 when it finds nothing and
        ``subgrid_bounds``.
      - Widen ``subgrid_bounds`` to hold the whole run, not only the
        release.
+   * - ``met_count``
+     - A release's run needs more than 128 met files, more than HYSPLIT
+       reads in time.
+     - Use met files that each hold more hours, such as daily ones, or
+       shorter runs.
    * - ``met_periods``
      - A file the releases need holds one time period, which HYSPLIT
        cannot read.
@@ -103,6 +116,12 @@ looks at share its rows. The command exits with 0 when it finds nothing and
      - A file the releases need ends partway through a time step, so it is
        damaged.
      - Download or crop the file again.
+   * - ``met_label``
+     - Two mets of one transport model record the same settings, such as
+       two folders of WRF files with one source id, so variants that differ
+       only in their met would share one run. A run refuses them too.
+     - Give each met a ``label`` of its own under ``mets:``
+       (:doc:`meteorology`).
    * - ``zsfc``
      - ``varsiwant`` lacks ``zsfc``, the terrain height, and a release
        given above sea level needs it. The message says why.
@@ -267,7 +286,7 @@ The release height
 The length of the run
    ``n_hours`` sets how far the particles go. Particles also stop early
    when they leave the met's domain or its crop, and the run is still
-   complete. ``particles["age"].abs().max() / 60`` is how many hours they
+   complete. ``particles["age"].abs().max() / 3600`` is how many hours they
    went. If that is short, widen the met's domain or ``subgrid_bounds``
    (:doc:`choosing_settings`).
 

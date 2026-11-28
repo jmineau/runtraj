@@ -1,0 +1,6 @@
+﻿runtraj.execution.runner.array\_size
+====================================
+
+.. currentmodule:: runtraj.execution.runner
+
+.. autofunction:: array_size

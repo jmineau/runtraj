@@ -1,0 +1,5 @@
+runtraj.models.flexpart.FlexpartMetConfig.open
+==============================================
+
+.. currentmodule:: runtraj.models.flexpart
+.. automethod:: FlexpartMetConfig.open

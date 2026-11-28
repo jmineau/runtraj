@@ -59,7 +59,7 @@ hour and are followed 6 hours forward:
        time="2021-07-15 01:00", longitude=-111.85, latitude=40.77, altitude=500
    )
    cloud = runtraj.run_trajectories(
-       start, met_dir, n_hours=6, numpar=200, emisshrs=1.0,
+       start, met_dir, model="hysplit", n_hours=6, numpar=200, emisshrs=1.0,
        krand=2, seed=42,
    )
    cloud[["time", "particle", "lon", "lat", "zagl"]].tail()
@@ -87,7 +87,7 @@ particle with turbulence off follows the same path, so ``numpar=1`` and
 .. ipython:: python
 
    path = runtraj.run_trajectories(
-       start, met_dir, n_hours=6, numpar=1, nturb=1
+       start, met_dir, model="hysplit", n_hours=6, numpar=1, nturb=1
    )
    path[["time", "lon", "lat", "zagl"]].iloc[[0, 59, 179, 359]]
 
@@ -155,7 +155,7 @@ The starting points go in ``releases.csv``, one row each:
    2021-07-15 13:00:00,-111.85,40.77,500
 
 ``runtraj run ./my_project`` runs them here, and ``runtraj submit
-./my_project`` as a Slurm job array (:doc:`slurm`). Then read the particles
+./my_project --backend slurm`` as a Slurm job array (:doc:`slurm`). Then read the particles
 of any selection of runs as one table:
 
 .. code-block:: python
@@ -211,7 +211,9 @@ rest itself:
    * - ``SETUP.CFG`` ``SEED``
      - ``seed``, written as ``-(seed + 1)``
    * - ``SETUP.CFG`` ``WINDERRTF``, ``ZICONTROLTF``
-     - The wind and mixed-layer error settings, and ``ziscale``
+     - The wind and mixed-layer error settings, and ``ziscale``; with
+       ``ziscale`` on HYSPLIT 5.3.0 and later, ``WINDERRTF`` is 2 less,
+       because ``hycs_std`` adds 2 itself once it has read ``ZICONTROL``
    * - ``SETUP.CFG`` ``ICHEM``, ``IDSP``
      - 8 and 2, the only values with which HYSPLIT writes particles
        (:data:`~runtraj.models.hysplit.config.FIXED_SETUP`; ``ichem`` may

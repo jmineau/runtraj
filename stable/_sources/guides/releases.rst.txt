@@ -48,7 +48,9 @@ the release type that matches how your instrument samples the air.
      - ``longitudes``, ``latitudes``, ``altitudes`` (arrays)
 
 Every release also needs a ``time`` in UTC. A timezone-aware time is
-converted to UTC. Altitudes are in meters above ground level. Pass
+converted to UTC. A time is kept to the minute, and its seconds are
+dropped: HYSPLIT starts a run on the minute, and the release id names the
+minute. Altitudes are in meters above ground level. Pass
 ``altitude_ref="msl"`` to give them above mean sea level instead.
 
 PointRelease
@@ -189,6 +191,12 @@ results by it with pandas:
    releases = project.releases          # one row per release
    releases[releases.site.isin(["WBB", "UOU"])]
 
+A label may not be named like a column runtraj adds to those tables
+(``variant``, ``realization``, ``model``, ``state``, ``stage``, ``reason``,
+``message``, a result type such as ``particles``, or the name of one of the
+project's stages). Reading or adding such a release is an error that lists
+the names.
+
 For a release built from several rows, the first row's labels are used.
 ``project.release(release_id)`` returns the release itself. A project
 reads ``releases.csv`` as a table and builds a release only when you ask
@@ -228,7 +236,10 @@ How particles are released
 HYSPLIT stops releasing when it reaches ``maxpar`` and fills the locations
 in order, so a ``maxpar`` set too low would leave the last locations with
 fewer particles or none. Leave ``maxpar`` unset: runtraj then gives HYSPLIT
-room for every location (``n * (numpar // n + 1)``). A run whose ``maxpar``
+room for every location (``n * (numpar // n + 1)`` for a release of one time
+step; a longer ``emisshrs`` releases a share at every one-minute step, and
+HYSPLIT rounds each one up: 1000 particles over 3 locations and half an hour
+give 12 x 3 x 30 = 1080). A run whose ``maxpar``
 cuts a multipoint release short fails as ``PARTICLE_LIMIT``.
 
 A release happens at one time, but HYSPLIT releases its particles over
@@ -245,6 +256,14 @@ that averages over one, set ``emisshrs`` to that period in hours:
 
 The particles are then spread evenly over the hour. :doc:`choosing_settings`
 lists the other settings HYSPLIT chooses for you.
+
+A :class:`ColumnRelease` released over more than a minute is a column of
+particles every minute. With ``numpar: 1000`` and ``emisshrs: 0.5``, HYSPLIT
+releases 34 particles a minute, each in one of 34 slabs from ``bottom`` to
+``top``. A HYSPLIT build that writes no rows at release time (5.4.2 and
+earlier) then tells runtraj a particle's start height only to within its
+slab, about 29 m in a 1000 m column, against about 1 m for the default
+instant release. A build that writes them makes it exact.
 
 
 Advanced: release heights for multipoint and slant releases
@@ -322,6 +341,7 @@ All three classes have these members:
 
 ``release.geometry``
    A shapely geometry: a ``Point``, ``LineString``, or ``MultiPoint``.
+   Needs the ``geometry`` extra.
 
 ``release.plot.map()``
    A quick map of the release.

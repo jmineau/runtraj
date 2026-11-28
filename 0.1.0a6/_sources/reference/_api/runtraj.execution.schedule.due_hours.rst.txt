@@ -1,0 +1,6 @@
+﻿runtraj.execution.schedule.due\_hours
+=====================================
+
+.. currentmodule:: runtraj.execution.schedule
+
+.. autofunction:: due_hours

@@ -1,0 +1,6 @@
+runtraj.models.flexpart.FlexpartConfig.UNRECORDED
+=================================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+.. autoattribute:: FlexpartConfig.UNRECORDED

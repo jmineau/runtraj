@@ -1,0 +1,6 @@
+﻿runtraj.models.flexpart.flexpart\_version
+=========================================
+
+.. currentmodule:: runtraj.models.flexpart
+
+.. autofunction:: flexpart_version

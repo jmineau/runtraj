@@ -1,0 +1,5 @@
+runtraj.Project.add\_table
+==========================
+
+.. currentmodule:: runtraj
+.. automethod:: Project.add_table

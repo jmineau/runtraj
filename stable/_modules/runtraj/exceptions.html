@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>runtraj.exceptions &#8212; runtraj 0.1.0a5</title>
+    <title>runtraj.exceptions &#8212; runtraj 0.1.0a6</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=b5c4fd1f"></script>
+    <script src="../../_static/documentation_options.js?v=823c7775"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a5';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0a6';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a5" />
+  <meta name="docsearch:version" content="0.1.0a6" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -570,12 +570,28 @@
 
 
 
+<div class="viewcode-block" id="SchedulerError">
+<a class="viewcode-back" href="../../reference/_api/runtraj.exceptions.SchedulerError.html#runtraj.SchedulerError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SchedulerError</span><span class="p">(</span><span class="n">RuntrajError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    A scheduler refused a job, could not be reached, or stopped answering.</span>
+
+<span class="sd">    Raised when ``sbatch``, ``qsub`` or ``kubectl`` is missing or refuses the</span>
+<span class="sd">    job (an invalid account, a limit, a quota), and when ``sacct`` or</span>
+<span class="sd">    ``qstat`` stops answering while a run waits. The message is the</span>
+<span class="sd">    scheduler's own. ``runtraj submit`` and ``runtraj run`` end with exit</span>
+<span class="sd">    code 2 and that message alone, as they do for a setting they refuse.</span>
+<span class="sd">    """</span></div>
+
+
+
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">"HYSPLITNotFoundError"</span><span class="p">,</span>
     <span class="s2">"MeteorologyError"</span><span class="p">,</span>
     <span class="s2">"MissingClass"</span><span class="p">,</span>
     <span class="s2">"SimulationError"</span><span class="p">,</span>
     <span class="s2">"RuntrajError"</span><span class="p">,</span>
+    <span class="s2">"SchedulerError"</span><span class="p">,</span>
     <span class="s2">"WorkerDied"</span><span class="p">,</span>
 <span class="p">]</span>
 </pre></div>

@@ -33,20 +33,20 @@ back from 10 m above Salt Lake Valley:
        time="2021-07-15 10:30", longitude=-112.0, latitude=40.5, altitude=10
    )
    trajectories = runtraj.run_trajectories(
-       release, "/data/hrrr", n_hours=-6, mode="trajectory"
+       release, "/data/hrrr", model="hysplit", n_hours=-6, mode="trajectory"
    )
    trajectories
 
 .. code-block:: text
 
-      trajectory                      time  age      lon     lat   zagl   pres
-   0           1 2021-07-15 10:30:00+00:00    0 -112.000  40.500   10.0  853.1
-   1           1 2021-07-15 09:30:00+00:00  -60 -111.851  40.310    0.1  863.8
-   2           1 2021-07-15 08:30:00+00:00 -120 -111.865  40.049  280.5  834.0
-   3           1 2021-07-15 07:30:00+00:00 -180 -112.114  39.738  720.8  750.4
-   4           1 2021-07-15 06:30:00+00:00 -240 -112.340  39.480  250.0  831.0
+      trajectory                      time    age      lon     lat   zagl   pres
+   0           1 2021-07-15 10:30:00+00:00      0 -112.000  40.500   10.0  853.1
+   1           1 2021-07-15 09:30:00+00:00  -3600 -111.851  40.310    0.1  863.8
+   2           1 2021-07-15 08:30:00+00:00  -7200 -111.865  40.049  280.5  834.0
+   3           1 2021-07-15 07:30:00+00:00 -10800 -112.114  39.738  720.8  750.4
+   4           1 2021-07-15 06:30:00+00:00 -14400 -112.340  39.480  250.0  831.0
 
-``age`` is minutes since the release, negative going back, and the row at
+``age`` is seconds since the release, negative going back, and the row at
 ``age = 0`` is the release itself. ``zagl`` is the height above ground in
 meters, and ``pres`` the pressure in hPa, which HYSPLIT always writes.
 
@@ -77,7 +77,7 @@ setting its ``tm_`` setting to 1:
      - ``tpot``
      - Potential temperature, K
    * - ``tm_tamb``
-     - ``temp``
+     - ``temz``
      - Air temperature, K
    * - ``tm_rain``
      - ``rain``
@@ -120,19 +120,19 @@ at one place, at different heights, which is how you compare levels:
        altitudes=[10, 500, 100],
    )
    trajectories = runtraj.run_trajectories(
-       levels, "/data/hrrr", n_hours=6, mode="trajectory", tout=30, tm_tpot=1, tm_mixd=1
+       levels, "/data/hrrr", model="hysplit", n_hours=6, mode="trajectory", tout=30, tm_tpot=1, tm_mixd=1
    )
    trajectories.head(6)
 
 .. code-block:: text
 
-      trajectory                      time  age  ...   pres   tpot    mlht
-   0           1 2021-07-15 02:00:00+00:00    0  ...  851.4  316.8   354.5
-   1           2 2021-07-15 02:00:00+00:00    0  ...  805.6  318.6   354.5
-   2           3 2021-07-15 02:00:00+00:00    0  ...  817.1  319.7  3653.8
-   3           1 2021-07-15 02:30:00+00:00   30  ...  856.7  315.8   386.2
-   4           2 2021-07-15 02:30:00+00:00   30  ...  813.8  318.0   486.9
-   5           3 2021-07-15 02:30:00+00:00   30  ...  796.8  319.7  3253.2
+      trajectory                      time   age  ...   pres   tpot    mlht
+   0           1 2021-07-15 02:00:00+00:00     0  ...  851.4  316.8   354.5
+   1           2 2021-07-15 02:00:00+00:00     0  ...  805.6  318.6   354.5
+   2           3 2021-07-15 02:00:00+00:00     0  ...  817.1  319.7  3653.8
+   3           1 2021-07-15 02:30:00+00:00  1800  ...  856.7  315.8   386.2
+   4           2 2021-07-15 02:30:00+00:00  1800  ...  813.8  318.0   486.9
+   5           3 2021-07-15 02:30:00+00:00  1800  ...  796.8  319.7  3253.2
 
 How high did each get?
 

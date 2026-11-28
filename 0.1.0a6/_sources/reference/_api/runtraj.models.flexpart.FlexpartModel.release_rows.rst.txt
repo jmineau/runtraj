@@ -1,0 +1,5 @@
+runtraj.models.flexpart.FlexpartModel.release\_rows
+===================================================
+
+.. currentmodule:: runtraj.models.flexpart
+.. automethod:: FlexpartModel.release_rows

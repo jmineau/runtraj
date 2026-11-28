@@ -24,7 +24,6 @@ Methods
    :toctree:
 
    ~Output.clear_failure
-   ~Output.complete
    ~Output.failure
    ~Output.failures
    ~Output.folder
