@@ -56,7 +56,7 @@ PARTICLE_COLUMNS = {
     "hmix": "mlht",
     "rho": "dens",
     "prs": "pres",
-    "T": "temp",
+    "T": "temz",
     "sh": "sphu",
     "to": "zsfc",
 }

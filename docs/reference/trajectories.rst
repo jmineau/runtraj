@@ -58,10 +58,10 @@ is 1:
      - K
      - Potential temperature (``THETA``). Also written when the vertical
        motion is isentropic (``w_option: 2``).
-   * - ``temp``
+   * - ``temz``
      - ``tm_tamb``
      - K
-     - Air temperature (``AIR_TEMP``).
+     - Air temperature at the trajectory (``AIR_TEMP``).
    * - ``rain``
      - ``tm_rain``
      - mm per hour
@@ -94,9 +94,9 @@ is 1:
 
 The values are HYSPLIT's, as its file holds them, to one decimal (three
 for ``lon`` and ``lat``). A column that shares its name with a particle
-column (:doc:`particles`) is the same quantity, but HYSPLIT's trajectory
-program writes humidity in g/kg, so check a unit here before you compare
-the two.
+column (:doc:`particles`) is the same quantity, except ``rain`` (m/min in
+a particle table, mm per hour here) and ``sphu`` (g/g in a particle table,
+g/kg here): check a unit here before you compare the two.
 
 The table is not the particle table. It has no ``foot`` and no ``weight``,
 the particle transforms do not run on it, and a stage that reads particles

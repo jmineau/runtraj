@@ -223,6 +223,23 @@ def test_a_scan_of_old_and_new_files_names_an_old_one(tmp_path, old_first):
     assert str(old) in str(error.value)
 
 
+def test_a_scan_of_flexpart_particles_with_temp_is_refused(tmp_path):
+    import json
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    out = Output(tmp_path / "output")
+    path = write_one(out)
+    table = pq.read_table(path)
+    meta = dict(table.schema.metadata)
+    meta[b"runtraj:settings"] = json.dumps({"model": {"name": "flexpart"}}).encode()
+    table = table.append_column("temp", pa.array([270.0] * table.num_rows))
+    pq.write_table(table.replace_schema_metadata(meta), path)
+    with pytest.raises(ValueError, match="before it was named ``temz``"):
+        out.table("particles", VARIANT)
+
+
 # ---------------------------------------------------------------------------
 # Completion
 # ---------------------------------------------------------------------------

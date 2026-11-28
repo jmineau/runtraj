@@ -41,7 +41,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from runtraj._paths import location, readable
-from runtraj.particles.table import write_release_file
+from runtraj.particles.table import OLD_TEMP, write_release_file
 
 if TYPE_CHECKING:
     from upath import UPath
@@ -159,6 +159,8 @@ def read_trajectories(path: str | Path | UPath) -> pd.DataFrame:
     with readable(where) as source:
         pf = pq.ParquetFile(source)
         columns = [c for c in pf.schema_arrow.names if c != "release"]
+        if "temp" in columns:
+            raise ValueError(OLD_TEMP.format(what=f"The file {where}"))
         return pf.read(columns=columns).to_pandas()
 
 
@@ -170,6 +172,8 @@ def trajectories_from_table(table: pa.Table) -> pd.DataFrame:
     ``release`` column, the stored columns, and ``date``, which is dropped.
     ``release`` comes back as strings.
     """
+    if "temp" in table.column_names:
+        raise ValueError(OLD_TEMP.format(what="A trajectory file in the table"))
     data = table.unify_dictionaries().to_pandas()
     data = data.drop(columns=["date"], errors="ignore")
     if not data.empty:

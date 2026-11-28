@@ -93,7 +93,7 @@ from runtraj.identity import (
     settings_hash,
     stage_hash,
 )
-from runtraj.particles.table import OLD_FILE, float64_schema
+from runtraj.particles.table import OLD_FILE, check_temp_name, float64_schema
 from runtraj.releases import Release, parse_release_id
 from runtraj.results import RESULT_TYPES, result_type, write_result
 from runtraj.stages import get_stage
@@ -1081,9 +1081,16 @@ class Output:
             )
         # A dataset takes its types from the first file, so a float32 file
         # first would cast a later float64 file down: ask for float64.
-        dataset = open_dataset(schema=float64_schema(open_dataset().schema))
+        first = open_dataset().schema
+        dataset = open_dataset(schema=float64_schema(first))
         if "release" not in dataset.schema.names:
             raise ValueError(_old_files_message(kind, folder, paths))
+        if kind == "particles":  # the first file's, as the dataset's columns are
+            check_temp_name(
+                first.names,
+                first.metadata or {},
+                f"The first {kind} file in {folder}",
+            )
         if columns is None:
             table = dataset.to_table()
         else:

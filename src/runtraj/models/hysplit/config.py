@@ -139,7 +139,7 @@ CONCENTRATION_ONLY_SETTINGS = (*CONCENTRATION_SETTINGS, "conversions")
 #: it in the trajectory file, and the column of the trajectory table.
 TRAJECTORY_DIAGNOSTICS = (
     ("tm_tpot", "THETA", "tpot"),
-    ("tm_tamb", "AIR_TEMP", "temp"),
+    ("tm_tamb", "AIR_TEMP", "temz"),
     ("tm_rain", "RAINFALL", "rain"),
     ("tm_mixd", "MIXDEPTH", "mlht"),
     ("tm_relh", "RELHUMID", "relh"),
@@ -1057,7 +1057,7 @@ class HysplitConfig(TransportConfig):
         0,
         description=(
             "Write the air temperature along each trajectory (1), as "
-            "``temp``, in K. In ``mode: trajectory`` only."
+            "``temz``, in K. In ``mode: trajectory`` only."
         ),
     )
     tm_rain: Literal[0, 1] = Field(

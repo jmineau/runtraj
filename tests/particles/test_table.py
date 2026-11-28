@@ -865,3 +865,32 @@ def test_stored_release_names_a_file_that_records_no_release():
 
     with pytest.raises(ValueError, match="a.parquet does not record its release"):
         stored_release({}, "a.parquet")
+
+
+def _flexpart_file(tmp_path, point_release, column):
+    """Write a FLEXPART particle file whose temperature column is *column*."""
+    traj = finished(_particles_basic(), point_release).assign(**{column: 270.0})
+    settings = {**_settings(_params(tmp_path)), "model": {"name": "flexpart"}}
+    path = tmp_path / f"{column}.parquet"
+    write_particles(path, traj, point_release, settings, [])
+    return path
+
+
+def test_a_flexpart_file_with_temp_is_refused_and_one_with_temz_reads(
+    point_release, tmp_path
+):
+    """Before ``temz``, FLEXPART's particle temperature was ``temp``, the name of HYSPLIT's lowest level."""
+    old = _flexpart_file(tmp_path, point_release, "temp")
+    with pytest.raises(ValueError, match="before it was named ``temz``") as error:
+        read_particles(old)
+    assert str(old) in str(error.value)
+    assert (
+        read_particles(_flexpart_file(tmp_path, point_release, "temz"))["temz"] == 270
+    ).all()
+
+
+def test_a_hysplit_file_with_temp_reads(point_release, tmp_path):
+    traj = finished(_particles_basic(), point_release).assign(temp=300.0, temz=270.0)
+    path = tmp_path / "hysplit.parquet"
+    write_particles(path, traj, point_release, _settings(_params(tmp_path)), [])
+    assert (read_particles(path)["temp"] == 300).all()
