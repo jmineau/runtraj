@@ -15,9 +15,7 @@ import numpy as np
 import pandas as pd
 
 from .config import TRAJECTORY_DIAGNOSTICS
-
-#: What :func:`read_tdump` resolves a two-digit year with: years below this are 20YY, the rest 19YY.
-_CENTURY_PIVOT = 40
+from .control import _year
 
 #: The trajectory table's column for each of HYSPLIT's labels in the file.
 #: A label not listed here keeps HYSPLIT's name, in lowercase.
@@ -101,10 +99,9 @@ def read_tdump(path: str | Path) -> pd.DataFrame:
     raw = pd.DataFrame(rows, columns=range(len(widths))).apply(
         pd.to_numeric, errors="coerce"
     )
-    year = raw[2].to_numpy()
     time = pd.to_datetime(
         {
-            "year": year + np.where(year < _CENTURY_PIVOT, 2000, 1900),
+            "year": raw[2].map(_year),
             "month": raw[3],
             "day": raw[4],
             "hour": raw[5],
