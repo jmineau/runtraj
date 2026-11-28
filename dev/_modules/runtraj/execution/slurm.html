@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=96b37ba0"></script>
+    <script src="../../../_static/documentation_options.js?v=ac3353df"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev59+g5dc290a2b" />
+  <meta name="docsearch:version" content="0.1.0a6.dev60+g134c80723" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -474,6 +474,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">SchedulerError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">SILENT_SCHEDULER_SECONDS</span><span class="p">,</span> <span class="n">Backend</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">FetchConfig</span><span class="p">,</span> <span class="n">SlurmConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.runner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -728,14 +729,17 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_sbatch</span><span class="p">(</span><span class="n">script</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="n">extra</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">"""Submit *script* with ``sbatch --parsable`` and return its job id and cluster (``None`` for the default one)."""</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-        <span class="p">[</span><span class="s2">"sbatch"</span><span class="p">,</span> <span class="s2">"--parsable"</span><span class="p">,</span> <span class="o">*</span><span class="n">extra</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">script</span><span class="p">)],</span>
-        <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">"sbatch"</span><span class="p">,</span> <span class="s2">"--parsable"</span><span class="p">,</span> <span class="o">*</span><span class="n">extra</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">script</span><span class="p">)],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SchedulerError</span><span class="p">(</span><span class="s2">"sbatch is not installed, or not on PATH."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+        <span class="k">raise</span> <span class="n">SchedulerError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"sbatch refused </span><span class="si">{</span><span class="n">script</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
         <span class="p">)</span>
     <span class="c1"># --parsable prints "&lt;id&gt;", or "&lt;id&gt;;&lt;cluster&gt;" for a job on another cluster.</span>
@@ -803,7 +807,7 @@
             <span class="n">after</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"--clusters=</span><span class="si">{</span><span class="n">fetch_cluster</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">job_id</span><span class="p">,</span> <span class="n">cluster</span> <span class="o">=</span> <span class="n">_sbatch</span><span class="p">(</span><span class="n">script</span><span class="p">,</span> <span class="o">*</span><span class="n">after</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+    <span class="k">except</span> <span class="n">SchedulerError</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">fetch_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Nothing waits for the fetch job now: do not leave it downloading.</span>
             <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
@@ -924,7 +928,7 @@
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
-<span class="sd">    RuntimeError</span>
+<span class="sd">    SchedulerError</span>
 <span class="sd">        If ``sacct`` gave no answer about the job for</span>
 <span class="sd">        :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`.</span>
 <span class="sd">    """</span>
@@ -934,7 +938,7 @@
         <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">answered</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="n">answered</span> <span class="o">&gt;=</span> <span class="n">SILENT_SCHEDULER_SECONDS</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">SchedulerError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"sacct has said nothing about job </span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s2"> for "</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">SILENT_SCHEDULER_SECONDS</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="mi">60</span><span class="si">}</span><span class="s2"> minutes, so runtraj stopped "</span>
                 <span class="s2">"waiting for it. The job may still be running: see squeue, and "</span>
