@@ -354,15 +354,19 @@ def write_inputs(
     shutil.copyfile(species, options / "SPECIES" / "SPECIES_001")
     first = next(iter(met_files.values()))
     (options / "COMMAND").write_text(
-        command(config, window, nxshift(met.source(), first))
+        command(config, window, nxshift(met.source(), first)), encoding="utf-8"
     )
-    (options / "RELEASES").write_text(releases(release, config.numpar))
-    (options / "PARTOPTIONS").write_text(partoptions())
-    (options / "OUTGRID").write_text(outgrid(release))
+    (options / "RELEASES").write_text(
+        releases(release, config.numpar), encoding="utf-8"
+    )
+    (options / "PARTOPTIONS").write_text(partoptions(), encoding="utf-8")
+    (options / "OUTGRID").write_text(outgrid(release), encoding="utf-8")
     for path in met_files.values():
         os.symlink(Path(path).resolve(), workdir / "met" / Path(path).name)
-    (workdir / "AVAILABLE").write_text(available(met_files))
-    (workdir / "pathnames").write_text("./options/\n./output/\n./met/\n./AVAILABLE\n")
+    (workdir / "AVAILABLE").write_text(available(met_files), encoding="utf-8")
+    (workdir / "pathnames").write_text(
+        "./options/\n./output/\n./met/\n./AVAILABLE\n", encoding="utf-8"
+    )
 
 
 __all__ = ["available", "command", "outgrid", "partoptions", "releases", "write_inputs"]

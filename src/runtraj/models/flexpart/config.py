@@ -216,7 +216,7 @@ def flexpart_version(directory: str | Path) -> str:
     """
     root = Path(directory)
     if (root / "version").is_file():
-        return (root / "version").read_text().strip()
+        return (root / "version").read_text(encoding="utf-8").strip()
     try:
         commit = subprocess.run(
             ["git", "-C", str(root), "describe", "--always", "--dirty"],
