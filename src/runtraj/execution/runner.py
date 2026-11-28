@@ -88,11 +88,14 @@ def task_share(release_ids: list[str], task: int, n_tasks: int) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
+def slug(name: str) -> str:
+    """Return *name* in lowercase letters, digits and single hyphens, as a job name or label needs it (``project`` when none are left)."""
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "project"
+
+
 def _project_slug(directory: str | Path) -> str:
-    """Return a lowercase, hyphenated name for a project directory, for the Slurm job name."""
-    name = Path(str(directory).rstrip("/")).name or "project"
-    slug = re.sub(r"[^a-z0-9-]+", "-", name.lower().replace("_", "-"))
-    return re.sub(r"-{2,}", "-", slug).strip("-") or "project"
+    """Return a lowercase, hyphenated name for a project directory, for the scheduler's job name."""
+    return slug(Path(str(directory).rstrip("/")).name)
 
 
 def resolve_compute_root(

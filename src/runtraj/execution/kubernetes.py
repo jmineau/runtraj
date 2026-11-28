@@ -29,7 +29,6 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import re
 import shutil
 import subprocess
 import sys
@@ -52,6 +51,7 @@ from runtraj.execution.inputs import (
     push,
     remove_file,
 )
+from runtraj.execution.runner import slug
 from runtraj.execution.schedule import DELAY_HOURS, read_sites
 from runtraj.fetch import downloads
 
@@ -93,8 +93,7 @@ def label_value(name: str) -> str:
     >>> label_value("SLV_2015 winter")
     'slv-2015-winter'
     """
-    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40].strip("-")
-    return slug or "project"
+    return slug(name)[:40].strip("-")
 
 
 def pull_policy(image: str) -> str | None:
