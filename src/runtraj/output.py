@@ -70,6 +70,7 @@ import functools
 import logging
 import os
 import shutil
+import time
 import warnings
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
@@ -257,8 +258,9 @@ def _claim(path: Path | UPath, name: str) -> str:
     A settings hash is claimed this way before its folder is made, so that
     two projects starting the same settings at once, under different
     variant names, both write to the folder of the first. The file is
-    created only if it is not there: a hard link on a filesystem, a
-    conditional put (``If-None-Match``) on an object store.
+    created only if it is not there: a hard link on a filesystem (an
+    exclusive create where there are none), a conditional put
+    (``If-None-Match``) on an object store.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -269,7 +271,14 @@ def _claim(path: Path | UPath, name: str) -> str:
             with path.open("x", encoding="utf-8") as file:
                 file.write(name)
     except FileExistsError:
-        return path.read_text(encoding="utf-8")
+        # A filesystem without hard links shows the file empty until its writer fills it.
+        for _ in range(100):
+            if claimed := path.read_text(encoding="utf-8"):
+                return claimed
+            time.sleep(0.05)
+        raise TimeoutError(
+            f"{path} has been empty for 5 seconds: its writer stopped."
+        ) from None
     return name
 
 

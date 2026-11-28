@@ -127,8 +127,9 @@ def _put_once(tmp: Path, path: Path) -> None:
 
     Windows' rename refuses an existing *path*. A POSIX rename replaces
     it, so there *tmp* gets a hard link at *path*, which refuses it too, and
-    *tmp* is removed after. A filesystem without hard links gets the rename,
-    which on POSIX does not fail while the old file is open.
+    *tmp* is removed after. A filesystem without hard links first creates
+    *path* empty with ``O_CREAT | O_EXCL``, which only one writer wins, and
+    then renames *tmp* over it; a reader may see it empty until then.
     """
     if sys.platform == "win32":
         os.rename(tmp, path)
@@ -138,6 +139,7 @@ def _put_once(tmp: Path, path: Path) -> None:
     except FileExistsError:
         raise
     except OSError:
+        os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
         os.replace(tmp, path)
 
 
