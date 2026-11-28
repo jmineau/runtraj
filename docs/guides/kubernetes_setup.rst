@@ -72,9 +72,8 @@ Try it on your computer
 
 This runs a small project on a Kubernetes cluster on your own computer,
 with `kind <https://kind.sigs.k8s.io/>`_ (Kubernetes in Docker) and a
-stand-in S3 server inside the cluster. It is the run runtraj's end-to-end
-test makes on every pull request, so it is known to work. It takes about
-ten minutes, on Linux: the HYSPLIT build below is for Linux on x86-64.
+stand-in S3 server inside the cluster. It takes about ten minutes, on
+Linux: the HYSPLIT build below is for Linux on x86-64.
 
 You need Docker, ``kind``, ``kubectl``, `uv <https://docs.astral.sh/uv/>`_
 and a clone of the repository:
@@ -138,14 +137,27 @@ Make a cluster whose node sees that folder at ``/met``:
    EOF
    kind create cluster --name runtraj --config kind.yaml
 
-Build the image the demo names (``runtraj:ci``), from this checkout and the
-HYSPLIT folder, and give it to the cluster:
+Build the image the demo names (``runtraj:ci``) from the short Dockerfile in
+`The image`_ above: save it in a build context next to a copy of the HYSPLIT
+folder, using ``s3fs`` for the demo's S3 bucket, then give it to the cluster:
 
 .. code-block:: bash
 
-   uv build --wheel --out-dir image/dist
+   mkdir -p image
    cp -r /opt/hysplit image/hysplit
-   docker build -t runtraj:ci -f tests/kubernetes/Dockerfile image
+   cat > image/Dockerfile <<'EOF'
+   FROM python:3.13-slim
+   RUN apt-get update \
+       && apt-get install -y --no-install-recommends tini \
+       && rm -rf /var/lib/apt/lists/*
+   RUN pip install --no-cache-dir "runtraj[download]" s3fs
+   COPY hysplit/ /opt/hysplit/
+   ENV PATH=/opt/hysplit/exec:$PATH
+   RUN useradd --create-home --uid 10001 runtraj
+   USER 10001
+   ENTRYPOINT ["/usr/bin/tini", "--"]
+   EOF
+   docker build -t runtraj:ci image
    kind load docker-image runtraj:ci --name runtraj
 
 Start the S3 server. ``tests/kubernetes/cluster.yaml`` also makes the
