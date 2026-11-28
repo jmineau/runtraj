@@ -7,15 +7,56 @@ All notable changes to runtraj are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0a6] - 2026-11-27
+
+### Added
+
+- Run FLEXPART 11 as a transport model with a `flexpart` block. FLEXPART particles are stored as float32, and every float column reads back as float64.
+- Support HYSPLIT 5.0. krand 10 to 13 are refused before 5.1.0.
+- A HYSPLIT run records the internal grid it prints in `MESSAGE` with its particles, and `sample_met` and `calc_pbl_height` sample on it.
+- A met takes an optional `label`, so two mets that record the same settings can share a project. Without labels they are refused by `run`, `submit` and `runtraj check`, where before the second variant got the first one's particles.
+
+### Changed
+
+- **Breaking:** a project names its transport model. A `config.yaml` or `ProjectConfig` without a `models:` block is refused, and `run_trajectories` takes `model` with no default. No settings folder moves.
+- **Breaking:** HYSPLIT's particle mode is `mode: particle`, in the singular; `mode: particles` is refused.
+- **Breaking:** `check_model` is imported from `runtraj.testing`, not `runtraj.models`. `runtraj.models` is split into `base`, `registry` and `run`, and re-exports every other public name.
+- **Breaking:** a transport model's `release_rows` takes the run's config. A column's particles are numbered by time step, as HYSPLIT releases them, when HYSPLIT writes no release rows; before, a release longer than one step put particles up to the column's height too high.
+- Requires arlmet 0.1.0b15.
+- Vertical levels are matched without a points-by-levels matrix.
+- **Breaking:** `Project.run` and `Project.submit` take every argument by keyword. A release id list passed first was read as `skip_existing`, and the whole project ran or was submitted; it is now a `TypeError`. Pass `releases=` for a selection.
+- **Breaking:** `age` (and `samt`) is in whole seconds, not minutes, in the particle table, the trajectory table and the CF export. The HYSPLIT readers convert HYSPLIT's minutes; FLEXPART's seconds are kept. A particle or trajectory file written before reads with the wrong unit: delete it and run again.
+- **Breaking:** FLEXPART's particle temperature and the trajectory air temperature are `temz`, and `temp` is always the temperature at the lowest level. A stored FLEXPART particle or trajectory file holding the old `temp` is refused; delete it and run again. HYSPLIT's particle files are unchanged.
+- **Breaking:** `run_many`, the transport model's `batched` flag, `run_model_many` and `run_result_batch` are removed, with the worker's batched path. A model runs one release per call.
+- **Breaking:** `wait`, `job_script` and `fetch_script` are no longer in `runtraj.execution`; import them from `runtraj.execution.slurm`. `block_name` is removed, and `transport_config`, `STAGE_NAME_RE`, `STAGE_VERSION_RE` and `output.Kind` are out of their `__all__`.
+- The refusals that told a user of a pre-release name what to write instead (`receptors.csv`, the `receptor` and `r_idx` columns, a variant's `from:`, a top-level `model`, `file_format`, `file_tres`, `subgrid_buffer`, `n_min`, several nested `ziscale` lists) are removed; those names are now unknown keys or columns.
+- shapely is an optional `geometry` extra (included in `complete`); `Release.geometry` and `.points` name the extra when it is missing. The `visualization` extra needs matplotlib 3.8 or later.
+
 ### Fixed
 
+- A column's particle k is in slab k on HYSPLIT builds that write release rows.
+- FLEXPART takes the number of particles released from `numpar`, and places OUTGRID's cell at the release, not with its longitude and latitude swapped. It ends when the worker that started it is killed outright, as HYSPLIT does.
+- HYSPLIT: DSWF is written in upper case, so hycs_std 5.2 and later fill the `dswf` column; ziscale's errors stay right on 5.3.0 and later; each krand=4 realization gets its own seed; the wind error settings are refused in the concentration mode on 5.3.0 and later; a trajectory release off the hour is refused before hyts_std 5.4.0; a `varsiwant` that leaves out a column of the particle table is refused; maxpar is sized for every time step of a multipoint release; a run that needs more than the 128 met files HYSPLIT reads is refused before it starts; met files of one name in different folders each keep their own crop; a short met crop's replacement is kept beside it when the rename is refused; HYSPLIT starts without the `HYSF_*` environment variables; `runtraj check` reports the krand and wind error refusals.
+- `releases.csv` reads its coordinates exactly on pandas 2, so a release keeps its id, keeps its time to the minute, and is written in one step, so a stop part way cannot leave it empty or cut short. Backfilled releases stay on the hour.
+- One settings hash gets one folder when two projects start it at once, and `status` leaves out a failure record a worker removes while it reads.
+- Sampling takes the cell across the seam of a global field instead of `fill_value`.
+- A Slurm or PBS wait stops with an error when `sacct` or `qstat` says nothing about the job for 30 minutes, and a SIGTERM while `run` or `tick` opens the project exits with 3, so the Slurm task is requeued.
+- A URL project's inputs are copied into a folder of the process's own. Kubernetes spreads the releases left to run over a Job's pods and lists the project for the met once.
+- `+proj=latlong` and `+proj=lonlat` are geographic, and a boolean mask with missing values is a selection.
+- `oxidation` reads its oxidant field's levels in their own units: a field on pressure levels in Pa (or kPa, mb) is matched to a particle's `pres` in hPa, and levels in m or km to `zagl`, instead of picking the level nearest the number. Levels whose `units` cannot be matched to the particle column are an error; levels with no `units` are taken to be in the particles' units, as before.
+- `oxidation` refuses particle times more than one step outside its oxidant field's times, instead of giving them the first or last step, which gave every row of a monthly climatology labeled with another year its December value. Relabel a climatology with the dates of the run.
 - A job the scheduler refuses (`sbatch`, `qsub` or `kubectl` refusing it or missing, or `sacct` or `qstat` going silent while a run waits) ends `runtraj submit` and `runtraj run` with the scheduler's own message and exit code 2, not a traceback and exit code 4. The backends raise the new `runtraj.exceptions.SchedulerError`, a `RuntimeError`; a missing `kubectl` was a `FileNotFoundError`.
 - An unquoted `time: 12:00:00` (or `walltime`, or any other `h:mm:ss`) in `config.yaml` or an `--execution` file stays the text `12:00:00`. PyYAML read it as the base-60 integer 43200, which Slurm took as 43200 minutes (30 days).
 - A variant's `realizations` must be a whole number, 1 or more. A float such as `2.5`, a boolean, a string or a list is refused with an error naming the variant and the value, instead of being rounded (`2.5` ran 2 realizations, `true` ran 1) or ending `runtraj check` in a traceback.
-- `oxidation` reads its oxidant field's levels in their own units: a field on pressure levels in Pa (or kPa, mb) is matched to a particle's `pres` in hPa, and levels in m or km to `zagl`, instead of picking the level nearest the number. Levels whose `units` cannot be matched to the particle column are an error; levels with no `units` are taken to be in the particles' units, as before.
-- `oxidation` refuses particle times more than one step outside its oxidant field's times, instead of giving them the first or last step, which gave every row of a monthly climatology labeled with another year its December value. Relabel a climatology with the dates of the run.
-- **Breaking:** `Project.run` and `Project.submit` take every argument by keyword. A release id list passed first was read as `skip_existing`, and the whole project ran or was submitted; it is now a `TypeError`. Pass `releases=` for a selection.
 - `Project.status` and `incomplete` list each results tree once per call. A lookup that found no folder listed the whole tree again for every variant, kind and realization, so a 50-member ensemble that had not run yet listed it 150 times; on an object store each listing is a request.
+- `runtraj submit` without `--backend`, when `config.yaml` names no backend or `local`, exits with 2 naming the flag and `execution.backend`. `--n-workers` on a backend without workers is refused. A Slurm wait asks `squeue` when `sacct` is silent, and a job gone from `squeue` has ended.
+- FLEXPART refuses a `loutstep` below twice `lsynctime`, and a multipoint release with more points than `numpar`, before it runs; both stop FLEXPART.
+- A CONTROL file's two-digit year is read as HYSPLIT does (40 to 99 is 19YY, 00 to 39 is 20YY); `ControlFile.write` refuses a release time outside 1940 to 2039.
+- A blank `group` cell in `releases.csv` is a release of its own, not a group of every blank row.
+- A stage whose config class forbids extra keys gets runtraj's hint for an unknown key.
+- A release label named like a column of `project.simulations` or `status()` (or like a stage) is refused, in `releases.csv` and in `add_releases`.
+- `ProjectConfig.output` takes a `pathlib.Path` as well as a string, so `Project.init(..., output=Path(...))` works.
+- On a filesystem without hard links (SMB, some FUSE mounts), two projects starting one settings hash at once can no longer both claim it.
 
 ## [0.1.0a5] - 2026-11-24
 
