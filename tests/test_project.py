@@ -177,6 +177,26 @@ def test_init_takes_a_config_or_settings_not_both(tmp_path):
         Project.init(tmp_path / "proj", config=config, output="elsewhere")
 
 
+def test_init_takes_output_as_a_path_like_as_a_string(tmp_path):
+    from_str = Project.init(
+        tmp_path / "a", **_settings(tmp_path), output=str(tmp_path / "out")
+    )
+    from_path = Project.init(
+        tmp_path / "b", **_settings(tmp_path), output=tmp_path / "out"
+    )
+
+    assert from_path.config.output == from_str.config.output == str(tmp_path / "out")
+    assert from_path.output.directory == from_str.output.directory
+
+
+def test_init_still_takes_output_as_a_url(tmp_path):
+    project = Project.init(
+        tmp_path / "proj", **_settings(tmp_path), output="s3://bucket/output"
+    )
+
+    assert project.config.output == "s3://bucket/output"
+
+
 def test_init_refuses_a_directory_that_is_already_a_project(tmp_path):
     project = _project(tmp_path)
     before = project.config_path.read_text()

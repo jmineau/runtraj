@@ -515,6 +515,12 @@ class ProjectConfig(BaseModel):
             )
         return data
 
+    @field_validator("output", mode="before")
+    @classmethod
+    def _output_path(cls, output: Any) -> Any:
+        """Accept a path in Python, kept as text like a URL."""
+        return str(output) if isinstance(output, PurePath) else output
+
     @field_validator("mets", mode="before")
     @classmethod
     def _met_mappings(cls, mets: Any) -> Any:
