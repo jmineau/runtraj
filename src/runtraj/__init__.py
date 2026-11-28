@@ -7,12 +7,10 @@ particles. :func:`run_trajectories` runs the transport model for one release,
 without a project.
 """
 
-from importlib.metadata import PackageNotFoundError
-from importlib.metadata import version as _version
-
 from .config import ProjectConfig
 from .exceptions import RuntrajError
 from .execution import ExecutionConfig, task_share
+from .identity import runtraj_version
 from .models import run_trajectories
 from .particles import read_particles
 from .project import Project
@@ -26,10 +24,7 @@ from .releases import (
 from .simulation import Simulation
 from .spatial import Bounds
 
-try:
-    __version__ = _version("runtraj")
-except PackageNotFoundError:
-    __version__ = "0+unknown"
+__version__ = runtraj_version()
 
 __all__ = [
     # A project and its settings
