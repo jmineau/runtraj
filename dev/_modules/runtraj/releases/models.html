@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=8e990314"></script>
+    <script src="../../../_static/documentation_options.js?v=f8f1cdf2"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
+  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -463,6 +463,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModuleType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">TYPE_CHECKING</span><span class="p">,</span>
     <span class="n">Annotated</span><span class="p">,</span>
@@ -482,9 +483,10 @@
     <span class="n">field_validator</span><span class="p">,</span>
     <span class="n">model_validator</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">shapely</span><span class="w"> </span><span class="kn">import</span> <span class="n">Geometry</span><span class="p">,</span> <span class="n">LineString</span><span class="p">,</span> <span class="n">MultiPoint</span><span class="p">,</span> <span class="n">Point</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">shapely</span><span class="w"> </span><span class="kn">import</span> <span class="n">Geometry</span><span class="p">,</span> <span class="n">LineString</span><span class="p">,</span> <span class="n">MultiPoint</span><span class="p">,</span> <span class="n">Point</span>
+
     <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReleasePlotAccessor</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.validation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -493,6 +495,19 @@
     <span class="n">point_errors</span><span class="p">,</span>
     <span class="n">two_points_errors</span><span class="p">,</span>
 <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_shapely</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ModuleType</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Import shapely, which only a release's geometry needs."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shapely</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">"A release's geometry requires shapely, which the geometry extra "</span>
+            <span class="s1">'installs: pip install "runtraj[geometry]"'</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+    <span class="k">return</span> <span class="n">shapely</span>
+
 
 <span class="n">TimeLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span> <span class="o">|</span> <span class="nb">str</span>
 
@@ -819,7 +834,8 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Point</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Release points as shapely ``Point(lon, lat, alt)`` objects."""</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span><span class="p">)</span> <span class="k">for</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">()]</span>
+        <span class="n">shapely</span> <span class="o">=</span> <span class="n">_shapely</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">shapely</span><span class="o">.</span><span class="n">Point</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span><span class="p">)</span> <span class="k">for</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">alt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coords</span><span class="p">()]</span>
 
 <div class="viewcode-block" id="Release.plot">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.Release.plot.html#runtraj.Release.plot">[docs]</a>
@@ -998,7 +1014,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Point</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return a shapely Point at the release point."""</span>
-        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">_shapely</span><span class="p">()</span><span class="o">.</span><span class="n">Point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">)</span></div>
 
 
 
@@ -1059,7 +1075,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LineString</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return a shapely LineString from the bottom to the top."""</span>
-        <span class="k">return</span> <span class="n">LineString</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">_shapely</span><span class="p">()</span><span class="o">.</span><span class="n">LineString</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom</span><span class="p">),</span>
                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">),</span>
@@ -1161,7 +1177,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MultiPoint</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return a shapely MultiPoint of the release points."""</span>
-        <span class="k">return</span> <span class="n">MultiPoint</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">_shapely</span><span class="p">()</span><span class="o">.</span><span class="n">MultiPoint</span><span class="p">(</span>
             <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longitudes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitudes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitudes</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
         <span class="p">)</span></div>
 

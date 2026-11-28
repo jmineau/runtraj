@@ -341,6 +341,7 @@ All three classes have these members:
 
 ``release.geometry``
    A shapely geometry: a ``Point``, ``LineString``, or ``MultiPoint``.
+   Needs the ``geometry`` extra.
 
 ``release.plot.map()``
    A quick map of the release.

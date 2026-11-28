@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=8e990314"></script>
+    <script src="../../../../_static/documentation_options.js?v=f8f1cdf2"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
+  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -570,8 +570,6 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Check the archive and its options, and the fields each mode needs."""</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">download_options</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">extra</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">_REMOVED</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> is gone: </span><span class="si">{</span><span class="n">_REMOVED</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">download</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">arlmet.archives</span><span class="w"> </span><span class="kn">import</span> <span class="n">ARCHIVES</span>
 
@@ -1447,27 +1445,6 @@
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"file"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"string"</span><span class="p">)</span></div>
 </div>
 
-
-
-<span class="c1">#: Met settings that were removed, and what to do instead.</span>
-<span class="n">_REMOVED</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">"file_format"</span><span class="p">:</span> <span class="p">(</span>
-        <span class="s2">"delete it. Each met file's header says which times it holds, so its "</span>
-        <span class="s2">"name no longer matters."</span>
-    <span class="p">),</span>
-    <span class="s2">"file_tres"</span><span class="p">:</span> <span class="p">(</span>
-        <span class="s2">"delete it. Each met file's header says which times it holds, so how "</span>
-        <span class="s2">"much a file covers is read from the file."</span>
-    <span class="p">),</span>
-    <span class="s2">"subgrid_buffer"</span><span class="p">:</span> <span class="p">(</span>
-        <span class="s2">"the crop is subgrid_bounds. Widen the bounds by the buffer instead (it "</span>
-        <span class="s2">"was in degrees)."</span>
-    <span class="p">),</span>
-    <span class="s2">"n_min"</span><span class="p">:</span> <span class="p">(</span>
-        <span class="s2">"a run needs every met file its hours fall in, and fails naming the "</span>
-        <span class="s2">"hours with no file."</span>
-    <span class="p">),</span>
-<span class="p">}</span>
 
 
 <span class="nd">@dataclass</span>

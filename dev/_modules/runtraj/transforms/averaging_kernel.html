@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=8e990314"></script>
+    <script src="../../../_static/documentation_options.js?v=f8f1cdf2"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
+  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -615,12 +615,6 @@
             <span class="sa">f</span><span class="s2">"averaging_kernel table </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2"> must be a .parquet or .csv file."</span>
         <span class="p">)</span>
     <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">KERNEL_TABLE_COLUMNS</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">missing</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"release"</span><span class="p">]</span> <span class="ow">and</span> <span class="s2">"receptor"</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"averaging_kernel table </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2"> has a 'receptor' column, which is "</span>
-            <span class="s2">"now named 'release'. Rename the column in the file, or make the "</span>
-            <span class="s2">"table again with averaging_kernel_table."</span>
-        <span class="p">)</span>
     <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"averaging_kernel table </span><span class="si">{</span><span class="n">path</span><span class="si">!r}</span><span class="s2"> lacks columns </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">; "</span>

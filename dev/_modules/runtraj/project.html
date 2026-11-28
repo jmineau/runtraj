@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=8e990314"></script>
+    <script src="../../_static/documentation_options.js?v=f8f1cdf2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
+  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -614,9 +614,6 @@
 <span class="sd">    FileNotFoundError</span>
 <span class="sd">        If the directory has no ``config.yaml``, so it is not a project: a</span>
 <span class="sd">        mistyped path is not read as a project with no releases.</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If the directory has ``receptors.csv`` and no ``releases.csv``: the</span>
-<span class="sd">        file was renamed, and its ``r_idx`` column is now ``group``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -633,13 +630,6 @@
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"No config.yaml in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="si">}</span><span class="s2">. Make a project with "</span>
                 <span class="s2">"runtraj.Project.init(...)."</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="o">/</span> <span class="s2">"receptors.csv"</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">releases_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="si">}</span><span class="s2"> has receptors.csv, which is now named "</span>
-                <span class="s2">"releases.csv: rename the file, and rename its r_idx column to group."</span>
             <span class="p">)</span>
 
 <div class="viewcode-block" id="Project.init">
@@ -991,8 +981,7 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If *table* has other columns than the table it adds to, or the</span>
-<span class="sd">            table was written with a ``receptor`` column, now ``release``.</span>
+<span class="sd">            If *table* has other columns than the table it adds to.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1006,12 +995,6 @@
         <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">held</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s2">"receptor"</span> <span class="ow">in</span> <span class="n">held</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="s2">"release"</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Table </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> was written with a 'receptor' column, which "</span>
-                    <span class="sa">f</span><span class="s2">"is now named 'release'. Rename the column in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">, or "</span>
-                    <span class="s2">"delete the file and add the table again."</span>
-                <span class="p">)</span>
             <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="n">held</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Table </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has the columns </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">held</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
@@ -1180,12 +1163,6 @@
             <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
                 <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"release"</span><span class="p">,</span> <span class="s2">"variant"</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s2">"release"</span> <span class="ow">in</span> <span class="n">missing</span> <span class="ow">and</span> <span class="s2">"receptor"</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">"A selection of simulations has a 'receptor' column, which is "</span>
-                <span class="s2">"now named 'release'. Rename the column, or select from "</span>
-                <span class="s2">"project.simulations."</span>
-            <span class="p">)</span>
         <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">"A selection of simulations is a table with 'release' and "</span>
