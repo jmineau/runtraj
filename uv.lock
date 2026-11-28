@@ -3924,7 +3924,6 @@ dependencies = [
     { name = "pyyaml" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "shapely" },
     { name = "typer" },
     { name = "universal-pathlib" },
     { name = "xarray" },
@@ -3939,6 +3938,7 @@ complete = [
     { name = "eccodeslib", marker = "sys_platform != 'win32'" },
     { name = "matplotlib" },
     { name = "netcdf4" },
+    { name = "shapely" },
 ]
 concentration = [
     { name = "netcdf4" },
@@ -3950,6 +3950,9 @@ flexpart = [
     { name = "cfgrib" },
     { name = "eccodes" },
     { name = "eccodeslib", marker = "sys_platform != 'win32'" },
+]
+geometry = [
+    { name = "shapely" },
 ]
 visualization = [
     { name = "cartopy" },
@@ -3984,6 +3987,7 @@ dev = [
     { name = "rust-just" },
     { name = "s3fs" },
     { name = "setuptools-scm" },
+    { name = "shapely" },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.12.*'" },
     { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
@@ -4005,7 +4009,7 @@ requires-dist = [
     { name = "eccodes", marker = "extra == 'flexpart'", specifier = ">=2.39" },
     { name = "eccodeslib", marker = "sys_platform != 'win32' and extra == 'flexpart'", specifier = ">=2.39" },
     { name = "fsspec", specifier = ">=2024.12.0" },
-    { name = "matplotlib", marker = "extra == 'visualization'", specifier = ">=3.7" },
+    { name = "matplotlib", marker = "extra == 'visualization'", specifier = ">=3.8" },
     { name = "netcdf4", marker = "extra == 'concentration'", specifier = ">=1.6.5" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.1" },
@@ -4016,14 +4020,15 @@ requires-dist = [
     { name = "runtraj", extras = ["concentration"], marker = "extra == 'complete'" },
     { name = "runtraj", extras = ["download"], marker = "extra == 'complete'" },
     { name = "runtraj", extras = ["flexpart"], marker = "extra == 'complete'" },
+    { name = "runtraj", extras = ["geometry"], marker = "extra == 'complete'" },
     { name = "runtraj", extras = ["visualization"], marker = "extra == 'complete'" },
     { name = "scipy", specifier = ">=1.10" },
-    { name = "shapely", specifier = ">=2.0" },
+    { name = "shapely", marker = "extra == 'geometry'", specifier = ">=2.0" },
     { name = "typer", specifier = ">=0.15.4" },
     { name = "universal-pathlib", specifier = ">=0.3.0" },
     { name = "xarray", specifier = ">=2024.10.0" },
 ]
-provides-extras = ["visualization", "download", "concentration", "flexpart", "complete"]
+provides-extras = ["visualization", "geometry", "download", "concentration", "flexpart", "complete"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -4053,6 +4058,7 @@ dev = [
     { name = "rust-just", specifier = ">=1.42.4" },
     { name = "s3fs", specifier = ">=2024.2" },
     { name = "setuptools-scm", specifier = ">=8" },
+    { name = "shapely", specifier = ">=2.0" },
     { name = "sphinx", specifier = ">=8.2" },
     { name = "sphinx-autobuild", specifier = ">=2024.10" },
     { name = "sphinx-autodoc-typehints", specifier = ">=3.0" },

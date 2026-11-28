@@ -252,7 +252,7 @@ log, met files or `age = 0` row; particles numbered 10, 20, ...):
 - Exceptions live in `runtraj/exceptions.py`, each subclassing `RuntrajError` and
   the builtin that describes it; a failed run is a `SimulationError`. Plain
   input checks raise builtins such as `ValueError`.
-- Extras: `visualization`, `download`, `concentration` (netCDF4), and `complete`, which the `dev` group installs.
+- Extras: `visualization`, `geometry` (shapely, for `Release.geometry`), `download`, `concentration` (netCDF4), and `complete`, which the `dev` group installs.
 
 ### Documentation
 

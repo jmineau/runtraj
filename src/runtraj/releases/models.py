@@ -13,6 +13,7 @@ import hashlib
 import json
 from collections.abc import Iterable, Mapping, Sequence
 from functools import cached_property
+from types import ModuleType
 from typing import (
     TYPE_CHECKING,
     Annotated,
@@ -32,9 +33,10 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from shapely import Geometry, LineString, MultiPoint, Point
 
 if TYPE_CHECKING:
+    from shapely import Geometry, LineString, MultiPoint, Point
+
     from runtraj.visualization import ReleasePlotAccessor
 
 from .validation import (
@@ -43,6 +45,19 @@ from .validation import (
     point_errors,
     two_points_errors,
 )
+
+
+def _shapely() -> ModuleType:
+    """Import shapely, which only a release's geometry needs."""
+    try:
+        import shapely
+    except ImportError as error:
+        raise ImportError(
+            "A release's geometry requires shapely, which the geometry extra "
+            'installs: pip install "runtraj[geometry]"'
+        ) from error
+    return shapely
+
 
 TimeLike: TypeAlias = dt.datetime | pd.Timestamp | np.datetime64 | str
 
@@ -358,7 +373,8 @@ class Release(BaseModel):
     @property
     def points(self) -> list[Point]:
         """Release points as shapely ``Point(lon, lat, alt)`` objects."""
-        return [Point(lon, lat, alt) for lon, lat, alt in self.coords()]
+        shapely = _shapely()
+        return [shapely.Point(lon, lat, alt) for lon, lat, alt in self.coords()]
 
     @cached_property
     def plot(self) -> ReleasePlotAccessor:
@@ -513,7 +529,7 @@ class PointRelease(Release):
 
     def _build_geometry(self) -> Point:
         """Return a shapely Point at the release point."""
-        return Point(self.longitude, self.latitude, self.altitude)
+        return _shapely().Point(self.longitude, self.latitude, self.altitude)
 
 
 class ColumnRelease(Release):
@@ -568,7 +584,7 @@ class ColumnRelease(Release):
 
     def _build_geometry(self) -> LineString:
         """Return a shapely LineString from the bottom to the top."""
-        return LineString(
+        return _shapely().LineString(
             [
                 (self.longitude, self.latitude, self.bottom),
                 (self.longitude, self.latitude, self.top),
@@ -664,7 +680,7 @@ class MultiPointRelease(Release):
 
     def _build_geometry(self) -> MultiPoint:
         """Return a shapely MultiPoint of the release points."""
-        return MultiPoint(
+        return _shapely().MultiPoint(
             list(zip(self.longitudes, self.latitudes, self.altitudes, strict=True))
         )
 
