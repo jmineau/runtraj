@@ -25,7 +25,7 @@ from runtraj._paths import absolute, atomic_path
 from runtraj._transient import is_transient
 from runtraj.exceptions import MeteorologyError
 from runtraj.identity import settings_hash
-from runtraj.meteorology import run_window
+from runtraj.meteorology import _time, run_window
 from runtraj.models import MetConfig
 from runtraj.spatial import Bounds
 
@@ -259,14 +259,6 @@ class HysplitMetConfig(MetConfig):
 #: grid, so a run that needs more stops with "Numb meteo times exceed
 #: DEFGRID limit".
 MAX_MET_FILES = 128
-
-
-def _time(value: Any) -> pd.Timestamp:
-    """Return *value* as a Timestamp, raising for a missing time."""
-    time = pd.Timestamp(value)
-    if not isinstance(time, pd.Timestamp):  # NaT
-        raise ValueError(f"Not a time: {value!r}")
-    return time
 
 
 def _download_cover(
