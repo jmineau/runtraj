@@ -325,11 +325,6 @@ class TransportModel(ABC, Generic[C]):
     #: Whether :meth:`run` is handed an empty directory for its files. A
     #: model that writes no files sets it False, and gets ``None``.
     needs_workdir: bool = True
-    #: Whether the model runs many releases in one call (:meth:`run_many`),
-    #: such as an emulator on a GPU. The worker then hands it every release
-    #: of a variant that needs particles at once, where it otherwise calls
-    #: :meth:`run` for one at a time.
-    batched: bool = False
 
     @abstractmethod
     def run(
@@ -371,34 +366,6 @@ class TransportModel(ABC, Generic[C]):
         SimulationError
             When the run fails, with the model's log in ``log``.
         """
-
-    def run_many(
-        self,
-        releases: list[Release],
-        config: C,
-        met: Any,
-        windows: list[tuple[dt.datetime, dt.datetime]],
-        workdir: Path | None = None,
-        timeout: int | None = None,
-    ) -> ModelRun:
-        """
-        Run many releases with one config, and return their particles as one table, for a model with :attr:`batched` set.
-
-        The table has a ``release`` column holding each row's release id,
-        beside the particle columns :meth:`run` returns. ``windows[i]`` is
-        the time ``releases[i]`` covers. A release with no rows failed;
-        the others are written. The log and met files are shared by all.
-
-        Raises
-        ------
-        SimulationError
-            When the whole call fails, with the model's log in ``log``.
-        NotImplementedError
-            Here, for a model that is not batched.
-        """
-        raise NotImplementedError(
-            f"Transport model {self.name!r} sets batched but has no run_many."
-        )
 
     def result(self, config: C) -> str:
         """
@@ -455,9 +422,8 @@ class TransportModel(ABC, Generic[C]):
         ``release`` and ``message`` columns, in that order, one row for each
         release it cannot run; a row whose ``release`` is ``NA`` is about the
         settings, and refuses every release. ``runtraj check`` lists them, and
-        :func:`run_model` and :func:`run_model_many` fail them with the
-        reason ``RELEASE_REFUSED`` before the model runs, so :meth:`run`
-        and :meth:`run_many` never get such a release. HYSPLIT refuses a
+        :func:`run_model` fails them with the reason ``RELEASE_REFUSED``
+        before the model runs, so :meth:`run` never gets such a release. HYSPLIT refuses a
         multipoint release whose points share a horizontal location, which
         it would join into a line source, in its trajectory mode with
         a ``hyts_std`` before 5.4.0 a release not on the hour, and a setting

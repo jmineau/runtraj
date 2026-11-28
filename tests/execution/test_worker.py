@@ -218,27 +218,6 @@ def test_run_particles_without_particles_is_a_simulation_error(
     assert caught.value.reason == "NO_PARTICLE_DATA"
 
 
-def test_a_batched_model_that_writes_no_log_leaves_no_started_line(
-    tmp_path, release, other_release, monkeypatch
-):
-    project = _model(tmp_path, [release, other_release])
-    sims = [project.simulation(str(r.id), "hrrr") for r in (release, other_release)]
-    monkeypatch.setattr(
-        worker,
-        "run_model_many",
-        lambda model, releases, *a, **k: {
-            str(r.id): ModelRun(_particles(r)) for r in releases
-        },
-    )
-
-    written, failed = worker.run_result_batch(sims)
-
-    assert len(written) == 2 and not failed
-    for sim in sims:
-        with pytest.raises(FileNotFoundError, match="No log"):
-            sim.log  # noqa: B018
-
-
 def test_a_run_that_fails_without_a_model_log_leaves_no_started_line(
     sim, met, compute_root, monkeypatch
 ):
@@ -270,42 +249,6 @@ def test_a_run_that_fails_unexpectedly_without_a_model_log_keeps_its_started_lin
         worker.run_result(sim, workdir=compute_root / "w")
 
     assert "runtraj started this run" in sim.log
-
-
-def test_a_batched_model_that_fails_without_a_log_leaves_no_started_line(
-    tmp_path, release, other_release, monkeypatch
-):
-    project = _model(tmp_path, [release, other_release])
-    sims = [project.simulation(str(r.id), "hrrr") for r in (release, other_release)]
-
-    def fail(*args, **kwargs):
-        raise SimulationError("the one call failed", reason="TIMEOUT")
-
-    monkeypatch.setattr(worker, "run_model_many", fail)
-
-    written, failed = worker.run_result_batch(sims)
-
-    assert not written and len(failed) == 2
-    for sim in sims:
-        with pytest.raises(FileNotFoundError, match="No log"):
-            sim.log  # noqa: B018
-
-
-def test_a_batched_model_that_fails_unexpectedly_keeps_its_started_lines(
-    tmp_path, release, other_release, monkeypatch
-):
-    project = _model(tmp_path, [release, other_release])
-    sims = [project.simulation(str(r.id), "hrrr") for r in (release, other_release)]
-
-    def fail(*args, **kwargs):
-        raise RuntimeError("a bug in the model")
-
-    monkeypatch.setattr(worker, "run_model_many", fail)
-
-    worker.run_result_batch(sims)
-
-    for sim in sims:
-        assert "runtraj started this run" in sim.log
 
 
 # ---------------------------------------------------------------------------
@@ -565,7 +508,6 @@ def _fake_run_release(calls: list[dict], status=None):
         compute_root,
         execution=None,
         skip_existing=True,
-        batched=True,
     ):
         calls.append(
             {
@@ -986,7 +928,7 @@ def test_a_dead_pool_worker_is_found_by_looking_at_the_workers(alive, died):
 
 
 # ---------------------------------------------------------------------------
-# A batched transport model
+# Pool workers' threads
 # ---------------------------------------------------------------------------
 
 

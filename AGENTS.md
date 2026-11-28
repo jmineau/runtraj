@@ -124,8 +124,7 @@ the branches on its name live in its class, not in `cli.py` or `runner.py`. The 
 of work is a release: the worker runs the model once per run-settings hash,
 then each missing stage file of the variants that share the particles, a
 stage after the ones it `reads` and again when one of those was remade
-(`run_release`, `run_stages`); a batched model
-(`batched = True`) first runs a variant group's releases in one call.
+(`run_release`, `run_stages`).
 
 The import contracts in `pyproject.toml` (`just imports`) hold this shape: an
 exhaustive `layers` contract (a new top-level module fails until placed), only

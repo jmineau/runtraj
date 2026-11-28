@@ -489,10 +489,8 @@ it.
   cannot run, as HYSPLIT does for a multipoint release whose points share
   a location. A row whose `release` is `NA` is about the settings and
   refuses every release (HYSPLIT's `krand` 10 to 13 on a build before 5.1.0).
-  `runtraj check` shows them, and `run_model` and
-  `run_model_many` fail them as `RELEASE_REFUSED` before `run` or
-  `run_many` is called, so a batched model never has to refuse one release
-  of a call.
+  `runtraj check` shows them, and `run_model` fails them
+  as `RELEASE_REFUSED` before `run` is called.
 - **`sha256(config)`**, **`version(config)`** and
   **`data_files(config)`** describe the build: the checksum of the
   executable it runs (`None` by default; part of the run's settings), what
@@ -502,12 +500,6 @@ it.
   compares stored folders without the build.
 - **`needs_workdir = False`** is for a model that writes no files; it is
   handed `workdir=None`.
-- **`batched = True`** is for a model that runs many releases in one
-  call, such as an emulator on a GPU. It gives `run_many(releases, config,
-  met, windows, workdir=None, timeout=None)`, returning one table with a
-  `release` column. The worker then hands it every release of a variant
-  that needs particles at once, and a release it returns no rows for fails
-  alone.
 
 The toy transport model in `tests/fixtures/models.py` stands for a model in
 another package, and is made unlike HYSPLIT: it runs no program, needs no
@@ -521,8 +513,7 @@ Test a change to the core on the toy as well as on HYSPLIT.
 promises a model keeps: its config uses no key runtraj records beside it
 (`RESERVED_SETTINGS`) and its record reads back, also for its realizations;
 its build makes a `ModelInfo`; and, given a release, the release is run
-through the same code a project's run uses (`run` with a `timeout`, and
-`run_many` with no workdir for a batched model), so its particles have the
+through the same code a project's run uses (`run` with a `timeout`), so its particles have the
 table's columns, ages that go the way `n_hours` does, release heights, and
 a particle file that stores them. A release its `check_releases` lists must
 be refused, not run. Call it in the tests of a model of your own, with a

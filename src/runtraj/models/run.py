@@ -1,8 +1,7 @@
-"""Run a transport model for one release, or many, and finish its result."""
+"""Run a transport model for one release and finish its result."""
 
 from __future__ import annotations
 
-import datetime as dt
 from collections.abc import Iterable, Mapping
 from dataclasses import replace
 from functools import partial
@@ -90,92 +89,8 @@ def _run_one(
     return _finish(run, release, model, config)
 
 
-def run_model_many(
-    name: str,
-    releases: list[Release],
-    config: TransportConfig,
-    met: Any,
-    workdir: Path | None = None,
-    timeout: int | None = None,
-) -> dict[str, ModelRun | SimulationError]:
-    """
-    Run a batched transport model once for many releases, and finish each one's particles.
-
-    The model's one table is split by its ``release`` column, and each
-    release's particles get the steps :func:`run_model` applies. A release
-    the model's ``check_releases`` refuses is left out of the call and
-    gets a ``RELEASE_REFUSED`` error; one whose particles are missing or
-    fail those steps gets its error, and the others their runs.
-
-    Returns
-    -------
-    dict
-        ``{release id: ModelRun}``, or the :class:`SimulationError` of a
-        release that failed.
-
-    Raises
-    ------
-    SimulationError
-        If the whole call fails.
-    """
-    return _run_many(get_model(name), releases, config, met, workdir, timeout)
-
-
-def _run_many(
-    model: TransportModel,
-    releases: list[Release],
-    config: TransportConfig,
-    met: Any,
-    workdir: Path | None,
-    timeout: int | None,
-) -> dict[str, ModelRun | SimulationError]:
-    """Run batched *model* for *releases* as :func:`run_model_many` does."""
-    made = model_result(model, config)
-    if made != "particles":
-        raise TypeError(
-            f"Transport model {model.name!r} is batched and makes {made}: a "
-            "batched model returns one particle table for many releases, so it "
-            "makes particles."
-        )
-    results: dict[str, ModelRun | SimulationError] = dict(
-        _refused(model, releases, config)
-    )
-    releases = [r for r in releases if str(r.id) not in results]
-    if not releases:
-        return results
-    windows: list[tuple[dt.datetime, dt.datetime]] = [
-        run_window(r.time, config.n_hours) for r in releases
-    ]
-    run = _returned(
-        model.run_many(releases, config, met, windows, workdir, timeout=timeout)
-    )
-    if not isinstance(run.result, pd.DataFrame) or "release" not in run.result.columns:
-        raise SimulationError(
-            "A batched transport model's particles need a release column.",
-            reason="NO_PARTICLE_DATA",
-            log=run.log,
-        )
-    by_release = dict(tuple(run.result.groupby("release", sort=False)))
-    for release in releases:
-        rows = by_release.get(str(release.id))
-        own = replace(
-            run,
-            result=(
-                pd.DataFrame()
-                if rows is None
-                else rows.drop(columns="release").reset_index(drop=True)
-            ),
-        )
-        try:
-            results[str(release.id)] = _finish(own, release, model, config)
-        except SimulationError as error:
-            error.log = run.log
-            results[str(release.id)] = error
-    return results
-
-
 def _returned(run: Any) -> ModelRun:
-    """Return *run*, what a model's ``run`` or ``run_many`` returned, when it is a :class:`ModelRun`."""
+    """Return *run*, what a model's ``run`` returned, when it is a :class:`ModelRun`."""
     if not isinstance(run, ModelRun):
         raise TypeError(
             f"A transport model's run must return a ModelRun, not {type(run).__name__}."

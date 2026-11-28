@@ -22,7 +22,7 @@ from runtraj.models.base import (
     TransportModel,
 )
 from runtraj.models.registry import MODELS, get_model
-from runtraj.models.run import run_model, run_model_many, run_trajectories
+from runtraj.models.run import run_model, run_trajectories
 
 __all__ = [
     "MODELS",
@@ -34,6 +34,5 @@ __all__ = [
     "RESERVED_SETTINGS",
     "get_model",
     "run_model",
-    "run_model_many",
     "run_trajectories",
 ]
