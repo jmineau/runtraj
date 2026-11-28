@@ -92,7 +92,8 @@ settings in the ``flexpart`` block keep the names they have in ``COMMAND``
 
 A column release is ``numpar`` releases of one particle each, stacked from
 the bottom up, and a multipoint release is one release for each point with
-the particles shared between them.
+the particles shared between them, so ``numpar`` is at least the number
+of points (``runtraj check`` lists a release that has more).
 
 FLEXPART ends some failed runs with exit status 0, so a run counts as
 complete only when its output ends with FLEXPART's closing line. Its

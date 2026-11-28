@@ -84,6 +84,35 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
         except FileNotFoundError:
             return None
 
+    def check_releases(
+        self, releases: pd.DataFrame, config: FlexpartConfig
+    ) -> pd.DataFrame:
+        """
+        Return the multipoint releases with more points than ``config.numpar``, which FLEXPART stops on.
+
+        ``RELEASES`` gives each point at least one particle
+        (:func:`~runtraj.models.flexpart.inputs.split`), so a point past
+        ``numpar`` is written with ``PARTS=0``, and FLEXPART stops with
+        "RELEASES file is corrupt" (``readoptions_mod.f90``).
+        """
+        points = releases.loc[
+            releases["kind"] == "multipoint", "release"
+        ].value_counts()
+        bad = points[points > config.numpar]
+        return pd.DataFrame(
+            {
+                "check": "release_refused",
+                "release": bad.index,
+                "message": [
+                    f"A multipoint release of {n} points needs numpar of at least "
+                    f"{n}, and numpar is {config.numpar}: FLEXPART stops on a "
+                    "release with no particles."
+                    for n in bad
+                ],
+            },
+            columns=["check", "release", "message"],
+        )
+
     def release_rows(
         self, particles: pd.DataFrame, release: Release, config: FlexpartConfig
     ) -> pd.DataFrame:
