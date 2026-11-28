@@ -642,6 +642,19 @@ def test_run_takes_its_execution_settings_from_a_file(tmp_path, calls):
     assert "cpus=3" in result.output
 
 
+def test_an_execution_file_keeps_an_unquoted_time_as_text(tmp_path, calls):
+    project = _project(tmp_path)
+    settings = tmp_path / "execution.yaml"
+    settings.write_text("backend: slurm\nslurm:\n  time: 12:00:00\n")
+    calls.states = ["complete"]
+
+    result = _run(project, "--execution", settings)
+
+    assert result.exit_code == 0, result.output
+    [(_, options)] = calls
+    assert options["execution"].slurm.time == "12:00:00"
+
+
 @pytest.mark.parametrize(
     ("states", "code"),
     [
