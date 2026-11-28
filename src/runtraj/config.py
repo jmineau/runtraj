@@ -382,6 +382,23 @@ class _UniqueKeyLoader(yaml.SafeLoader):
         return super().construct_mapping(node, deep=deep)
 
 
+def _base60_stays_text(construct):
+    """Wrap a number constructor so YAML 1.1's base-60 form (``12:00:00``) stays text."""
+
+    def wrapped(loader: yaml.SafeLoader, node: yaml.ScalarNode):
+        return node.value if ":" in node.value else construct(loader, node)
+
+    return wrapped
+
+
+# YAML 1.1 reads an unquoted 12:00:00 as the integer 43200 (a Slurm time limit
+# of 30 days, a PBS walltime in seconds); YAML 1.2 dropped base 60, and so does this.
+for _tag in ("tag:yaml.org,2002:int", "tag:yaml.org,2002:float"):
+    _UniqueKeyLoader.add_constructor(
+        _tag, _base60_stays_text(yaml.SafeLoader.yaml_constructors[_tag])
+    )
+
+
 class ProjectConfig(BaseModel):
     """
     A project's configuration, as read from ``config.yaml``.

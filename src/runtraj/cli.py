@@ -69,6 +69,7 @@ from typer.core import TyperGroup
 
 from runtraj._paths import is_url
 from runtraj._transient import is_transient
+from runtraj.config import _UniqueKeyLoader
 from runtraj.exceptions import MissingClass, WorkerDied
 from runtraj.execution import schedule as schedules
 from runtraj.execution.backends import Backend, get_backend
@@ -487,7 +488,12 @@ def _start(
         settings = opened.config.execution.model_dump(exclude_unset=True)
     else:
         try:
-            settings = yaml.safe_load(execution_file.read_text(encoding="utf-8")) or {}
+            settings = (
+                yaml.load(
+                    execution_file.read_text(encoding="utf-8"), Loader=_UniqueKeyLoader
+                )
+                or {}
+            )
         except (OSError, yaml.YAMLError) as error:
             _fail(f"cannot read {execution_file}: {error}")
     if task is not None:
