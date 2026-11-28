@@ -259,3 +259,25 @@ def test_a_forward_column_run_ages_forward_and_keeps_each_particle_in_its_slab(
     assert particles["release_height"].min() > 5.0
     assert particles["release_height"].max() < 1000.0
     assert particles["particle"].nunique() == 100
+
+
+@integration
+def test_a_column_particles_slab_is_the_height_hysplit_released_it_at(
+    tmp_path, met_dir
+):
+    """Particle k is in slab k: the heights HYSPLIT gives the particles rank as their slabs do."""
+    import runtraj
+
+    release = ColumnRelease(
+        time=REFERENCE_TIME, longitude=-112.0, latitude=40.5, bottom=5.0, top=1000.0
+    )
+    particles = runtraj.run_trajectories(
+        release, reference_met(met_dir), workdir=tmp_path, model="hysplit", n_hours=-1,
+        numpar=100, krand=2, seed=7,
+    )  # fmt: skip
+
+    # A minute after the release the particles are still near their slabs.
+    first = particles.loc[particles.groupby("particle")["age"].idxmax()]
+    rank_of_height = first["zagl"].rank()
+    rank_of_slab = first["release_height"].rank()
+    assert rank_of_height.corr(rank_of_slab) > 0.99

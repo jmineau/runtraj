@@ -5,7 +5,7 @@ programs:
   hycs_std:
     version: hysplit.v5.0.2
     sha256: 994ea7bd60369ff62cab4d138beae428f5a681dd91d8696c18ab8c2837e588a4
-    cases: 45
+    cases: 46
   hyts_std:
     version: hysplit.v5.0.2
     sha256: 4cfd728db700685f9c237b4d877b4dbaf5aff8471a3b9b24fc5f7301cbfd63ea
