@@ -100,9 +100,9 @@ def test_a_release_row_is_one_step_before_its_particles_first_row(
     ages = particles.sort_values("age", ascending=False).groupby("particle")["age"]
     gaps = ages.agg(lambda a: a.iloc[0] - a.iloc[1])
     print(
-        f"\nminutes from a release row to the next row: {gaps.value_counts().to_dict()}"
+        f"\nseconds from a release row to the next row: {gaps.value_counts().to_dict()}"
     )
-    assert (gaps == 1).all()
+    assert (gaps == 60).all()
 
 
 def test_a_release_row_is_at_the_control_height(

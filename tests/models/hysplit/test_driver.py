@@ -352,8 +352,24 @@ def test_read_particle_dat_reads_the_values_numpy_reads(tmp_path):
     df = read_particle_dat(dat, names)
 
     expected = np.loadtxt(dat, skiprows=1)
+    expected[:, 0] *= 60.0  # HYSPLIT's minutes, read as seconds
     assert df.dtypes.eq(np.float64).all()
     np.testing.assert_array_equal(df.to_numpy(), expected, strict=True)
+
+
+def test_read_particle_dat_reads_hysplits_minutes_as_seconds(tmp_path):
+    dat = tmp_path / PARTICLE_FILE
+    _write_particle_dat(
+        dat,
+        rows=[
+            [-1, 1, -111.9, 40.7, 10.0, 0.5],
+            [-90, 1, -112.0, 40.6, 20.0, 2.0],
+        ],
+    )
+
+    df = read_particle_dat(dat, ["time", "indx", "long", "lati", "zagl", "samt"])
+    assert df["age"].tolist() == [-60.0, -5400.0]
+    assert df["samt"].tolist() == [30.0, 120.0]
 
 
 def test_read_particle_dat_of_an_empty_file_is_an_empty_table(tmp_path):
@@ -673,7 +689,7 @@ def test_a_run_whose_particles_left_the_domain_early_is_complete(
 
     run = run_model("hysplit", point_release, _config(), met, tmp_path / "run")
 
-    assert run.result["age"].min() == -13 * 60
+    assert run.result["age"].min() == -13 * 3600
 
 
 def test_run_keeps_a_run_that_reaches_the_end_past_a_damaged_met_file(
@@ -685,7 +701,7 @@ def test_run_keeps_a_run_that_reaches_the_end_past_a_damaged_met_file(
         rows=_ending_at(24 * 60),
     )
 
-    assert _run(tmp_path, point_release).result["age"].min() == -24 * 60
+    assert _run(tmp_path, point_release).result["age"].min() == -24 * 3600
 
 
 def test_run_leaves_an_empty_particle_file_to_the_caller(
@@ -706,7 +722,7 @@ def test_run_leaves_particles_that_stop_early_to_the_caller(
     """Particles that all left the met's domain before the end are a run."""
     _fake_hysplit(monkeypatch, log="", rows=_ending_at(13 * 60))
 
-    assert _run(tmp_path, point_release).result["age"].min() == -13 * 60
+    assert _run(tmp_path, point_release).result["age"].min() == -13 * 3600
 
 
 def test_a_run_with_zcfx_in_varsiwant_gives_a_zcfx_column(
@@ -863,14 +879,15 @@ def _stopped_at(minute: float, *positions: tuple[float, float, float]):
     Particles that each stop *minute* minutes back, at a (lon, lat, zagl) of *positions*.
 
     Each starts at the grid's middle and has a row at the release and one at
-    the stop, as HYSPLIT writes every time step of each.
+    the stop, as HYSPLIT writes every time step of each. ``age`` is in
+    seconds, as :func:`read_particle_dat` gives it.
     """
     import pandas as pd
 
     rows = []
     for i, (lon, lat, zagl) in enumerate(positions, start=1):
-        rows.append((i, -1.0, *MIDDLE, 10.0))
-        rows.append((i, -float(minute), lon, lat, zagl))
+        rows.append((i, -60.0, *MIDDLE, 10.0))
+        rows.append((i, -60.0 * minute, lon, lat, zagl))
     return pd.DataFrame(rows, columns=["particle", "age", "lon", "lat", "zagl"])
 
 
@@ -973,7 +990,7 @@ def test_run_does_not_check_where_particles_stopped_when_outdt_is_set(
 
     run = _run(tmp_path, point_release, _config(outdt=60))
 
-    assert run.result["age"].min() == -360
+    assert run.result["age"].min() == -360 * 60
 
 
 def test_met_grid_is_the_grid_of_a_met_file(tmp_path):

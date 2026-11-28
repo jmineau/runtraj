@@ -99,8 +99,8 @@ def test_ziscale_scales_the_mixed_layer(tmp_path, met_dir):
     plain = _mixed_layer(tmp_path, met_dir, "plain")
     scaled = _mixed_layer(tmp_path, met_dir, "scaled", ziscale=0.5)
     minute = ["particle", "mlht"]
-    both = plain.loc[plain["age"] == -1, minute].merge(
-        scaled.loc[scaled["age"] == -1, minute], on="particle"
+    both = plain.loc[plain["age"] == -60, minute].merge(
+        scaled.loc[scaled["age"] == -60, minute], on="particle"
     )
     ratio = (both["mlht_y"] / both["mlht_x"]).to_numpy()
     print(f"\nmlht scaled / plain on the first rows: {np.unique(ratio.round(3))}")
@@ -147,7 +147,7 @@ def test_the_wind_falls_to_zero_below_the_first_level(
     particles = run_raw(tmp_path, release, config, met_dir)
 
     # Each point's mean move in the first minute; its first 500 particles are the 1 m point's.
-    rows = particles.loc[particles["age"] == -1]
+    rows = particles.loc[particles["age"] == -60]
     low = rows["particle"] <= 500
     move = {}
     for name, rows_at, lon in (

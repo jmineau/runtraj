@@ -373,13 +373,21 @@ def read_internal_grid(workdir: str | Path) -> tuple[int, float, float, float] |
     return int(nlvl), float(aa), float(bb), float(cc)
 
 
+#: The particle table's columns that HYSPLIT writes in minutes and
+#: :func:`read_particle_dat` reads as seconds: ``age`` (HYSPLIT's ``time``)
+#: and ``samt``, the time spent in the surface layer.
+MINUTE_COLUMNS = ("age", "samt")
+
+
 def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
     """
     Read HYSPLIT's particle file as a particle table.
 
     The ``varsiwant`` codes ``indx``, ``time``, ``long``, and ``lati``
     become the particle table's ``particle``, ``age``, ``lon``, and ``lat``
-    (:data:`PARTICLE_COLUMNS`).
+    (:data:`PARTICLE_COLUMNS`). HYSPLIT writes ``time`` and ``samt`` in
+    minutes; they are read as seconds (:data:`MINUTE_COLUMNS`), the particle
+    table's one time unit.
 
     Parameters
     ----------
@@ -423,6 +431,9 @@ def read_particle_dat(path: str | Path, columns: Sequence[str]) -> pd.DataFrame:
             f"from varsiwant={list(columns)!r}."
         )
     particles.columns = pd.Index(names)
+    for name in MINUTE_COLUMNS:
+        if name in particles.columns:
+            particles[name] *= 60.0
     return particles
 
 
@@ -627,14 +638,14 @@ def check_met_stop(particles: pd.DataFrame, n_hours: int, grid: "Grid") -> None:
         return
     reach = particles["age"].abs()
     stop = reach.max()
-    if stop >= abs(n_hours) * 60:
+    if stop >= abs(n_hours) * 3600:
         return
     last = particles[reach == stop]
     inside = cells_from_edge(last["lon"], last["lat"], grid).max()
     if inside > MET_STOP_CELLS:
         share = len(last) / particles["particle"].nunique()
         raise SimulationError(
-            f"The particles stopped {stop / 60:.1f} h into the {abs(n_hours)} h "
+            f"The particles stopped {stop / 3600:.1f} h into the {abs(n_hours)} h "
             f"run, up to {inside:.1f} grid cells inside the met's domain, not "
             f"at its edge: the met ran out ({share:.0%} of the particles were "
             "still in the air).",

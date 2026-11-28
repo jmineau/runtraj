@@ -26,7 +26,7 @@ _COLUMN_ATTRS: dict[str, dict[str, str]] = {
     },
     "mlht": {"units": "m", "long_name": "mixed-layer height above ground"},
     "dens": {"units": "kg m-3", "long_name": "air density"},
-    "samt": {"units": "minutes", "long_name": "time spent in the surface layer"},
+    "samt": {"units": "s", "long_name": "time spent in the surface layer"},
     "sigw": {"units": "m s-1", "long_name": "standard deviation of vertical wind"},
     "tlgr": {"units": "s", "long_name": "Lagrangian time scale"},
     "pres": {"units": "hPa", "long_name": "air pressure"},
@@ -119,7 +119,7 @@ def to_cf_trajectories(particles: pd.DataFrame) -> xr.Dataset:
         "age": (
             dims,
             grid(table["age"].to_numpy(dtype=float)),
-            {"long_name": "time since release", "units": "minutes"},
+            {"long_name": "time since release", "units": "s"},
         )
     }
     skip = {*_REQUIRED_COLUMNS, "time", "_step", "realization"}
@@ -140,13 +140,13 @@ def to_cf_trajectories(particles: pd.DataFrame) -> xr.Dataset:
     }
     if "realization" in table.columns and len(table):
         ds.attrs["realization"] = int(table["realization"].iloc[0])
-    # Whole minutes since the first time, as the particle table counts them.
+    # Whole seconds since the first time, as the particle table counts them.
     first = table["time"].min()
     if not pd.isna(first):
         stamp = first.strftime("%Y-%m-%d %H:%M:%S")
         ds.variables["time"].encoding.update(
             {
-                "units": f"minutes since {stamp}",
+                "units": f"seconds since {stamp}",
                 "calendar": "standard",
                 "dtype": "float64",
                 "_FillValue": np.nan,

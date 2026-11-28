@@ -48,7 +48,7 @@ def read_tdump(path: str | Path) -> pd.DataFrame:
     -------
     pandas.DataFrame
         One row per trajectory per output time, in the file's order, with
-        ``trajectory``, ``time`` (UTC), ``age`` (minutes since the
+        ``trajectory``, ``time`` (UTC), ``age`` (seconds since the
         trajectory's first row, which is where it started), ``lon``,
         ``lat``, ``zagl``, ``pres`` (hPa), and a column for each other
         value the run wrote (:data:`TDUMP_COLUMNS`). Its ``attrs`` hold
@@ -111,7 +111,7 @@ def read_tdump(path: str | Path) -> pd.DataFrame:
     )
     table = pd.DataFrame({"trajectory": raw[0].astype("int32"), "time": time})
     start = table.groupby("trajectory")["time"].transform("first")
-    table["age"] = ((table["time"] - start).dt.total_seconds() // 60).astype("int32")
+    table["age"] = (table["time"] - start).dt.total_seconds().astype("int32")
     table["lon"] = raw[10]
     table["lat"] = raw[9]
     table["zagl"] = raw[11]

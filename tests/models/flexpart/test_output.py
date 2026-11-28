@@ -59,8 +59,8 @@ def test_reads_flexpart_output(tmp_path):
 
     check_particles(particles)
     assert len(particles) == 5 * 24
-    assert particles["age"].iloc[0] == -60
-    assert particles["age"].iloc[-1] == -1440
+    assert particles["age"].iloc[0] == -3600
+    assert particles["age"].iloc[-1] == -86400
     assert particles["particle"].iloc[:5].tolist() == [1, 2, 3, 4, 5]
     first = particles.iloc[0]
     # Released at 40.766 N, 111.848 W, 25 m above ground, an hour before.
@@ -103,7 +103,7 @@ def test_reads_backward_run_as_particle_table(tmp_path):
     check_particles(particles)
     assert list(particles.columns[:5]) == ["particle", "age", "lon", "lat", "zagl"]
     assert particles["particle"].tolist() == [1, 2, 1, 3, 1, 3]
-    assert particles["age"].tolist() == [-60, -60, -120, -120, -180, -180]
+    assert particles["age"].tolist() == [-3600, -3600, -7200, -7200, -10800, -10800]
     assert particles["particle"].dtype == np.int32
     assert particles["age"].dtype == np.int32
     # FLEXPART's fields are float32 and stay so, with NaN for the fill value.
@@ -118,7 +118,7 @@ def test_longitude_of_minus_one_is_kept(tmp_path):
 
     particles = read_partoutput(path, RELEASE_TIME)
 
-    row = particles[(particles["particle"] == 3) & (particles["age"] == -120)]
+    row = particles[(particles["particle"] == 3) & (particles["age"] == -7200)]
     assert row["lon"].item() == -1.0
 
 
@@ -141,7 +141,7 @@ def test_fill_in_other_fields_becomes_nan(tmp_path):
 
     particles = read_partoutput(path, RELEASE_TIME)
 
-    row = particles[(particles["particle"] == 3) & (particles["age"] == -180)]
+    row = particles[(particles["particle"] == 3) & (particles["age"] == -10800)]
     assert np.isnan(row["mlht"].item())
 
 
@@ -167,15 +167,16 @@ def test_age_counts_from_release_time(tmp_path):
 
     particles = read_partoutput(path, RELEASE_TIME)
 
-    assert particles["age"].unique().tolist() == [0, -60, -120]
+    assert particles["age"].unique().tolist() == [0, -3600, -7200]
 
 
-def test_rejects_times_not_whole_minutes(tmp_path):
+def test_keeps_an_output_step_under_a_minute(tmp_path):
     path = tmp_path / "partoutput.nc"
     write_partoutput(path, [-90, -7200, -10800], backward_fields())
 
-    with pytest.raises(ValueError, match="whole minutes"):
-        read_partoutput(path, RELEASE_TIME)
+    particles = read_partoutput(path, RELEASE_TIME)
+
+    assert particles["age"].unique().tolist() == [-90, -7200, -10800]
 
 
 def test_rejects_file_without_positions(tmp_path):

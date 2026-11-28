@@ -156,7 +156,7 @@ def test_run_trajectories_runs_the_toy_without_a_workdir(tmp_path):
         _release(), {"weather": "hrrr"}, model=TOY, n_hours=2, step=30
     )
 
-    assert sorted(particles["age"].unique()) == [30, 60, 90, 120]
+    assert sorted(particles["age"].unique()) == [1800, 3600, 5400, 7200]
     assert (particles["time"] > pd.Timestamp(NOON)).all()
     with pytest.raises(ValueError, match="numpar"):
         runtraj.run_trajectories(

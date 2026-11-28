@@ -191,7 +191,7 @@ def run_stage(
     particles.to_parquet(tables / f"{release.id}.parquet")
     name = get_stage(stage).name
     ages = pd.to_numeric(particles["age"])
-    longest = ages.loc[ages.abs().idxmax()] / 60.0
+    longest = ages.loc[ages.abs().idxmax()] / 3600.0
     n_hours = int(math.copysign(max(1, math.ceil(abs(longest))), longest))
     project = Project.init(
         directory / "project",
@@ -444,9 +444,9 @@ def _check_particles(
     backward = config.n_hours < 0
     assert ((age <= 0) if backward else (age >= 0)).all(), (
         f"{what}'s ages must be {'<=' if backward else '>='} 0 for "
-        f"n_hours {config.n_hours}: minutes since release"
+        f"n_hours {config.n_hours}: seconds since release"
     )
-    assert (abs(age) <= abs(config.n_hours) * 60).all(), (
+    assert (abs(age) <= abs(config.n_hours) * 3600).all(), (
         f"{what}'s ages must stay within n_hours ({config.n_hours} h)"
     )
     if "release_height" in finished.columns:

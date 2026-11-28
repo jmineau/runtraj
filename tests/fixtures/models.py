@@ -137,8 +137,9 @@ class ToyModel(TransportModel[ToyConfig]):
         n = config.n_particles
         lon, lat, alt = _starts(release, n, rng)
         sign = -1 if config.n_hours < 0 else 1
-        ages = np.arange(config.step, abs(config.n_hours) * 60 + 1, config.step)
-        hours = np.repeat(ages, n) / 60.0
+        # The toy's step is in minutes, its own setting; age is in seconds.
+        ages = 60 * np.arange(config.step, abs(config.n_hours) * 60 + 1, config.step)
+        hours = np.repeat(ages, n) / 3600.0
         jitter = rng.normal(0.0, 0.001, size=hours.size)
         particles = pd.DataFrame(
             {
@@ -160,7 +161,7 @@ class ToyModel(TransportModel[ToyConfig]):
         first = particles.loc[
             particles["age"].abs().groupby(particles["particle"]).idxmin()
         ]
-        hours = first["age"].abs().to_numpy() / 60.0
+        hours = first["age"].abs().to_numpy() / 3600.0
         return pd.DataFrame(
             {
                 "particle": first["particle"].to_numpy(),

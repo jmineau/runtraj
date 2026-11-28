@@ -35,7 +35,7 @@ def add_release_heights(particles: pd.DataFrame, release) -> pd.DataFrame:
 def _particles_basic() -> pd.DataFrame:
     return pd.DataFrame(
         {
-            "age": [-60, -120],
+            "age": [-3600, -7200],
             "particle": [1, 1],
             "lon": [-111.9, -112.0],
             "lat": [40.7, 40.6],
@@ -94,7 +94,7 @@ def test_read_particles_builds_time_when_only_time_is_asked_for(
     write_particles(path, traj, point_release, _settings(params), [])
     loaded = read_particles(path, columns=["time"])
     expected = pd.Timestamp(point_release.time) + pd.to_timedelta(
-        traj["age"].to_numpy(), unit="min"
+        traj["age"].to_numpy(), unit="s"
     )
     np.testing.assert_array_equal(loaded["time"].to_numpy(), expected.to_numpy())
 
@@ -121,7 +121,10 @@ _FIRST, _SECOND = "202301011200_-111.85_40.77_5", "202301011300_-111.85_40.77_5"
 def _two_files() -> pa.Table:
     """Two releases' files read together: two dictionaries of one entry each, as the output reads them."""
     return pa.concat_tables(
-        [_file_table(_SECOND, [-60, -120, -180]), _file_table(_FIRST, [-30, -90])]
+        [
+            _file_table(_SECOND, [-3600, -7200, -10800]),
+            _file_table(_FIRST, [-1800, -5400]),
+        ]
     )
 
 
@@ -135,7 +138,7 @@ def test_particles_from_table_gives_every_row_its_release_and_time():
     assert got["age"].dtype == got["particle"].dtype == "float64"
     start = {_FIRST: pd.Timestamp("2023-01-01 12:00"), _SECOND: "2023-01-01 13:00"}
     want = [
-        pd.Timestamp(start[r]) + pd.Timedelta(minutes=a)
+        pd.Timestamp(start[r]) + pd.Timedelta(seconds=a)
         for r, a in zip(got["release"], got["age"], strict=True)
     ]
     assert got["time"].dtype.kind == "M"  # naive UTC
@@ -591,7 +594,7 @@ def _particles_two_lengths() -> pd.DataFrame:
     """Two particles: particle 1 reaches -120 min, particle 2 only -30 min."""
     return pd.DataFrame(
         {
-            "age": [-60, -120, -30],
+            "age": [-3600, -7200, -1800],
             "particle": [1, 1, 2],
             "lon": [-111.9, -112.0, -111.8],
             "lat": [40.7, 40.6, 40.75],
@@ -615,15 +618,13 @@ def test_endpoints_returns_far_end_per_particle(point_release, tmp_path):
     """
     particles = finished(_particles_two_lengths(), point_release)
     # As read_particles gives them.
-    particles["time"] = point_release.time + pd.to_timedelta(
-        particles["age"], unit="min"
-    )
+    particles["time"] = point_release.time + pd.to_timedelta(particles["age"], unit="s")
 
     ep = particles.runtraj.endpoints().sort_values("particle").reset_index(drop=True)
     assert list(ep.columns) == list(particles.columns)
-    # Both particles kept, each at its far end (largest |time|): p1 at -120, p2 at -30.
+    # Both particles kept, each at its far end (largest |time|): p1 at -120 min, p2 at -30 min.
     assert ep["particle"].tolist() == [1, 2]
-    assert ep["age"].tolist() == [-120, -30]
+    assert ep["age"].tolist() == [-7200, -1800]
     assert ep.loc[0, ["lon", "lat", "zagl"]].tolist() == [-112.0, 40.6, 20.0]
     assert ep.loc[1, ["lon", "lat", "zagl"]].tolist() == [-111.8, 40.75, 15.0]
     assert ep["time"].tolist() == [

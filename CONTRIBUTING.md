@@ -404,7 +404,7 @@ class StillModel(TransportModel[StillConfig]):
         particles = pd.DataFrame(
             {
                 "particle": np.tile(np.arange(1, config.n_particles + 1), len(hours)),
-                "age": np.repeat(hours * 60, config.n_particles),  # minutes
+                "age": np.repeat(hours * 3600, config.n_particles),  # seconds
                 "lon": release.longitude,
                 "lat": release.latitude,
                 "zagl": release.altitude,

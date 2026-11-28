@@ -12,7 +12,7 @@ each of its points, numbered in the order of the points::
 The table has the columns of :data:`TRAJECTORY_SCHEMA`:
 
 - ``trajectory``, the trajectory's number, from 1;
-- ``time``, when the row is (UTC), and ``age``, the minutes since the
+- ``time``, when the row is (UTC), and ``age``, the seconds since the
   release, negative in a backward run. Each trajectory has a row at
   ``age = 0``, where it started;
 - ``lon`` and ``lat``, in degrees, and ``zagl``, the height above ground
@@ -56,7 +56,7 @@ TRAJECTORIES_SUFFIX = ".parquet"
 TRAJECTORY_SCHEMA: dict[str, str] = {
     "trajectory": "The trajectory's number in its release, from 1.",
     "time": "Time of the row, in UTC.",
-    "age": "Minutes since the release, negative in a backward run.",
+    "age": "Seconds since the release, negative in a backward run.",
     "lon": "Longitude, in degrees east.",
     "lat": "Latitude, in degrees north.",
     "zagl": "Height above ground, in meters.",

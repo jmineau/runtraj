@@ -44,13 +44,13 @@ def test_obs_counts_steps_from_the_release():
     table = pd.DataFrame(
         {
             "particle": [1, 1, 1],
-            "age": [-3.0, -1.0, -2.0],
+            "age": [-180.0, -60.0, -120.0],
             "lon": [3.0, 1.0, 2.0],
             "lat": [0.0, 0.0, 0.0],
             "zagl": [1.0, 1.0, 1.0],
         }
     )
-    table["time"] = RELEASE_TIME + pd.to_timedelta(table["age"], unit="min")
+    table["time"] = RELEASE_TIME + pd.to_timedelta(table["age"], unit="s")
     ds = table.runtraj.to_cf_trajectories()
     assert ds.lon.values.tolist() == [[1.0, 2.0, 3.0]]
     # A backward run's time decreases along obs.
@@ -61,13 +61,13 @@ def test_a_forward_run_runs_forward_in_time():
     table = pd.DataFrame(
         {
             "particle": [1, 1],
-            "age": [10.0, 20.0],
+            "age": [600.0, 1200.0],
             "lon": [0.0, 1.0],
             "lat": [0.0, 0.0],
             "zagl": [1.0, 1.0],
         }
     )
-    table["time"] = RELEASE_TIME + pd.to_timedelta(table["age"], unit="min")
+    table["time"] = RELEASE_TIME + pd.to_timedelta(table["age"], unit="s")
     ds = table.runtraj.to_cf_trajectories()
     expected = np.array(
         ["2024-01-15T18:10", "2024-01-15T18:20"], dtype="datetime64[ns]"
@@ -100,7 +100,7 @@ def test_cf_metadata(particles):
         "units": "m",
         "positive": "up",
     }
-    assert ds.age.attrs["units"] == "minutes"
+    assert ds.age.attrs["units"] == "s"
     assert ds.foot.attrs["units"] == "ppm m2 s umol-1"
     assert ds.mlht.attrs["units"] == "m"
     assert set(ds.coords) == {"trajectory", "time", "lon", "lat", "zagl"}
@@ -117,13 +117,13 @@ def test_a_netcdf_file_reads_back_the_same(particles, tmp_path):
     path = tmp_path / "trajectories.nc"
     ds.to_netcdf(path)
 
-    # Older xarray decodes a variable in minutes as a duration; keep the numbers.
+    # Older xarray decodes a variable in seconds as a duration; keep the numbers.
     with xr.open_dataset(path, decode_timedelta=False) as back:
         xr.testing.assert_identical(back.load(), ds)
         assert back.age.dtype == np.float64
     with xr.open_dataset(path, decode_times=False) as raw:
-        # Minutes since the earliest time; a missing time is NaN.
-        assert raw.time.attrs["units"].startswith("minutes since 2024-01-13")
+        # Seconds since the earliest time; a missing time is NaN.
+        assert raw.time.attrs["units"].startswith("seconds since 2024-01-13")
         assert raw.time.attrs["calendar"] == "standard"
         assert raw.time.dtype == np.float64
         assert np.isnan(raw.time.values[-1, -1])

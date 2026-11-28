@@ -75,7 +75,7 @@ def test_a_project_runs_a_trajectory_variant_beside_a_particles_one(tmp_path, me
     sim = project.simulation(release.id, "traj")
     assert sim.result_path.parent.parent.parent.name == "trajectories"
     table = sim.trajectories
-    assert table["age"].tolist() == [0, 60, 120, 180]
+    assert table["age"].tolist() == [0, 3600, 7200, 10800]
     assert table["time"].iloc[0] == pd.Timestamp(release.time, tz="UTC")
     assert (table["lon"].iloc[0], table["lat"].iloc[0], table["zagl"].iloc[0]) == (
         -112.0,
@@ -126,7 +126,7 @@ def test_a_backward_trajectory_goes_back_in_time(tmp_path, met_dir):
         mode="trajectory",
         tout=30,
     )
-    assert table["age"].tolist() == [0, -30, -60, -90, -120, -150, -180]
+    assert table["age"].tolist() == [0, -1800, -3600, -5400, -7200, -9000, -10800]
     assert table["time"].is_monotonic_decreasing
 
 

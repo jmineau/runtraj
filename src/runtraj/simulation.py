@@ -276,7 +276,7 @@ class Simulation:
 
         The columns are the variables the transport model writes (for
         HYSPLIT, those its ``varsiwant`` names), under the particle table's
-        names (``particle``, ``age`` in minutes since release,
+        names (``particle``, ``age`` in seconds since release,
         ``lon``, ``lat``, ``zagl``, ``foot``, ...), plus ``time`` (UTC)
         and ``release_height`` (for column and multipoint releases). Read from the output directory on first
         access and kept. Check

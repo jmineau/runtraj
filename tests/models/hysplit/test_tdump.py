@@ -56,7 +56,7 @@ def test_a_row_holds_the_values_of_its_line():
     # "2 1 21 7 15 4 30 1 2.5 41.019 -111.855 1090.2 682.5 319.4 286.4 0.0
     #  764.3 30.3 4.2 4.2 2305.2 0.0" in the file.
     table = read_tdump(HERE / "forward")
-    row = table[(table["trajectory"] == 2) & (table["age"] == 150)].iloc[0]
+    row = table[(table["trajectory"] == 2) & (table["age"] == 9000)].iloc[0]
     assert row["time"] == pd.Timestamp("2021-07-15 04:30", tz="UTC")
     assert row.drop(["trajectory", "time", "age"]).to_dict() == {
         "lon": -111.855,
@@ -75,12 +75,12 @@ def test_a_row_holds_the_values_of_its_line():
     }
 
 
-def test_age_is_in_minutes_from_each_rows_time_and_negative_backward():
+def test_age_is_in_seconds_from_each_rows_time_and_negative_backward():
     table = read_tdump(HERE / "backward")
     assert table.attrs["direction"] == "BACKWARD"
     # The release was at 10:30, a minute the file's header does not hold.
     assert table["time"].iloc[0] == pd.Timestamp("2021-07-15 10:30", tz="UTC")
-    assert table["age"].tolist() == [0, -60, -120, -180, -240]
+    assert table["age"].tolist() == [0, -3600, -7200, -10800, -14400]
     assert list(table.columns)[6:] == ["pres"]
 
 

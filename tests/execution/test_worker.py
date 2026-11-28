@@ -78,7 +78,7 @@ def compute_root(tmp_path):
 def _particles(release) -> pd.DataFrame:
     data = pd.DataFrame(
         {
-            "age": [-60.0],
+            "age": [-3600.0],
             "particle": [1.0],
             "lon": [-111.9],
             "lat": [40.7],
@@ -86,7 +86,7 @@ def _particles(release) -> pd.DataFrame:
             "foot": [1e-5],
         }
     )
-    data["time"] = pd.Timestamp(release.time) + pd.to_timedelta(data["age"], unit="min")
+    data["time"] = pd.Timestamp(release.time) + pd.to_timedelta(data["age"], unit="s")
     return data
 
 

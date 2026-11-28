@@ -78,7 +78,7 @@ class ParticlesAccessor:
         -------
         pandas.DataFrame
             One row per particle, with every column of the particle table.
-            ``age`` is minutes since release and ``time`` the UTC time. A
+            ``age`` is seconds since release and ``time`` the UTC time. A
             table of several simulations, as ``Project.particles`` returns,
             gives one row per particle of each.
         """
@@ -132,7 +132,7 @@ class ParticlesAccessor:
             it has them, then
             ``particle``, ``edge`` (``"n"``, ``"e"``, ``"s"`` or ``"w"``,
             the side of the box it left by), ``lon`` and ``lat`` (degrees),
-            ``zagl`` (meters), ``age`` (minutes since release) and, when the
+            ``zagl`` (meters), ``age`` (seconds since release) and, when the
             table has a ``time`` column, ``time`` (UTC). Longitudes are
             wrapped to -180 to 180 where the interpolation crosses 180.
 
@@ -146,15 +146,15 @@ class ParticlesAccessor:
         >>> particles = pd.DataFrame(
         ...     {
         ...         "particle": [1, 1, 1],
-        ...         "age": [0.0, -60.0, -120.0],
+        ...         "age": [0.0, -3600.0, -7200.0],
         ...         "lon": [-111.0, -110.5, -109.5],
         ...         "lat": [41.0, 41.0, 41.0],
         ...         "zagl": [10.0, 20.0, 30.0],
         ...     }
         ... )
         >>> particles.runtraj.grid_exits(box)
-           particle edge    lon   lat  zagl   age
-        0         1    e -110.0  41.0  25.0 -90.0
+           particle edge    lon   lat  zagl     age
+        0         1    e -110.0  41.0  25.0 -5400.0
         """
         p = self._particles
         keys = trajectory_columns(p)
@@ -255,7 +255,7 @@ class ParticlesAccessor:
         along the ``trajectory`` dimension, and its rows, from its release
         onward, run along ``obs``. A particle with fewer rows than the
         longest (one that left the meteorology domain early) is padded with
-        missing values at the end. ``time`` is UTC, and ``age``, in minutes
+        missing values at the end. ``time`` is UTC, and ``age``, in seconds
         since release, is kept as a variable. ``obs`` counts output steps
         from the release, so in a backward run ``time`` decreases along
         ``obs``.
@@ -286,14 +286,14 @@ class ParticlesAccessor:
         >>> particles = pd.DataFrame(
         ...     {
         ...         "particle": [1, 1, 1, 2, 2],
-        ...         "age": [-1.0, -2.0, -3.0, -1.0, -2.0],
+        ...         "age": [-60.0, -120.0, -180.0, -60.0, -120.0],
         ...         "lon": [-111.85, -111.86, -111.88, -111.84, -111.83],
         ...         "lat": [40.77, 40.78, 40.80, 40.76, 40.75],
         ...         "zagl": [5.0, 40.0, 120.0, 8.0, 60.0],
         ...     }
         ... )
         >>> particles["time"] = pd.Timestamp("2024-01-15 18:00") + pd.to_timedelta(
-        ...     particles["age"], unit="min"
+        ...     particles["age"], unit="s"
         ... )
         >>> ds = particles.runtraj.to_cf_trajectories()
         >>> dict(ds.sizes)
@@ -301,7 +301,7 @@ class ParticlesAccessor:
         >>> ds.attrs["featureType"]
         'trajectory'
         >>> ds.age.sel(trajectory=2).values
-        array([-1., -2., nan])
+        array([ -60., -120.,   nan])
         >>> str(ds.time.sel(trajectory=1).values[-1])
         '2024-01-15T17:57:00.000000000'
         """
