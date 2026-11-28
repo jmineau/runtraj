@@ -87,6 +87,39 @@ def test_control_file_roundtrip_single_point(point_release, tmp_path):
     assert len(loaded.met_files) == 1
 
 
+@pytest.mark.parametrize("year", [1940, 1968, 1969, 1999, 2000, 2039])
+def test_control_file_year_roundtrip(year, tmp_path):
+    """A two-digit year reads as HYSPLIT does: 40 to 99 is 19YY, 00 to 39 is 20YY."""
+    control = ControlFile(
+        release_time=dt.datetime(year, 1, 1),
+        locations=[(-112.0, 40.5, 10.0)],
+        emisshrs=0.01,
+        n_hours=-24,
+        w_option=0,
+        z_top=25000.0,
+        met_files=[Path("/met/file")],
+    )
+    path = tmp_path / "CONTROL"
+    control.write(path)
+    assert ControlFile.read(path).release_time.year == year
+
+
+@pytest.mark.parametrize("year", [1939, 2040])
+def test_control_file_refuses_year_outside_two_digit_range(year, tmp_path):
+    """HYSPLIT would read the year a century off, so CONTROL is not written."""
+    control = ControlFile(
+        release_time=dt.datetime(year, 1, 1),
+        locations=[(-112.0, 40.5, 10.0)],
+        emisshrs=0.01,
+        n_hours=-24,
+        w_option=0,
+        z_top=25000.0,
+        met_files=[Path("/met/file")],
+    )
+    with pytest.raises(ValueError, match="1940 to 2039"):
+        control.write(tmp_path / "CONTROL")
+
+
 def test_control_file_roundtrip_emisshrs(point_release, tmp_path):
     cf = _make_control(point_release, emisshrs=0.5)
     path = tmp_path / "CONTROL"

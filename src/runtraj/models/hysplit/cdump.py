@@ -20,13 +20,11 @@ import pandas as pd
 import xarray as xr
 
 from runtraj.concentration import CONCENTRATION_DIMS, describe_grid
+from runtraj.models.hysplit.control import _year
 
 #: The ``ichem`` values with which HYSPLIT counts one pollutant apart by
 #: release location or by emission cycle, and the dimension each is read as.
 SPLIT_ICHEM = {1: "source", 10: "release_time"}
-
-#: What :func:`read_cdump` resolves a two-digit year with: years below this are 20YY, the rest 19YY.
-_CENTURY_PIVOT = 40
 
 
 class _Records:
@@ -64,13 +62,6 @@ class _Records:
         if record is None:
             raise ValueError(f"{self._path} ends before its {what}.")
         return record
-
-
-def _year(yy: int) -> int:
-    """Return the year of HYSPLIT's two-digit *yy*: 1940 to 2039."""
-    if yy >= 100:
-        return yy
-    return 2000 + yy if yy < _CENTURY_PIVOT else 1900 + yy
 
 
 def _stamp(values: tuple[int, ...]) -> dt.datetime:

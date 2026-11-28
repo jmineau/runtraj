@@ -134,7 +134,7 @@ class Backend(ABC):
 
         Raises
         ------
-        FileNotFoundError, RuntimeError
+        SchedulerError
             When the jobs cannot be listed; ``runtraj status`` prints the
             message and the counts.
         """

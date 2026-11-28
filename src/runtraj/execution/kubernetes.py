@@ -41,6 +41,7 @@ from uuid import uuid4
 import yaml
 
 from runtraj._paths import is_url
+from runtraj.exceptions import SchedulerError
 from runtraj.execution.backends import Backend
 from runtraj.execution.config import SCRATCH, ExecutionConfig, KubernetesConfig
 from runtraj.execution.inputs import (
@@ -458,10 +459,8 @@ def kubectl_create(manifest: dict[str, Any]) -> str:
 
     Raises
     ------
-    FileNotFoundError
-        If ``kubectl`` is not on ``PATH``.
-    RuntimeError
-        If ``kubectl`` refuses it; the message is its error.
+    SchedulerError
+        If ``kubectl`` is not on ``PATH`` or refuses it; the message is its error.
     """
     return _kubectl("create", manifest)
 
@@ -475,10 +474,8 @@ def kubectl_apply(manifest: dict[str, Any]) -> str:
 
     Raises
     ------
-    FileNotFoundError
-        If ``kubectl`` is not on ``PATH``.
-    RuntimeError
-        If ``kubectl`` refuses it; the message is its error.
+    SchedulerError
+        If ``kubectl`` is not on ``PATH`` or refuses it; the message is its error.
     """
     return _kubectl("apply", manifest)
 
@@ -487,7 +484,7 @@ def _kubectl(verb: str, manifest: dict[str, Any]) -> str:
     """Run ``kubectl <verb> -f - -o name`` on *manifest* and return the object's name."""
     kubectl = shutil.which("kubectl")
     if kubectl is None:
-        raise FileNotFoundError("kubectl is not installed, or not on PATH.")
+        raise SchedulerError("kubectl is not installed, or not on PATH.")
     result = subprocess.run(
         [kubectl, verb, "-f", "-", "-o", "name"],
         input=yaml.safe_dump(manifest, sort_keys=False),
@@ -496,7 +493,7 @@ def _kubectl(verb: str, manifest: dict[str, Any]) -> str:
         check=False,
     )
     if result.returncode != 0:
-        raise RuntimeError(
+        raise SchedulerError(
             f"kubectl refused the {manifest['kind']}: "
             + (result.stderr.strip() or f"exit {result.returncode}")
         )
@@ -622,14 +619,12 @@ def project_jobs(project: Project, execution: ExecutionConfig) -> list[dict[str,
 
     Raises
     ------
-    FileNotFoundError
-        If ``kubectl`` is not on ``PATH``.
-    RuntimeError
-        If ``kubectl`` cannot list the Jobs; the message is its error.
+    SchedulerError
+        If ``kubectl`` is not on ``PATH`` or cannot list the Jobs; the message is its error.
     """
     kubectl = shutil.which("kubectl")
     if kubectl is None:
-        raise FileNotFoundError("kubectl is not installed, or not on PATH.")
+        raise SchedulerError("kubectl is not installed, or not on PATH.")
     args = [
         kubectl,
         "get",
@@ -644,7 +639,7 @@ def project_jobs(project: Project, execution: ExecutionConfig) -> list[dict[str,
         args += ["--namespace", namespace]
     result = subprocess.run(args, capture_output=True, text=True, check=False)
     if result.returncode != 0:
-        raise RuntimeError(
+        raise SchedulerError(
             "kubectl could not list the Jobs: "
             + (result.stderr.strip() or f"exit {result.returncode}")
         )

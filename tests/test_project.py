@@ -7,6 +7,7 @@ import matplotlib
 import pandas as pd
 import pytest
 
+import runtraj.output
 from runtraj import Project
 from runtraj.config import ProjectConfig
 from runtraj.models.hysplit import HysplitMetConfig
@@ -174,6 +175,26 @@ def test_init_takes_a_config_or_settings_not_both(tmp_path):
     config = ProjectConfig(**_settings(tmp_path))
     with pytest.raises(TypeError, match="not both"):
         Project.init(tmp_path / "proj", config=config, output="elsewhere")
+
+
+def test_init_takes_output_as_a_path_like_as_a_string(tmp_path):
+    from_str = Project.init(
+        tmp_path / "a", **_settings(tmp_path), output=str(tmp_path / "out")
+    )
+    from_path = Project.init(
+        tmp_path / "b", **_settings(tmp_path), output=tmp_path / "out"
+    )
+
+    assert from_path.config.output == from_str.config.output == str(tmp_path / "out")
+    assert from_path.output.directory == from_str.output.directory
+
+
+def test_init_still_takes_output_as_a_url(tmp_path):
+    project = Project.init(
+        tmp_path / "proj", **_settings(tmp_path), output="s3://bucket/output"
+    )
+
+    assert project.config.output == "s3://bucket/output"
 
 
 def test_init_refuses_a_directory_that_is_already_a_project(tmp_path):
@@ -511,6 +532,32 @@ def test_an_ensembles_particles_are_one_set_per_realization(tmp_path, transport_
     assert particles["realization"].value_counts().to_dict() == {0: 50, 1: 50}
 
 
+def test_status_lists_the_results_tree_once_however_many_realizations(
+    tmp_path, transport_runs, monkeypatch
+):
+    """Each listing is a request on an object store, and a lookup that finds no folder did one per realization."""
+    project = _project(
+        tmp_path, [_release(12)], variants={"ens": {"realizations": 4, "krand": 4}}
+    )
+    listings = []
+    original = runtraj.output._settings_folders
+    monkeypatch.setattr(
+        runtraj.output,
+        "_settings_folders",
+        lambda tree: listings.append(tree) or original(tree),
+    )
+
+    before = project.status()
+    assert len(listings) == 1
+    assert list(before["state"]) == ["pending"] * 4
+
+    project.incomplete()
+    assert len(listings) == 2
+
+    _run(project)  # a folder made after a miss is found by the next call
+    assert list(project.status()["state"]) == ["complete"] * 4
+
+
 # ---------------------------------------------------------------------------
 # run() and submit()
 # ---------------------------------------------------------------------------
@@ -536,6 +583,16 @@ def test_run_runs_the_releases_it_is_given_in_this_process(tmp_path, ran):
     assert [call["ids"] for call in ran] == [[_release(13).id]]
     assert list(table["release"]) == [_release(13).id]
     assert list(table["state"]) == ["pending"]  # the fake ran nothing
+
+
+@pytest.mark.parametrize("method", ["run", "submit"])
+def test_run_and_submit_take_their_options_by_keyword_only(tmp_path, ran, method):
+    """Release ids passed first are not read as ``skip_existing`` (which ran the whole project)."""
+    project = _project(tmp_path)
+
+    with pytest.raises(TypeError, match="positional"):
+        getattr(project, method)([_release(12).id])
+    assert ran == []
 
 
 def test_run_refuses_a_release_the_project_does_not_have(tmp_path, ran):

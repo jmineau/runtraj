@@ -16,6 +16,7 @@ import yaml
 from fsspec.implementations.memory import MemoryFileSystem
 from pydantic import ValidationError
 
+from runtraj.exceptions import SchedulerError
 from runtraj.execution import inputs, kubernetes, runner
 from runtraj.execution.config import ExecutionConfig, KubernetesConfig
 from runtraj.execution.inputs import FETCH_DONE, hash_inputs, pull, push
@@ -348,7 +349,7 @@ def test_submit_says_why_kubectl_refused(tmp_path, kubectl):
 @_SHARED_VOLUME
 def test_submit_without_kubectl_says_so(tmp_path, monkeypatch):
     monkeypatch.setattr(kubernetes.shutil, "which", lambda name: None)
-    with pytest.raises(FileNotFoundError, match="kubectl is not installed"):
+    with pytest.raises(SchedulerError, match="kubectl is not installed"):
         runner.submit(_project(tmp_path, 1), execution=_execution())
 
 
@@ -580,7 +581,7 @@ def test_listing_jobs_says_why_kubectl_could_not(tmp_path, cluster):
 
 def test_listing_jobs_without_kubectl_says_so(tmp_path, monkeypatch):
     monkeypatch.setattr(kubernetes.shutil, "which", lambda name: None)
-    with pytest.raises(FileNotFoundError, match="kubectl is not installed"):
+    with pytest.raises(SchedulerError, match="kubectl is not installed"):
         kubernetes.project_jobs(_project(tmp_path), _execution())
 
 

@@ -25,6 +25,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from runtraj.exceptions import SchedulerError
 from runtraj.execution.backends import SILENT_SCHEDULER_SECONDS, Backend
 from runtraj.execution.config import ExecutionConfig, PbsConfig
 from runtraj.execution.runner import (
@@ -129,11 +130,14 @@ def job_script(
 
 def _qsub(script: Path) -> str:
     """Submit *script* with ``qsub`` and return its job id, such as ``12[].server``."""
-    result = subprocess.run(
-        ["qsub", str(script)], capture_output=True, text=True, check=False
-    )
+    try:
+        result = subprocess.run(
+            ["qsub", str(script)], capture_output=True, text=True, check=False
+        )
+    except FileNotFoundError:
+        raise SchedulerError("qsub is not installed, or not on PATH.") from None
     if result.returncode != 0:
-        raise RuntimeError(
+        raise SchedulerError(
             "qsub refused the job array: "
             + (result.stderr.strip() or f"exit {result.returncode}")
         )
@@ -221,7 +225,7 @@ def wait(job_id: str, poll: float = 30.0) -> None:
 
     Raises
     ------
-    RuntimeError
+    SchedulerError
         If ``qstat`` gave no answer about the job for
         :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`, as
         one that does not take ``-F json`` gives none. The job runs on.
@@ -231,7 +235,7 @@ def wait(job_id: str, poll: float = 30.0) -> None:
         if state is not None:
             answered = time.monotonic()
         elif time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
-            raise RuntimeError(
+            raise SchedulerError(
                 f"qstat has said nothing about job {job_id} for "
                 f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
                 "waiting for it. The job may still be running: see qstat, and "

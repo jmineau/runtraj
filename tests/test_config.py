@@ -7,7 +7,8 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from runtraj.config import ProjectConfig
+from runtraj.config import ProjectConfig, _UniqueKeyLoader
+from runtraj.execution import ExecutionConfig
 from runtraj.models.hysplit.driver import winderrtf
 from tests.fixtures.factories import blocks
 
@@ -112,7 +113,9 @@ def test_a_config_loads_and_resolves_without_its_hysplit_build(tmp_path):
     variant = cfg.resolve()["hrrr"]
     with pytest.raises(FileNotFoundError, match="hycs_std"):
         _ = variant.build
-    with pytest.raises(ValueError, match="realizations must be >= 1"):
+    with pytest.raises(
+        ValueError, match="realizations must be a whole number, 1 or more"
+    ):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
             mets={"hrrr": mc},
@@ -177,6 +180,22 @@ def test_model_config_refuses_a_repeated_key(tmp_path, text, where):
     assert str(error.value) == (
         f"config.yaml is not valid YAML at {where} is written twice."
     )
+
+
+@pytest.mark.parametrize("text", ["12:00:00", "2:00:00", "02:00:00", "'12:00:00'"])
+@pytest.mark.parametrize("key", ["slurm.time", "pbs.walltime"])
+def test_an_unquoted_clock_time_stays_text(text, key):
+    """``time: 12:00:00`` is 12 hours, not the base-60 integer 43200 (30 days)."""
+    block, setting = key.split(".")
+    raw = yaml.load(
+        f"backend: {block}\n{block}:\n  {setting}: {text}\n", Loader=_UniqueKeyLoader
+    )
+    value = getattr(getattr(ExecutionConfig.model_validate(raw), block), setting)
+    assert value == text.strip("'")
+
+
+def test_a_plain_number_is_still_a_number():
+    assert yaml.load("a: 12\nb: 1.5\n", Loader=_UniqueKeyLoader) == {"a": 12, "b": 1.5}
 
 
 def test_model_config_yaml_roundtrip_with_execution(tmp_path):
@@ -457,6 +476,17 @@ def test_an_ensemble_is_one_variant_whose_realizations_have_their_own_seed(tmp_p
         err.transport_for(3)
 
 
+@pytest.mark.parametrize("value", [2.5, 2.0, True, False, "3", [3], 0, -1])
+def test_realizations_must_be_a_whole_number_of_one_or_more(tmp_path, value):
+    with pytest.raises(
+        ValueError,
+        match=rf"Variant 'ens'.*realizations must be a whole number.*{re.escape(repr(value))}",
+    ):
+        _variant_config(
+            tmp_path, krand=4, variants={"ens": {"realizations": value}}
+        ).resolve()
+
+
 @pytest.mark.parametrize("krand", [0, 1, 2, 3, 12])
 def test_several_realizations_require_krand_4_or_a_seed(tmp_path, krand):
     config = _variant_config(tmp_path, krand=krand, variants={"e": {"realizations": 3}})
@@ -469,7 +499,9 @@ def test_several_realizations_accept_krand_4_or_seeded_krand_2(tmp_path):
     assert a.resolve()["e"].realizations == 3
     b = _variant_config(tmp_path, krand=2, seed=7, variants={"e": {"realizations": 2}})
     assert b.resolve()["e"].realizations == 2
-    with pytest.raises(ValueError, match="realizations must be >= 1"):
+    with pytest.raises(
+        ValueError, match="realizations must be a whole number, 1 or more"
+    ):
         _variant_config(tmp_path, variants={"e": {"realizations": 0}})
 
 

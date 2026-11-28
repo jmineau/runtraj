@@ -21,6 +21,18 @@ TDUMP_FILE = "tdump"
 #: sampling stop, its end).
 _ZERO_TIME = "00 00 00 00 00"
 
+#: HYSPLIT reads a two-digit year below this as 20YY and the rest as 19YY
+#: (``IF(IYEAR.LT.1940)IYEAR=IYEAR+100`` in its ``tm2min.f``), so a ``CONTROL``
+#: file holds the years 1940 to 2039.
+_CENTURY_PIVOT = 40
+
+
+def _year(yy: int) -> int:
+    """Return the year of HYSPLIT's two-digit *yy*: 1940 to 2039."""
+    if yy >= 100:
+        return yy
+    return 2000 + yy if yy < _CENTURY_PIVOT else 1900 + yy
+
 
 def cdump_name(grid: str) -> str:
     """Return the file ``hycs_std`` writes the grid called *grid* to."""
@@ -92,6 +104,13 @@ class ControlFile(BaseModel):
         path : str or Path
             File to write.
         """
+        year = self.release_time.year
+        if not 1900 + _CENTURY_PIVOT <= year < 2000 + _CENTURY_PIVOT:
+            raise ValueError(
+                f"CONTROL holds a two-digit year, which HYSPLIT reads as "
+                f"{1900 + _CENTURY_PIVOT} to {1999 + _CENTURY_PIVOT}; "
+                f"the release time {self.release_time:%Y-%m-%d %H:%M} is outside it."
+            )
         lines: list[str] = []
 
         # (1) release time, with a 2-digit year (HYSPLIT convention)
@@ -202,7 +221,8 @@ class ControlFile(BaseModel):
             lines = f.readlines()
 
         # Parse the release time
-        release_time = dt.datetime.strptime(lines[0].strip(), "%y %m %d %H %M")
+        yy, mo, da, hh, mi = map(int, lines[0].split())
+        release_time = dt.datetime(_year(yy), mo, da, hh, mi)
 
         # Parse the release locations
         n_locations = int(lines[1].strip())

@@ -382,6 +382,23 @@ class _UniqueKeyLoader(yaml.SafeLoader):
         return super().construct_mapping(node, deep=deep)
 
 
+def _base60_stays_text(construct):
+    """Wrap a number constructor so YAML 1.1's base-60 form (``12:00:00``) stays text."""
+
+    def wrapped(loader: yaml.SafeLoader, node: yaml.ScalarNode):
+        return node.value if ":" in node.value else construct(loader, node)
+
+    return wrapped
+
+
+# YAML 1.1 reads an unquoted 12:00:00 as the integer 43200 (a Slurm time limit
+# of 30 days, a PBS walltime in seconds); YAML 1.2 dropped base 60, and so does this.
+for _tag in ("tag:yaml.org,2002:int", "tag:yaml.org,2002:float"):
+    _UniqueKeyLoader.add_constructor(
+        _tag, _base60_stays_text(yaml.SafeLoader.yaml_constructors[_tag])
+    )
+
+
 class ProjectConfig(BaseModel):
     """
     A project's configuration, as read from ``config.yaml``.
@@ -497,6 +514,12 @@ class ProjectConfig(BaseModel):
                 elsewhere=_blocks_of_settings(data.get("models"), data.get("stages")),
             )
         return data
+
+    @field_validator("output", mode="before")
+    @classmethod
+    def _output_path(cls, output: Any) -> Any:
+        """Accept a path in Python, kept as text like a URL."""
+        return str(output) if isinstance(output, PurePath) else output
 
     @field_validator("mets", mode="before")
     @classmethod
@@ -639,10 +662,15 @@ class ProjectConfig(BaseModel):
             },
         )
         realizations = spec.pop("realizations", None)
-        if realizations is not None:
-            realizations = int(realizations)
-            if realizations < 1:
-                raise ValueError(f"{where}: realizations must be >= 1")
+        if realizations is not None and (
+            not isinstance(realizations, int)
+            or isinstance(realizations, bool)
+            or realizations < 1
+        ):
+            raise ValueError(
+                f"{where}: realizations must be a whole number, 1 or more, "
+                f"not {realizations!r}"
+            )
         stages = self._variant_stages(group, spec.pop("stages", None))
         transport = {**defaults, **spec}
         return _Declared(
