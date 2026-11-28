@@ -703,7 +703,8 @@ def submit(
         job array and ``scancel <id>`` stops it; ``kubectl get job <name>``
         and ``kubectl delete job <name>`` do the same for a Job. A fetch
         job is a job of its own: its id is logged and written to
-        ``fetch.id`` in the submission folder, and ``scancel`` stops it too.
+        ``fetch.id`` in the submission folder (the array's is ``job.id``), and
+        ``scancel`` stops it too.
 
     Raises
     ------

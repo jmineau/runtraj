@@ -361,6 +361,7 @@ def submit_array(
                 "Cancelled fetch job %s: the job array was refused.", fetch_id
             )
         raise
+    (folder / "job.id").write_text(job_id + "\n", encoding="utf-8")
     logger.info(
         "Submitted job: %s%s (%d tasks); logs in %s",
         job_id,
