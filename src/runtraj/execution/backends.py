@@ -27,10 +27,12 @@ runs a transport model itself.
 
 from __future__ import annotations
 
+import time
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from runtraj._plugins import import_class
+from runtraj.exceptions import SchedulerError
 from runtraj.execution.config import BackendConfig
 
 if TYPE_CHECKING:
@@ -161,6 +163,25 @@ def not_waited(backend: Backend) -> str:
 #: it stops with an error: long enough for an accounting database that is
 #: slow to hear of a new job, short of waiting for ever where it never will.
 SILENT_SCHEDULER_SECONDS = 1800
+
+
+def check_scheduler_answered(
+    answered: float, job_id: str, asked: str, see: str
+) -> None:
+    """
+    Raise :class:`~runtraj.exceptions.SchedulerError` once the scheduler has been silent too long about *job_id*.
+
+    *answered* is when it last said something (``time.monotonic()``),
+    *asked* names who was asked, with its verb (``"qstat has"``), and *see*
+    is the command to look at the job with.
+    """
+    if time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
+        raise SchedulerError(
+            f"{asked} said nothing about job {job_id} for "
+            f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
+            f"waiting for it. The job may still be running: see {see}, and "
+            "runtraj status once it ends."
+        )
 
 
 #: The backends built in, by the name ``execution.backend`` gives them, and

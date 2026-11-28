@@ -88,11 +88,14 @@ def task_share(release_ids: list[str], task: int, n_tasks: int) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
+def slug(name: str) -> str:
+    """Return *name* in lowercase letters, digits and single hyphens, as a job name or label needs it (``project`` when none are left)."""
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "project"
+
+
 def _project_slug(directory: str | Path) -> str:
-    """Return a lowercase, hyphenated name for a project directory, for the Slurm job name."""
-    name = Path(str(directory).rstrip("/")).name or "project"
-    slug = re.sub(r"[^a-z0-9-]+", "-", name.lower().replace("_", "-"))
-    return re.sub(r"-{2,}", "-", slug).strip("-") or "project"
+    """Return a lowercase, hyphenated name for a project directory, for the scheduler's job name."""
+    return slug(Path(str(directory).rstrip("/")).name)
 
 
 def resolve_compute_root(
@@ -302,6 +305,14 @@ def _unfinished(table: pd.DataFrame) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def submission_folder(project: Project, scheduler: str) -> Path:
+    """Make ``_<scheduler>/<date_time>_<id>/`` in the project, new for each submission, and return it."""
+    stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
+    folder = Path(project.directory) / f"_{scheduler}" / stamp
+    folder.mkdir(parents=True)
+    return folder
+
+
 def write_submission(
     project: Project, pending: list[str], execution: ExecutionConfig, scheduler: str
 ) -> Path:
@@ -319,9 +330,7 @@ def write_submission(
 
     from runtraj._paths import write_parquet
 
-    stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
-    folder = Path(project.directory) / f"_{scheduler}" / stamp
-    folder.mkdir(parents=True)
+    folder = submission_folder(project, scheduler)
     (folder / "releases.txt").write_text("\n".join(pending) + "\n", encoding="utf-8")
     rows = project._rows_of(pending)
     write_parquet(

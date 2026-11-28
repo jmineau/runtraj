@@ -170,6 +170,21 @@ class Variant:
             return [None]
         return list(range(self.realizations))
 
+    def check_realization(self, realization: int | None) -> None:
+        """
+        Raise unless *realization* is one the variant runs as.
+
+        Raises
+        ------
+        ValueError
+            If *realization* is not one of :attr:`realization_numbers`.
+        """
+        if realization not in self.realization_numbers:
+            raise ValueError(
+                f"Variant {self.name!r} runs as realizations "
+                f"{self.realization_numbers}, not {realization!r}."
+            )
+
     def transport_for(self, realization: int | None) -> TransportConfig:
         """
         Return the transport config realization *realization* runs with.
@@ -182,11 +197,7 @@ class Variant:
         ValueError
             If *realization* is not one of :attr:`realization_numbers`.
         """
-        if realization not in self.realization_numbers:
-            raise ValueError(
-                f"Variant {self.name!r} runs as realizations "
-                f"{self.realization_numbers}, not {realization!r}."
-            )
+        self.check_realization(realization)
         if realization is None:
             return self.transport
         return self.transport.realizations(realization + 1)[realization]

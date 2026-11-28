@@ -474,6 +474,12 @@ def test_an_ensemble_is_one_variant_whose_realizations_have_their_own_seed(tmp_p
     assert variants["hrrr"].realization_numbers == [None]
     with pytest.raises(ValueError, match="realizations"):
         err.transport_for(3)
+    err.check_realization(2)
+    variants["hrrr"].check_realization(None)
+    with pytest.raises(ValueError, match=r"runs as realizations \[0, 1, 2\], not None"):
+        err.check_realization(None)
+    with pytest.raises(ValueError, match=r"runs as realizations \[None\], not 0"):
+        variants["hrrr"].check_realization(0)
 
 
 @pytest.mark.parametrize("value", [2.5, 2.0, True, False, "3", [3], 0, -1])

@@ -64,7 +64,7 @@ class _Records:
         return record
 
 
-def _stamp(values: tuple[int, ...]) -> dt.datetime:
+def _record_time(values: tuple[int, ...]) -> dt.datetime:
     """Return the time of a ``(yy, mm, dd, hh, mn)`` record."""
     yy, mm, dd, hh, mn = values[:5]
     return dt.datetime(_year(yy), mm, dd, hh, mn)
@@ -263,7 +263,7 @@ def _read_records(records: _Records, path: Path, ichem: int) -> xr.Dataset:
             ">4i3fi", records.need("release locations")
         )
         locations.append([float(lon), float(lat), float(height)])
-        start = start or _stamp((yy, mm, dd, hh, mn))
+        start = start or _record_time((yy, mm, dd, hh, mn))
     nlat, nlon, dlat, dlon, lat1, lon1 = struct.unpack(">2i4f", records.need("grid"))
     level_record = records.need("levels")
     (nz,) = struct.unpack(">i", level_record[:4])
@@ -281,8 +281,8 @@ def _read_records(records: _Records, path: Path, ichem: int) -> xr.Dataset:
     ends: list[dt.datetime] = []
     samples: list[np.ndarray] = []
     while (record := records.next()) is not None:
-        starts.append(_stamp(struct.unpack(">6i", record[:24])))
-        ends.append(_stamp(struct.unpack(">6i", records.need("sample end")[:24])))
+        starts.append(_record_time(struct.unpack(">6i", record[:24])))
+        ends.append(_record_time(struct.unpack(">6i", records.need("sample end")[:24])))
         grid = np.zeros((ntyp, nz, nlat, nlon), dtype=np.float32)
         # One record per pollutant per level, the levels of a pollutant together.
         for kt in range(ntyp):

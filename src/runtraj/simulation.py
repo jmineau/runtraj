@@ -74,11 +74,7 @@ class Simulation:
     realization: int | None = None
 
     def __post_init__(self) -> None:
-        if self.realization not in self.variant.realization_numbers:
-            raise ValueError(
-                f"Variant {self.variant.name!r} runs as realizations "
-                f"{self.variant.realization_numbers}, not {self.realization!r}."
-            )
+        self.variant.check_realization(self.realization)
 
     def __repr__(self) -> str:
         realization = (

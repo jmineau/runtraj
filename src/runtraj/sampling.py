@@ -323,9 +323,6 @@ _MET_VARIABLES: dict[str, tuple[str, ...]] = {
     "zsfc": ("SHGT",),
 }
 
-#: Gas constant of dry air, J kg⁻¹ K⁻¹, the value HYSPLIT uses.
-_R_DRY = 287.04
-
 #: The top of the domain of a HYSPLIT run that does not set one, in meters
 #: (``HysplitConfig.z_top``, which a test keeps this equal to: this module does
 #: not import HYSPLIT's package).
@@ -369,9 +366,7 @@ def _met_times(sources: list[Any]) -> pd.DatetimeIndex:
             index = pd.DatetimeIndex(source.indexes["time"])
         else:
             index = pd.DatetimeIndex(source.times)
-        if index.tz is not None:
-            index = index.tz_convert("UTC").tz_localize(None)
-        times.update(index)
+        times.update(_utc(index))
     return pd.DatetimeIndex(sorted(times))
 
 
@@ -526,6 +521,7 @@ def sample_met(
     >>> (sampled["pres"] - hysplit["pres"]).describe()  # doctest: +SKIP
     """
     import arlmet
+    from arlmet.vertical import R_D
 
     columns = list(dict.fromkeys(columns))
     unknown = [c for c in columns if c not in _MET_VARIABLES]
@@ -595,7 +591,7 @@ def sample_met(
         if column == "dens":
             sphu = values_at.get("SPHU", 0.0)
             virtual_temperature = values_at["TEMP"] * (1.0 + 0.61 * sphu)
-            out[column] = 100.0 * values_at["PRES"] / (_R_DRY * virtual_temperature)
+            out[column] = 100.0 * values_at["PRES"] / (R_D * virtual_temperature)
         else:
             out[column] = values_at[_MET_VARIABLES[column][0]]
     return out
@@ -631,9 +627,9 @@ def _bracket(
     return t0.to_numpy(), t1.to_numpy(), weight.astype(float)
 
 
-#: HYSPLIT's constants for the mixed layer (``stbcon.f``): gravity in m s⁻²,
-#: von Kármán's constant, and the heat capacity of air in J kg⁻¹ K⁻¹.
-_HYSPLIT_GRAV = 9.80616
+#: HYSPLIT's constants for the mixed layer (``stbcon.f``): von Kármán's
+#: constant, and the heat capacity of air in J kg⁻¹ K⁻¹. Its gravity and the
+#: gas constant of dry air are arlmet's ``G`` and ``R_D``.
 _VON_KARMAN = 0.4
 _CP = 1005.0
 #: The top of HYSPLIT's surface layer, in m above ground (``metlvl.f``).
@@ -998,6 +994,7 @@ def _hysplit_columns(
 ) -> np.ndarray:
     """Return the mixed-layer height of each grid point and met time in *columns*, as HYSPLIT's *method* finds it."""
     import arlmet
+    from arlmet.vertical import R_D
 
     momentum = ["USTR"] if "USTR" in names else ["UMOF", "VMOF"]
     ground_variables = {
@@ -1058,7 +1055,7 @@ def _hysplit_columns(
 
     uu, vv = grid("UWND"), grid("VWND")
     sphu = grid("SPHU") if "SPHU" in profile_variables else np.zeros_like(temp)
-    density = 100.0 * pres / (_R_DRY * temp * (1.0 + 0.61 * sphu))
+    density = 100.0 * pres / (R_D * temp * (1.0 + 0.61 * sphu))
     ks = max(int(np.sum(levels.heights <= _SURFACE_LAYER_TOP)), 1) - 1
     if "USTR" in momentum:
         ustar = np.maximum(ground["USTR"].to_numpy(dtype=float), 0.0001)
@@ -1291,12 +1288,14 @@ def _richardson_mixed_layer(
     comes from the fluxes, and the temperature excess from it in unstable
     air.
     """
+    from arlmet.vertical import G
+
     n_col, n_lev = zz.shape
     heat = np.maximum(-25.0, heat)
     tstar = np.sign(-heat) * np.maximum(
         0.0001, np.abs(heat / (density[:, ks] * _CP * ustar))
     )
-    zl = zz[:, ks] * _VON_KARMAN * _HYSPLIT_GRAV * tstar / (ustar**2 * theta[:, ks])
+    zl = zz[:, ks] * _VON_KARMAN * G * tstar / (ustar**2 * theta[:, ks])
     unstable = np.clip(zl, -2.0, 15.0) < 0
 
     # Up the column until Ri passes 0.25, interpolating to where it is 0.25.
@@ -1309,7 +1308,7 @@ def _richardson_mixed_layer(
         if not go.any():
             break
         tstk = tstar * density[:, ks] / density[:, k]
-        wstar = np.abs(_HYSPLIT_GRAV * ustar * tstk * zz[:, k] / theta[:, 0]) ** (1 / 3)
+        wstar = np.abs(G * ustar * tstk * zz[:, k] / theta[:, 0]) ** (1 / 3)
         excess = np.where(
             unstable,
             np.abs(8.5 * ustar * tstk / (ustar**3 + 0.6 * wstar**3) ** (1 / 3)),
@@ -1318,7 +1317,7 @@ def _richardson_mixed_layer(
         t1 = theta[:, 0] + excess
         du = np.maximum(0.0001, (uu[:, k] - uu[:, 0]) ** 2 + (vv[:, k] - vv[:, 0]) ** 2)
         old = ri
-        new = _HYSPLIT_GRAV * (theta[:, k] - t1) * (zz[:, k] - zz[:, 0]) / t1 / du
+        new = G * (theta[:, k] - t1) * (zz[:, k] - zz[:, 0]) / t1 / du
         with np.errstate(divide="ignore", invalid="ignore"):
             crossed = (zz[:, k] - zz[:, k - 1]) / (new - old) * (
                 _CRITICAL_RICHARDSON - old

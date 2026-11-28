@@ -47,6 +47,7 @@ from typing import TYPE_CHECKING, Any
 import xarray as xr
 
 from runtraj._paths import atomic_path, location
+from runtraj.spatial import cf_axis_attrs
 
 if TYPE_CHECKING:
     from upath import UPath
@@ -108,14 +109,11 @@ def describe_grid(ds: xr.Dataset, units: str, long_name: str) -> xr.Dataset:
         "units": "m",
         "long_name": "top of the level above ground; 0 is the ground, for deposition",
     }
-    ds["lat"].attrs = {
-        "units": "degrees_north",
-        "long_name": "latitude of the cell center",
-    }
-    ds["lon"].attrs = {
-        "units": "degrees_east",
-        "long_name": "longitude of the cell center",
-    }
+    for axis, quantity in (("lat", "latitude"), ("lon", "longitude")):
+        ds[axis].attrs = {
+            **cf_axis_attrs(axis),
+            "long_name": f"{quantity} of the cell center",
+        }
     for name in ds.data_vars:
         ds[name].attrs = {"long_name": long_name.format(name=name), "units": units}
     return ds

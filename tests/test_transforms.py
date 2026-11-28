@@ -818,10 +818,13 @@ def test_oxidation_rate_is_the_rate_constant_times_the_oxidant():
 
 
 def test_oxidation_takes_the_temperature_from_pres_and_dens_without_temz():
+    # 287.04 is the gas constant of dry air that HYSPLIT and sample_met compute
+    # the density with (arlmet's R_D), so the temperature comes back as it went in.
     p = _oxidized_particles().drop(columns=["temz"])
     t = Oxidation(a=1e-12, e_over_r=1000.0, oxidant=1e6)
-    temperature = p["pres"].to_numpy() * 100.0 / (p["dens"].to_numpy() * 287.05)
-    assert t.rate(p) == pytest.approx(1e-6 * np.exp(-1000.0 / temperature))
+    temperature = p["pres"].to_numpy() * 100.0 / (p["dens"].to_numpy() * 287.04)
+    expected = 1e-6 * np.exp(-1000.0 / temperature)
+    assert t.rate(p) == pytest.approx(expected, rel=1e-9, abs=0)
 
 
 def test_oxidation_needs_a_temperature():
