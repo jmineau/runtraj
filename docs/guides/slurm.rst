@@ -247,6 +247,7 @@ earlier one's logs:
    my_project/
      _slurm/<date_time>_<id>/
        job.sh            # the script given to sbatch
+       job.id            # the job array's Slurm ID
        releases.txt     # the releases submitted, one per line
        releases.parquet # their rows of releases.csv, already checked
        execution.yaml    # the execution settings of this submission

@@ -191,9 +191,8 @@ def get_backend(name: str) -> Backend:
     Raises
     ------
     ValueError
-        If *name* is not a built-in backend and not an import path.
-    TypeError
-        If the class at the import path is not a :class:`Backend`.
+        If *name* is not a built-in backend and not an import path, or the
+        class at the import path is not a :class:`Backend`.
     MissingClass
         If *name* is an import path that cannot be imported on this machine.
     """
@@ -206,7 +205,7 @@ def get_backend(name: str) -> Backend:
         )
     found = import_class(path)
     if not (isinstance(found, type) and issubclass(found, Backend)):
-        raise TypeError(
+        raise ValueError(
             f"execution.backend names {path}, which is not a backend: a backend "
             "subclasses runtraj.execution.Backend."
         )

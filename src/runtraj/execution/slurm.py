@@ -202,7 +202,8 @@ def job_script(
         'if [ "$code" = 3 ]; then',
         '    if [ "$notice" = 0 ] && ! scontrol $on_cluster show job "$SLURM_JOB_ID" \\',
         "        | grep -Eq 'PreemptTime=[0-9]'; then",
-        '        echo "Stopped, not by the time limit or a preemption; not requeued."',
+        '        echo "Exited with 3 (stopped, or a connection error), not at the time'
+        ' limit or by a preemption; not requeued."',
         f'    elif [ "${{SLURM_RESTART_COUNT:-0}}" -ge {MAX_REQUEUES} ]; then',
         '        echo "Requeued ${SLURM_RESTART_COUNT} times; not again. Run the project'
         ' again, or raise execution.slurm.time."',
@@ -361,6 +362,7 @@ def submit_array(
                 "Cancelled fetch job %s: the job array was refused.", fetch_id
             )
         raise
+    (folder / "job.id").write_text(job_id + "\n", encoding="utf-8")
     logger.info(
         "Submitted job: %s%s (%d tasks); logs in %s",
         job_id,

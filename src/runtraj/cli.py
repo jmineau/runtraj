@@ -749,7 +749,7 @@ def _backend(name: str) -> Backend:
     """Return the backend *name* names, or exit with 2 saying why it cannot be found."""
     try:
         return get_backend(name)
-    except (MissingClass, TypeError, ValueError) as error:
+    except (MissingClass, ValueError) as error:
         _fail(str(error))
 
 

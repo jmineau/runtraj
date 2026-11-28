@@ -509,6 +509,7 @@ def test_submit_sends_a_fetch_job_first_and_the_array_waits_for_it(
     assert options["mem"] == "8G"
     assert options["output"] == str(folder / "fetch.log")
     assert (folder / "fetch.id").read_text() == "41\n"
+    assert (folder / "job.id").read_text() == "42\n"
     assert "exclude" not in options  # the array's own sbatch options stay its own
     assert "array" not in options
     assert "module load gcc" in text

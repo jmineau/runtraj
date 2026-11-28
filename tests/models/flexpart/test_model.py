@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import xarray as xr
 from pydantic import ValidationError
 
 import runtraj
@@ -569,6 +570,28 @@ def test_run_without_particle_output(checkout, era5, tmp_path):
     workdir.mkdir()
 
     with pytest.raises(SimulationError, match="no partoutput") as caught:
+        FlexpartModel().run(
+            RELEASE,
+            config(checkout),
+            FlexpartMetConfig(directory=era5),
+            WINDOW,
+            workdir,
+        )
+    assert caught.value.reason == "NO_PARTICLE_DATA"
+
+
+@not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
+def test_run_with_a_particle_file_that_cannot_be_read(checkout, era5, tmp_path):
+    bad = tmp_path / "no_lon.nc"
+    xr.Dataset({"z": ("particle", [1.0])}).to_netcdf(bad)
+    exe = checkout / "src" / "FLEXPART"
+    exe.write_text(
+        f"#!/bin/bash\ncp {bad} output/partoutput_x.nc\necho ' CONGRATULATIONS'\n"
+    )
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+
+    with pytest.raises(SimulationError, match="has no lon, lat") as caught:
         FlexpartModel().run(
             RELEASE,
             config(checkout),

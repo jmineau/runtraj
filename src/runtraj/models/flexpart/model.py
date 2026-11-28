@@ -172,7 +172,8 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
             With FLEXPART's output in ``log``: ``reason`` ``TIMEOUT`` when
             the run exceeded *timeout* seconds, ``EXIT_STATUS`` when
             FLEXPART stopped without finishing, and ``NO_PARTICLE_DATA``
-            when it finished but wrote no particle file.
+            when it finished but wrote no particle file or one that
+            :func:`~runtraj.models.flexpart.read_partoutput` refuses.
         """
         if workdir is None:
             with tempfile.TemporaryDirectory(prefix="runtraj-") as tmp:
@@ -186,7 +187,10 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
                 raise SimulationError(
                     "FLEXPART wrote no partoutput file.", reason="NO_PARTICLE_DATA"
                 )
-            particles = read_partoutput(outputs, release.time)
+            try:
+                particles = read_partoutput(outputs, release.time)
+            except (FileNotFoundError, ValueError) as error:
+                raise SimulationError(str(error), reason="NO_PARTICLE_DATA") from error
         except SimulationError as error:
             error.log = read_log(workdir / LOG_FILE)
             raise
