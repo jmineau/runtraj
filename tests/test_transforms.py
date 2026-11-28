@@ -851,6 +851,131 @@ def test_oxidation_matches_the_field_time(tmp_path):
     assert rate == pytest.approx(1e-12 * np.array([3e6, 2e6]))
 
 
+def _levels_in(units: str | None, values: list[float]) -> xr.DataArray:
+    """OH on levels in *units*: 1e6 at the first level, then 1e5, 1e4, ..., everywhere."""
+    attrs = {} if units is None else {"units": units}
+    return xr.DataArray(
+        np.stack([np.full((2, 3), 1e6 / 10**i) for i in range(len(values))]),
+        dims=["lev", "lat", "lon"],
+        coords={
+            "lev": ("lev", values, attrs),
+            "lat": [40.0, 41.0],
+            "lon": [-112.0, -111.0, -110.0],
+        },
+        name="OH",
+    )
+
+
+def _issue_221_particles() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "particle": [1, 1],
+            "age": [-1440.0, -2880.0],
+            "lon": [-112.0, -112.0],
+            "lat": [40.0, 40.0],
+            "temz": [280.0, 280.0],
+            "pres": [850.0, 850.0],
+            "zagl": [1500.0, 1500.0],
+            "time": pd.to_datetime(["2024-07-15 12:00", "2024-07-15 10:00"]),
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("units", "levels"),
+    [
+        ("Pa", [100000.0, 85000.0, 50000.0, 10000.0, 1000.0]),
+        ("hPa", [1000.0, 850.0, 500.0, 100.0, 10.0]),
+        ("millibars", [1000.0, 850.0, 500.0, 100.0, 10.0]),
+        ("kPa", [100.0, 85.0, 50.0, 10.0, 1.0]),
+        (None, [1000.0, 850.0, 500.0, 100.0, 10.0]),  # no units: taken as hPa
+    ],
+)
+def test_oxidation_matches_pres_to_the_levels_in_the_fields_own_units(
+    tmp_path, units, levels
+):
+    _levels_in(units, levels).to_dataset().to_netcdf(tmp_path / "oh.nc")
+    k = 2.45e-12 * np.exp(-1775.0 / 280.0)
+    rate = Oxidation(a=2.45e-12, e_over_r=1775.0, oxidant="oh.nc", coordinate="pres")
+    # 850 hPa is the second level, 1e5 (not the 10 hPa level, 1e2)
+    assert rate.rate(_issue_221_particles(), tmp_path) == pytest.approx([k * 1e5] * 2)
+
+
+def test_oxidation_matches_zagl_to_levels_in_km(tmp_path):
+    _levels_in("km", [0.0, 1.5, 3.0]).to_dataset().to_netcdf(tmp_path / "oh.nc")
+    t = Oxidation(a=1e-12, oxidant="oh.nc", coordinate="zagl")
+    assert t.rate(_issue_221_particles(), tmp_path) == pytest.approx([1e-12 * 1e5] * 2)
+
+
+def test_oxidation_leaves_the_levels_of_another_column_alone(tmp_path):
+    # no unit to compare with: the particle column's value is matched as it is
+    _levels_in("Pa", [0.0, 850.0, 3000.0]).to_dataset().to_netcdf(tmp_path / "oh.nc")
+    p = _issue_221_particles().rename(columns={"pres": "level"})
+    t = Oxidation(a=1e-12, oxidant="oh.nc", coordinate="level")
+    assert t.rate(p, tmp_path) == pytest.approx([1e-12 * 1e5] * 2)
+
+
+@pytest.mark.parametrize("units", ["1", "sigma_level", "m"])
+def test_oxidation_refuses_levels_in_units_it_cannot_match_to_pres(tmp_path, units):
+    _levels_in(units, [1.0, 0.85, 0.5]).to_dataset().to_netcdf(tmp_path / "oh.nc")
+    t = Oxidation(a=1e-12, oxidant="oh.nc")
+    with pytest.raises(ValueError, match=rf"'{units}'.*'pres' column \(hPa\)"):
+        t.rate(_issue_221_particles(), tmp_path)
+    [(name, rid, message)] = t.check(["r1"], tmp_path)
+    assert (name, rid) == ("oxidant_file", None)
+    assert units in message
+
+
+def _monthly_field(year: int) -> xr.DataArray:
+    """A monthly climatology: January is 1 everywhere, December 12."""
+    months = pd.date_range(f"{year}-01-01", periods=12, freq="MS")
+    return xr.DataArray(
+        np.arange(1.0, 13.0)[:, None, None] * np.ones((12, 2, 3)),
+        dims=("time", "lat", "lon"),
+        coords={"time": months, "lat": [40.0, 41.0], "lon": [-112.0, -111.0, -110.0]},
+        name="OH",
+    )
+
+
+def test_oxidation_refuses_a_climatology_labeled_with_another_year(tmp_path):
+    _monthly_field(2000).to_dataset().to_netcdf(tmp_path / "oh.nc")
+    t = Oxidation(a=1e-12, oxidant="oh.nc")
+    with pytest.raises(ValueError, match="relabel a climatology"):
+        t.rate(_issue_221_particles(), tmp_path)
+    assert t.check(["r1"], tmp_path) == []
+
+
+def test_oxidation_reads_the_month_of_a_climatology_labeled_with_the_runs_year(
+    tmp_path,
+):
+    _monthly_field(2024).to_dataset().to_netcdf(tmp_path / "oh.nc")
+    t = Oxidation(a=1e-12, oxidant="oh.nc")
+    p = _issue_221_particles()
+    # July 15 is nearest July 1
+    assert t.rate(p, tmp_path) == pytest.approx([1e-12 * 7.0] * 2)
+    # a step beyond the last label is still inside; more is not
+    p["time"] = pd.to_datetime(["2024-12-30 23:00", "2024-12-31 00:00"])
+    assert t.rate(p, tmp_path) == pytest.approx([1e-12 * 12.0] * 2)
+    p["time"] = pd.to_datetime(["2024-12-30 23:00", "2025-02-15 00:00"])
+    with pytest.raises(ValueError, match="1 of the particles' times"):
+        t.rate(p, tmp_path)
+    p["time"] = pd.to_datetime(["2023-12-02 00:00", "2024-06-01 00:00"])
+    assert t.rate(p, tmp_path)[0] == pytest.approx(1e-12 * 1.0)
+    p["time"] = pd.to_datetime(["2023-11-15 00:00", "2024-06-01 00:00"])
+    with pytest.raises(ValueError, match="1 of the particles' times"):
+        t.rate(p, tmp_path)
+
+
+def test_oxidation_reads_particle_times_in_utc(tmp_path):
+    _monthly_field(2024).to_dataset().to_netcdf(tmp_path / "oh.nc")
+    p = _issue_221_particles()
+    p["time"] = pd.to_datetime(["2024-07-15 12:00", "2024-07-15 10:00"]).tz_localize(
+        "America/Denver"
+    )
+    rate = Oxidation(a=1e-12, oxidant="oh.nc").rate(p, tmp_path)
+    assert rate == pytest.approx([1e-12 * 7.0] * 2)
+
+
 def test_oxidation_names_the_variable_of_a_file_with_several(tmp_path):
     ds = _oh_field().to_dataset()
     ds["O3"] = _oh_field() * 0.0
