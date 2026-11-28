@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=ac3353df"></script>
+    <script src="../../_static/documentation_options.js?v=206646b6"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev60+g134c80723" />
+  <meta name="docsearch:version" content="0.1.0a6.dev61+g83ee4a22b" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1185,13 +1185,14 @@
 <span class="sd">        one for each stage it uses.</span>
 <span class="sd">        """</span>
         <span class="n">present</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">_Key</span><span class="p">,</span> <span class="n">_Present</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
-            <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-            <span class="n">among</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">"release"</span><span class="p">])</span>
-            <span class="n">present</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">kind</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">present</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">among</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">variant</span><span class="o">.</span><span class="n">stage_order</span><span class="p">)</span>
-            <span class="p">}</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">_listed_once</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+                <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">among</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="s2">"release"</span><span class="p">])</span>
+                <span class="n">present</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">kind</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">present</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">among</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="n">variant</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="o">*</span><span class="n">variant</span><span class="o">.</span><span class="n">stage_order</span><span class="p">)</span>
+                <span class="p">}</span>
         <span class="k">return</span> <span class="n">present</span>
 
     <span class="nd">@staticmethod</span>
@@ -1245,7 +1246,10 @@
 <span class="sd">        &gt;&gt;&gt; st[st.state == "failed"][["release", "variant", "reason"]]  # doctest: +SKIP</span>
 <span class="sd">        """</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selected</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
-        <span class="n">present</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_present</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">_listed_once</span><span class="p">():</span>
+            <span class="n">present</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_present</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_failure_records</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">present</span><span class="p">)</span>
+            <span class="n">started</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">present</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="n">_rows</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
         <span class="c1"># One column for each kind of result any variant of the project makes.</span>
         <span class="n">made</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="o">.</span><span class="n">result</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variants</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
@@ -1266,9 +1270,7 @@
             <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">kinds</span>
         <span class="p">}</span>
         <span class="n">complete</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_complete</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">present</span><span class="p">)</span>
-        <span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_failure_records</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">present</span><span class="p">)</span>
         <span class="n">records</span> <span class="o">=</span> <span class="p">[</span><span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="p">{})</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]</span>
-        <span class="n">started</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">present</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
         <span class="n">state</span> <span class="o">=</span> <span class="p">[</span>
             <span class="s2">"complete"</span>
             <span class="k">if</span> <span class="n">done</span>
