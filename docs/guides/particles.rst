@@ -75,7 +75,7 @@ Plots
 
 runtraj's methods for a particle table are under ``particles.runtraj``.
 Plotting needs the ``visualization`` extra; with cartopy installed, maps
-also show coastlines and state borders.
+also show coastlines and country borders.
 
 .. ipython:: python
 

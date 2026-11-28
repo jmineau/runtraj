@@ -55,7 +55,7 @@ def _make_ax(
         projection = ccrs.PlateCarree(central_longitude=center)
         ax = fig.add_subplot(1, 1, 1, projection=projection)
         # pyrefly: ignore[missing-attribute]
-        ax.add_feature(cfeature.STATES, linewidth=0.4, edgecolor="0.4")
+        ax.add_feature(cfeature.BORDERS, linewidth=0.4, edgecolor="0.4")
         # pyrefly: ignore[missing-attribute]
         ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
         if extent is not None:

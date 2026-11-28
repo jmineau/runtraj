@@ -98,6 +98,17 @@ def test_make_ax_with_extent():
     assert ax is not None
 
 
+def test_make_ax_draws_country_borders_not_state_lines():
+    """US state lines suit one country, and cartopy downloads them on first use."""
+    feature = pytest.importorskip("cartopy.feature")
+    from cartopy.mpl.feature_artist import FeatureArtist
+
+    _, ax = _make_ax()
+    drawn = [a._feature for a in ax.get_children() if isinstance(a, FeatureArtist)]
+    assert feature.BORDERS in drawn
+    assert feature.STATES not in drawn
+
+
 def test_make_ax_with_existing_ax():
     _, existing = plt.subplots()
     fig, ax = _make_ax(ax=existing)
