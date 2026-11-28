@@ -203,6 +203,32 @@ OLD_FILE = (
 )
 
 
+#: The message for a stored file whose ``temp`` is not the lowest-level temperature.
+OLD_TEMP = (
+    "{what} holds the air temperature at the particle or trajectory as "
+    "``temp``, as files were written before it was named ``temz`` (``temp`` "
+    "is the lowest model level), and is not read. Delete it and run again to make it with "
+    "the current names: its settings folder is the same, so the simulation "
+    "counts as unfinished once the file is gone."
+)
+
+
+def check_temp_name(
+    names: Iterable[str], meta: Mapping[bytes, bytes], what: str
+) -> None:
+    """
+    Refuse a FLEXPART particle file that names the particle's temperature ``temp``.
+
+    Files written before ``temz`` hold it as ``temp``, where a HYSPLIT file's
+    ``temp`` is the lowest model level: reading one as the other would be
+    wrong without a sign. A FLEXPART file has no other ``temp`` than that.
+    """
+    if "temp" not in names or b"runtraj:settings" not in meta:
+        return
+    if json.loads(meta[b"runtraj:settings"]).get("model", {}).get("name") == "flexpart":
+        raise ValueError(OLD_TEMP.format(what=what))
+
+
 def read_particles(
     path: str | Path | UPath, columns: list[str] | None = None
 ) -> pd.DataFrame:
@@ -238,6 +264,7 @@ def read_particles(
         pf = pq.ParquetFile(source)
         stored = pf.schema_arrow.names
         meta = pf.schema_arrow.metadata or {}
+        check_temp_name(stored, meta, f"The file {path}")
         # The output directory adds a ``release`` column for scans of the
         # whole tree. One file is one release, so it is not read here.
         wanted = [c for c in (stored if columns is None else columns) if c != "release"]

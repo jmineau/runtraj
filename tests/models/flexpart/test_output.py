@@ -68,7 +68,7 @@ def test_reads_flexpart_output(tmp_path):
     assert first["lat"] == pytest.approx(40.74, abs=0.05)
     assert 0 < first["zagl"] < 100
     assert first["pres"] == pytest.approx(806, abs=5)
-    assert {"mlht", "dens", "temp", "sphu", "zsfc", "pv"} <= set(particles.columns)
+    assert {"mlht", "dens", "temz", "sphu", "zsfc", "pv"} <= set(particles.columns)
 
 
 def backward_fields():

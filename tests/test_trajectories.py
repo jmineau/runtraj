@@ -10,6 +10,7 @@ from runtraj.trajectories import (
     TRAJECTORY_SCHEMA,
     check_trajectories,
     read_trajectories,
+    trajectories_from_table,
     write_trajectories,
 )
 
@@ -75,3 +76,24 @@ def test_a_table_needs_a_row_and_to_be_a_table(point_release):
         check_trajectories(_table(point_release).iloc[:0])
     with pytest.raises(ValueError, match="DataFrame"):
         check_trajectories({"trajectory": [1]})
+
+
+def test_a_trajectory_file_with_temp_is_refused(tmp_path, point_release):
+    """Before ``temz``, the air temperature along a trajectory was ``temp``, the name of the lowest level."""
+    table = _table(point_release).assign(temp=290.0)
+    path = write_trajectories(
+        tmp_path / "t.parquet", table, point_release, {"mode": "trajectory"}, []
+    )
+    with pytest.raises(ValueError, match="before it was named ``temz``") as error:
+        read_trajectories(path)
+    assert str(path) in str(error.value)
+    with pytest.raises(ValueError, match="before it was named ``temz``"):
+        trajectories_from_table(pq.read_table(path))
+    new = write_trajectories(
+        tmp_path / "n.parquet",
+        table.rename(columns={"temp": "temz"}),
+        point_release,
+        {"mode": "trajectory"},
+        [],
+    )
+    assert (read_trajectories(new)["temz"] == 290).all()

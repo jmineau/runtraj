@@ -103,6 +103,14 @@ Some of them:
    * - ``dens``
      - kg m⁻³
      - Air density.
+   * - ``temp``
+     - K
+     - Air temperature at the lowest model level under the particle, the
+       same for every particle over one place.
+   * - ``temz``
+     - K
+     - Air temperature at the particle. FLEXPART's table has this one and
+       not ``temp``.
    * - ``samt``
      - minutes
      - Time the particle spent in the surface layer during the step.
@@ -124,7 +132,7 @@ Some of them:
        summed over the steps (the Grell scheme, ``capemin: -2``). HYSPLIT
        reads this name only: ``zfx1`` stops it, and the config refuses it.
 
-FLEXPART writes ``mlht``, ``dens``, ``pres``, ``temp``, ``sphu`` and
+FLEXPART writes ``mlht``, ``dens``, ``pres``, ``temz``, ``sphu`` and
 ``zsfc`` at each particle, and no other column of this table.
 :doc:`flexpart` lists them and where they differ from HYSPLIT's.
 

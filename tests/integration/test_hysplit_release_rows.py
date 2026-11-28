@@ -133,11 +133,11 @@ def test_a_release_row_is_at_the_control_height(
     np.testing.assert_allclose(released, 3000.0, atol=0.01)
 
 
-def test_sphu_is_the_specific_humidity_of_rhfr_temp_and_pres(
+def test_sphu_is_the_specific_humidity_of_rhfr_temz_and_pres(
     tmp_path, met_dir, hysplit_build, request
 ):
     # In the particle rows after the release, sphu is a fraction of the
-    # specific humidity that the same rows' rhfr, temp and pres give.
+    # specific humidity that the same rows' rhfr, temz and pres give.
     request.applymarker(
         pytest.mark.xfail(
             reason="HYSPLIT's particle rows write sphu several times too small",
@@ -148,14 +148,14 @@ def test_sphu_is_the_specific_humidity_of_rhfr_temp_and_pres(
         time=REFERENCE_TIME, longitude=-112.0, latitude=40.5, altitude=5.0
     )
     config = HysplitConfig(
-        n_hours=-1, numpar=20, varsiwant=[*COLUMNS, "temp", "rhfr", "pres", "sphu"]
+        n_hours=-1, numpar=20, varsiwant=[*COLUMNS, "temz", "rhfr", "pres", "sphu"]
     )
     rows = run_raw(tmp_path, release, config, met_dir)
     rows = rows.query("age != 0")
 
-    celsius = rows["temp"] - 273.15
+    celsius = rows["temz"] - 273.15
     vapor = rows["rhfr"] * 6.112 * np.exp(17.67 * celsius / (celsius + 243.5))
     expected = 0.622 * vapor / (rows["pres"] - 0.378 * vapor)
     ratio = float(np.median(rows["sphu"] / expected))
-    print(f"\nsphu / specific humidity of rhfr, temp, pres: median {ratio:.3f}")
+    print(f"\nsphu / specific humidity of rhfr, temz, pres: median {ratio:.3f}")
     assert ratio == pytest.approx(1.0, abs=0.1)
