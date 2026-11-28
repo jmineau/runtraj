@@ -32,7 +32,8 @@ or a directory that is not a project) or the project's files are invalid
 (``config.yaml`` that is not valid YAML or has a misspelled setting, a bad
 row in ``releases.csv``). ``runtraj run`` and ``runtraj submit`` also
 exit with 2 when a met directory does not exist or holds no ARL file, which
-``runtraj check`` lists. ``runtraj status`` does too, unless the output holds no
+``runtraj check`` lists, and when the scheduler refuses the job or is not
+installed (the message is the scheduler's own). ``runtraj status`` does too, unless the output holds no
 result the project could own: then it counts every simulation as pending.
 
 An error the command did not expect ends it too, after its traceback: with
@@ -70,7 +71,7 @@ from typer.core import TyperGroup
 from runtraj._paths import is_url
 from runtraj._transient import is_transient
 from runtraj.config import _UniqueKeyLoader
-from runtraj.exceptions import MissingClass, WorkerDied
+from runtraj.exceptions import MissingClass, SchedulerError, WorkerDied
 from runtraj.execution import schedule as schedules
 from runtraj.execution.backends import Backend, get_backend
 from runtraj.execution.config import ExecutionConfig, check_url
@@ -674,8 +675,8 @@ def run(
     failed, 3 when some did not finish (the run was stopped, a worker process
     was killed, often for memory, or a connection
     or I/O error stopped them while they wrote), and 2 when
-    the command line is wrong, the project's files are invalid or a met
-    cannot be read (nothing ran). An
+    the command line is wrong, the project's files are invalid, a met
+    cannot be read or the scheduler refuses the job (nothing ran). An
     error the run did not expect prints its traceback and exits with 3 when
     it is a connection or I/O error, such as an output bucket that cannot
     be reached, which a retry may get past, and with 4 when it is any
@@ -729,7 +730,7 @@ def _run_and_exit(
     """Run the project's unfinished simulations, print what ran, and exit with the run's code."""
     try:
         table = opened.run(releases=release_ids, task=share, **options)
-    except ValueError as error:
+    except (SchedulerError, ValueError) as error:
         _fail(str(error))
     except WorkerDied as error:
         # A worker was killed, most likely for memory; the message says what to do.
@@ -814,7 +815,7 @@ def submit(
     )
     try:
         job_id = opened.submit(releases=release_ids, **options)
-    except ValueError as error:
+    except (SchedulerError, ValueError) as error:
         _fail(str(error))
     if job_id is not None:
         typer.echo(f"Submitted job: {job_id}")

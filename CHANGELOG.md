@@ -9,6 +9,7 @@ All notable changes to runtraj are listed here. The format follows
 
 ### Fixed
 
+- A job the scheduler refuses (`sbatch`, `qsub` or `kubectl` refusing it or missing, or `sacct` or `qstat` going silent while a run waits) ends `runtraj submit` and `runtraj run` with the scheduler's own message and exit code 2, not a traceback and exit code 4. The backends raise the new `runtraj.exceptions.SchedulerError`, a `RuntimeError`; a missing `kubectl` was a `FileNotFoundError`.
 - An unquoted `time: 12:00:00` (or `walltime`, or any other `h:mm:ss`) in `config.yaml` or an `--execution` file stays the text `12:00:00`. PyYAML read it as the base-60 integer 43200, which Slurm took as 43200 minutes (30 days).
 - A variant's `realizations` must be a whole number, 1 or more. A float such as `2.5`, a boolean, a string or a list is refused with an error naming the variant and the value, instead of being rounded (`2.5` ran 2 realizations, `true` ran 1) or ending `runtraj check` in a traceback.
 - `oxidation` reads its oxidant field's levels in their own units: a field on pressure levels in Pa (or kPa, mb) is matched to a particle's `pres` in hPa, and levels in m or km to `zagl`, instead of picking the level nearest the number. Levels whose `units` cannot be matched to the particle column are an error; levels with no `units` are taken to be in the particles' units, as before.

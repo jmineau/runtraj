@@ -11,6 +11,7 @@ from runtraj.exceptions import (
     MeteorologyError,
     MissingClass,
     RuntrajError,
+    SchedulerError,
     SimulationError,
     WorkerDied,
 )
@@ -23,6 +24,7 @@ PARENTS = {
     HYSPLITNotFoundError: (RuntrajError, FileNotFoundError),
     MissingClass: (RuntrajError, ImportError),
     WorkerDied: (RuntrajError, RuntimeError),
+    SchedulerError: (RuntrajError, RuntimeError),
 }
 
 

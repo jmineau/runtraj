@@ -1521,3 +1521,34 @@ def test_an_unreachable_object_store_exits_3_not_1(tmp_path):
 # ---------------------------------------------------------------------------
 # init command
 # ---------------------------------------------------------------------------
+
+
+@not_on_windows("the scheduler is a shell script")
+@pytest.mark.parametrize("command", ["submit", "run"])
+def test_a_job_the_scheduler_refuses_ends_in_its_message_and_exit_2(
+    tmp_path, monkeypatch, command
+):
+    """A scheduler's refusal is a message and exit code 2, not a traceback and exit code 4."""
+    fake = tmp_path / "bin"
+    fake.mkdir()
+    sbatch = fake / "sbatch"
+    sbatch.write_text(
+        "#!/bin/sh\n"
+        "echo 'sbatch: error: Invalid account or account/partition "
+        "combination specified' >&2\nexit 1\n"
+    )
+    sbatch.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{fake}{os.pathsep}{os.environ['PATH']}")
+    project = _project(tmp_path)
+
+    args = ["--backend", "slurm"]
+    result = (
+        _invoke("submit", *args, project=project)
+        if command == "submit"
+        else _run(project, *args)
+    )
+
+    assert result.exit_code == 2, result.output
+    assert "Invalid account or account/partition combination" in result.output
+    assert "Traceback" not in result.output
+    assert "runtraj exits with 4" not in result.output
