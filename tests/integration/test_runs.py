@@ -252,9 +252,9 @@ def test_a_forward_column_run_ages_forward_and_keeps_each_particle_in_its_slab(
     )  # fmt: skip
 
     assert (particles["age"] > 0).all()
-    assert particles["age"].max() == 120
+    assert particles["age"].max() == 7200  # seconds
     # A row's time is the release time plus its age.
-    elapsed = (particles["time"] - pd.Timestamp(REFERENCE_TIME)) / pd.Timedelta("1min")
+    elapsed = (particles["time"] - pd.Timestamp(REFERENCE_TIME)) / pd.Timedelta("1s")
     np.testing.assert_array_equal(elapsed, particles["age"])
     assert particles["release_height"].min() > 5.0
     assert particles["release_height"].max() < 1000.0
