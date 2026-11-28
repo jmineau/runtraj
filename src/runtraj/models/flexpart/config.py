@@ -85,7 +85,7 @@ class FlexpartConfig(TransportConfig):
         900,
         description=(
             "Seconds between the times all particles are synchronized "
-            "(``LSYNCTIME``). It must divide ``loutstep``."
+            "(``LSYNCTIME``). It must divide ``loutstep`` at least twice."
         ),
     )
     ctl: float = Field(
@@ -158,7 +158,7 @@ class FlexpartConfig(TransportConfig):
 
     @model_validator(mode="after")
     def _steps(self) -> FlexpartConfig:
-        """Check that ``loutstep`` is whole minutes, that ``lsynctime`` divides it, and that ``cblflag`` has the time steps FLEXPART would force."""
+        """Check that ``loutstep`` is whole minutes and a multiple of ``lsynctime`` of at least two, and that ``cblflag`` has the time steps FLEXPART would force."""
         if self.loutstep % 60:
             raise ValueError(
                 f"loutstep ({self.loutstep} s) must be a whole number of minutes: "
@@ -169,6 +169,13 @@ class FlexpartConfig(TransportConfig):
             raise ValueError(
                 f"lsynctime ({self.lsynctime} s) must divide loutstep "
                 f"({self.loutstep} s)."
+            )
+        if self.loutstep < 2 * self.lsynctime:
+            raise ValueError(
+                f"loutstep ({self.loutstep} s) must be at least twice lsynctime "
+                f"({self.lsynctime} s): FLEXPART stops with 'INTERVAL BETWEEN "
+                "CONCENTRATION FIELDS MUST BE AT LEAST TWICE THE SYNCHRONISATION "
+                "INTERVAL'."
             )
         if self.cblflag and (
             self.ctl < 5 or self.ctl * self.ifine < 50 or self.lsynctime > 1200

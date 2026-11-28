@@ -118,6 +118,13 @@ def test_config_refuses_a_loutstep_that_is_not_whole_minutes(loutstep):
     assert FlexpartConfig(n_hours=-24, loutstep=120, lsynctime=30).loutstep == 120
 
 
+def test_config_needs_loutstep_of_twice_lsynctime_or_more():
+    """FLEXPART stops on ``(loutstep/lsynctime).lt.2`` (readoptions_mod.f90)."""
+    with pytest.raises(ValidationError, match="at least twice lsynctime"):
+        FlexpartConfig(n_hours=-24, loutstep=900, lsynctime=900)
+    assert FlexpartConfig(n_hours=-24, loutstep=1800, lsynctime=900).loutstep == 1800
+
+
 def test_config_refuses_cblflag_with_time_steps_flexpart_would_change(checkout):
     """FLEXPART raises CTL to 5 and IFINE until CTL * IFINE is 50, and caps LSYNCTIME at 1200 s."""
     for steps in (
