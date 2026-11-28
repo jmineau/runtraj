@@ -186,8 +186,10 @@ Commands
      array (:doc:`any_scheduler`).
 
 ``runtraj submit <project>``
-   Submit the unfinished simulations to Slurm as a job array, and return as
-   soon as it is submitted (:doc:`slurm`).
+   Submit the unfinished simulations as a job array, and return as soon as
+   it is submitted (:doc:`slurm`). It goes to the scheduler ``--backend``
+   names, or ``execution.backend`` in ``config.yaml``; with neither,
+   ``submit`` is an error.
 
 ``runtraj schedule <project>`` and ``runtraj tick <project>``
    Run a project every hour on Kubernetes, for the sites in its

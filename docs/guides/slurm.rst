@@ -224,8 +224,9 @@ task has ended (it asks ``sacct``), and returns the status table of the
 simulations it submitted. When some look unfinished then, it lists the
 output again a minute later, since a network filesystem can show the
 submitting node new files late. On a cluster without Slurm's accounting
-database, ``sacct`` never answers: after 30 minutes without an answer it
-stops waiting with an error, and the job runs on. ``project.submit()``
+database, ``sacct`` never answers, so it asks ``squeue`` instead and
+stops waiting when that lists no task; if neither answers for 30 minutes
+it stops waiting with an error, and the job runs on. ``project.submit()``
 submits and returns the Slurm job id at once:
 
 .. code-block:: python

@@ -7,7 +7,7 @@ script into ``_slurm/<stamp>/`` in the project and submits it with
 run --task``, so a task is a command line that can be read, and run again,
 by hand. When a met downloads, a job that runs ``runtraj fetch`` goes first
 and the array waits for it. :func:`wait` follows the tasks with ``sacct``
-until they end. A task that Slurm stops near its time limit, or preempts,
+(``squeue`` where ``sacct`` does not answer) until they end. A task that Slurm stops near its time limit, or preempts,
 is requeued by its job script, which runs ``runtraj run`` as a child: the
 worker itself knows nothing of Slurm, and stops with exit code 3 on
 SIGTERM as it does on every backend.
@@ -435,6 +435,24 @@ def _task_states(
     return states or None
 
 
+def _queued(job_id: str, cluster: str | None = None) -> bool | None:
+    """
+    Say whether ``squeue`` lists a task of the job, or ``None`` when it cannot answer.
+
+    ``squeue`` answers on every cluster, with or without the accounting
+    database. A job it no longer knows has ended.
+    """
+    result = subprocess.run(
+        ["squeue", *_on_cluster(cluster), "-h", "-j", job_id, "-o", "%T"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return False if "Invalid job id" in result.stderr else None
+    return bool(result.stdout.split())
+
+
 def wait(
     job_id: str, poll: float = 30.0, *, cluster: str | None = None
 ) -> dict[str, tuple[str, str]]:
@@ -444,10 +462,13 @@ def wait(
     Polls ``sacct`` every *poll* seconds. A task that ended other than
     complete, or with failed simulations (exit 1) or interrupted ones
     (exit 3), is logged with its state; its simulations stay pending in the
-    status table. When ``sacct`` gives no answer about the job for
-    :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`, as on a
-    cluster without Slurm's accounting database, it stops waiting with an
-    error; the job itself runs on.
+    status table. When ``sacct`` gives no answer, as on a cluster without
+    Slurm's accounting database, it asks ``squeue``: while that lists a
+    task it goes on waiting, and when it lists none the job has ended and
+    this returns ``{}``, the status table saying what finished. When
+    neither answers for
+    :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS` it stops
+    waiting with an error; the job itself runs on.
 
     Parameters
     ----------
@@ -463,22 +484,31 @@ def wait(
     -------
     dict
         ``{task: (state, exit code)}`` as ``sacct`` gives them, such as
-        ``{"123_0": ("COMPLETED", "0:0")}``.
+        ``{"123_0": ("COMPLETED", "0:0")}``; empty when only ``squeue``
+        answered.
 
     Raises
     ------
     SchedulerError
-        If ``sacct`` gave no answer about the job for
+        If neither ``sacct`` nor ``squeue`` gave an answer about the job for
         :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`.
     """
     answered = time.monotonic()
     states = _task_states(job_id, cluster)
-    while states is None or any(s in _ACTIVE for s, _ in states.values()):
-        if states is not None:
+    while True:
+        if states is None:
+            active = _queued(job_id, cluster)
+            if active is False:
+                return {}
+        else:
+            active = any(s in _ACTIVE for s, _ in states.values())
+            if not active:
+                break
+        if active:
             answered = time.monotonic()
         elif time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
             raise SchedulerError(
-                f"sacct has said nothing about job {job_id} for "
+                f"sacct and squeue have said nothing about job {job_id} for "
                 f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
                 "waiting for it. The job may still be running: see squeue, and "
                 "runtraj status once it ends."

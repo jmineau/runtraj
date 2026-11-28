@@ -127,7 +127,7 @@ Slurm job arrays
 
 The Slurm backend is :mod:`runtraj.execution.slurm`: it writes the job
 array and fetch scripts, submits them with ``sbatch``, follows the tasks
-with ``sacct``. The job array script requeues a task that Slurm stops
+with ``sacct`` (``squeue`` where it does not answer). The job array script requeues a task that Slurm stops
 near its time limit or preempts; the worker only stops, and exits with 3.
 
 .. autosummary::
