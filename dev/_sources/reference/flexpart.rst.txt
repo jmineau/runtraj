@@ -151,10 +151,10 @@ have:
      - ``prs``
      - hPa
      - Pressure (FLEXPART writes Pa).
-   * - ``temp``
+   * - ``temz``
      - ``T``
      - K
-     - Temperature.
+     - Air temperature at the particle (HYSPLIT's ``temz``).
    * - ``sphu``
      - ``sh``
      - kg kg\ :sup:`-1`

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=f8f1cdf2"></script>
+    <script src="../../_static/documentation_options.js?v=56e32173"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
+  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1016,10 +1016,13 @@
 <p>Polls <code class="docutils literal notranslate"><span class="pre">sacct</span></code> every <em>poll</em> seconds. A task that ended other than
 complete, or with failed simulations (exit 1) or interrupted ones
 (exit 3), is logged with its state; its simulations stay pending in the
-status table. When <code class="docutils literal notranslate"><span class="pre">sacct</span></code> gives no answer about the job for
-<code class="xref py py-data docutils literal notranslate"><span class="pre">SILENT_SCHEDULER_SECONDS</span></code>, as on a
-cluster without Slurm’s accounting database, it stops waiting with an
-error; the job itself runs on.</p>
+status table. When <code class="docutils literal notranslate"><span class="pre">sacct</span></code> gives no answer, as on a cluster without
+Slurm’s accounting database, it asks <code class="docutils literal notranslate"><span class="pre">squeue</span></code>: while that lists a
+task it goes on waiting, and when it lists none the job has ended and
+this returns <code class="docutils literal notranslate"><span class="pre">{}</span></code>, the status table saying what finished. When
+neither answers for
+<code class="xref py py-data docutils literal notranslate"><span class="pre">SILENT_SCHEDULER_SECONDS</span></code> it stops
+waiting with an error; the job itself runs on.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1031,13 +1034,14 @@ error; the job itself runs on.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{task:</span> <span class="pre">(state,</span> <span class="pre">exit</span> <span class="pre">code)}</span></code> as <code class="docutils literal notranslate"><span class="pre">sacct</span></code> gives them, such as
-<code class="docutils literal notranslate"><span class="pre">{&quot;123_0&quot;:</span> <span class="pre">(&quot;COMPLETED&quot;,</span> <span class="pre">&quot;0:0&quot;)}</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">{&quot;123_0&quot;:</span> <span class="pre">(&quot;COMPLETED&quot;,</span> <span class="pre">&quot;0:0&quot;)}</span></code>; empty when only <code class="docutils literal notranslate"><span class="pre">squeue</span></code>
+answered.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="runtraj.exceptions.SchedulerError.html#runtraj.exceptions.SchedulerError" title="runtraj.exceptions.SchedulerError"><strong>SchedulerError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">sacct</span></code> gave no answer about the job for
+<dd class="field-even"><p><a class="reference internal" href="runtraj.exceptions.SchedulerError.html#runtraj.exceptions.SchedulerError" title="runtraj.exceptions.SchedulerError"><strong>SchedulerError</strong></a> – If neither <code class="docutils literal notranslate"><span class="pre">sacct</span></code> nor <code class="docutils literal notranslate"><span class="pre">squeue</span></code> gave an answer about the job for
     <code class="xref py py-data docutils literal notranslate"><span class="pre">SILENT_SCHEDULER_SECONDS</span></code>.</p>
 </dd>
 </dl>

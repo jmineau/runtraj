@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=f8f1cdf2"></script>
+    <script src="../_static/documentation_options.js?v=56e32173"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
+  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -1159,7 +1159,7 @@ what is complete, and exits with a code that says whether to try it again
 <h2>Slurm job arrays<a class="headerlink" href="#slurm-job-arrays" title="Link to this heading">#</a></h2>
 <p>The Slurm backend is <code class="xref py py-mod docutils literal notranslate"><span class="pre">runtraj.execution.slurm</span></code>: it writes the job
 array and fetch scripts, submits them with <code class="docutils literal notranslate"><span class="pre">sbatch</span></code>, follows the tasks
-with <code class="docutils literal notranslate"><span class="pre">sacct</span></code>. The job array script requeues a task that Slurm stops
+with <code class="docutils literal notranslate"><span class="pre">sacct</span></code> (<code class="docutils literal notranslate"><span class="pre">squeue</span></code> where it does not answer). The job array script requeues a task that Slurm stops
 near its time limit or preempts; the worker only stops, and exits with 3.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>

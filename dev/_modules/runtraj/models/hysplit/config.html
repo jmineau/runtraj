@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=f8f1cdf2"></script>
+    <script src="../../../../_static/documentation_options.js?v=56e32173"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
+  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -589,7 +589,7 @@
 <span class="c1">#: it in the trajectory file, and the column of the trajectory table.</span>
 <span class="n">TRAJECTORY_DIAGNOSTICS</span> <span class="o">=</span> <span class="p">(</span>
     <span class="p">(</span><span class="s2">"tm_tpot"</span><span class="p">,</span> <span class="s2">"THETA"</span><span class="p">,</span> <span class="s2">"tpot"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"tm_tamb"</span><span class="p">,</span> <span class="s2">"AIR_TEMP"</span><span class="p">,</span> <span class="s2">"temp"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"tm_tamb"</span><span class="p">,</span> <span class="s2">"AIR_TEMP"</span><span class="p">,</span> <span class="s2">"temz"</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">"tm_rain"</span><span class="p">,</span> <span class="s2">"RAINFALL"</span><span class="p">,</span> <span class="s2">"rain"</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">"tm_mixd"</span><span class="p">,</span> <span class="s2">"MIXDEPTH"</span><span class="p">,</span> <span class="s2">"mlht"</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">"tm_relh"</span><span class="p">,</span> <span class="s2">"RELHUMID"</span><span class="p">,</span> <span class="s2">"relh"</span><span class="p">),</span>
@@ -1518,7 +1518,7 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">"Write the air temperature along each trajectory (1), as "</span>
-            <span class="s2">"``temp``, in K. In ``mode: trajectory`` only."</span>
+            <span class="s2">"``temz``, in K. In ``mode: trajectory`` only."</span>
         <span class="p">),</span>
     <span class="p">)</span>
     <span class="n">tm_rain</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>

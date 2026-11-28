@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=f8f1cdf2"></script>
+    <script src="../../../_static/documentation_options.js?v=56e32173"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
+  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -665,6 +665,32 @@
 <span class="p">)</span>
 
 
+<span class="c1">#: The message for a stored file whose ``temp`` is not the lowest-level temperature.</span>
+<span class="n">OLD_TEMP</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"</span><span class="si">{what}</span><span class="s2"> holds the air temperature at the particle or trajectory as "</span>
+    <span class="s2">"``temp``, as files were written before it was named ``temz`` (``temp`` "</span>
+    <span class="s2">"is the lowest model level), and is not read. Delete it and run again to make it with "</span>
+    <span class="s2">"the current names: its settings folder is the same, so the simulation "</span>
+    <span class="s2">"counts as unfinished once the file is gone."</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_temp_name</span><span class="p">(</span>
+    <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">],</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Refuse a FLEXPART particle file that names the particle's temperature ``temp``.</span>
+
+<span class="sd">    Files written before ``temz`` hold it as ``temp``, where a HYSPLIT file's</span>
+<span class="sd">    ``temp`` is the lowest model level: reading one as the other would be</span>
+<span class="sd">    wrong without a sign. A FLEXPART file has no other ``temp`` than that.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"temp"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">"runtraj:settings"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="sa">b</span><span class="s2">"runtraj:settings"</span><span class="p">])</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"model"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"flexpart"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">OLD_TEMP</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">what</span><span class="o">=</span><span class="n">what</span><span class="p">))</span>
+
+
 <div class="viewcode-block" id="read_particles">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.read_particles.html#runtraj.particles.read_particles">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_particles</span><span class="p">(</span>
@@ -702,6 +728,7 @@
         <span class="n">pf</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">ParquetFile</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="n">stored</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">names</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">schema_arrow</span><span class="o">.</span><span class="n">metadata</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">check_temp_name</span><span class="p">(</span><span class="n">stored</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"The file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="c1"># The output directory adds a ``release`` column for scans of the</span>
         <span class="c1"># whole tree. One file is one release, so it is not read here.</span>
         <span class="n">wanted</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="n">stored</span> <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">columns</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s2">"release"</span><span class="p">]</span>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=f8f1cdf2"></script>
+    <script src="../_static/documentation_options.js?v=56e32173"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev72+g273d14212" />
+  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -673,8 +673,10 @@ one.</p></li>
 array (<a class="reference internal" href="any_scheduler.html"><span class="doc">On Any Scheduler</span></a>).</p></li>
 </ul>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Submit the unfinished simulations to Slurm as a job array, and return as
-soon as it is submitted (<a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>).</p>
+<dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">submit</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Submit the unfinished simulations as a job array, and return as soon as
+it is submitted (<a class="reference internal" href="slurm.html"><span class="doc">On An HPC Cluster (Slurm)</span></a>). It goes to the scheduler <code class="docutils literal notranslate"><span class="pre">--backend</span></code>
+names, or <code class="docutils literal notranslate"><span class="pre">execution.backend</span></code> in <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>; with neither,
+<code class="docutils literal notranslate"><span class="pre">submit</span></code> is an error.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">schedule</span> <span class="pre">&lt;project&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">tick</span> <span class="pre">&lt;project&gt;</span></code></dt><dd><p>Run a project every hour on Kubernetes, for the sites in its
 <code class="docutils literal notranslate"><span class="pre">sites.csv</span></code>: <code class="docutils literal notranslate"><span class="pre">schedule</span></code> makes the CronJob, and <code class="docutils literal notranslate"><span class="pre">tick</span></code> is what each

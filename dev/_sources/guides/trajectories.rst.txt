@@ -77,7 +77,7 @@ setting its ``tm_`` setting to 1:
      - ``tpot``
      - Potential temperature, K
    * - ``tm_tamb``
-     - ``temp``
+     - ``temz``
      - Air temperature, K
    * - ``tm_rain``
      - ``rain``
