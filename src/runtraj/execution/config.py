@@ -15,6 +15,32 @@ from pydantic import (
 )
 
 
+def _refuse_misspelled(
+    data: dict[Any, Any],
+    fields: Any,
+    block: str,
+    cutoff: float,
+    *,
+    accepted: tuple[str, ...] = (),
+) -> None:
+    """
+    Raise when a key of *data* reads as a misspelled name in *fields*, as ``execution.<block>`` has it.
+
+    The block takes other keys too (an ``sbatch`` option, a ``qsub``
+    resource): a key is refused only when it is as close as *cutoff* to a
+    setting, and never when it is one of *accepted*.
+    """
+    for key in data:
+        if key in fields or key in accepted:
+            continue
+        close = difflib.get_close_matches(str(key), list(fields), n=1, cutoff=cutoff)
+        if close:
+            raise ValueError(
+                f"{key!r} is not a setting of execution.{block}. Did you "
+                f"mean {close[0]!r}?"
+            )
+
+
 class FetchConfig(BaseModel):
     """
     The Slurm resources of the job that gets the met files before a job array.
@@ -253,18 +279,10 @@ class SlurmConfig(_ArrayConfig):
                     "array_parallelism is now n_workers, the most array tasks "
                     "running at once; n_tasks is the number of tasks."
                 )
-            for key in data:
-                # ntasks is sbatch's own option, spelled almost like n_tasks.
-                if key in cls.model_fields or key == "ntasks":
-                    continue
-                close = difflib.get_close_matches(
-                    str(key), list(cls.model_fields), n=1, cutoff=0.8
-                )
-                if close:
-                    raise ValueError(
-                        f"{key!r} is not a setting of execution.slurm. Did you "
-                        f"mean {close[0]!r}?"
-                    )
+            # ntasks is sbatch's own option, spelled almost like n_tasks.
+            _refuse_misspelled(
+                data, cls.model_fields, "slurm", 0.8, accepted=("ntasks",)
+            )
         return data
 
     @field_validator("fetch", mode="before")
@@ -380,18 +398,8 @@ class PbsConfig(_ArrayConfig):
     def _no_misspelled_setting(cls, data: Any) -> Any:
         """Refuse a key that reads as a misspelled setting, which would otherwise go to ``qsub`` as a resource."""
         if isinstance(data, dict):
-            for key in data:
-                if key in cls.model_fields:
-                    continue
-                # 0.9, so PBS's own vmem, pmem, ncpus and min_walltime pass.
-                close = difflib.get_close_matches(
-                    str(key), list(cls.model_fields), n=1, cutoff=0.9
-                )
-                if close:
-                    raise ValueError(
-                        f"{key!r} is not a setting of execution.pbs. Did you "
-                        f"mean {close[0]!r}?"
-                    )
+            # 0.9, so PBS's own vmem, pmem, ncpus and min_walltime pass.
+            _refuse_misspelled(data, cls.model_fields, "pbs", 0.9)
         return data
 
     @field_validator("walltime")
