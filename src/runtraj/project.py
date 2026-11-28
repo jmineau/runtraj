@@ -1206,10 +1206,10 @@ class Project:
 
     def run(
         self,
+        *,
         skip_existing: bool = True,
         compute_root: str | Path | None = None,
         execution: ExecutionConfig | None = None,
-        *,
         releases: Iterable[str] | None = None,
         task: tuple[int, int] | None = None,
     ) -> pd.DataFrame:
@@ -1232,10 +1232,10 @@ class Project:
 
     def submit(
         self,
+        *,
         skip_existing: bool = True,
         compute_root: str | Path | None = None,
         execution: ExecutionConfig | None = None,
-        *,
         releases: Iterable[str] | None = None,
     ) -> str | None:
         """
