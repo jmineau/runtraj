@@ -102,11 +102,24 @@ class WorkerDied(RuntrajError, RuntimeError):
     """
 
 
+class SchedulerError(RuntrajError, RuntimeError):
+    """
+    A scheduler refused a job, could not be reached, or stopped answering.
+
+    Raised when ``sbatch``, ``qsub`` or ``kubectl`` is missing or refuses the
+    job (an invalid account, a limit, a quota), and when ``sacct`` or
+    ``qstat`` stops answering while a run waits. The message is the
+    scheduler's own. ``runtraj submit`` and ``runtraj run`` end with exit
+    code 2 and that message alone, as they do for a setting they refuse.
+    """
+
+
 __all__ = [
     "HYSPLITNotFoundError",
     "MeteorologyError",
     "MissingClass",
     "SimulationError",
     "RuntrajError",
+    "SchedulerError",
     "WorkerDied",
 ]

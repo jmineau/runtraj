@@ -24,6 +24,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from runtraj.exceptions import SchedulerError
 from runtraj.execution.backends import SILENT_SCHEDULER_SECONDS, Backend
 from runtraj.execution.config import ExecutionConfig, FetchConfig, SlurmConfig
 from runtraj.execution.runner import (
@@ -272,14 +273,17 @@ def fetch_script(
 
 def _sbatch(script: Path, *extra: str) -> tuple[str, str | None]:
     """Submit *script* with ``sbatch --parsable`` and return its job id and cluster (``None`` for the default one)."""
-    result = subprocess.run(
-        ["sbatch", "--parsable", *extra, str(script)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            ["sbatch", "--parsable", *extra, str(script)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        raise SchedulerError("sbatch is not installed, or not on PATH.") from None
     if result.returncode != 0:
-        raise RuntimeError(
+        raise SchedulerError(
             f"sbatch refused {script}: {result.stderr.strip() or result.stdout.strip()}"
         )
     # --parsable prints "<id>", or "<id>;<cluster>" for a job on another cluster.
@@ -345,7 +349,7 @@ def submit_array(
             after.append(f"--clusters={fetch_cluster}")
     try:
         job_id, cluster = _sbatch(script, *after)
-    except RuntimeError:
+    except SchedulerError:
         if fetch_id is not None:
             # Nothing waits for the fetch job now: do not leave it downloading.
             subprocess.run(
@@ -463,7 +467,7 @@ def wait(
 
     Raises
     ------
-    RuntimeError
+    SchedulerError
         If ``sacct`` gave no answer about the job for
         :data:`~runtraj.execution.backends.SILENT_SCHEDULER_SECONDS`.
     """
@@ -473,7 +477,7 @@ def wait(
         if states is not None:
             answered = time.monotonic()
         elif time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
-            raise RuntimeError(
+            raise SchedulerError(
                 f"sacct has said nothing about job {job_id} for "
                 f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
                 "waiting for it. The job may still be running: see squeue, and "
