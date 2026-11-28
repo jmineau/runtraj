@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from runtraj.execution import runner, slurm
+from runtraj.execution import backends, runner, slurm
 from runtraj.execution.config import (
     ExecutionConfig,
     FetchConfig,
@@ -111,7 +111,7 @@ def test_submit_says_why_sbatch_refused(pending, commands, tmp_path):
 def test_waiting_stops_when_the_scheduler_says_nothing_for_too_long(
     commands, monkeypatch
 ):
-    monkeypatch.setattr(slurm, "SILENT_SCHEDULER_SECONDS", 0)
+    monkeypatch.setattr(backends, "SILENT_SCHEDULER_SECONDS", 0)
     commands.answers["sacct"] = [
         _out(returncode=1, stderr="Slurm accounting storage is disabled")
     ]

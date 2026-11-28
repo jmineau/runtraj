@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from runtraj.exceptions import SchedulerError
-from runtraj.execution.backends import SILENT_SCHEDULER_SECONDS, Backend
+from runtraj.execution.backends import Backend, check_scheduler_answered
 from runtraj.execution.config import ExecutionConfig, PbsConfig
 from runtraj.execution.runner import (
     _project_slug,
@@ -234,13 +234,8 @@ def wait(job_id: str, poll: float = 30.0) -> None:
     while (state := _job_state(job_id)) != "F":
         if state is not None:
             answered = time.monotonic()
-        elif time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
-            raise SchedulerError(
-                f"qstat has said nothing about job {job_id} for "
-                f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
-                "waiting for it. The job may still be running: see qstat, and "
-                "runtraj status once it ends."
-            )
+        else:
+            check_scheduler_answered(answered, job_id, "qstat has", "qstat")
         time.sleep(poll)
 
 

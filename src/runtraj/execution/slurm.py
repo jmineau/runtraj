@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from runtraj.exceptions import SchedulerError
-from runtraj.execution.backends import SILENT_SCHEDULER_SECONDS, Backend
+from runtraj.execution.backends import Backend, check_scheduler_answered
 from runtraj.execution.config import ExecutionConfig, FetchConfig, SlurmConfig
 from runtraj.execution.runner import (
     _project_slug,
@@ -506,12 +506,9 @@ def wait(
                 break
         if active:
             answered = time.monotonic()
-        elif time.monotonic() - answered >= SILENT_SCHEDULER_SECONDS:
-            raise SchedulerError(
-                f"sacct and squeue have said nothing about job {job_id} for "
-                f"{SILENT_SCHEDULER_SECONDS // 60} minutes, so runtraj stopped "
-                "waiting for it. The job may still be running: see squeue, and "
-                "runtraj status once it ends."
+        else:
+            check_scheduler_answered(
+                answered, job_id, "sacct and squeue have", "squeue"
             )
         time.sleep(poll)
         states = _task_states(job_id, cluster)

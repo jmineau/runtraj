@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from runtraj.execution import pbs, runner
+from runtraj.execution import backends, pbs, runner
 from runtraj.execution.config import ExecutionConfig, PbsConfig
 from runtraj.execution.pbs import job_script, max_array_size
 from tests.fixtures.platform import not_on_windows
@@ -266,7 +266,7 @@ def test_wait_polls_qstat_until_the_array_has_finished(commands):
 
 def test_wait_stops_when_qstat_says_nothing_for_too_long(commands, monkeypatch):
     """A qstat that does not take -F json never answers."""
-    monkeypatch.setattr(pbs, "SILENT_SCHEDULER_SECONDS", 0)
+    monkeypatch.setattr(backends, "SILENT_SCHEDULER_SECONDS", 0)
     commands.answers["qstat"] = [
         _out(returncode=2, stderr="qstat: invalid option -- 'F'")
     ]
