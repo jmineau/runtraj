@@ -112,7 +112,9 @@ def test_a_config_loads_and_resolves_without_its_hysplit_build(tmp_path):
     variant = cfg.resolve()["hrrr"]
     with pytest.raises(FileNotFoundError, match="hycs_std"):
         _ = variant.build
-    with pytest.raises(ValueError, match="realizations must be >= 1"):
+    with pytest.raises(
+        ValueError, match="realizations must be a whole number, 1 or more"
+    ):
         ProjectConfig(
             models={"hysplit": {"n_hours": -24}},
             mets={"hrrr": mc},
@@ -457,6 +459,17 @@ def test_an_ensemble_is_one_variant_whose_realizations_have_their_own_seed(tmp_p
         err.transport_for(3)
 
 
+@pytest.mark.parametrize("value", [2.5, 2.0, True, False, "3", [3], 0, -1])
+def test_realizations_must_be_a_whole_number_of_one_or_more(tmp_path, value):
+    with pytest.raises(
+        ValueError,
+        match=rf"Variant 'ens'.*realizations must be a whole number.*{re.escape(repr(value))}",
+    ):
+        _variant_config(
+            tmp_path, krand=4, variants={"ens": {"realizations": value}}
+        ).resolve()
+
+
 @pytest.mark.parametrize("krand", [0, 1, 2, 3, 12])
 def test_several_realizations_require_krand_4_or_a_seed(tmp_path, krand):
     config = _variant_config(tmp_path, krand=krand, variants={"e": {"realizations": 3}})
@@ -469,7 +482,9 @@ def test_several_realizations_accept_krand_4_or_seeded_krand_2(tmp_path):
     assert a.resolve()["e"].realizations == 3
     b = _variant_config(tmp_path, krand=2, seed=7, variants={"e": {"realizations": 2}})
     assert b.resolve()["e"].realizations == 2
-    with pytest.raises(ValueError, match="realizations must be >= 1"):
+    with pytest.raises(
+        ValueError, match="realizations must be a whole number, 1 or more"
+    ):
         _variant_config(tmp_path, variants={"e": {"realizations": 0}})
 
 
