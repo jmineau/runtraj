@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=487503e1"></script>
+    <script src="../../../_static/documentation_options.js?v=312533e6"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev55+g6ef1caed0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev56+g4c71dfa01" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -468,7 +468,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.sampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">sample_field</span><span class="p">,</span> <span class="n">vertical_dim</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.sampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">_utc</span><span class="p">,</span> <span class="n">sample_field</span><span class="p">,</span> <span class="n">vertical_dim</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.transforms._common</span><span class="w"> </span><span class="kn">import</span> <span class="n">weigh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.transforms.lifetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">survival</span>
 
@@ -477,6 +477,82 @@
 
 <span class="c1"># The specific gas constant of dry air, in J kg⁻¹ K⁻¹.</span>
 <span class="n">_R_DRY_AIR</span> <span class="o">=</span> <span class="mf">287.05</span>
+
+
+<span class="c1"># Units a CF file gives a vertical coordinate, by the particle column it can</span>
+<span class="c1"># be matched to: that column's unit, and each CF unit as a multiple of it.</span>
+<span class="n">_LEVEL_UNITS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"pres"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"hPa"</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="s2">"pa"</span><span class="p">,</span> <span class="s2">"pascal"</span><span class="p">,</span> <span class="s2">"pascals"</span><span class="p">),</span> <span class="mf">0.01</span><span class="p">),</span>
+            <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="s2">"hpa"</span><span class="p">,</span> <span class="s2">"hectopascal"</span><span class="p">,</span> <span class="s2">"hectopascals"</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="s2">"mb"</span><span class="p">,</span> <span class="s2">"mbar"</span><span class="p">,</span> <span class="s2">"mbars"</span><span class="p">,</span> <span class="s2">"millibar"</span><span class="p">,</span> <span class="s2">"millibars"</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="s2">"kpa"</span><span class="p">,</span> <span class="s2">"kilopascal"</span><span class="p">,</span> <span class="s2">"kilopascals"</span><span class="p">),</span> <span class="mf">10.0</span><span class="p">),</span>
+            <span class="s2">"bar"</span><span class="p">:</span> <span class="mf">1000.0</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+    <span class="s2">"zagl"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"m"</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="s2">"m"</span><span class="p">,</span> <span class="s2">"meter"</span><span class="p">,</span> <span class="s2">"meters"</span><span class="p">,</span> <span class="s2">"metre"</span><span class="p">,</span> <span class="s2">"metres"</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="o">**</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">"km"</span><span class="p">,</span> <span class="s2">"kilometer"</span><span class="p">,</span> <span class="s2">"kilometers"</span><span class="p">,</span> <span class="s2">"kilometre"</span><span class="p">,</span> <span class="s2">"kilometres"</span><span class="p">),</span> <span class="mf">1000.0</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_level_scale</span><span class="p">(</span><span class="n">field</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">coordinate</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return what multiplies a particle's *coordinate* to give it in the units of the field's levels.</span>
+
+<span class="sd">    ``pres`` is in hPa and ``zagl`` in m. A level coordinate without a</span>
+<span class="sd">    ``units`` attribute, or a *coordinate* of another column, is taken to</span>
+<span class="sd">    be in the particles' units already (1). Units that cannot be matched</span>
+<span class="sd">    to the particles' raise ``ValueError``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">coordinate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_LEVEL_UNITS</span> <span class="ow">or</span> <span class="s2">"units"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">field</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">1.0</span>
+    <span class="n">unit</span><span class="p">,</span> <span class="n">factors</span> <span class="o">=</span> <span class="n">_LEVEL_UNITS</span><span class="p">[</span><span class="n">coordinate</span><span class="p">]</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">field</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"units"</span><span class="p">])</span>
+    <span class="n">in_unit</span> <span class="o">=</span> <span class="n">factors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">in_unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The oxidant field's </span><span class="si">{</span><span class="n">dim</span><span class="si">!r}</span><span class="s2"> levels are in </span><span class="si">{</span><span class="n">units</span><span class="si">!r}</span><span class="s2">, which cannot "</span>
+            <span class="sa">f</span><span class="s2">"be matched to the particles' </span><span class="si">{</span><span class="n">coordinate</span><span class="si">!r}</span><span class="s2"> column (</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">). Give "</span>
+            <span class="sa">f</span><span class="s2">"the levels in </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2"> or an equivalent unit, as the units "</span>
+            <span class="s2">"attribute of the coordinate."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">in_unit</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_times</span><span class="p">(</span><span class="n">field</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">times</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Refuse particle times more than a step outside the field's times.</span>
+
+<span class="sd">    The field is matched to the nearest time, so a time outside its span</span>
+<span class="sd">    would take the first or last step: December for every row of a monthly</span>
+<span class="sd">    climatology labeled with another year.</span>
+<span class="sd">    """</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">indexes</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">stamps</span> <span class="o">=</span> <span class="n">_utc</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">times</span><span class="p">)))</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+    <span class="n">first</span><span class="p">,</span> <span class="n">last</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">outside</span> <span class="o">=</span> <span class="p">(</span><span class="n">stamps</span> <span class="o">&lt;</span> <span class="n">first</span> <span class="o">-</span> <span class="p">(</span><span class="n">ordered</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">first</span><span class="p">))</span> <span class="o">|</span> <span class="p">(</span>
+        <span class="n">stamps</span> <span class="o">&gt;</span> <span class="n">last</span> <span class="o">+</span> <span class="p">(</span><span class="n">last</span> <span class="o">-</span> <span class="n">ordered</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">outside</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The oxidant field's times run from </span><span class="si">{</span><span class="n">first</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">last</span><span class="si">}</span><span class="s2">, but "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">outside</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> of the particles' times, from </span><span class="si">{</span><span class="n">stamps</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"to </span><span class="si">{</span><span class="n">stamps</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2">, are more than a step outside them, and would "</span>
+            <span class="s2">"take the field's first or last step. Give the field the dates of "</span>
+            <span class="s2">"the run: relabel a climatology's times with them."</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_temperature</span><span class="p">(</span><span class="n">particles</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -543,7 +619,16 @@
 <span class="sd">    ``e_over_r`` of 1775 K. Add ``temz`` to HYSPLIT's ``varsiwant`` when that matters.</span>
 
 <span class="sd">    A field with a ``time`` dimension is matched to each row's nearest</span>
-<span class="sd">    time, so a climatology must carry the dates of the run.</span>
+<span class="sd">    time, so a climatology must carry the dates of the run: a row more than</span>
+<span class="sd">    one step before the field's first time or after its last is an error,</span>
+<span class="sd">    not a match to the end step.</span>
+
+<span class="sd">    The field's levels are read in their own units. A vertical coordinate</span>
+<span class="sd">    whose ``units`` attribute is Pa, hPa, mb or the like is converted to the</span>
+<span class="sd">    particles' ``pres`` (hPa), and one in m or km to ``zagl`` (m). Levels in</span>
+<span class="sd">    other units are an error, since they cannot be matched to the particles'</span>
+<span class="sd">    column. Levels with no ``units`` attribute are taken to be in the</span>
+<span class="sd">    particles' units already, hPa for ``pres``.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -601,8 +686,10 @@
     <span class="n">coordinate</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="s2">"pres"</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">"Particle column matched to the field's vertical dimension, in its "</span>
-            <span class="s2">"units: ``pres`` (hPa) by default, or ``zagl`` (m above ground)."</span>
+            <span class="s2">"Particle column matched to the field's vertical dimension: "</span>
+            <span class="s2">"``pres`` (hPa) by default, or ``zagl`` (m above ground). The "</span>
+            <span class="s2">"field's levels may be in any equivalent unit, named by their "</span>
+            <span class="s2">"``units`` attribute; without one they must be in the column's."</span>
         <span class="p">),</span>
     <span class="p">)</span>
 
@@ -665,6 +752,13 @@
 
 <span class="sd">        A row outside the oxidant field, or in a missing cell, has no loss.</span>
 <span class="sd">        A relative ``oxidant`` path starts from *directory*.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the field's levels are in units that cannot be matched to</span>
+<span class="sd">            ``coordinate``, or a row's time is more than a step outside the</span>
+<span class="sd">            field's times.</span>
 <span class="sd">        """</span>
         <span class="n">temperature</span> <span class="o">=</span> <span class="n">_temperature</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
         <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">e_over_r</span> <span class="o">/</span> <span class="n">temperature</span><span class="p">)</span>
@@ -672,13 +766,14 @@
             <span class="k">return</span> <span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">oxidant</span>
         <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
         <span class="n">z</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">vertical_dim</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">zdim</span> <span class="o">:=</span> <span class="n">vertical_dim</span><span class="p">(</span><span class="n">field</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"Particle DataFrame has no </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span><span class="si">!r}</span><span class="s2"> column, "</span>
                     <span class="s2">"which oxidation matches to the field's vertical dimension."</span>
                 <span class="p">)</span>
-            <span class="n">z</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">_level_scale</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">zdim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span>
         <span class="n">times</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="s2">"time"</span> <span class="ow">in</span> <span class="n">field</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">"time"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
@@ -687,6 +782,8 @@
                     <span class="s2">"no 'time' column."</span>
                 <span class="p">)</span>
             <span class="n">times</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">times</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s2">"biufc"</span><span class="p">:</span>  <span class="c1"># sample_field refuses numbers</span>
+                <span class="n">_check_times</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
         <span class="n">number_density</span> <span class="o">=</span> <span class="n">sample_field</span><span class="p">(</span>
             <span class="n">field</span><span class="p">,</span>
             <span class="n">particles</span><span class="p">[</span><span class="s2">"lon"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
@@ -707,14 +804,17 @@
 <span class="sd">        Return what is wrong with the oxidant file, for a stage's check to report.</span>
 
 <span class="sd">        Each finding is ``(check, None, message)``: the file does not exist,</span>
-<span class="sd">        cannot be read, or has no such variable (``oxidant_file``). A</span>
+<span class="sd">        cannot be read, has no such variable, or has levels in units that</span>
+<span class="sd">        cannot be matched to ``coordinate`` (``oxidant_file``). A</span>
 <span class="sd">        constant oxidant has nothing to check. A relative ``oxidant`` path</span>
 <span class="sd">        starts from *directory*.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oxidant</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">[]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+            <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">zdim</span> <span class="o">:=</span> <span class="n">vertical_dim</span><span class="p">(</span><span class="n">field</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_level_scale</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">zdim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinate</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span>
                 <span class="p">(</span>
