@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=0d1e1d9e"></script>
+    <script src="../../../_static/documentation_options.js?v=0a4d9070"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev63+g904b2bfdb" />
+  <meta name="docsearch:version" content="0.1.0a6.dev65+ge46252c22" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -641,12 +641,17 @@
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
     <span class="n">ref</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="s2">"altitude_ref"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
     <span class="c1"># Group keys as text: a file that mixes numeric and string ids must not</span>
-    <span class="c1"># split one release into two. Without a group column, every row is a release.</span>
-    <span class="n">keys</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">frame</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="c1"># split one release into two. A row with no group (no column, or a blank</span>
+    <span class="c1"># cell) is a release of its own: its key starts with NUL, so no group</span>
+    <span class="c1"># label can equal it.</span>
+    <span class="n">nogroup</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">frame</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
         <span class="k">if</span> <span class="s2">"group"</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span>
-        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+        <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
     <span class="p">)</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">"</span><span class="se">\0</span><span class="s2">"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nogroup</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="n">keys</span><span class="p">[</span><span class="o">~</span><span class="n">nogroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[</span><span class="o">~</span><span class="n">nogroup</span><span class="p">]</span>
     <span class="n">codes</span><span class="p">,</span> <span class="n">uniques</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">factorize</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">fail</span><span class="p">(</span><span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -654,7 +659,7 @@
         <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">where</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">label</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"group=</span><span class="si">{</span><span class="n">uniques</span><span class="p">[</span><span class="n">codes</span><span class="p">[</span><span class="n">where</span><span class="p">]]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="s2">"group"</span> <span class="ow">in</span> <span class="n">frame</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"row </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span>
+                <span class="sa">f</span><span class="s2">"row </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">nogroup</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"group=</span><span class="si">{</span><span class="n">uniques</span><span class="p">[</span><span class="n">codes</span><span class="p">[</span><span class="n">where</span><span class="p">]]</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 

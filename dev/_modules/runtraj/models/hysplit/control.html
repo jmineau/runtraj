@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=0d1e1d9e"></script>
+    <script src="../../../../_static/documentation_options.js?v=0a4d9070"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev63+g904b2bfdb" />
+  <meta name="docsearch:version" content="0.1.0a6.dev65+ge46252c22" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -471,6 +471,18 @@
 <span class="c1">#: sampling stop, its end).</span>
 <span class="n">_ZERO_TIME</span> <span class="o">=</span> <span class="s2">"00 00 00 00 00"</span>
 
+<span class="c1">#: HYSPLIT reads a two-digit year below this as 20YY and the rest as 19YY</span>
+<span class="c1">#: (``IF(IYEAR.LT.1940)IYEAR=IYEAR+100`` in its ``tm2min.f``), so a ``CONTROL``</span>
+<span class="c1">#: file holds the years 1940 to 2039.</span>
+<span class="n">_CENTURY_PIVOT</span> <span class="o">=</span> <span class="mi">40</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_year</span><span class="p">(</span><span class="n">yy</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the year of HYSPLIT's two-digit *yy*: 1940 to 2039."""</span>
+    <span class="k">if</span> <span class="n">yy</span> <span class="o">&gt;=</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">yy</span>
+    <span class="k">return</span> <span class="mi">2000</span> <span class="o">+</span> <span class="n">yy</span> <span class="k">if</span> <span class="n">yy</span> <span class="o">&lt;</span> <span class="n">_CENTURY_PIVOT</span> <span class="k">else</span> <span class="mi">1900</span> <span class="o">+</span> <span class="n">yy</span>
+
 
 <span class="k">def</span><span class="w"> </span><span class="nf">cdump_name</span><span class="p">(</span><span class="n">grid</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return the file ``hycs_std`` writes the grid called *grid* to."""</span>
@@ -546,6 +558,13 @@
 <span class="sd">        path : str or Path</span>
 <span class="sd">            File to write.</span>
 <span class="sd">        """</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_time</span><span class="o">.</span><span class="n">year</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">1900</span> <span class="o">+</span> <span class="n">_CENTURY_PIVOT</span> <span class="o">&lt;=</span> <span class="n">year</span> <span class="o">&lt;</span> <span class="mi">2000</span> <span class="o">+</span> <span class="n">_CENTURY_PIVOT</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"CONTROL holds a two-digit year, which HYSPLIT reads as "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="mi">1900</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_CENTURY_PIVOT</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="mi">1999</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">_CENTURY_PIVOT</span><span class="si">}</span><span class="s2">; "</span>
+                <span class="sa">f</span><span class="s2">"the release time </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">release_time</span><span class="si">:</span><span class="s2">%Y-%m-%d %H:%M</span><span class="si">}</span><span class="s2"> is outside it."</span>
+            <span class="p">)</span>
         <span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># (1) release time, with a 2-digit year (HYSPLIT convention)</span>
@@ -659,7 +678,8 @@
             <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
 
         <span class="c1"># Parse the release time</span>
-        <span class="n">release_time</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="s2">"%y %m </span><span class="si">%d</span><span class="s2"> %H %M"</span><span class="p">)</span>
+        <span class="n">yy</span><span class="p">,</span> <span class="n">mo</span><span class="p">,</span> <span class="n">da</span><span class="p">,</span> <span class="n">hh</span><span class="p">,</span> <span class="n">mi</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+        <span class="n">release_time</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">_year</span><span class="p">(</span><span class="n">yy</span><span class="p">),</span> <span class="n">mo</span><span class="p">,</span> <span class="n">da</span><span class="p">,</span> <span class="n">hh</span><span class="p">,</span> <span class="n">mi</span><span class="p">)</span>
 
         <span class="c1"># Parse the release locations</span>
         <span class="n">n_locations</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
