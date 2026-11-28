@@ -94,17 +94,17 @@ class FlexpartModel(TransportModel[FlexpartConfig]):
         and ``RELEASES`` (:func:`~runtraj.models.flexpart.inputs.releases`)
         releases a column's particle *k* in slab *k* of ``numpar``, and a
         multipoint release's particles point by point, so the number says
-        where each started. ``numpar`` is taken to be the highest
-        ``particle`` in *particles*: a run whose last-released particles
-        left the met's domain before the first output step has them missing,
-        and the slabs or points of the others shift.
+        where each started. The number of particles released is
+        ``config.numpar``, whichever of them *particles* holds: those that
+        left the met's domain before the first output step are missing, and
+        the others keep their slabs or points.
 
         Raises
         ------
         ValueError
             If *release* is not a column or multipoint release.
         """
-        numpar = int(particles["particle"].max())
+        numpar = config.numpar
         if isinstance(release, ColumnRelease):
             return column_release_rows(release, numpar, numpar)
         if isinstance(release, MultiPointRelease):

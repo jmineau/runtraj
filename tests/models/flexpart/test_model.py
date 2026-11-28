@@ -274,7 +274,9 @@ def test_release_rows_of_a_column_put_particle_k_in_slab_k():
     )
     particles = pd.DataFrame({"particle": [3, 1, 4, 2], "age": -60})
 
-    rows = FlexpartModel().release_rows(particles, column, FlexpartConfig(n_hours=-1))
+    rows = FlexpartModel().release_rows(
+        particles, column, FlexpartConfig(n_hours=-1, numpar=4)
+    )
 
     assert rows["particle"].tolist() == [1, 2, 3, 4]
     assert rows["height"].tolist() == [12.5, 37.5, 62.5, 87.5]
@@ -290,11 +292,56 @@ def test_release_rows_of_a_multipoint_follow_the_releases_split():
     )
     particles = pd.DataFrame({"particle": range(1, 11), "age": -60})
 
-    rows = FlexpartModel().release_rows(particles, release, FlexpartConfig(n_hours=-1))
+    rows = FlexpartModel().release_rows(
+        particles, release, FlexpartConfig(n_hours=-1, numpar=10)
+    )
 
     # releases() gives the points 4, 3 and 3 particles, released in order.
     assert rows["height"].tolist() == [1000] * 4 + [2000] * 3 + [3000] * 3
     assert rows["lon"].tolist() == [-111.8] * 4 + [-111.9] * 3 + [-112.0] * 3
+
+
+def test_release_rows_of_a_multipoint_with_the_last_particles_missing():
+    """The last point's particles left the domain: the others stay at their points."""
+    release = MultiPointRelease(
+        time="2023-06-01 18:00",
+        longitudes=[-111.8, -111.9, -112.0],
+        latitudes=[40.7, 40.8, 40.9],
+        altitudes=[10, 10, 10],
+    )
+    config = FlexpartConfig(n_hours=-24, numpar=999)  # 333 particles a point
+    particles = pd.DataFrame({"particle": np.arange(1, 667), "age": -60})
+
+    rows = FlexpartModel().release_rows(particles, release, config)
+
+    assert rows.groupby("lon").size().to_dict() == {
+        -111.8: 333,
+        -111.9: 333,
+        -112.0: 333,
+    }
+    assert rows.set_index("particle").loc[[333, 334, 666], "lon"].tolist() == [
+        -111.8,
+        -111.9,
+        -111.9,
+    ]
+
+
+def test_release_rows_of_a_column_with_the_last_particles_missing():
+    """A column's particles that stayed keep the slabs of a column split for ``numpar``."""
+    column = ColumnRelease(
+        time="2023-06-01 18:00", longitude=-111.8, latitude=40.7, bottom=0, top=100
+    )
+    particles = pd.DataFrame({"particle": [1, 2, 3], "age": -60})
+
+    rows = FlexpartModel().release_rows(
+        particles, column, FlexpartConfig(n_hours=-1, numpar=4)
+    )
+
+    assert rows.loc[rows["particle"].isin([1, 2, 3]), "height"].tolist() == [
+        12.5,
+        37.5,
+        62.5,
+    ]
 
 
 @not_on_windows("FLEXPART runs on Linux and macOS; the stand-in is a bash script")
@@ -308,12 +355,12 @@ def test_run_trajectories_of_a_column_gives_release_heights(checkout, era5, tmp_
         model="flexpart",
         directory=str(checkout),
         n_hours=-24,
+        numpar=5,  # the stand-in writes the sample's five particles
         workdir=tmp_path / "work",
     )
 
-    numpar = particles["particle"].max()
     first = particles.groupby("particle")["release_height"].first()
-    assert first.tolist() == [(k - 0.5) * 50 / numpar for k in first.index]
+    assert first.tolist() == [(k - 0.5) * 50 / 5 for k in first.index]
 
 
 def test_partoptions_turn_on_the_met_at_each_particle():
