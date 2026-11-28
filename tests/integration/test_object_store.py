@@ -21,6 +21,7 @@ from runtraj.output import Output  # noqa: E402
 from ..fixtures.output import (  # noqa: E402
     VARIANT,
     release_at,
+    write_one,
 )
 
 BUCKET = "runtraj-test"
@@ -83,3 +84,26 @@ def test_a_kept_workdir_on_an_object_store_leaves_out_links(store, tmp_path):
     assert kept == out.kept_workdir(VARIANT, rid)
     assert (kept / "CONTROL").read_text() == "x"
     assert not (kept / "met").exists()
+
+
+def test_results_read_back_from_an_object_store_as_from_a_folder(store, tmp_path):
+    """``table`` and ``read`` take their own branch on a bucket (``filesystem=``)."""
+    local, bucket = Output(tmp_path / "output"), Output(f"{store}/output")
+    # Two days, so the date partition is read from the folder names.
+    releases = [release_at(12, 15), release_at(6, 16)]
+    for out in (local, bucket):
+        for release in releases:
+            write_one(out, release=release)
+    ids = [str(r.id) for r in releases]
+
+    table = bucket.table("particles", VARIANT, ids)
+
+    assert table.num_rows == 1000
+    assert table.equals(local.table("particles", VARIANT, ids))
+    assert table["date"].unique().to_pylist() == [r.time.date() for r in releases]
+    assert bucket.read("particles", VARIANT, ids[1]).equals(
+        local.read("particles", VARIANT, ids[1])
+    )
+    assert bucket.table("particles", VARIANT, columns=["lon"]).equals(
+        local.table("particles", VARIANT, columns=["lon"])
+    )

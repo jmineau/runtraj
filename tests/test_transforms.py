@@ -1435,6 +1435,29 @@ def test_ak_table_releases_needs_a_table_that_exists_with_its_columns(tmp_path):
         AveragingKernel(table="bad.csv").table_releases(tmp_path)
 
 
+def test_ak_check_finds_a_missing_table_a_missing_kernel_and_an_unused_one(tmp_path):
+    a, b = _two_releases()
+    _write_table(tmp_path / "kernels.parquet", a, b)
+    mine = AveragingKernel(table="kernels.parquet")
+    ids = [str(a.id), "202301011300_x"]
+
+    found = mine.check(ids, tmp_path)
+
+    assert [(c, r) for c, r, _ in found] == [
+        ("kernel_missing", "202301011300_x"),
+        ("kernel_unused", str(b.id)),
+    ]
+    assert mine.check([str(a.id), str(b.id)], tmp_path) == []
+    (missing,) = AveragingKernel(table="gone.parquet").check(ids, tmp_path)
+    assert missing[:2] == ("kernel_table", None)
+    assert "gone.parquet" in missing[2]
+    pd.DataFrame({"release": ["x"]}).to_csv(tmp_path / "bad.csv", index=False)
+    (bad,) = AveragingKernel(table="bad.csv").check(ids, tmp_path)
+    assert bad[0] == "kernel_table"
+    assert "lacks columns" in bad[2]
+    assert AveragingKernel(levels=[0.0, 1.0], values=[1.0, 1.0]).check(ids) == []
+
+
 def test_ak_table_round_trips_through_config():
     kernel = load_transform(
         {"kind": "averaging_kernel", "table": "kernels.parquet", "coordinate": "pres"}

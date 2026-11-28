@@ -10,6 +10,7 @@ import pytest
 
 from runtraj import Project
 from runtraj.releases import (
+    MultiPointRelease,
     PointRelease,
 )
 from runtraj.spatial import Bounds
@@ -491,6 +492,49 @@ def test_a_release_on_the_edge_of_the_grid_is_inside_it(tmp_path):
 # ---------------------------------------------------------------------------
 # zsfc in varsiwant
 # ---------------------------------------------------------------------------
+
+#: What a particle run needs, without ``zsfc``.
+NO_ZSFC = ["time", "indx", "long", "lati", "zagl"]
+
+
+def _multipoint(altitudes, altitude_ref="msl") -> MultiPointRelease:
+    """Two points 70 m apart, at *altitudes*."""
+    return MultiPointRelease(
+        time=NOON,
+        longitudes=[-111.85, -111.8508],
+        latitudes=[40.77, 40.77],
+        altitudes=altitudes,
+        altitude_ref=altitude_ref,
+    )
+
+
+def _zsfc_found(tmp_path, release, varsiwant=NO_ZSFC) -> pd.DataFrame:
+    hysplit = make_hysplit_dir(tmp_path / "hysplit", "hysplit.v5.4.2")
+    project = _project(tmp_path, [release], directory=str(hysplit), varsiwant=varsiwant)
+    return _found(project.check(), "zsfc")
+
+
+def test_a_multipoint_release_above_sea_level_matched_by_height_needs_zsfc(tmp_path):
+    found = _zsfc_found(tmp_path, _multipoint([5.0, 10.0]))
+
+    assert found["variant"].tolist() == ["hrrr"]
+    message = found["message"].iloc[0]
+    assert "1 release is above sea level" in message
+    assert "1 of them is a multipoint release" in message
+    assert "varsiwant: [time, indx, long, lati, zagl, zsfc]" in message
+
+
+@pytest.mark.parametrize(
+    ("release", "varsiwant"),
+    [
+        (_multipoint([5.0, 10.0], "agl"), NO_ZSFC),  # heights above ground need no zsfc
+        (_multipoint([5.0, 5.0]), NO_ZSFC),  # points at one altitude match by position
+        (_multipoint([5.0, 10.0]), [*NO_ZSFC, "zsfc"]),  # it is there
+    ],
+    ids=["above-ground", "one-altitude", "zsfc-in-varsiwant"],
+)
+def test_no_zsfc_is_asked_for_where_it_is_not_needed(tmp_path, release, varsiwant):
+    assert _zsfc_found(tmp_path, release, varsiwant).empty
 
 
 # ---------------------------------------------------------------------------

@@ -365,6 +365,26 @@ def test_settings_another_worker_wrote_first_with_another_hash_are_refused(
         Output(path).write_log(VARIANT, rid, "")
 
 
+@pytest.mark.parametrize("seen_in_time", [True, False])
+def test_settings_already_written_are_kept_when_equal_and_refused_when_not(
+    tmp_path, monkeypatch, seen_in_time
+):
+    """Another worker's file is there before the write, or appears between the check and the write."""
+    from runtraj.output import _write_settings
+
+    path = tmp_path / "_settings.yaml"
+    path.write_text(yaml.safe_dump({"hash": "a" * 8, "by": "first"}), encoding="utf-8")
+    if not seen_in_time:
+        monkeypatch.setattr(Path, "exists", lambda self: False)
+
+    _write_settings(path, {"hash": "a" * 8, "by": "second"})
+
+    assert yaml.safe_load(path.read_text(encoding="utf-8"))["by"] == "first"
+    with pytest.raises(FileExistsError, match="aaaaaaaa.*bbbbbbbb"):
+        _write_settings(path, {"hash": "b" * 8, "by": "second"})
+    assert [p.name for p in tmp_path.iterdir()] == ["_settings.yaml"]
+
+
 def test_a_file_written_once_keeps_the_one_already_there(tmp_path):
     from runtraj._paths import atomic_path
 

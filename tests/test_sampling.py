@@ -304,7 +304,15 @@ _T1 = pd.Timestamp("2021-01-15 01:00")
 _LEVELS = [0.0, 50.0, 500.0, 2000.0]
 
 
-def _met_file(path: Path, *, winds: bool = False, axis=None) -> Path:
+def _met_file(
+    path: Path,
+    *,
+    winds: bool = False,
+    axis=None,
+    source: str = "TEST",
+    heat: float = 150.0,
+    momentum: float | None = None,
+) -> Path:
     """
     Write an ARL file with two times of uniform fields, and return its path.
 
@@ -315,7 +323,9 @@ def _met_file(path: Path, *, winds: bool = False, axis=None) -> Path:
     1/254, the smallest value ARL packing keeps in a uniform field. With
     *winds*, it also has what :func:`calc_pbl_height` reads: winds that
     grow with height, an upward heat flux, and a friction velocity. *axis*
-    replaces the vertical axis.
+    replaces the vertical axis, *source* names the model, *heat* is the
+    heat flux, and *momentum* gives the momentum fluxes ``UMOF`` and ``VMOF``
+    in place of ``USTR``.
     """
     from arlmet import File, Projection
     from arlmet import Grid as ArlGrid
@@ -342,7 +352,7 @@ def _met_file(path: Path, *, winds: bool = False, axis=None) -> Path:
     with File(
         path,
         mode="w",
-        source="TEST",
+        source=source,
         grid=grid,
         vertical_axis=TerrainAxis(_LEVELS) if axis is None else axis,
     ) as f:
@@ -351,8 +361,14 @@ def _met_file(path: Path, *, winds: bool = False, axis=None) -> Path:
             rs.create_datarecord("SHGT", level=0, forecast=0, data=ones * 1500)
             rs.create_datarecord("PBLH", level=0, forecast=0, data=ones * pblh)
             if winds:
-                rs.create_datarecord("SHTF", level=0, forecast=0, data=ones * 150)
-                rs.create_datarecord("USTR", level=0, forecast=0, data=ones * 0.4)
+                rs.create_datarecord("SHTF", level=0, forecast=0, data=ones * heat)
+                if momentum is None:
+                    rs.create_datarecord("USTR", level=0, forecast=0, data=ones * 0.4)
+                else:
+                    for name in ("UMOF", "VMOF"):
+                        rs.create_datarecord(
+                            name, level=0, forecast=0, data=ones * momentum
+                        )
             for level, (pres, temp, sphu) in enumerate(
                 [(850.0, 280.0, 0.010), (800.0, 275.0, 0.008), (650.0, 265.0, 0.006)],
                 start=1,
@@ -601,7 +617,7 @@ def test_richardson_mixed_layer_without_a_crossing_is_the_second_highest_level()
     assert _richardson_column(heat=-20.0, theta_top=300.0)[0] == pytest.approx(2990.0)
 
 
-def _flexpart_column(heat: float, lapse_above: float = 0.0, below_ground: bool = False):
+def _flexpart_inputs(heat: float, lapse_above: float = 0.0, below_ground: bool = False):
     """
     One column on 50 m levels: dry-adiabatic to 1000 m, isothermal above, no wind, and u* 0.3 m/s.
 
@@ -611,10 +627,9 @@ def _flexpart_column(heat: float, lapse_above: float = 0.0, below_ground: bool =
     g (θ − θ₂)(z − 2) / (θ₂ · 9) passes 0.25 where
     (0.0098 (z − 1000) − 0.09)(z − 2) = 68.8, at about 1016 m. With
     *lapse_above* the air above 1000 m is dry-adiabatic too. With
-    *below_ground* a level under the ground comes first.
+    *below_ground* a level under the ground comes first. Return the
+    arguments of ``_flexpart_mixed_layer``, in SI units.
     """
-    from runtraj.sampling import _flexpart_mixed_layer
-
     z = np.arange(0.0, 3001.0, 1.0)
     temp = 300.0 - 0.00976 * np.minimum(z, 1000.0)
     temp -= lapse_above * np.maximum(z - 1000.0, 0.0)
@@ -632,7 +647,7 @@ def _flexpart_column(heat: float, lapse_above: float = 0.0, below_ground: bool =
     def one(value: float) -> np.ndarray:
         return np.array([value])
 
-    return _flexpart_mixed_layer(
+    return (
         pres[None, :],
         temp[None, :],
         calm,
@@ -646,6 +661,12 @@ def _flexpart_column(heat: float, lapse_above: float = 0.0, below_ground: bool =
         one(0.3),
         one(heat),
     )
+
+
+def _flexpart_column(heat: float, lapse_above: float = 0.0, below_ground: bool = False):
+    from runtraj.sampling import _flexpart_mixed_layer
+
+    return _flexpart_mixed_layer(*_flexpart_inputs(heat, lapse_above, below_ground))
 
 
 def test_flexpart_mixed_layer_ends_where_the_richardson_number_passes_a_quarter():
@@ -754,6 +775,87 @@ def test_calc_pbl_height_names_what_flexpart_needs(tmp_path):
         sampling.calc_pbl_height(
             _particles_at([_T0], [100.0]), [met], method="flexpart"
         )
+
+
+def _flexpart_through_sampling(source: str, shtf: float) -> np.ndarray:
+    """
+    Run ``_flexpart_columns`` on the column of :func:`_flexpart_inputs` (heat 200 W m-2).
+
+    ``arlmet.sample_points`` is stubbed to give that column in the met's own
+    units: pressure in hPa, the heat flux *shtf* as the met of *source*
+    writes it.
+    """
+    from types import SimpleNamespace
+
+    pres, temp, sphu, uu, vv, psfc, t2, td2, u10, v10, ustar, _ = _flexpart_inputs(
+        200.0
+    )
+    n_lev = pres.shape[1]
+    ground = {"PRSS": psfc / 100, "T02M": t2, "DP2M": td2, "U10M": u10}
+    ground |= {"V10M": v10, "USTR": ustar, "SHTF": np.array([shtf])}
+    profile = {"PRES": pres[0] / 100, "TEMP": temp[0], "SPHU": sphu[0]}
+    profile |= {"UWND": uu[0], "VWND": vv[0]}
+
+    def sample_points(sources, points, variables, **kwargs):
+        values = ground if "PRSS" in variables else profile
+        if values is profile:  # the met's own levels, 1 up
+            assert points["z"].tolist() == list(range(1, n_lev + 1))
+        return pd.DataFrame({v: values[v] for v in variables})
+
+    header = SimpleNamespace(
+        source=source, vertical_axis=SimpleNamespace(levels=range(n_lev + 1))
+    )
+    columns = pd.DataFrame({"lon": [25.5], "lat": [-5.0], "time": [_T0]})
+    with patch("arlmet.sample_points", sample_points):
+        return sampling._flexpart_columns([], columns, header, "PRES")
+
+
+def test_flexpart_columns_give_the_met_in_pascals_to_the_mixed_layer():
+    """A dropped ``100 *`` on the pressures moves the height by hundreds of meters."""
+    expected = sampling._flexpart_mixed_layer(*_flexpart_inputs(200.0))
+
+    np.testing.assert_allclose(_flexpart_through_sampling("TEST", 200.0), expected)
+    assert np.isfinite(expected).all()
+
+
+def test_flexpart_columns_flip_the_heat_flux_of_a_nam_met():
+    """NAM's flux is positive downward: -200 there is the 200 of the unstable column above."""
+    expected = sampling._flexpart_mixed_layer(*_flexpart_inputs(200.0))
+
+    np.testing.assert_allclose(_flexpart_through_sampling("ETA", -200.0), expected)
+
+
+def test_calc_pbl_height_flips_the_heat_flux_of_a_nam_met(tmp_path):
+    """The same column, with the flux NAM writes (positive downward), is in the same air."""
+    particles = _particles_at([_T0], [100.0])
+    up = _met_file(tmp_path / "up.arl", winds=True, heat=150.0)
+    down = _met_file(tmp_path / "nam.arl", winds=True, heat=-150.0, source="ETA")
+    stable = _met_file(tmp_path / "stable.arl", winds=True, heat=-150.0)
+
+    mlht = sampling.calc_pbl_height(particles, [down])
+
+    np.testing.assert_allclose(mlht, sampling.calc_pbl_height(particles, [up]))
+    assert abs(mlht[0] - sampling.calc_pbl_height(particles, [stable])[0]) > 100
+
+
+def test_calc_pbl_height_takes_the_friction_velocity_from_the_momentum_fluxes(tmp_path):
+    """Without ``USTR`` the met gives ``UMOF`` and ``VMOF``: each is a stress, u* is sqrt(stress / density)."""
+    met = _met_file(tmp_path / "met.arl", winds=True, momentum=1.0)
+    seen = {}
+
+    def spy(zz, theta, uu, vv, density, ustar, heat, ks):
+        seen.update(density=density, ustar=ustar, ks=ks)
+        return real(zz, theta, uu, vv, density, ustar, heat, ks)
+
+    real = sampling._richardson_mixed_layer
+    with patch.object(sampling, "_richardson_mixed_layer", spy):
+        sampling.calc_pbl_height(_particles_at([_T0], [100.0]), [met])
+
+    # The density of the lowest level above the first; UMOF = VMOF, so the
+    # components add as the sides of a right triangle.
+    rho = seen["density"][:, max(1, seen["ks"])]
+    np.testing.assert_allclose(seen["ustar"], np.sqrt(2.0 / rho), rtol=1e-4)
+    assert 0.9 < rho[0] < 1.5  # air, in kg m-3
 
 
 def test_calc_pbl_height_names_the_variables_the_files_lack(tmp_path):
