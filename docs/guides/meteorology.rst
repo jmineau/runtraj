@@ -6,10 +6,11 @@ turbulence of a weather model, so a run can only be as good as the
 meteorology behind it. Choose a weather product first, then point runtraj at its files or
 let it download them, and crop them to your region so runs stay fast.
 
-runtraj reads meteorology in the format of NOAA's Air Resources Laboratory
-(ARL), the format HYSPLIT reads. NOAA publishes ARL files for HRRR,
-NAM, GDAS, GFS and other models, and many research groups keep an archive
-of them.
+HYSPLIT reads meteorology in the format of NOAA's Air Resources Laboratory
+(ARL), and the rest of this page is about those files. NOAA publishes ARL
+files for HRRR, NAM, GDAS, GFS and other models, and many research groups
+keep an archive of them. FLEXPART reads GRIB files, which runtraj uses as
+they are (:doc:`../reference/flexpart`).
 
 .. This page runs when the docs are built, on the HRRR files the tests cache
    (14 and 15 January 2021 around Salt Lake City).
@@ -52,8 +53,8 @@ and a coarse grid smooths all three away.
    * - ERA5
      - 0.25 degree, hourly
      - The globe, 1940 on
-     - Long, consistent records. You convert it to ARL yourself
-       (`ERA5`_ below).
+     - Long, consistent records. HYSPLIT needs it converted to ARL, which
+       you do yourself (`ERA5`_ below); FLEXPART reads flex_extract's GRIB.
 
 If you run the same releases with two products, give each its own met and
 its own variant, and compare the results.
@@ -238,7 +239,7 @@ With your own files, runtraj crops each file the first time a run needs
 it, writes the copy to ``subgrid_dir`` and reuses it after that.
 ``subgrid_dir`` is required, so that runtraj never writes into your
 archive. It reads your files where they are and changes none of them.
-Scratch space suits it, and several projects with the same box share the
+A fast disk suits it, and several projects with the same box share the
 copies. runtraj finds the crops by their headers, as it finds your files, so
 a folder of crops copied from another machine works even where the archive
 is not. With ``download``, each file is cropped as it arrives and only the
@@ -251,8 +252,10 @@ ERA5
 ----
 
 ERA5, ECMWF's reanalysis, is not published in ARL format, and runtraj does
-not convert it, so convert it to ARL first. Then it is a met like any other.
-We recommend two settings that differ from the defaults:
+not convert it, so for HYSPLIT convert it to ARL first. Then it is a met like
+any other. (FLEXPART reads the GRIB files flex_extract writes as they are:
+:doc:`../reference/flexpart`.) For HYSPLIT we recommend two settings that
+differ from the defaults:
 
 .. code-block:: yaml
 

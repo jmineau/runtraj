@@ -10,11 +10,13 @@ work underneath.
   ``task=(i, n)`` runs share ``i`` of ``n`` here (:func:`~runtraj.execution.task_share`),
   which is what ``runtraj run --task i/n`` does.
 - :func:`~runtraj.execution.submit` is what ``project.submit()`` calls. It
-  writes a job array script (:func:`~runtraj.execution.slurm.job_script`) whose
-  tasks each run ``runtraj run --task``, submits it with ``sbatch``, and
-  returns the job id at once. With ``backend: kubernetes`` it makes an
-  indexed Job instead (:func:`~runtraj.execution.kubernetes.job_manifest`)
-  and creates it with ``kubectl``.
+  hands the releases to the backend, whose tasks each run ``runtraj run
+  --task``, and returns the job id at once. With ``backend: slurm`` it writes
+  a job array script (:func:`~runtraj.execution.slurm.job_script`) and
+  submits it with ``sbatch``; with ``backend: pbs`` it submits a PBS job
+  array; with ``backend: kubernetes`` it makes an indexed Job
+  (:func:`~runtraj.execution.kubernetes.job_manifest`) and creates it with
+  ``kubectl``.
 - :func:`~runtraj.execution.kubernetes.schedule_job` is what ``runtraj
   schedule`` calls: a CronJob (:func:`~runtraj.execution.kubernetes.cron_job_manifest`)
   whose pod each hour runs ``runtraj tick``, which adds the hours now due

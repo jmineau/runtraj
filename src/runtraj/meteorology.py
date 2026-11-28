@@ -63,7 +63,8 @@ def run_window(r_time: Any, n_hours: int) -> tuple[pd.Timestamp, pd.Timestamp]:
 #     met = arlmet.sample_points(files, points, ["UWND", "VWND"], earth_relative=True)
 #     u_err = met["UWND"] - observed_u
 #
-# The Wind Error Statistics guide goes from there to the four settings.
+# A :class:`VariogramFit` gives ``sigma``, the standard deviation, and
+# ``length``, the scale, of the setting of the coordinate it was fitted over.
 # ---------------------------------------------------------------------------
 
 

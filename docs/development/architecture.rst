@@ -42,28 +42,9 @@ files.
 Module map
 ----------
 
-.. code-block:: text
-
-   src/runtraj/
-     cli.py          the runtraj command
-     project.py      Project: inputs, the simulations table, run and submit, status
-     check.py        what would stop a project's runs, from its inputs
-     fetch.py        gets the met files the unfinished simulations need
-     output.py       Output: the output directory; completed, the completion rule
-     simulation.py   Simulation: a frozen (release, variant, output) value
-     config.py       ProjectConfig and Variant
-     identity.py     settings records and hashes
-     stages.py       the Stage base class, get_stage, check_stage
-     testing.py      run_stage: a stage end to end in a project, on the replay model; check_model
-     releases/       release classes, releases.csv, shared validation
-     particles/      the particle table and files, release heights, particles.runtraj
-     models/         base (the TransportModel and TransportConfig base classes), registry (MODELS, get_model), run (run_model)
-       hysplit/      config, met, driver, CONTROL and SETUP.CFG writers, failures
-     execution/      ExecutionConfig, the runner (plan, local run), slurm (the job array, whose script requeues a stopped task), pbs (the job array), the worker,
-                     kubernetes (the indexed Job, the hourly CronJob), inputs (copies to a bucket, the lock), schedule
-     transforms/     particle transforms, each multiplying the weight column
-     sampling.py     sample_field, sample_met, calc_pbl_height: fields and met read at points
-     meteorology.py, spatial.py, visualization.py, exceptions.py
+The module map is in the repository's `AGENTS.md
+<https://github.com/jmineau/runtraj/blob/main/AGENTS.md>`_, so that there is
+one to keep current.
 
 The import contracts in ``pyproject.toml`` (``just imports``) hold this
 shape: the modules are in layers, only :mod:`runtraj.models` imports a
@@ -75,8 +56,8 @@ How a run goes
 --------------
 
 A run (``runtraj run``, :meth:`runtraj.Project.run`,
-:meth:`runtraj.Project.submit`) happens in this process or as a Slurm job
-array whose tasks each run ``runtraj run --task i/N``. The unit of work is a
+:meth:`runtraj.Project.submit`) happens in this process or as a job array
+(Slurm, PBS or a Kubernetes indexed Job) whose tasks each run ``runtraj run --task i/N``. The unit of work is a
 release: the worker runs the model once per run-settings hash, then each
 missing stage file of the variants that share the particles, a stage after
 the ones it reads. A Slurm task rebuilds the project in another process, so

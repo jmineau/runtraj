@@ -31,7 +31,7 @@ exits with 2 when its command line is wrong (an unknown option, a bad value,
 or a directory that is not a project) or the project's files are invalid
 (``config.yaml`` that is not valid YAML or has a misspelled setting, a bad
 row in ``releases.csv``). ``runtraj run`` and ``runtraj submit`` also
-exit with 2 when a met directory does not exist or holds no ARL file, which
+exit with 2 when a met directory does not exist or holds no met file, which
 ``runtraj check`` lists, and when the scheduler refuses the job or is not
 installed (the message is the scheduler's own). ``runtraj status`` does too, unless the output holds no
 result the project could own: then it counts every simulation as pending.
@@ -260,7 +260,7 @@ def check(project: str | None = _PROJECT_ARG) -> None:
 
     For each variant, checks that the transport model can run each release
     (HYSPLIT refuses a multipoint release whose points share a location),
-    that the met's directory exists and holds ARL files, that every met file each release's run needs is there (naming
+    that the met's directory exists and holds met files, that every met file each release's run needs is there (naming
     the hours), that the first of them holds more than one time period,
     which HYSPLIT needs, and that each ends on a whole time step, that each
     release is inside the grid of the met files its run starts in (or inside
@@ -956,8 +956,8 @@ def status(
     files it holds, which variants use it, and, for a folder this project
     does not use, how its settings differ from the variant of its name.
 
-    The settings folders are named by the hash of the settings, which includes
-    the met's weather product, read from the met's files. When a met cannot
+    A settings folder's name comes from its settings, which include the
+    met's weather product, read from the met's files. When a met cannot
     be read, status still counts every simulation as pending if no folder in
     the output has the variant's other settings, since then no result can
     exist. Otherwise it needs the met, and exits with 2, as it does when the

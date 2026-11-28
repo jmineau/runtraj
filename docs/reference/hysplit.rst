@@ -87,7 +87,7 @@ for. A ``hycs_std`` that prints no version gets the value as HYSPLIT
 version too: from HYSPLIT 5.3.0, ``hycs_std`` applies the wind error only
 with ``IDSP=2``, which that mode does not set, so the settings are refused
 there (``setting_refused`` in ``runtraj check``, and ``RELEASE_REFUSED`` in a
-run) instead of running without it (the particles mode sets ``IDSP=2``, and
+run) instead of running without it (the particle mode sets ``IDSP=2``, and
 5.2.3 and earlier apply the error). It takes what
 ``CONTROL`` starts from: a release time and release locations (longitude,
 latitude and height, like ``release.coords()``; the ``CONTROL`` file lists
@@ -367,8 +367,7 @@ line source, so it refuses a multipoint release whose points share a
 horizontal location
 (:func:`~runtraj.models.hysplit.releases.check_releases`): ``runtraj check``
 lists it, and its run fails as ``RELEASE_REFUSED`` before ``hycs_std``
-starts. HYSPLIT 5.1.0 to 5.4.2
-write no particle row at ``age = 0``, so
+starts. HYSPLIT writes no particle row at ``age = 0``, so
 :func:`~runtraj.models.hysplit.releases.release_rows` says where each
 particle of a column or multipoint release started: a column's particles
 from their numbers, :func:`~runtraj.models.hysplit.releases.particles_per_step`
@@ -472,10 +471,21 @@ Each reason, what happened, and what to do:
        HYSPLIT had written are not kept, and running again runs the
        simulation again.
    * - ``RELEASE_REFUSED``
-     - A multipoint release whose points share a horizontal location,
-       which HYSPLIT would join into a line source. Use a
-       :class:`~runtraj.ColumnRelease` for a column, or one
-       :class:`~runtraj.PointRelease` per height (:doc:`/guides/releases`).
+     - HYSPLIT would run the release or a setting wrong, or not at all, so
+       runtraj refuses it before ``hycs_std`` starts (``runtraj check``
+       lists it too). It is one of:
+
+       - a multipoint release whose points share a horizontal location,
+         which HYSPLIT would join into a line source (use a
+         :class:`~runtraj.ColumnRelease` for a column, or one
+         :class:`~runtraj.PointRelease` per height; not in the trajectory
+         mode, which starts a trajectory at every location);
+       - a column release in the trajectory mode, which has no line source,
+         or with ``ichem: 1``, where it is one source at two locations;
+       - a trajectory release off the hour, before HYSPLIT 5.4.0;
+       - ``krand`` 10 to 13, before HYSPLIT 5.1.0;
+       - the wind error settings in the concentration mode, from HYSPLIT
+         5.3.0.
    * - ``TIMEOUT``
      - The run took longer than ``timeout`` under ``execution:``. Raise it,
        or look for a slow node or a met file read over a slow filesystem.

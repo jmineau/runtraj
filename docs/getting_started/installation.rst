@@ -35,6 +35,8 @@ Extras add optional features. List them in the brackets, for example
      - ``release.geometry`` and ``release.points``, as shapely objects.
    * - ``download``
      - Downloading meteorology from NOAA.
+   * - ``concentration``
+     - Running in the concentration mode (:doc:`../guides/concentration`), whose result is a NetCDF file.
    * - ``flexpart``
      - Reading GRIB meteorology, to run FLEXPART (:doc:`../reference/flexpart`).
    * - ``complete``

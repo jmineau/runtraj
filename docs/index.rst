@@ -10,7 +10,7 @@ runtraj
 runtraj runs particle dispersion models at scale. Give it the times and
 places particles are released from, some meteorology, and the settings to
 run under, and it runs the transport model once for each, on your computer
-or as a Slurm job array, and keeps the particles where you can find them
+or as a job array on a scheduler (Slurm, PBS or Kubernetes), and keeps the particles where you can find them
 again.
 
 You choose the transport model and install it yourself. runtraj supports

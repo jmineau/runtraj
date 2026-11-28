@@ -3,9 +3,9 @@ What HYSPLIT does with a release that another transport model may not: its line 
 
 :func:`check_releases` lists the multipoint releases HYSPLIT would turn
 into a line source, and :func:`release_rows` says where each particle
-started: from the particle's number for a column, and, for a multipoint
-release, when HYSPLIT wrote no row at ``age = 0``, as HYSPLIT 5.1.0 to
-5.4.2 do not. :class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's
+started, since HYSPLIT writes no row at ``age = 0``: from the particle's
+number for a column, and, for a multipoint release, from its first row.
+:class:`~runtraj.models.hysplit.HysplitModel` gives both to runtraj's
 core (:class:`runtraj.models.TransportModel`), which refuses such a release
 before HYSPLIT runs; :func:`off_the_hour` lists the releases that
 ``hyts_std`` before 5.4.0 cannot run.
@@ -206,7 +206,7 @@ def particles_per_step(config: HysplitConfig, locations: int = 1) -> int:
     of this many particles for each of the ``nbptyp`` size bins, and with
     ``maxdim: 1`` the bins share ``numpar``. A puff run (``initd`` 1 or
     2, or a three-digit ``initd`` whose tens digit is 1 or 2) releases one
-    puff a step, at the middle of the column. HYSPLIT 5.1.0 to 5.4.2 count the same way.
+    puff a step, at the middle of the column. HYSPLIT 5.0.2 and 5.4.2, the versions tested, count the same way.
 
     Examples
     --------

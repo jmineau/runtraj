@@ -33,7 +33,7 @@ to do something, start with the :doc:`../guides/index` instead.
    Finding, downloading, and cropping meteorology files.
 
 :doc:`execution`
-   Running simulations locally or on Slurm, transport models, and stages.
+   Running simulations locally or on a scheduler, transport models, and stages.
 
 :doc:`project`
    The project, its simulations, and the output directory.

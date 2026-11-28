@@ -45,9 +45,10 @@ Two reasons come from runtraj itself, for any transport model:
 
 ``RELEASE_REFUSED``
    The transport model cannot run the release, and said so in its
-   ``check_releases`` before the run; ``runtraj check`` lists it too. With
-   HYSPLIT, it is a multipoint release whose points share a horizontal
-   location: use a :class:`~runtraj.ColumnRelease` for a column, or one
+   ``check_releases`` before the run; ``runtraj check`` lists it too. HYSPLIT's
+   refusals are in the failure table of :doc:`hysplit`; the usual one is a
+   multipoint release whose points share a horizontal location: use a
+   :class:`~runtraj.ColumnRelease` for a column, or one
    :class:`~runtraj.PointRelease` per height.
 ``NO_RELEASE_ROWS``
    Where the particles of a column or multipoint release started is not

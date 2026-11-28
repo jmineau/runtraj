@@ -6,8 +6,8 @@ the unfinished releases among the array tasks and submits the job. You
 don't write any Slurm scripts yourself.
 
 Your project folder, its output directory, and the Python environment must
-be on a filesystem the compute nodes can see, such as a shared home, group,
-or scratch space.
+be on a filesystem the compute nodes can see, such as a shared home or
+group folder.
 
 Set it up
 ---------

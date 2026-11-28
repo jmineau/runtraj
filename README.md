@@ -18,7 +18,7 @@
 
 runtraj runs particle dispersion models at scale. You describe where and when particles are
 released and the settings to run them under, and it runs the transport model once for each,
-on your machine or as a Slurm job array, and keeps the particles where you can find them again.
+on your machine or as a job array on a scheduler (Slurm, PBS or Kubernetes), and keeps the particles where you can find them again.
 You choose the transport model and install it yourself. runtraj supports the two below; any
 other model, and what is made from the particles afterwards, plug in by the import path of a class.
 
@@ -45,8 +45,8 @@ Install it from PyPI:
 pip install runtraj
 ```
 
-For plotting and for downloading meteorology from NOAA, add the `complete` extra
-(`runtraj[complete]`).
+For plotting, downloading meteorology from NOAA, concentration runs, and FLEXPART, add the
+`complete` extra (`runtraj[complete]`), or name only the extras you need (`runtraj[visualization]`).
 
 runtraj runs NOAA's HYSPLIT program, `hycs_std`, but does not include it or its data tables.
 It supports HYSPLIT 5.0 and later. Download HYSPLIT from [NOAA's Air Resources Laboratory](https://www.ready.noaa.gov/HYSPLIT.php),
