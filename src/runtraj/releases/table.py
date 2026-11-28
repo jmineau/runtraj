@@ -93,15 +93,8 @@ def _normalize_columns(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str
     Raises
     ------
     ValueError
-        If a column is named ``r_idx``, the old name of ``group``, or two
-        columns name one field, such as ``altitude`` and ``zagl``.
+        If two columns name one field, such as ``altitude`` and ``zagl``.
     """
-    old = [str(c) for c in frame.columns if str(c).lower() == "r_idx"]
-    if old:
-        raise ValueError(
-            f"The column {old[0]!r} is not read. Rename it to 'group': rows "
-            "that share a group make one column or multipoint release."
-        )
     spelling: dict[str, str] = {}
     for field, aliases in ALIASES.items():
         found = [str(col) for col in frame.columns if str(col).lower() in aliases]

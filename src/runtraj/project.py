@@ -162,9 +162,6 @@ class Project:
     FileNotFoundError
         If the directory has no ``config.yaml``, so it is not a project: a
         mistyped path is not read as a project with no releases.
-    ValueError
-        If the directory has ``receptors.csv`` and no ``releases.csv``: the
-        file was renamed, and its ``r_idx`` column is now ``group``.
 
     Attributes
     ----------
@@ -181,13 +178,6 @@ class Project:
             raise FileNotFoundError(
                 f"No config.yaml in {self.directory}. Make a project with "
                 "runtraj.Project.init(...)."
-            )
-        if (
-            self.directory / "receptors.csv"
-        ).exists() and not self.releases_path.exists():
-            raise ValueError(
-                f"{self.directory} has receptors.csv, which is now named "
-                "releases.csv: rename the file, and rename its r_idx column to group."
             )
 
     @classmethod
@@ -513,8 +503,7 @@ class Project:
         Raises
         ------
         ValueError
-            If *table* has other columns than the table it adds to, or the
-            table was written with a ``receptor`` column, now ``release``.
+            If *table* has other columns than the table it adds to.
 
         Examples
         --------
@@ -528,12 +517,6 @@ class Project:
         rows = table.reset_index(drop=True)
         if path.exists():
             held = pd.read_parquet(path)
-            if "receptor" in held.columns and "release" in rows.columns:
-                raise ValueError(
-                    f"Table {name!r} was written with a 'receptor' column, which "
-                    f"is now named 'release'. Rename the column in {path}, or "
-                    "delete the file and add the table again."
-                )
             if list(held.columns) != list(rows.columns):
                 raise ValueError(
                     f"Table {name!r} has the columns {list(held.columns)}, "
@@ -692,12 +675,6 @@ class Project:
             except (KeyError, TypeError, ValueError, IndexError):
                 frame = pd.DataFrame()
         missing = [c for c in ("release", "variant") if c not in frame.columns]
-        if "release" in missing and "receptor" in frame.columns:
-            raise ValueError(
-                "A selection of simulations has a 'receptor' column, which is "
-                "now named 'release'. Rename the column, or select from "
-                "project.simulations."
-            )
         if missing:
             raise ValueError(
                 "A selection of simulations is a table with 'release' and "

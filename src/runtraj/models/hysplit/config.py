@@ -1248,12 +1248,7 @@ class HysplitConfig(TransportConfig):
 
         Both mean the same factors, so they must hash the same.
         """
-        if isinstance(value, list) and value and isinstance(value[0], list):
-            if len(value) != 1:
-                raise ValueError(
-                    "Per-simulation ziscale lists are not supported. Pass one shared "
-                    "list of hourly factors for all simulations."
-                )
+        if isinstance(value, list) and len(value) == 1 and isinstance(value[0], list):
             return value[0]
         return value
 

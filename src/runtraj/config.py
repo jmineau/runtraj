@@ -631,20 +631,13 @@ class ProjectConfig(BaseModel):
         ------
         ValueError
             For a bad name, an unknown met, model or stage, a bad
-            ``realizations``, ``from:``, a setting written outside its
+            ``realizations``, a setting written outside its
             block, or a stage set to null that another of its stages reads.
         """
         if not VARIANT_NAME_RE.fullmatch(group):
             raise ValueError(f"Variant name {group!r} {_NAME_RULE}")
         where = f"Variant {group!r}"
         spec = dict(self.variants[group] or {})
-        if "from" in spec:
-            raise ValueError(
-                f"{where} uses 'from:', which is no longer needed: a "
-                "variant with the same transport settings as another shares its "
-                "particles. Give the variant the transport overrides of "
-                f"{spec['from']!r} (if any) and its own stage settings."
-            )
         met = _met_name(group, spec, self.mets)
         block = _model_name(group, spec, self._models)
         model, defaults = self._models[block]
@@ -1117,10 +1110,6 @@ def _blocks_of_settings(models: Any, stages: Any = None) -> dict[str, str]:
                 setting, f"a {model} setting. Write it under models: {name}:."
             )
     places.update(_stage_places(stages))
-    places["model"] = (
-        "no longer a key. Name each transport model as a block under "
-        "models:, such as models: {hysplit: {}}."
-    )
     return places
 
 
@@ -1190,7 +1179,7 @@ def _check_keys(
         If a key is not one of *allowed*.
     """
     for key in keys:
-        if key in allowed or key == "from":  # "from:" has its own message
+        if key in allowed:
             continue
         if key in elsewhere:
             raise ValueError(f"{where}: {key!r} is {elsewhere[key]}")

@@ -170,8 +170,6 @@ def test_nested_and_flat_ziscale_are_one_run(tmp_path):
     nested = _variant(tmp_path, ziscale=[[0.8, 0.9]])
     assert nested.transport.ziscale == [0.8, 0.9]
     assert nested.result_hash == flat.result_hash
-    with pytest.raises(ValueError, match="Per-simulation"):
-        HysplitConfig(n_hours=-24, ziscale=[[0.8], [0.9]])
 
 
 # ---------------------------------------------------------------------------

@@ -118,8 +118,6 @@ class HysplitMetConfig(MetConfig):
     def _validate_mode(self) -> Self:
         """Check the archive and its options, and the fields each mode needs."""
         extra = self.download_options
-        for key in extra.keys() & _REMOVED.keys():
-            raise ValueError(f"{key} is gone: {_REMOVED[key]}")
         if self.download is not None:
             from arlmet.archives import ARCHIVES
 
@@ -955,27 +953,6 @@ class Met:
         table = [(str(path), None) for path in files]
         table += [(None, reason) for reason in problems]
         return pd.DataFrame(table, columns=["file", "message"]).astype("string")
-
-
-#: Met settings that were removed, and what to do instead.
-_REMOVED = {
-    "file_format": (
-        "delete it. Each met file's header says which times it holds, so its "
-        "name no longer matters."
-    ),
-    "file_tres": (
-        "delete it. Each met file's header says which times it holds, so how "
-        "much a file covers is read from the file."
-    ),
-    "subgrid_buffer": (
-        "the crop is subgrid_bounds. Widen the bounds by the buffer instead (it "
-        "was in degrees)."
-    ),
-    "n_min": (
-        "a run needs every met file its hours fall in, and fails naming the "
-        "hours with no file."
-    ),
-}
 
 
 @dataclass
