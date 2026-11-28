@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../_static/documentation_options.js?v=8e990314"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -780,7 +780,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
@@ -791,7 +790,6 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run_many.html">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
 </ul>
@@ -805,7 +803,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.ModelRun.html">runtraj.models.ModelRun</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.get_model.html">runtraj.models.get_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model.html">runtraj.models.run_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.MetConfig.html">runtraj.models.MetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.check.html">runtraj.models.MetConfig.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.downloads.html">runtraj.models.MetConfig.downloads</a></li>
@@ -1035,10 +1032,11 @@ for the whole run. HYSPLIT calls it <code class="docutils literal notranslate"><
 read back as float64.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">age</span></code></p></td>
-<td><p>minutes</p></td>
+<td><p>s</p></td>
 <td><p>Time since release. Negative for a backward run, positive for a
-forward one. HYSPLIT calls it <code class="docutils literal notranslate"><span class="pre">time</span></code>. Stored as whole minutes,
-int32, and read back as float64.</p></td>
+forward one. HYSPLIT calls it <code class="docutils literal notranslate"><span class="pre">time</span></code> and writes it in minutes,
+which runtraj reads as seconds. Stored as whole seconds, int32, and
+read back as float64.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lon</span></code></p></td>
 <td><p>degrees east</p></td>
@@ -1062,10 +1060,10 @@ to float32 can move a particle across a grid-cell edge), FLEXPART’s float32.
 <code class="xref py py-func docutils literal notranslate"><span class="pre">read_particles()</span></code> and
 <a class="reference internal" href="_api/runtraj.output.Output.table.html#runtraj.output.Output.table" title="runtraj.output.Output.table"><code class="xref py py-meth docutils literal notranslate"><span class="pre">table()</span></code></a> give every float column back as
 float64, whatever a file stores, so a table does not depend on which
-file was read first. <code class="docutils literal notranslate"><span class="pre">age</span></code> is whole minutes: a model whose output steps
-are not whole minutes cannot write particles
-(<a class="reference internal" href="_api/runtraj.particles.write_particles.html#runtraj.particles.write_particles" title="runtraj.particles.write_particles"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_particles()</span></code></a> raises, and
-<a class="reference internal" href="flexpart.html"><span class="doc">FLEXPART Integration</span></a>’s reader refuses such times).</p>
+file was read first. <code class="docutils literal notranslate"><span class="pre">age</span></code> is whole seconds, the unit FLEXPART counts
+in, so an output step under a minute is kept as it is; a model whose
+output times are not whole seconds from the release cannot write
+particles (<a class="reference internal" href="_api/runtraj.particles.write_particles.html#runtraj.particles.write_particles" title="runtraj.particles.write_particles"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_particles()</span></code></a> raises).</p>
 <section id="the-release-row">
 <h2>The release row<a class="headerlink" href="#the-release-row" title="Link to this heading">#</a></h2>
 <p>A model should write each particle’s release as a row at <code class="docutils literal notranslate"><span class="pre">age</span> <span class="pre">=</span> <span class="pre">0</span></code>. That
@@ -1125,8 +1123,10 @@ output step, which HYSPLIT computes with <code class="docutils literal notransla
 <td><p>Air density.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">samt</span></code></p></td>
-<td><p>minutes</p></td>
-<td><p>Time the particle spent in the surface layer during the step.</p></td>
+<td><p>s</p></td>
+<td><p>Time the particle spent in the surface layer during the step.
+HYSPLIT writes it in minutes; runtraj reads it as seconds, as it
+does <code class="docutils literal notranslate"><span class="pre">age</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sigw</span></code></p></td>
 <td><p>m s⁻¹</p></td>

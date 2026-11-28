@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -500,7 +500,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    pandas.DataFrame</span>
 <span class="sd">        One row per trajectory per output time, in the file's order, with</span>
-<span class="sd">        ``trajectory``, ``time`` (UTC), ``age`` (minutes since the</span>
+<span class="sd">        ``trajectory``, ``time`` (UTC), ``age`` (seconds since the</span>
 <span class="sd">        trajectory's first row, which is where it started), ``lon``,</span>
 <span class="sd">        ``lat``, ``zagl``, ``pres`` (hPa), and a column for each other</span>
 <span class="sd">        value the run wrote (:data:`TDUMP_COLUMNS`). Its ``attrs`` hold</span>
@@ -563,7 +563,7 @@
     <span class="p">)</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"trajectory"</span><span class="p">:</span> <span class="n">raw</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span> <span class="s2">"time"</span><span class="p">:</span> <span class="n">time</span><span class="p">})</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"trajectory"</span><span class="p">)[</span><span class="s2">"time"</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s2">"first"</span><span class="p">)</span>
-    <span class="n">table</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">table</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)</span>
+    <span class="n">table</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">"lon"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span>
     <span class="n">table</span><span class="p">[</span><span class="s2">"zagl"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span>

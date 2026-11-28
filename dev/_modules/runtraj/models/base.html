@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -810,11 +810,6 @@
     <span class="c1">#: Whether :meth:`run` is handed an empty directory for its files. A</span>
     <span class="c1">#: model that writes no files sets it False, and gets ``None``.</span>
     <span class="n">needs_workdir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="c1">#: Whether the model runs many releases in one call (:meth:`run_many`),</span>
-    <span class="c1">#: such as an emulator on a GPU. The worker then hands it every release</span>
-    <span class="c1">#: of a variant that needs particles at once, where it otherwise calls</span>
-    <span class="c1">#: :meth:`run` for one at a time.</span>
-    <span class="n">batched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="TransportModel.run">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.run.html#runtraj.models.TransportModel.run">[docs]</a>
@@ -858,37 +853,6 @@
 <span class="sd">        SimulationError</span>
 <span class="sd">            When the run fails, with the model's log in ``log``.</span>
 <span class="sd">        """</span></div>
-
-
-<div class="viewcode-block" id="TransportModel.run_many">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.models.TransportModel.run_many.html#runtraj.models.TransportModel.run_many">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_many</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Release</span><span class="p">],</span>
-        <span class="n">config</span><span class="p">:</span> <span class="n">C</span><span class="p">,</span>
-        <span class="n">met</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-        <span class="n">windows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]],</span>
-        <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Run many releases with one config, and return their particles as one table, for a model with :attr:`batched` set.</span>
-
-<span class="sd">        The table has a ``release`` column holding each row's release id,</span>
-<span class="sd">        beside the particle columns :meth:`run` returns. ``windows[i]`` is</span>
-<span class="sd">        the time ``releases[i]`` covers. A release with no rows failed;</span>
-<span class="sd">        the others are written. The log and met files are shared by all.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        SimulationError</span>
-<span class="sd">            When the whole call fails, with the model's log in ``log``.</span>
-<span class="sd">        NotImplementedError</span>
-<span class="sd">            Here, for a model that is not batched.</span>
-<span class="sd">        """</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Transport model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> sets batched but has no run_many."</span>
-        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TransportModel.result">
@@ -963,9 +927,8 @@
 <span class="sd">        ``release`` and ``message`` columns, in that order, one row for each</span>
 <span class="sd">        release it cannot run; a row whose ``release`` is ``NA`` is about the</span>
 <span class="sd">        settings, and refuses every release. ``runtraj check`` lists them, and</span>
-<span class="sd">        :func:`run_model` and :func:`run_model_many` fail them with the</span>
-<span class="sd">        reason ``RELEASE_REFUSED`` before the model runs, so :meth:`run`</span>
-<span class="sd">        and :meth:`run_many` never get such a release. HYSPLIT refuses a</span>
+<span class="sd">        :func:`run_model` fails them with the reason ``RELEASE_REFUSED``</span>
+<span class="sd">        before the model runs, so :meth:`run` never gets such a release. HYSPLIT refuses a</span>
 <span class="sd">        multipoint release whose points share a horizontal location, which</span>
 <span class="sd">        it would join into a line source, in its trajectory mode with</span>
 <span class="sd">        a ``hyts_std`` before 5.4.0 a release not on the hour, and a setting</span>

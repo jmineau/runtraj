@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -551,7 +551,7 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    pandas.DataFrame</span>
-<span class="sd">        ``particle``, ``age`` (minutes, negative for a backward run), ``lon``,</span>
+<span class="sd">        ``particle``, ``age`` (seconds, negative for a backward run), ``lon``,</span>
 <span class="sd">        ``lat``, ``zagl``, then the other fields, ordered by output time</span>
 <span class="sd">        as FLEXPART wrote them and by particle within a time.</span>
 
@@ -562,8 +562,7 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If no file is given, a file has no ``lon``, ``lat``, or ``z``, a</span>
 <span class="sd">        field is on FLEXPART's grid rather than per particle (the output</span>
-<span class="sd">        of a domain-filling run, ``MDOMAINFILL`` 1), or an output time is</span>
-<span class="sd">        not a whole number of minutes from *release_time*.</span>
+<span class="sd">        of a domain-filling run, ``MDOMAINFILL`` 1).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -614,12 +613,8 @@
         <span class="n">times</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"datetime64[ns]"</span><span class="p">)</span>
         <span class="n">numbers</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
-    <span class="n">age</span> <span class="o">=</span> <span class="p">(</span><span class="n">times</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">release_time</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"m"</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">age</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">age</span><span class="p">)):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2"> has output times that are not whole "</span>
-            <span class="sa">f</span><span class="s2">"minutes from the release time </span><span class="si">{</span><span class="n">release_time</span><span class="si">}</span><span class="s2">."</span>
-        <span class="p">)</span>
+    <span class="c1"># FLEXPART writes its times in whole seconds, as the particle table counts age.</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="p">(</span><span class="n">times</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="n">release_time</span><span class="p">,</span> <span class="s2">"ns"</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"s"</span><span class="p">)</span>
     <span class="n">kept</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s2">"z"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">_FILL</span>
     <span class="n">rows_time</span><span class="p">,</span> <span class="n">rows_particle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
 

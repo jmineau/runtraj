@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -466,8 +466,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.transforms._common</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">elapsed_minutes</span><span class="p">,</span>
-    <span class="n">step_minutes</span><span class="p">,</span>
+    <span class="n">elapsed_seconds</span><span class="p">,</span>
+    <span class="n">step_seconds</span><span class="p">,</span>
     <span class="n">trajectory_columns</span><span class="p">,</span>
     <span class="n">weigh</span><span class="p">,</span>
 <span class="p">)</span>
@@ -491,7 +491,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    particles : pandas.DataFrame</span>
-<span class="sd">        The particle table, with ``particle`` and ``age`` (minutes) columns.</span>
+<span class="sd">        The particle table, with ``particle`` and ``age`` (seconds) columns.</span>
 <span class="sd">        A table of several simulations tells each trajectory apart by its</span>
 <span class="sd">        ``release``, ``variant`` and ``realization`` as well.</span>
 <span class="sd">    rate : array-like</span>
@@ -525,7 +525,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from runtraj.transforms import survival</span>
-<span class="sd">    &gt;&gt;&gt; p = pd.DataFrame({"particle": [1, 1, 1], "age": [-60.0, -120.0, -180.0]})</span>
+<span class="sd">    &gt;&gt;&gt; p = pd.DataFrame({"particle": [1, 1, 1], "age": [-3600.0, -7200.0, -10800.0]})</span>
 <span class="sd">    &gt;&gt;&gt; survival(p, rate=[1e-4, 1e-4, 0.0]).round(4).tolist()</span>
 <span class="sd">    [0.6977, 0.4868, 0.4868]</span>
 <span class="sd">    """</span>
@@ -538,13 +538,13 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">"rate must be a finite number, zero or positive, at every row."</span>
         <span class="p">)</span>
-    <span class="n">step</span> <span class="o">=</span> <span class="n">step_minutes</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="n">step_seconds</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
     <span class="c1"># Add the losses up from the release, one trajectory at a time.</span>
     <span class="n">keys</span> <span class="o">=</span> <span class="n">trajectory_columns</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="n">keys</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
-        <span class="n">_loss</span><span class="o">=</span><span class="n">k</span> <span class="o">*</span> <span class="n">step</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="mf">60.0</span><span class="p">,</span>
-        <span class="n">_elapsed</span><span class="o">=</span><span class="n">elapsed_minutes</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span>
+        <span class="n">_loss</span><span class="o">=</span><span class="n">k</span> <span class="o">*</span> <span class="n">step</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+        <span class="n">_elapsed</span><span class="o">=</span><span class="n">elapsed_seconds</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span>
     <span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="o">*</span><span class="n">keys</span><span class="p">,</span> <span class="s2">"_elapsed"</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"stable"</span><span class="p">)</span>
     <span class="n">cumulative</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">"_loss"</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">cumulative</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()),</span> <span class="n">index</span><span class="o">=</span><span class="n">particles</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
@@ -558,7 +558,7 @@
 <span class="sd">    Transform that decays each row's ``weight`` by ``exp(-age / lifetime)``.</span>
 
 <span class="sd">    ``age`` is the particle's time since release, its ``age`` column</span>
-<span class="sd">    (minutes), and the lifetime is the species' e-folding lifetime.</span>
+<span class="sd">    (seconds), and the lifetime is the species' e-folding lifetime.</span>
 <span class="sd">    """</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -575,7 +575,7 @@
         <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the particles with ``weight`` decayed by age."""</span>
-        <span class="n">age_hours</span> <span class="o">=</span> <span class="n">elapsed_minutes</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span> <span class="o">/</span> <span class="mf">60.0</span>
+        <span class="n">age_hours</span> <span class="o">=</span> <span class="n">elapsed_seconds</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3600.0</span>
         <span class="k">return</span> <span class="n">weigh</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">age_hours</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">lifetime_hours</span><span class="p">))</span></div>
 </div>
 

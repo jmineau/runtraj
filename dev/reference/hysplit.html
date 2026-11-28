@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../_static/documentation_options.js?v=8e990314"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -780,7 +780,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
@@ -791,7 +790,6 @@
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.run_many.html">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
 </ul>
@@ -805,7 +803,6 @@
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.ModelRun.html">runtraj.models.ModelRun</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.get_model.html">runtraj.models.get_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model.html">runtraj.models.run_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="_api/runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="_api/runtraj.models.MetConfig.html">runtraj.models.MetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.check.html">runtraj.models.MetConfig.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_api/runtraj.models.MetConfig.downloads.html">runtraj.models.MetConfig.downloads</a></li>
@@ -1105,7 +1102,8 @@ above ground and 1 above sea level, as <code class="docutils literal notranslate
 release points (<code class="docutils literal notranslate"><span class="pre">release.coords()</span></code>) and <code class="docutils literal notranslate"><span class="pre">altitude_ref</span></code>.
 <a class="reference internal" href="_api/runtraj.models.hysplit.run_hycs_std.html#runtraj.models.hysplit.run_hycs_std" title="runtraj.models.hysplit.run_hycs_std"><code class="xref py py-func docutils literal notranslate"><span class="pre">run_hycs_std()</span></code></a> runs <code class="docutils literal notranslate"><span class="pre">hycs_std</span></code> in the
 folder, and <a class="reference internal" href="_api/runtraj.models.hysplit.read_particle_dat.html#runtraj.models.hysplit.read_particle_dat" title="runtraj.models.hysplit.read_particle_dat"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_particle_dat()</span></code></a> reads its
-particle file as a particle table. Use them to look at or change
+particle file as a particle table, with HYSPLIT’s minutes (<code class="docutils literal notranslate"><span class="pre">time</span></code>, which
+becomes <code class="docutils literal notranslate"><span class="pre">age</span></code>, and <code class="docutils literal notranslate"><span class="pre">samt</span></code>) in seconds. Use them to look at or change
 the input files of a run. A project run then adds the release heights
 (<a class="reference internal" href="particles.html"><span class="doc">The Particle Table</span></a>); by hand:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>

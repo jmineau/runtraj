@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -780,7 +780,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.get.html">runtraj.execution.inputs.get</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.inputs.put.html">runtraj.execution.inputs.put</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.TransportModel.html">runtraj.models.TransportModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.batched.html">runtraj.models.TransportModel.batched</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.config_class.html">runtraj.models.TransportModel.config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.met_config_class.html">runtraj.models.TransportModel.met_config_class</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.name.html">runtraj.models.TransportModel.name</a></li>
@@ -791,7 +790,6 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result.html">runtraj.models.TransportModel.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.result_files.html">runtraj.models.TransportModel.result_files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.run.html">runtraj.models.TransportModel.run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.run_many.html">runtraj.models.TransportModel.run_many</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.sha256.html">runtraj.models.TransportModel.sha256</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.TransportModel.version.html">runtraj.models.TransportModel.version</a></li>
 </ul>
@@ -805,7 +803,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.ModelRun.html">runtraj.models.ModelRun</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.get_model.html">runtraj.models.get_model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model.html">runtraj.models.run_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.models.run_model_many.html">runtraj.models.run_model_many</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.MetConfig.html">runtraj.models.MetConfig</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.MetConfig.check.html">runtraj.models.MetConfig.check</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.MetConfig.downloads.html">runtraj.models.MetConfig.downloads</a></li>
@@ -1025,7 +1022,7 @@ trajectories open. Write it to NetCDF with
 along the <code class="docutils literal notranslate"><span class="pre">trajectory</span></code> dimension, and its rows, from its release
 onward, run along <code class="docutils literal notranslate"><span class="pre">obs</span></code>. A particle with fewer rows than the
 longest (one that left the meteorology domain early) is padded with
-missing values at the end. <code class="docutils literal notranslate"><span class="pre">time</span></code> is UTC, and <code class="docutils literal notranslate"><span class="pre">age</span></code>, in minutes
+missing values at the end. <code class="docutils literal notranslate"><span class="pre">time</span></code> is UTC, and <code class="docutils literal notranslate"><span class="pre">age</span></code>, in seconds
 since release, is kept as a variable. <code class="docutils literal notranslate"><span class="pre">obs</span></code> counts output steps
 from the release, so in a backward run <code class="docutils literal notranslate"><span class="pre">time</span></code> decreases along
 <code class="docutils literal notranslate"><span class="pre">obs</span></code>.</p>
@@ -1054,14 +1051,14 @@ HYSPLIT write.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="p">{</span>
 <span class="gp">... </span>        <span class="s2">"particle"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-<span class="gp">... </span>        <span class="s2">"age"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="s2">"age"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">60.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">120.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">180.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">60.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">120.0</span><span class="p">],</span>
 <span class="gp">... </span>        <span class="s2">"lon"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">111.85</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.86</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.88</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.84</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.83</span><span class="p">],</span>
 <span class="gp">... </span>        <span class="s2">"lat"</span><span class="p">:</span> <span class="p">[</span><span class="mf">40.77</span><span class="p">,</span> <span class="mf">40.78</span><span class="p">,</span> <span class="mf">40.80</span><span class="p">,</span> <span class="mf">40.76</span><span class="p">,</span> <span class="mf">40.75</span><span class="p">],</span>
 <span class="gp">... </span>        <span class="s2">"zagl"</span><span class="p">:</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">40.0</span><span class="p">,</span> <span class="mf">120.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">],</span>
 <span class="gp">... </span>    <span class="p">}</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">"2024-01-15 18:00"</span><span class="p">)</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">],</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"min"</span>
+<span class="gp">... </span>    <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">],</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"s"</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="n">particles</span><span class="o">.</span><span class="n">runtraj</span><span class="o">.</span><span class="n">to_cf_trajectories</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">dict</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span>
@@ -1069,7 +1066,7 @@ HYSPLIT write.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"featureType"</span><span class="p">]</span>
 <span class="go">'trajectory'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span><span class="o">.</span><span class="n">age</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">trajectory</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-<span class="go">array([-1., -2., nan])</span>
+<span class="go">array([ -60., -120.,   nan])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">trajectory</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 <span class="go">'2024-01-15T17:57:00.000000000'</span>
 </pre></div>

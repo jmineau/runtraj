@@ -26,7 +26,7 @@ simulation's and :meth:`runtraj.Project.trajectories` many.
      - UTC
      - When the row is.
    * - ``age``
-     - minutes
+     - s
      - Time since the release, negative in a backward run. Each
        trajectory has a row at ``age = 0``, where it started. Stored as
        int32.

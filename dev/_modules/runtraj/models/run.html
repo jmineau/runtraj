@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -448,11 +448,10 @@
                 <article class="bd-article">
                   
   <h1>Source code for runtraj.models.run</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""Run a transport model for one release, or many, and finish its result."""</span>
+<span></span><span class="sd">"""Run a transport model for one release and finish its result."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
@@ -543,95 +542,8 @@
     <span class="k">return</span> <span class="n">_finish</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="run_model_many">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.models.run_model_many.html#runtraj.models.run_model_many">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_model_many</span><span class="p">(</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Release</span><span class="p">],</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">TransportConfig</span><span class="p">,</span>
-    <span class="n">met</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ModelRun</span> <span class="o">|</span> <span class="n">SimulationError</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Run a batched transport model once for many releases, and finish each one's particles.</span>
-
-<span class="sd">    The model's one table is split by its ``release`` column, and each</span>
-<span class="sd">    release's particles get the steps :func:`run_model` applies. A release</span>
-<span class="sd">    the model's ``check_releases`` refuses is left out of the call and</span>
-<span class="sd">    gets a ``RELEASE_REFUSED`` error; one whose particles are missing or</span>
-<span class="sd">    fail those steps gets its error, and the others their runs.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    dict</span>
-<span class="sd">        ``{release id: ModelRun}``, or the :class:`SimulationError` of a</span>
-<span class="sd">        release that failed.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    SimulationError</span>
-<span class="sd">        If the whole call fails.</span>
-<span class="sd">    """</span>
-    <span class="k">return</span> <span class="n">_run_many</span><span class="p">(</span><span class="n">get_model</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">releases</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_run_many</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">TransportModel</span><span class="p">,</span>
-    <span class="n">releases</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Release</span><span class="p">],</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">TransportConfig</span><span class="p">,</span>
-    <span class="n">met</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="n">workdir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ModelRun</span> <span class="o">|</span> <span class="n">SimulationError</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Run batched *model* for *releases* as :func:`run_model_many` does."""</span>
-    <span class="n">made</span> <span class="o">=</span> <span class="n">model_result</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">made</span> <span class="o">!=</span> <span class="s2">"particles"</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"Transport model </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is batched and makes </span><span class="si">{</span><span class="n">made</span><span class="si">}</span><span class="s2">: a "</span>
-            <span class="s2">"batched model returns one particle table for many releases, so it "</span>
-            <span class="s2">"makes particles."</span>
-        <span class="p">)</span>
-    <span class="n">results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ModelRun</span> <span class="o">|</span> <span class="n">SimulationError</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-        <span class="n">_refused</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">releases</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">releases</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">releases</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">results</span>
-    <span class="n">windows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">run_window</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">releases</span>
-    <span class="p">]</span>
-    <span class="n">run</span> <span class="o">=</span> <span class="n">_returned</span><span class="p">(</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">run_many</span><span class="p">(</span><span class="n">releases</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">windows</span><span class="p">,</span> <span class="n">workdir</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"release"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">run</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
-            <span class="s2">"A batched transport model's particles need a release column."</span><span class="p">,</span>
-            <span class="n">reason</span><span class="o">=</span><span class="s2">"NO_PARTICLE_DATA"</span><span class="p">,</span>
-            <span class="n">log</span><span class="o">=</span><span class="n">run</span><span class="o">.</span><span class="n">log</span><span class="p">,</span>
-        <span class="p">)</span>
-    <span class="n">by_release</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"release"</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span>
-    <span class="k">for</span> <span class="n">release</span> <span class="ow">in</span> <span class="n">releases</span><span class="p">:</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">by_release</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
-        <span class="n">own</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
-            <span class="n">run</span><span class="p">,</span>
-            <span class="n">result</span><span class="o">=</span><span class="p">(</span>
-                <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="n">rows</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">"release"</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">results</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">_finish</span><span class="p">(</span><span class="n">own</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">SimulationError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-            <span class="n">error</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">run</span><span class="o">.</span><span class="n">log</span>
-            <span class="n">results</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">error</span>
-    <span class="k">return</span> <span class="n">results</span>
-
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_returned</span><span class="p">(</span><span class="n">run</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return *run*, what a model's ``run`` or ``run_many`` returned, when it is a :class:`ModelRun`."""</span>
+<span class="w">    </span><span class="sd">"""Return *run*, what a model's ``run`` returned, when it is a :class:`ModelRun`."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">ModelRun</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"A transport model's run must return a ModelRun, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">run</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
@@ -826,7 +738,7 @@
     <span class="k">if</span> <span class="n">made</span> <span class="o">!=</span> <span class="s2">"particles"</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">particles</span>
     <span class="n">particles</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span>
-        <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"min"</span>
+        <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"s"</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">particles</span></div>
 

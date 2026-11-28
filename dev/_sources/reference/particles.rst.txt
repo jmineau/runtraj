@@ -24,10 +24,11 @@ Every table has five columns, :data:`PARTICLE_SCHEMA`:
        for the whole run. HYSPLIT calls it ``indx``. Stored as int32 and
        read back as float64.
    * - ``age``
-     - minutes
+     - s
      - Time since release. Negative for a backward run, positive for a
-       forward one. HYSPLIT calls it ``time``. Stored as whole minutes,
-       int32, and read back as float64.
+       forward one. HYSPLIT calls it ``time`` and writes it in minutes,
+       which runtraj reads as seconds. Stored as whole seconds, int32, and
+       read back as float64.
    * - ``lon``
      - degrees east
      - Longitude of the particle (HYSPLIT's ``long``).
@@ -45,10 +46,10 @@ to float32 can move a particle across a grid-cell edge), FLEXPART's float32.
 :func:`~runtraj.particles.read_particles` and
 :meth:`~runtraj.output.Output.table` give every float column back as
 float64, whatever a file stores, so a table does not depend on which
-file was read first. ``age`` is whole minutes: a model whose output steps
-are not whole minutes cannot write particles
-(:func:`~runtraj.particles.write_particles` raises, and
-:doc:`flexpart`'s reader refuses such times).
+file was read first. ``age`` is whole seconds, the unit FLEXPART counts
+in, so an output step under a minute is kept as it is; a model whose
+output times are not whole seconds from the release cannot write
+particles (:func:`~runtraj.particles.write_particles` raises).
 
 The release row
 ---------------
@@ -104,8 +105,10 @@ Some of them:
      - kg m⁻³
      - Air density.
    * - ``samt``
-     - minutes
+     - s
      - Time the particle spent in the surface layer during the step.
+       HYSPLIT writes it in minutes; runtraj reads it as seconds, as it
+       does ``age``.
    * - ``sigw``
      - m s⁻¹
      - Standard deviation of the vertical wind.

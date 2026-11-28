@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -532,7 +532,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        pandas.DataFrame</span>
 <span class="sd">            One row per particle, with every column of the particle table.</span>
-<span class="sd">            ``age`` is minutes since release and ``time`` the UTC time. A</span>
+<span class="sd">            ``age`` is seconds since release and ``time`` the UTC time. A</span>
 <span class="sd">            table of several simulations, as ``Project.particles`` returns,</span>
 <span class="sd">            gives one row per particle of each.</span>
 <span class="sd">        """</span>
@@ -589,7 +589,7 @@
 <span class="sd">            it has them, then</span>
 <span class="sd">            ``particle``, ``edge`` (``"n"``, ``"e"``, ``"s"`` or ``"w"``,</span>
 <span class="sd">            the side of the box it left by), ``lon`` and ``lat`` (degrees),</span>
-<span class="sd">            ``zagl`` (meters), ``age`` (minutes since release) and, when the</span>
+<span class="sd">            ``zagl`` (meters), ``age`` (seconds since release) and, when the</span>
 <span class="sd">            table has a ``time`` column, ``time`` (UTC). Longitudes are</span>
 <span class="sd">            wrapped to -180 to 180 where the interpolation crosses 180.</span>
 
@@ -603,15 +603,15 @@
 <span class="sd">        &gt;&gt;&gt; particles = pd.DataFrame(</span>
 <span class="sd">        ...     {</span>
 <span class="sd">        ...         "particle": [1, 1, 1],</span>
-<span class="sd">        ...         "age": [0.0, -60.0, -120.0],</span>
+<span class="sd">        ...         "age": [0.0, -3600.0, -7200.0],</span>
 <span class="sd">        ...         "lon": [-111.0, -110.5, -109.5],</span>
 <span class="sd">        ...         "lat": [41.0, 41.0, 41.0],</span>
 <span class="sd">        ...         "zagl": [10.0, 20.0, 30.0],</span>
 <span class="sd">        ...     }</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; particles.runtraj.grid_exits(box)</span>
-<span class="sd">           particle edge    lon   lat  zagl   age</span>
-<span class="sd">        0         1    e -110.0  41.0  25.0 -90.0</span>
+<span class="sd">           particle edge    lon   lat  zagl     age</span>
+<span class="sd">        0         1    e -110.0  41.0  25.0 -5400.0</span>
 <span class="sd">        """</span>
         <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_particles</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="n">trajectory_columns</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
@@ -715,7 +715,7 @@
 <span class="sd">        along the ``trajectory`` dimension, and its rows, from its release</span>
 <span class="sd">        onward, run along ``obs``. A particle with fewer rows than the</span>
 <span class="sd">        longest (one that left the meteorology domain early) is padded with</span>
-<span class="sd">        missing values at the end. ``time`` is UTC, and ``age``, in minutes</span>
+<span class="sd">        missing values at the end. ``time`` is UTC, and ``age``, in seconds</span>
 <span class="sd">        since release, is kept as a variable. ``obs`` counts output steps</span>
 <span class="sd">        from the release, so in a backward run ``time`` decreases along</span>
 <span class="sd">        ``obs``.</span>
@@ -746,14 +746,14 @@
 <span class="sd">        &gt;&gt;&gt; particles = pd.DataFrame(</span>
 <span class="sd">        ...     {</span>
 <span class="sd">        ...         "particle": [1, 1, 1, 2, 2],</span>
-<span class="sd">        ...         "age": [-1.0, -2.0, -3.0, -1.0, -2.0],</span>
+<span class="sd">        ...         "age": [-60.0, -120.0, -180.0, -60.0, -120.0],</span>
 <span class="sd">        ...         "lon": [-111.85, -111.86, -111.88, -111.84, -111.83],</span>
 <span class="sd">        ...         "lat": [40.77, 40.78, 40.80, 40.76, 40.75],</span>
 <span class="sd">        ...         "zagl": [5.0, 40.0, 120.0, 8.0, 60.0],</span>
 <span class="sd">        ...     }</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; particles["time"] = pd.Timestamp("2024-01-15 18:00") + pd.to_timedelta(</span>
-<span class="sd">        ...     particles["age"], unit="min"</span>
+<span class="sd">        ...     particles["age"], unit="s"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; ds = particles.runtraj.to_cf_trajectories()</span>
 <span class="sd">        &gt;&gt;&gt; dict(ds.sizes)</span>
@@ -761,7 +761,7 @@
 <span class="sd">        &gt;&gt;&gt; ds.attrs["featureType"]</span>
 <span class="sd">        'trajectory'</span>
 <span class="sd">        &gt;&gt;&gt; ds.age.sel(trajectory=2).values</span>
-<span class="sd">        array([-1., -2., nan])</span>
+<span class="sd">        array([ -60., -120.,   nan])</span>
 <span class="sd">        &gt;&gt;&gt; str(ds.time.sel(trajectory=1).values[-1])</span>
 <span class="sd">        '2024-01-15T17:57:00.000000000'</span>
 <span class="sd">        """</span>

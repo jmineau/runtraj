@@ -44,6 +44,6 @@ Inherited
 ---------
 
 
-From :class:`~.TransportModel`: :py:obj:`~.TransportModel.batched`, :py:obj:`~.TransportModel.check_releases`, :py:obj:`~.TransportModel.data_files`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.result`, :py:obj:`~.TransportModel.result_files`, :py:obj:`~.TransportModel.run_many`
+From :class:`~.TransportModel`: :py:obj:`~.TransportModel.check_releases`, :py:obj:`~.TransportModel.data_files`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.result`, :py:obj:`~.TransportModel.result_files`
 
 

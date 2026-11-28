@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -832,6 +832,12 @@
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">nlvl</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">aa</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">bb</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
 
 
+<span class="c1">#: The particle table's columns that HYSPLIT writes in minutes and</span>
+<span class="c1">#: :func:`read_particle_dat` reads as seconds: ``age`` (HYSPLIT's ``time``)</span>
+<span class="c1">#: and ``samt``, the time spent in the surface layer.</span>
+<span class="n">MINUTE_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"age"</span><span class="p">,</span> <span class="s2">"samt"</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="read_particle_dat">
 <a class="viewcode-back" href="../../../../reference/_api/runtraj.models.hysplit.read_particle_dat.html#runtraj.models.hysplit.read_particle_dat">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">read_particle_dat</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -840,7 +846,9 @@
 
 <span class="sd">    The ``varsiwant`` codes ``indx``, ``time``, ``long``, and ``lati``</span>
 <span class="sd">    become the particle table's ``particle``, ``age``, ``lon``, and ``lat``</span>
-<span class="sd">    (:data:`PARTICLE_COLUMNS`).</span>
+<span class="sd">    (:data:`PARTICLE_COLUMNS`). HYSPLIT writes ``time`` and ``samt`` in</span>
+<span class="sd">    minutes; they are read as seconds (:data:`MINUTE_COLUMNS`), the particle</span>
+<span class="sd">    table's one time unit.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -884,6 +892,9 @@
             <span class="sa">f</span><span class="s2">"from varsiwant=</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span><span class="si">!r}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="n">particles</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">MINUTE_COLUMNS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">particles</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">60.0</span>
     <span class="k">return</span> <span class="n">particles</span></div>
 
 
@@ -1089,14 +1100,14 @@
         <span class="k">return</span>
     <span class="n">reach</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
     <span class="n">stop</span> <span class="o">=</span> <span class="n">reach</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">stop</span> <span class="o">&gt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">stop</span> <span class="o">&gt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">:</span>
         <span class="k">return</span>
     <span class="n">last</span> <span class="o">=</span> <span class="n">particles</span><span class="p">[</span><span class="n">reach</span> <span class="o">==</span> <span class="n">stop</span><span class="p">]</span>
     <span class="n">inside</span> <span class="o">=</span> <span class="n">cells_from_edge</span><span class="p">(</span><span class="n">last</span><span class="p">[</span><span class="s2">"lon"</span><span class="p">],</span> <span class="n">last</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">],</span> <span class="n">grid</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">inside</span> <span class="o">&gt;</span> <span class="n">MET_STOP_CELLS</span><span class="p">:</span>
         <span class="n">share</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">last</span><span class="p">)</span> <span class="o">/</span> <span class="n">particles</span><span class="p">[</span><span class="s2">"particle"</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
         <span class="k">raise</span> <span class="n">SimulationError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"The particles stopped </span><span class="si">{</span><span class="n">stop</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">60</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> h into the </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span><span class="si">}</span><span class="s2"> h "</span>
+            <span class="sa">f</span><span class="s2">"The particles stopped </span><span class="si">{</span><span class="n">stop</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3600</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> h into the </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">n_hours</span><span class="p">)</span><span class="si">}</span><span class="s2"> h "</span>
             <span class="sa">f</span><span class="s2">"run, up to </span><span class="si">{</span><span class="n">inside</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> grid cells inside the met's domain, not "</span>
             <span class="sa">f</span><span class="s2">"at its edge: the met ran out (</span><span class="si">{</span><span class="n">share</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> of the particles were "</span>
             <span class="s2">"still in the air)."</span><span class="p">,</span>

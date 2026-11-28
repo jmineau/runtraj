@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -925,7 +925,7 @@
 <span class="sd">        A particle table with ``lon``, ``lat``, ``zagl``, and ``time``</span>
 <span class="sd">        (UTC; a time with a time zone is converted to UTC).</span>
 <span class="sd">        ``sim.particles`` has ``time``. For a table a transport model</span>
-<span class="sd">        returned, add it: the release time plus ``age`` minutes.</span>
+<span class="sd">        returned, add it: the release time plus ``age`` seconds.</span>
 <span class="sd">    met : path-like, iterable of path-like, or xarray.Dataset</span>
 <span class="sd">        ARL met files that cover the particles' times, such as the files the</span>
 <span class="sd">        run read (``met_files`` of :class:`runtraj.models.ModelRun` or of</span>
@@ -1003,7 +1003,7 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="s2">"time"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"sample_met needs a 'time' column: the release time plus 'age' minutes."</span>
+            <span class="s2">"sample_met needs a 'time' column: the release time plus 'age' seconds."</span>
         <span class="p">)</span>
     <span class="n">variables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_MET_VARIABLES</span><span class="p">[</span><span class="n">c</span><span class="p">]))</span>
 
@@ -1308,7 +1308,7 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="s2">"time"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">particles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">"calc_pbl_height needs a 'time' column: the release time plus 'age' minutes."</span>
+            <span class="s2">"calc_pbl_height needs a 'time' column: the release time plus 'age' seconds."</span>
         <span class="p">)</span>
     <span class="n">_check_z_top</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>
     <span class="n">internal_grid</span> <span class="o">=</span> <span class="n">_recorded_internal_grid</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">z_top</span><span class="p">)</span>

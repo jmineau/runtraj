@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=1261e425"></script>
+    <script src="../../_static/documentation_options.js?v=8e990314"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev67+g7b13880c3" />
+  <meta name="docsearch:version" content="0.1.0a6.dev69+g689bcd572" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -507,7 +507,7 @@
     <span class="n">TransportConfig</span><span class="p">,</span>
     <span class="n">TransportModel</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">_refused</span><span class="p">,</span> <span class="n">_release_points</span><span class="p">,</span> <span class="n">_run_many</span><span class="p">,</span> <span class="n">_run_one</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.models.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">_refused</span><span class="p">,</span> <span class="n">_release_points</span><span class="p">,</span> <span class="n">_run_one</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.particles</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_particles</span><span class="p">,</span> <span class="n">write_particles</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.project</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_result</span><span class="p">,</span> <span class="n">result_type</span>
@@ -649,7 +649,7 @@
     <span class="n">particles</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">tables</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.parquet"</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">get_stage</span><span class="p">(</span><span class="n">stage</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
     <span class="n">ages</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">particles</span><span class="p">[</span><span class="s2">"age"</span><span class="p">])</span>
-    <span class="n">longest</span> <span class="o">=</span> <span class="n">ages</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ages</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()]</span> <span class="o">/</span> <span class="mf">60.0</span>
+    <span class="n">longest</span> <span class="o">=</span> <span class="n">ages</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">ages</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()]</span> <span class="o">/</span> <span class="mf">3600.0</span>
     <span class="n">n_hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">copysign</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">longest</span><span class="p">))),</span> <span class="n">longest</span><span class="p">))</span>
     <span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
         <span class="n">directory</span> <span class="o">/</span> <span class="s2">"project"</span><span class="p">,</span>
@@ -723,8 +723,7 @@
 <span class="sd">      this machine).</span>
 
 <span class="sd">    With a *release* and its *met* (of ``met_config_class``), it also runs</span>
-<span class="sd">    the model once, through the code a project's run uses (``run``, and</span>
-<span class="sd">    ``run_many`` too for a batched model), and checks the result. A result</span>
+<span class="sd">    the model once, through the code a project's run uses (``run``), and checks the result. A result</span>
 <span class="sd">    of a type other than particles (the model's ``result``) is checked by</span>
 <span class="sd">    its type and stored and read back. Particles are checked further: the</span>
 <span class="sd">    columns of the particle table, ages that go the way ``n_hours`` does and</span>
@@ -876,30 +875,17 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Run *model* once for *release* as a project's run does, and check its particles."""</span>
     <span class="n">name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
-    <span class="n">batched</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">batched</span>
-    <span class="k">assert</span> <span class="ow">not</span> <span class="n">batched</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">run_many</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">TransportModel</span><span class="o">.</span><span class="n">run_many</span><span class="p">,</span> <span class="p">(</span>
-        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is batched, so it needs run_many"</span>
-    <span class="p">)</span>
     <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"runtraj-check-"</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
         <span class="n">workdir</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">needs_workdir</span><span class="p">:</span>
             <span class="n">workdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"work"</span>
             <span class="n">workdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
-        <span class="n">runs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"run"</span><span class="p">:</span> <span class="n">_promised</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_run_one</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">workdir</span><span class="p">)}</span>
-        <span class="k">if</span> <span class="n">batched</span><span class="p">:</span>
-            <span class="c1"># The worker gives run_many no workdir.</span>
-            <span class="n">many</span> <span class="o">=</span> <span class="n">_promised</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_run_many</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="p">[</span><span class="n">release</span><span class="p">],</span> <span class="n">config</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">many</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">release</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
-            <span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.run_many must return the release"</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">SimulationError</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">result</span>
-            <span class="n">runs</span><span class="p">[</span><span class="s2">"run_many"</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="n">run</span> <span class="o">=</span> <span class="n">_promised</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_run_one</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="n">workdir</span><span class="p">)</span>
         <span class="n">made</span> <span class="o">=</span> <span class="n">model_result</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">how</span><span class="p">,</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">made</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
-                <span class="n">_check_particles</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_check_stored</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">how</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">made</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">made</span> <span class="o">==</span> <span class="s2">"particles"</span><span class="p">:</span>
+            <span class="n">_check_particles</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.run"</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_check_stored</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.run"</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">made</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">release</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_promised</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -920,9 +906,9 @@
     <span class="n">backward</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">n_hours</span> <span class="o">&lt;</span> <span class="mi">0</span>
     <span class="k">assert</span> <span class="p">((</span><span class="n">age</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">backward</span> <span class="k">else</span> <span class="p">(</span><span class="n">age</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">'s ages must be </span><span class="si">{</span><span class="s1">'&lt;='</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">backward</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'&gt;='</span><span class="si">}</span><span class="s2"> 0 for "</span>
-        <span class="sa">f</span><span class="s2">"n_hours </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="si">}</span><span class="s2">: minutes since release"</span>
+        <span class="sa">f</span><span class="s2">"n_hours </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="si">}</span><span class="s2">: seconds since release"</span>
     <span class="p">)</span>
-    <span class="k">assert</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">age</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="p">(</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">age</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">'s ages must stay within n_hours (</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">n_hours</span><span class="si">}</span><span class="s2"> h)"</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="s2">"release_height"</span> <span class="ow">in</span> <span class="n">finished</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
