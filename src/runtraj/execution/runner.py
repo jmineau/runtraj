@@ -305,6 +305,14 @@ def _unfinished(table: pd.DataFrame) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def submission_folder(project: Project, scheduler: str) -> Path:
+    """Make ``_<scheduler>/<date_time>_<id>/`` in the project, new for each submission, and return it."""
+    stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
+    folder = Path(project.directory) / f"_{scheduler}" / stamp
+    folder.mkdir(parents=True)
+    return folder
+
+
 def write_submission(
     project: Project, pending: list[str], execution: ExecutionConfig, scheduler: str
 ) -> Path:
@@ -322,9 +330,7 @@ def write_submission(
 
     from runtraj._paths import write_parquet
 
-    stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
-    folder = Path(project.directory) / f"_{scheduler}" / stamp
-    folder.mkdir(parents=True)
+    folder = submission_folder(project, scheduler)
     (folder / "releases.txt").write_text("\n".join(pending) + "\n", encoding="utf-8")
     rows = project._rows_of(pending)
     write_parquet(

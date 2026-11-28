@@ -32,10 +32,8 @@ import logging
 import shutil
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from uuid import uuid4
 
 import yaml
 
@@ -51,7 +49,7 @@ from runtraj.execution.inputs import (
     push,
     remove_file,
 )
-from runtraj.execution.runner import slug
+from runtraj.execution.runner import slug, submission_folder
 from runtraj.execution.schedule import DELAY_HOURS, read_sites
 from runtraj.fetch import downloads
 
@@ -656,9 +654,7 @@ def project_jobs(project: Project, execution: ExecutionConfig) -> list[dict[str,
 
 def _keep(project: Project, kind: str, manifest: dict[str, Any]) -> Path:
     """Write *manifest* to ``_kubernetes/<date_time>_<id>/<kind>.yaml`` in the project, and return that folder."""
-    stamp = f"{datetime.now():%Y%m%d_%H%M%S}_{uuid4().hex[:6]}"
-    folder = Path(project.directory) / "_kubernetes" / stamp
-    folder.mkdir(parents=True)
+    folder = submission_folder(project, "kubernetes")
     (folder / f"{kind}.yaml").write_text(
         yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
     )
