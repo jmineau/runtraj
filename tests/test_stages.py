@@ -339,6 +339,20 @@ def test_a_stage_setting_written_elsewhere_is_sent_to_its_block(tmp_path):
         )
 
 
+def test_a_class_that_forbids_extra_keys_still_gets_runtrajs_message(tmp_path):
+    """``CountConfig`` has ``extra="forbid"``: runtraj refuses the key, not pydantic."""
+    with pytest.raises(
+        ValueError,
+        match="stages: count: 'scael' is not a setting. Did you mean 'scale'",
+    ):
+        _config(tmp_path, stages={"count": {"class": COUNT, "scael": 2}})
+    with pytest.raises(
+        ValueError,
+        match="stages: count: 'numpar' is a hysplit setting. Write it under models: hysplit:",
+    ):
+        _config(tmp_path, stages={"count": {"class": COUNT, "numpar": 5}})
+
+
 class _LenientConfig(CountConfig):
     """A count's settings that ignore a key they do not know."""
 

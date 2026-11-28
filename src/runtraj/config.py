@@ -1021,24 +1021,22 @@ def _stage_config(
     The class checks the values first, so that it can refuse a setting it
     once had with what to do instead; then a key that is no setting of the
     stage is refused, saying where it belongs (*elsewhere*) or naming the
-    nearest setting.
+    nearest setting. A class that forbids extra keys refuses them in its own
+    check, so the keys are checked before its error is raised.
 
     Raises
     ------
     ValueError
         If a setting is unknown to the stage or invalid.
     """
+    allowed = dict.fromkeys(stage.config_class.model_fields, f"a {stage.name} setting")
     try:
         config = stage.config_class.model_validate(settings)
     except ValidationError as error:
+        if any(e["type"] == "extra_forbidden" for e in error.errors()):
+            _check_keys(settings, where, allowed, elsewhere)
         raise ValueError(f"{where}: {error}") from None
-    fields = stage.config_class.model_fields
-    _check_keys(
-        settings,
-        where,
-        allowed=dict.fromkeys(fields, f"a {stage.name} setting"),
-        elsewhere=elsewhere,
-    )
+    _check_keys(settings, where, allowed, elsewhere)
     return config
 
 
