@@ -20,7 +20,7 @@ from runtraj import Project
 from runtraj.exceptions import SimulationError
 from runtraj.execution.runner import resolve_compute_root
 from runtraj.models.hysplit import FailureReason
-from runtraj.releases import MultiPointRelease
+from runtraj.releases import ColumnRelease, MultiPointRelease
 
 from ..conftest import integration
 from .conftest import REFERENCE_TIME, reference_met
@@ -234,3 +234,28 @@ def test_delt_has_no_effect(tmp_path, wbb_release, met_dir):
         )  # fmt: skip
 
     pd.testing.assert_frame_equal(run("delt", delt=5.0), run("default"))
+
+
+@integration
+def test_a_forward_column_run_ages_forward_and_keeps_each_particle_in_its_slab(
+    tmp_path, met_dir
+):
+    """Every recorded particle run before this one was backward: ages negative, times before the release."""
+    import runtraj
+
+    release = ColumnRelease(
+        time=REFERENCE_TIME, longitude=-112.0, latitude=40.5, bottom=5.0, top=1000.0
+    )
+    particles = runtraj.run_trajectories(
+        release, reference_met(met_dir), workdir=tmp_path, model="hysplit", n_hours=2,
+        numpar=100, krand=2, seed=7,
+    )  # fmt: skip
+
+    assert (particles["age"] > 0).all()
+    assert particles["age"].max() == 120
+    # A row's time is the release time plus its age.
+    elapsed = (particles["time"] - pd.Timestamp(REFERENCE_TIME)) / pd.Timedelta("1min")
+    np.testing.assert_array_equal(elapsed, particles["age"])
+    assert particles["release_height"].min() > 5.0
+    assert particles["release_height"].max() < 1000.0
+    assert particles["particle"].nunique() == 100
