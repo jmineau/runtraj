@@ -15,6 +15,13 @@ from pydantic import (
 )
 
 
+def _check_slurm_time(value: str | int | None) -> str | int | None:
+    """Raise on a time limit sbatch would not take."""
+    if value is not None:
+        slurm_minutes(value)  # raises on a form sbatch would not take
+    return value
+
+
 def _refuse_misspelled(
     data: dict[Any, Any],
     fields: Any,
@@ -85,13 +92,7 @@ class FetchConfig(BaseModel):
         description="Memory of the fetch job, such as ``4G``. Unset is the array's.",
     )
 
-    @field_validator("time")
-    @classmethod
-    def _slurm_time(cls, value: str | int | None) -> str | int | None:
-        """Raise on a time limit sbatch would not take."""
-        if value is not None:
-            slurm_minutes(value)  # raises on a form sbatch would not take
-        return value
+    _slurm_time = field_validator("time")(_check_slurm_time)
 
 
 class BackendConfig(BaseModel):
@@ -291,13 +292,7 @@ class SlurmConfig(_ArrayConfig):
         """Read ``fetch: true`` (or an empty ``fetch:``) as a fetch job with the array's resources."""
         return {} if value is True or value is None else value
 
-    @field_validator("time")
-    @classmethod
-    def _slurm_time(cls, value: str | int | None) -> str | int | None:
-        """Raise on a time limit sbatch would not take."""
-        if value is not None:
-            slurm_minutes(value)  # raises on a form sbatch would not take
-        return value
+    _slurm_time = field_validator("time")(_check_slurm_time)
 
     @property
     def options(self) -> dict[str, Any]:
