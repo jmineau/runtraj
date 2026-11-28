@@ -399,6 +399,29 @@ def test_a_file_written_once_on_a_filesystem_without_hard_links_is_renamed(
     assert path.read_text(encoding="utf-8") == "first"
     assert [p.name for p in tmp_path.iterdir()] == ["settings.yaml"]
 
+    with pytest.raises(FileExistsError), atomic_path(path, replace=False) as tmp:
+        tmp.write_text("second", encoding="utf-8")
+
+    assert path.read_text(encoding="utf-8") == "first"
+    assert [p.name for p in tmp_path.iterdir()] == ["settings.yaml"]
+
+
+@not_on_windows("Windows has no os.link to take away")
+def test_two_projects_claim_one_settings_hash_without_hard_links(tmp_path, monkeypatch):
+    import errno
+    import os
+
+    from runtraj.output import _claim
+
+    def no_links(src, dst):
+        raise OSError(errno.EPERM, "Operation not permitted")
+
+    monkeypatch.setattr(os, "link", no_links)
+    claim = tmp_path / "particles" / ".hash-def"
+
+    assert _claim(claim, "zeta-def") == "zeta-def"
+    assert _claim(claim, "alpha-def") == "zeta-def"
+
 
 def test_two_workers_writing_one_release_at_once_both_succeed(tmp_path, monkeypatch):
     """The other worker's cleanup removed the shared temporary file."""
