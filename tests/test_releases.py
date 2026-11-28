@@ -4,6 +4,7 @@ import datetime as dt
 import hashlib
 import io
 import json
+import sys
 
 import numpy as np
 import pandas as pd
@@ -450,6 +451,13 @@ def test_release_lazy_geometry_multipoint(multipoint_release):
     from shapely import MultiPoint
 
     assert isinstance(multipoint_release.geometry, MultiPoint)
+
+
+def test_release_geometry_without_shapely_names_the_extra(monkeypatch, point_release):
+    """A missing shapely says to install the geometry extra."""
+    monkeypatch.setitem(sys.modules, "shapely", None)
+    with pytest.raises(ImportError, match=r"runtraj\[geometry\]"):
+        _ = point_release.geometry
 
 
 # ---------------------------------------------------------------------------

@@ -35,7 +35,6 @@ dependencies = [
     "pydantic>=2.5.3",  # 2.4 and earlier take NaN for a setting with a lower bound; 2.5.0 fails the fetch settings (unhashable dict)
     "pyyaml>=6.0",
     "scipy>=1.10",
-    "shapely>=2.0",
     "typer>=0.15.4",  # older ones fail with click 8.2 and later (make_metavar)
     "universal-pathlib>=0.3.0",  # 0.2.x warns on S3 paths (PendingDeprecationWarning)
     "xarray>=2024.10.0",  # earlier ones fail to decode the CF trajectory export's time axis
@@ -44,7 +43,10 @@ dependencies = [
 [project.optional-dependencies]
 visualization = [
     "cartopy>=0.26",  # earlier ones give a projection across 180 without the prime meridian parameter the map tests check
-    "matplotlib>=3.7",
+    "matplotlib>=3.8",
+]
+geometry = [
+    "shapely>=2.0",  # Release.geometry and Release.points
 ]
 download = [
     "arlmet[archives]>=0.1.0b15,<0.2",
@@ -60,6 +62,7 @@ flexpart = [
 ]
 complete = [
     "runtraj[visualization]",
+    "runtraj[geometry]",
     "runtraj[download]",
     "runtraj[concentration]",
     "runtraj[flexpart]",
@@ -92,6 +95,7 @@ dev = [
     "ruff>=0.16",
     "rust-just>=1.42.4",
     "setuptools-scm>=8",  # `just version`
+    "shapely>=2.0",  # the geometry extra
     "sphinx>=8.2",  # what pydata-sphinx-theme 0.22 requires
     "sphinx-autobuild>=2024.10",  # `just docs-serve`
     "sphinx-autodoc-typehints>=3.0",
