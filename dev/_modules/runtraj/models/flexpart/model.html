@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../../_static/documentation_options.js?v=56e32173"></script>
+    <script src="../../../../_static/documentation_options.js?v=0f6763da"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev76+g3795b946a" />
   
     
     <script src="../../../../_static/searchtools.js"></script>
@@ -540,6 +540,38 @@
             <span class="k">return</span> <span class="n">flexpart_version</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">checkout</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="FlexpartModel.check_releases">
+<a class="viewcode-back" href="../../../../reference/_api/runtraj.models.flexpart.FlexpartModel.check_releases.html#runtraj.models.flexpart.FlexpartModel.check_releases">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_releases</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">releases</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">FlexpartConfig</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the multipoint releases with more points than ``config.numpar``, which FLEXPART stops on.</span>
+
+<span class="sd">        ``RELEASES`` gives each point at least one particle</span>
+<span class="sd">        (:func:`~runtraj.models.flexpart.inputs.split`), so a point past</span>
+<span class="sd">        ``numpar`` is written with ``PARTS=0``, and FLEXPART stops with</span>
+<span class="sd">        "RELEASES file is corrupt" (``readoptions_mod.f90``).</span>
+<span class="sd">        """</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">releases</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+            <span class="n">releases</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"multipoint"</span><span class="p">,</span> <span class="s2">"release"</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+        <span class="n">bad</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">points</span> <span class="o">&gt;</span> <span class="n">config</span><span class="o">.</span><span class="n">numpar</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"check"</span><span class="p">:</span> <span class="s2">"release_refused"</span><span class="p">,</span>
+                <span class="s2">"release"</span><span class="p">:</span> <span class="n">bad</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                <span class="s2">"message"</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">"A multipoint release of </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> points needs numpar of at least "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">, and numpar is </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">numpar</span><span class="si">}</span><span class="s2">: FLEXPART stops on a "</span>
+                    <span class="s2">"release with no particles."</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">bad</span>
+                <span class="p">],</span>
+            <span class="p">},</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"check"</span><span class="p">,</span> <span class="s2">"release"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">],</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FlexpartModel.release_rows">

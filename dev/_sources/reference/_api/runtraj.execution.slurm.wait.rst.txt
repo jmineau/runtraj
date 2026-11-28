@@ -1,0 +1,6 @@
+﻿runtraj.execution.slurm.wait
+============================
+
+.. currentmodule:: runtraj.execution.slurm
+
+.. autofunction:: wait

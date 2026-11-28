@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=56e32173"></script>
+    <script src="../../_static/documentation_options.js?v=0f6763da"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,12 +61,12 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="runtraj.models.flexpart.FlexpartModel.run" href="runtraj.models.flexpart.FlexpartModel.run.html" />
-    <link rel="prev" title="runtraj.models.flexpart.FlexpartModel.name" href="runtraj.models.flexpart.FlexpartModel.name.html" />
+    <link rel="prev" title="runtraj.models.flexpart.FlexpartModel.check_releases" href="runtraj.models.flexpart.FlexpartModel.check_releases.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev76+g3795b946a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -692,7 +692,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pending.html">runtraj.execution.pending</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.wait.html">runtraj.execution.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.task_share.html">runtraj.execution.task_share</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.runner.resolve_compute_root.html">runtraj.execution.runner.resolve_compute_root</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_result.html">runtraj.execution.worker.run_result</a></li>
@@ -751,8 +750,9 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.job_script.html">runtraj.execution.slurm.job_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.fetch_script.html">runtraj.execution.slurm.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.wait.html">runtraj.execution.slurm.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.job_script.html">runtraj.execution.pbs.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.submit_array.html">runtraj.execution.pbs.submit_array</a></li>
@@ -826,6 +826,7 @@
 </details></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.html">runtraj.models.flexpart.FlexpartModel</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.name.html">runtraj.models.flexpart.FlexpartModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.check_releases.html">runtraj.models.flexpart.FlexpartModel.check_releases</a></li>
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.models.flexpart.FlexpartModel.release_rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.run.html">runtraj.models.flexpart.FlexpartModel.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.sha256.html">runtraj.models.flexpart.FlexpartModel.sha256</a></li>
@@ -1054,12 +1055,12 @@ the others keep their slabs or points.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="runtraj.models.flexpart.FlexpartModel.name.html"
+       href="runtraj.models.flexpart.FlexpartModel.check_releases.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">runtraj.models.flexpart.FlexpartModel.name</p>
+        <p class="prev-next-title">runtraj.models.flexpart.FlexpartModel.check_releases</p>
       </div>
     </a>
     <a class="right-next"

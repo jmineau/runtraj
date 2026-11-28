@@ -32,6 +32,7 @@ Methods
 .. autosummary::
    :toctree:
 
+   ~FlexpartModel.check_releases
    ~FlexpartModel.release_rows
    ~FlexpartModel.run
    ~FlexpartModel.sha256
@@ -44,6 +45,6 @@ Inherited
 ---------
 
 
-From :class:`~.TransportModel`: :py:obj:`~.TransportModel.check_releases`, :py:obj:`~.TransportModel.data_files`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.result`, :py:obj:`~.TransportModel.result_files`
+From :class:`~.TransportModel`: :py:obj:`~.TransportModel.data_files`, :py:obj:`~.TransportModel.needs_workdir`, :py:obj:`~.TransportModel.result`, :py:obj:`~.TransportModel.result_files`
 
 

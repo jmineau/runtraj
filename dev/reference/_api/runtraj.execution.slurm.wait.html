@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>runtraj.execution.fetch_script &#8212; runtraj dev</title>
+    <title>runtraj.execution.slurm.wait &#8212; runtraj dev</title>
   
   
   
@@ -42,13 +42,13 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=56e32173"></script>
+    <script src="../../_static/documentation_options.js?v=0f6763da"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.execution.fetch_script';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/_api/runtraj.execution.slurm.wait';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.24.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/runtraj/switcher.json';
@@ -61,12 +61,12 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="runtraj.execution.slurm.submit_array" href="runtraj.execution.slurm.submit_array.html" />
-    <link rel="prev" title="runtraj.execution.job_script" href="runtraj.execution.job_script.html" />
+    <link rel="prev" title="runtraj.execution.slurm.fetch_script" href="runtraj.execution.slurm.fetch_script.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev76+g3795b946a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -75,7 +75,7 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="runtraj">
-  <meta property="og:title" content="runtraj.execution.fetch_script">
+  <meta property="og:title" content="runtraj.execution.slurm.wait">
   <meta property="og:description" content="Run particle dispersion models at scale.">
   <meta property="og:image" content="https://raw.githubusercontent.com/jmineau/runtraj/main/docs/_static/social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -692,7 +692,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pending.html">runtraj.execution.pending</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.wait.html">runtraj.execution.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.task_share.html">runtraj.execution.task_share</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.runner.resolve_compute_root.html">runtraj.execution.runner.resolve_compute_root</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_result.html">runtraj.execution.worker.run_result</a></li>
@@ -751,8 +750,9 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
-<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.job_script.html">runtraj.execution.slurm.job_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.fetch_script.html">runtraj.execution.slurm.fetch_script</a></li>
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">runtraj.execution.slurm.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.job_script.html">runtraj.execution.pbs.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.submit_array.html">runtraj.execution.pbs.submit_array</a></li>
@@ -826,6 +826,7 @@
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.html">runtraj.models.flexpart.FlexpartModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.name.html">runtraj.models.flexpart.FlexpartModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.check_releases.html">runtraj.models.flexpart.FlexpartModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.release_rows.html">runtraj.models.flexpart.FlexpartModel.release_rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.run.html">runtraj.models.flexpart.FlexpartModel.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.sha256.html">runtraj.models.flexpart.FlexpartModel.sha256</a></li>
@@ -990,7 +991,7 @@
     
     <li class="breadcrumb-item"><a href="../execution.html" class="nav-link">Execution</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.execution.fetch_script</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">runtraj.execution.slurm.wait</span></li>
   </ul>
 </nav>
 </div>
@@ -1007,31 +1008,42 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="runtraj-execution-fetch-script">
-<h1>runtraj.execution.fetch_script<a class="headerlink" href="#runtraj-execution-fetch-script" title="Link to this heading">#</a></h1>
+  <section id="runtraj-execution-slurm-wait">
+<h1>runtraj.execution.slurm.wait<a class="headerlink" href="#runtraj-execution-slurm-wait" title="Link to this heading">#</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="runtraj.execution.fetch_script">
-<span class="sig-prename descclassname"><span class="pre">runtraj.execution.</span></span><span class="sig-name descname"><span class="pre">fetch_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/execution/slurm.html#fetch_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.fetch_script" title="Link to this definition">#</a></dt>
-<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> script of the job that gets the met files before a job array.</p>
-<p>It runs <code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">fetch</span> <span class="pre">&lt;project&gt;</span> <span class="pre">--releases</span> <span class="pre">&lt;folder&gt;/releases.parquet</span></code>
-(with <code class="docutils literal notranslate"><span class="pre">--no-skip</span></code> when not <em>skip_existing</em>) with the Python that
-called this, as one task, after the <code class="docutils literal notranslate"><span class="pre">setup</span></code> commands. Its
-<code class="docutils literal notranslate"><span class="pre">partition</span></code>, <code class="docutils literal notranslate"><span class="pre">account</span></code>, <code class="docutils literal notranslate"><span class="pre">qos</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code> and <code class="docutils literal notranslate"><span class="pre">mem</span></code> are those of
-<code class="docutils literal notranslate"><span class="pre">fetch</span></code> in <em>execution</em>’s <code class="docutils literal notranslate"><span class="pre">slurm</span></code> block, each unset one the array’s.
-Of the other <code class="docutils literal notranslate"><span class="pre">sbatch</span></code> options it takes only <code class="docutils literal notranslate"><span class="pre">clusters</span></code>, so it runs
-on the cluster of the array that waits for it. Its log is
-<code class="docutils literal notranslate"><span class="pre">&lt;folder&gt;/fetch.log</span></code>.</p>
+<dt class="sig sig-object py" id="runtraj.execution.slurm.wait">
+<span class="sig-prename descclassname"><span class="pre">runtraj.execution.slurm.</span></span><span class="sig-name descname"><span class="pre">wait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poll</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/runtraj/execution/slurm.html#wait"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.slurm.wait" title="Link to this definition">#</a></dt>
+<dd><p>Wait until every task of a Slurm job array has ended, and return how each ended.</p>
+<p>Polls <code class="docutils literal notranslate"><span class="pre">sacct</span></code> every <em>poll</em> seconds. A task that ended other than
+complete, or with failed simulations (exit 1) or interrupted ones
+(exit 3), is logged with its state; its simulations stay pending in the
+status table. When <code class="docutils literal notranslate"><span class="pre">sacct</span></code> gives no answer, as on a cluster without
+Slurm’s accounting database, it asks <code class="docutils literal notranslate"><span class="pre">squeue</span></code>: while that lists a
+task it goes on waiting, and when it lists none the job has ended and
+this returns <code class="docutils literal notranslate"><span class="pre">{}</span></code>, the status table saying what finished. When
+neither answers for
+<code class="xref py py-data docutils literal notranslate"><span class="pre">SILENT_SCHEDULER_SECONDS</span></code> it stops
+waiting with an error; the job itself runs on.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
-</dd>
-<dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>project</strong> (<a class="reference internal" href="runtraj.Project.html#runtraj.Project" title="runtraj.Project"><em>runtraj.Project</em></a>)</p></li>
-<li><p><strong>execution</strong> (<em>ExecutionConfig</em>)</p></li>
-<li><p><strong>folder</strong> (<a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>Path</em></a>)</p></li>
-<li><p><strong>skip_existing</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>job_id</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The job array’s id.</p></li>
+<li><p><strong>poll</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – Seconds between <code class="docutils literal notranslate"><span class="pre">sacct</span></code> calls.</p></li>
+<li><p><strong>cluster</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The Slurm cluster the job is on, when it is not the default one
+(<code class="docutils literal notranslate"><span class="pre">clusters</span></code> in the Slurm options).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{task:</span> <span class="pre">(state,</span> <span class="pre">exit</span> <span class="pre">code)}</span></code> as <code class="docutils literal notranslate"><span class="pre">sacct</span></code> gives them, such as
+<code class="docutils literal notranslate"><span class="pre">{&quot;123_0&quot;:</span> <span class="pre">(&quot;COMPLETED&quot;,</span> <span class="pre">&quot;0:0&quot;)}</span></code>; empty when only <code class="docutils literal notranslate"><span class="pre">squeue</span></code>
+answered.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="runtraj.exceptions.SchedulerError.html#runtraj.exceptions.SchedulerError" title="runtraj.exceptions.SchedulerError"><strong>SchedulerError</strong></a> – If neither <code class="docutils literal notranslate"><span class="pre">sacct</span></code> nor <code class="docutils literal notranslate"><span class="pre">squeue</span></code> gave an answer about the job for
+    <code class="xref py py-data docutils literal notranslate"><span class="pre">SILENT_SCHEDULER_SECONDS</span></code>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1049,12 +1061,12 @@ on the cluster of the array that waits for it. Its log is
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="runtraj.execution.job_script.html"
+       href="runtraj.execution.slurm.fetch_script.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">runtraj.execution.job_script</p>
+        <p class="prev-next-title">runtraj.execution.slurm.fetch_script</p>
       </div>
     </a>
     <a class="right-next"
@@ -1085,14 +1097,14 @@ on the cluster of the array that waits for it. Its log is
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.execution.fetch_script"><code class="docutils literal notranslate"><span class="pre">fetch_script()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtraj.execution.slurm.wait"><code class="docutils literal notranslate"><span class="pre">wait()</span></code></a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/reference/_api/runtraj.execution.fetch_script.rst.txt">
+    <a href="../../_sources/reference/_api/runtraj.execution.slurm.wait.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

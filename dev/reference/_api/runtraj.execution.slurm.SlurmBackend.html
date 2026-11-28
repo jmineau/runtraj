@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../_static/documentation_options.js?v=56e32173"></script>
+    <script src="../../_static/documentation_options.js?v=0f6763da"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev76+g3795b946a" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -692,7 +692,6 @@
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.run.html">runtraj.execution.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.submit.html">runtraj.execution.submit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pending.html">runtraj.execution.pending</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.wait.html">runtraj.execution.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.task_share.html">runtraj.execution.task_share</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.runner.resolve_compute_root.html">runtraj.execution.runner.resolve_compute_root</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.worker.run_result.html">runtraj.execution.worker.run_result</a></li>
@@ -751,8 +750,9 @@
 <li class="toctree-l3"><a class="reference internal" href="runtraj.execution.kubernetes.KubernetesBackend.submit.html">runtraj.execution.kubernetes.KubernetesBackend.submit</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.job_script.html">runtraj.execution.job_script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.fetch_script.html">runtraj.execution.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.job_script.html">runtraj.execution.slurm.job_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.fetch_script.html">runtraj.execution.slurm.fetch_script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.wait.html">runtraj.execution.slurm.wait</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.slurm.submit_array.html">runtraj.execution.slurm.submit_array</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.job_script.html">runtraj.execution.pbs.job_script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="runtraj.execution.pbs.submit_array.html">runtraj.execution.pbs.submit_array</a></li>
@@ -826,6 +826,7 @@
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.html">runtraj.models.flexpart.FlexpartModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.name.html">runtraj.models.flexpart.FlexpartModel.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.check_releases.html">runtraj.models.flexpart.FlexpartModel.check_releases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.release_rows.html">runtraj.models.flexpart.FlexpartModel.release_rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.run.html">runtraj.models.flexpart.FlexpartModel.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtraj.models.flexpart.FlexpartModel.sha256.html">runtraj.models.flexpart.FlexpartModel.sha256</a></li>
@@ -1013,7 +1014,7 @@
 <dt class="sig sig-object py" id="runtraj.execution.slurm.SlurmBackend">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">runtraj.execution.slurm.</span></span><span class="sig-name descname"><span class="pre">SlurmBackend</span></span><a class="reference internal" href="../../_modules/runtraj/execution/slurm.html#SlurmBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#runtraj.execution.slurm.SlurmBackend" title="Link to this definition">#</a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">slurm</span></code> backend: the releases as the tasks of one Slurm job array (<a class="reference internal" href="runtraj.execution.slurm.submit_array.html#runtraj.execution.slurm.submit_array" title="runtraj.execution.slurm.submit_array"><code class="xref py py-func docutils literal notranslate"><span class="pre">submit_array()</span></code></a>).</p>
-<p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> waits for the array with <code class="docutils literal notranslate"><span class="pre">sacct</span></code> (<code class="xref py py-func docutils literal notranslate"><span class="pre">wait()</span></code>), and
+<p><code class="docutils literal notranslate"><span class="pre">runtraj</span> <span class="pre">run</span></code> waits for the array with <code class="docutils literal notranslate"><span class="pre">sacct</span></code> (<a class="reference internal" href="runtraj.execution.slurm.wait.html#runtraj.execution.slurm.wait" title="runtraj.execution.slurm.wait"><code class="xref py py-func docutils literal notranslate"><span class="pre">wait()</span></code></a>), and
 when some simulations look unfinished after it ends, lists their
 results once more <code class="xref py py-data docutils literal notranslate"><span class="pre">runtraj.execution.runner.RELIST_SECONDS</span></code>
 later, since a network filesystem can show this node new files late.</p>

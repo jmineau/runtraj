@@ -1,6 +1,0 @@
-﻿runtraj.execution.job\_script
-=============================
-
-.. currentmodule:: runtraj.execution
-
-.. autofunction:: job_script

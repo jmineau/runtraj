@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=56e32173"></script>
+    <script src="../../../_static/documentation_options.js?v=0f6763da"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev76+g3795b946a" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -547,7 +547,7 @@
 
 
 <div class="viewcode-block" id="job_script">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.job_script.html#runtraj.execution.job_script">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.job_script.html#runtraj.execution.slurm.job_script">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">job_script</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
@@ -669,7 +669,7 @@
 
 
 <div class="viewcode-block" id="fetch_script">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.fetch_script.html#runtraj.execution.fetch_script">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.fetch_script.html#runtraj.execution.slurm.fetch_script">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">fetch_script</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="n">execution</span><span class="p">:</span> <span class="n">ExecutionConfig</span><span class="p">,</span>
@@ -748,7 +748,7 @@
 
 
 <div class="viewcode-block" id="submit_array">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.submit_array.html#runtraj.execution.submit_array">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.submit_array.html#runtraj.execution.slurm.submit_array">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">submit_array</span><span class="p">(</span>
     <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
     <span class="n">pending</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -913,7 +913,7 @@
 
 
 <div class="viewcode-block" id="wait">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.wait.html#runtraj.execution.wait">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.wait.html#runtraj.execution.slurm.wait">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">wait</span><span class="p">(</span>
     <span class="n">job_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">poll</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cluster</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
@@ -987,7 +987,7 @@
 
 
 <div class="viewcode-block" id="SlurmBackend">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.html#runtraj.execution.SlurmBackend">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.html#runtraj.execution.slurm.SlurmBackend">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SlurmBackend</span><span class="p">(</span><span class="n">Backend</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The ``slurm`` backend: the releases as the tasks of one Slurm job array (:func:`submit_array`).</span>
@@ -1003,7 +1003,7 @@
     <span class="n">waits</span> <span class="o">=</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="SlurmBackend.submit">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.submit.html#runtraj.execution.SlurmBackend.submit">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.submit.html#runtraj.execution.slurm.SlurmBackend.submit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
@@ -1021,7 +1021,7 @@
 
 
 <div class="viewcode-block" id="SlurmBackend.run">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.run.html#runtraj.execution.SlurmBackend.run">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.run.html#runtraj.execution.slurm.SlurmBackend.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">project</span><span class="p">:</span> <span class="n">Project</span><span class="p">,</span>
@@ -1040,7 +1040,7 @@
 
 
 <div class="viewcode-block" id="SlurmBackend.describe">
-<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.describe.html#runtraj.execution.SlurmBackend.describe">[docs]</a>
+<a class="viewcode-back" href="../../../reference/_api/runtraj.execution.slurm.SlurmBackend.describe.html#runtraj.execution.slurm.SlurmBackend.describe">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waits</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the line ``runtraj run`` or ``runtraj submit`` prints before it submits."""</span>
         <span class="k">if</span> <span class="n">waits</span><span class="p">:</span>

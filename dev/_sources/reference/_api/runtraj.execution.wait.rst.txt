@@ -1,6 +1,0 @@
-﻿runtraj.execution.wait
-======================
-
-.. currentmodule:: runtraj.execution
-
-.. autofunction:: wait

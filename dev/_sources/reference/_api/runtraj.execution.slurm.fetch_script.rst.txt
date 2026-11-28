@@ -1,0 +1,6 @@
+﻿runtraj.execution.slurm.fetch\_script
+=====================================
+
+.. currentmodule:: runtraj.execution.slurm
+
+.. autofunction:: fetch_script

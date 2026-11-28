@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
-    <script src="../../../_static/documentation_options.js?v=56e32173"></script>
+    <script src="../../../_static/documentation_options.js?v=0f6763da"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -63,7 +63,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.0a6.dev74+g870db12b0" />
+  <meta name="docsearch:version" content="0.1.0a6.dev76+g3795b946a" />
   
     
     <script src="../../../_static/searchtools.js"></script>
@@ -1227,30 +1227,6 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s2">" Did you mean </span><span class="si">{</span><span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}{</span><span class="n">names</span><span class="p">[</span><span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="si">}</span><span class="s2">?"</span> <span class="k">if</span> <span class="n">close</span> <span class="k">else</span> <span class="s2">""</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">block_name</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the name of the block under ``execution`` that holds *backend*'s settings.</span>
-
-<span class="sd">    A built-in backend's block has its name. A backend named by its import</span>
-<span class="sd">    path has the block of its class's ``name``, so the class is imported.</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; block_name("slurm")</span>
-<span class="sd">    'slurm'</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If *backend* is not a built-in backend and not an import path.</span>
-<span class="sd">    MissingClass</span>
-<span class="sd">        If *backend* is an import path that cannot be imported here.</span>
-<span class="sd">    """</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_backend</span>
-
-    <span class="k">return</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
-
-
 <div class="viewcode-block" id="ExecutionConfig">
 <a class="viewcode-back" href="../../../reference/_api/runtraj.ExecutionConfig.html#runtraj.ExecutionConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ExecutionConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
@@ -1398,7 +1374,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BackendConfig</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""The block of the backend ``backend`` names, the one a run reads."""</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">block_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">runtraj.execution.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_backend</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ExecutionConfig</span><span class="o">.</span><span class="n">model_fields</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_extra</span> <span class="ow">or</span> <span class="p">{})[</span><span class="n">name</span><span class="p">]</span>
@@ -1473,7 +1451,6 @@
     <span class="s2">"SlurmConfig"</span><span class="p">,</span>
     <span class="s2">"TASKS_PER_WORKER"</span><span class="p">,</span>
     <span class="s2">"Volume"</span><span class="p">,</span>
-    <span class="s2">"block_name"</span><span class="p">,</span>
     <span class="s2">"check_url"</span><span class="p">,</span>
     <span class="s2">"slurm_minutes"</span><span class="p">,</span>
 <span class="p">]</span>
