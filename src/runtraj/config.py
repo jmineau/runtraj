@@ -639,10 +639,15 @@ class ProjectConfig(BaseModel):
             },
         )
         realizations = spec.pop("realizations", None)
-        if realizations is not None:
-            realizations = int(realizations)
-            if realizations < 1:
-                raise ValueError(f"{where}: realizations must be >= 1")
+        if realizations is not None and (
+            not isinstance(realizations, int)
+            or isinstance(realizations, bool)
+            or realizations < 1
+        ):
+            raise ValueError(
+                f"{where}: realizations must be a whole number, 1 or more, "
+                f"not {realizations!r}"
+            )
         stages = self._variant_stages(group, spec.pop("stages", None))
         transport = {**defaults, **spec}
         return _Declared(
