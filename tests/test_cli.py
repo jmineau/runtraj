@@ -736,7 +736,9 @@ def test_run_on_slurm_submits_and_waits(tmp_path, calls):
 def test_submit_sends_a_job_array_and_returns(tmp_path, calls):
     project = _project(tmp_path)
 
-    result = _invoke("submit", "--n-workers", "3", project=project)
+    result = _invoke(
+        "submit", "--backend", "slurm", "--n-workers", "3", project=project
+    )
 
     assert result.exit_code == 0, result.output
     [(what, options)] = calls
@@ -755,7 +757,7 @@ def test_submit_with_nothing_to_do_prints_the_status(tmp_path, monkeypatch):
     project = _project(tmp_path)
     monkeypatch.setattr("runtraj.cli.Project.submit", lambda self, **kwargs: None)
 
-    result = _invoke("submit", project=project)
+    result = _invoke("submit", "--backend", "slurm", project=project)
 
     assert result.exit_code == 0, result.output
     assert result.output.splitlines()[-1].startswith(f"Project: {project.directory}")
@@ -791,6 +793,30 @@ def test_submit_makes_a_kubernetes_job_when_config_yaml_says_so(tmp_path, calls)
     assert execution.kubernetes.cpus == 2
     assert "backend=kubernetes  tasks=5  cpus=2" in result.output
     assert "Making a Kubernetes indexed Job and returning" in result.output
+
+
+def test_a_bare_submit_asks_for_a_scheduler(tmp_path, calls):
+    """No --backend, and config.yaml names none (or local): an error, not Slurm."""
+    project = _project(tmp_path)
+    assert project.config.execution.backend == "local"
+
+    result = _invoke("submit", project=project)
+
+    assert result.exit_code == 2
+    assert "--backend" in result.output
+    assert "execution.backend" in result.output
+    assert not calls
+
+
+def test_n_workers_is_refused_where_the_backend_has_no_workers(tmp_path, calls):
+    project = _on_kubernetes(_project(tmp_path))
+
+    result = _invoke("submit", "--n-workers", "10", project=project)
+
+    assert result.exit_code == 2
+    assert "slurm or pbs" in result.output
+    assert "kubernetes" in result.output
+    assert not calls
 
 
 def test_submit_backend_is_slurm_or_kubernetes(tmp_path, calls):

@@ -12,7 +12,7 @@ Examples::
     runtraj run --backend slurm         # run as a Slurm job array, and wait
     runtraj run --task 3/10             # run task 3 of 10 here (a job array's task)
     runtraj run --releases ids.txt     # run only the releases listed in ids.txt
-    runtraj submit                      # submit a Slurm job array and return
+    runtraj submit --backend slurm      # submit a Slurm job array and return
     runtraj submit --backend kubernetes # make a Kubernetes indexed Job and return
     runtraj schedule                    # run every hour on Kubernetes, for the sites in sites.csv
     runtraj tick                        # add the hours now due for the sites, and run them
@@ -511,11 +511,13 @@ def _start(
     if backend is not None:
         settings["backend"] = backend
     if n_workers is not None:
-        # The block of a backend that has workers (slurm, pbs); else slurm's.
         found = _backend(settings.get("backend", "local"))
-        block = (
-            found.name if "n_workers" in found.config_class.model_fields else "slurm"
-        )
+        if "n_workers" not in found.config_class.model_fields:
+            _fail(
+                f"--n-workers is for a backend with workers, slurm or pbs; "
+                f"the backend is {found.name!r}."
+            )
+        block = found.name
         settings[block] = {**(settings.get(block) or {}), "n_workers": n_workers}
     if cpus is not None:
         block = _backend(settings.get("backend", "local")).name
@@ -766,8 +768,8 @@ _SUBMIT_BACKEND = typer.Option(
     "--backend",
     help=(
         "Where to submit: slurm, pbs, kubernetes, or a backend's import path. "
-        "Defaults to execution.backend in config.yaml unless it is local, "
-        "else slurm."
+        "Defaults to execution.backend in config.yaml; with neither, "
+        "submit is an error."
     ),
 )
 
@@ -793,8 +795,12 @@ def submit(
     Check on them with runtraj status.
     """
     if backend is None:
-        configured = _configured_backend(project)
-        backend = "slurm" if configured in (None, "local") else configured
+        backend = _configured_backend(project)
+        if backend in (None, "local"):
+            _fail(
+                "submit needs a scheduler: give --backend (slurm, pbs or "
+                "kubernetes) or set execution.backend in config.yaml."
+            )
     if _backend(backend).here:
         _fail(
             f"--backend for submit is a scheduler, such as slurm or kubernetes, "

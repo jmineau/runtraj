@@ -155,7 +155,7 @@ The starting points go in ``releases.csv``, one row each:
    2021-07-15 13:00:00,-111.85,40.77,500
 
 ``runtraj run ./my_project`` runs them here, and ``runtraj submit
-./my_project`` as a Slurm job array (:doc:`slurm`). Then read the particles
+./my_project --backend slurm`` as a Slurm job array (:doc:`slurm`). Then read the particles
 of any selection of runs as one table:
 
 .. code-block:: python

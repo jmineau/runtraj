@@ -108,14 +108,39 @@ def test_submit_says_why_sbatch_refused(pending, commands, tmp_path):
         )
 
 
-def test_waiting_stops_when_sacct_says_nothing_for_too_long(commands, monkeypatch):
-    """On a cluster without the accounting database, sacct never answers."""
+def test_waiting_stops_when_the_scheduler_says_nothing_for_too_long(
+    commands, monkeypatch
+):
     monkeypatch.setattr(slurm, "SILENT_SCHEDULER_SECONDS", 0)
     commands.answers["sacct"] = [
         _out(returncode=1, stderr="Slurm accounting storage is disabled")
     ]
+    commands.answers["squeue"] = [_out(returncode=1, stderr="Socket timed out")]
     with pytest.raises(RuntimeError, match="nothing about job 9 for 0 minutes"):
         slurm.wait("9", poll=0)
+
+
+def test_without_accounting_waiting_follows_the_job_with_squeue(commands):
+    """On a cluster without the accounting database, sacct never answers."""
+    commands.answers["sacct"] = [_out(returncode=1)] * 3
+    commands.answers["squeue"] = [
+        _out("PENDING\n"),
+        _out("RUNNING\nPENDING\n"),
+        _out(),  # no task listed: the job has ended
+    ]
+
+    assert slurm.wait("9", poll=0) == {}
+
+    assert [c[0] for c in commands.ran] == ["sacct", "squeue"] * 3
+    assert commands.ran[1] == ["squeue", "-h", "-j", "9", "-o", "%T"]
+
+
+def test_squeue_not_knowing_the_job_means_it_has_ended(commands):
+    commands.answers["sacct"] = [_out(returncode=1)]
+    commands.answers["squeue"] = [
+        _out(returncode=1, stderr="slurm_load_jobs error: Invalid job id specified")
+    ]
+    assert slurm.wait("9", poll=0) == {}
 
 
 def test_waiting_polls_sacct_until_every_task_ends(commands, caplog):
@@ -128,10 +153,17 @@ def test_waiting_polls_sacct_until_every_task_ends(commands, caplog):
             "9_3|CANCELLED by 123|0:15\n"
         ),
     ]
+    commands.answers["squeue"] = [_out("PENDING\n")]
     with caplog.at_level("WARNING", logger="runtraj.execution.runner"):
         states = slurm.wait("9", poll=0)
 
-    assert [c[0] for c in commands.ran] == ["sacct"] * 4
+    assert [c[0] for c in commands.ran] == [
+        "sacct",
+        "squeue",
+        "sacct",
+        "sacct",
+        "sacct",
+    ]
     warned = caplog.text
     assert "9_2 ended OUT_OF_MEMORY" in warned
     assert "9_3 ended CANCELLED" in warned

@@ -108,7 +108,7 @@ setting, edit `config.yaml`.
 runtraj check ./my_project         # list what would stop a run, before any run
 runtraj run ./my_project           # run every release that is not done yet
 runtraj run ./my_project --cpus 8  # the same, eight releases at a time
-runtraj submit ./my_project        # the same, as a Slurm job array
+runtraj submit ./my_project --backend slurm  # the same, as a Slurm job array
 runtraj status ./my_project        # what has finished, and the settings folders
 ```
 
