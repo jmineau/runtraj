@@ -49,6 +49,7 @@ from runtraj.releases.table import (
 )
 from runtraj.results import RESULT_TYPES
 from runtraj.simulation import Simulation
+from runtraj.stages import COLUMN_NAMES, FAILURE_COLUMNS, SIMULATION_COLUMNS
 from runtraj.trajectories import trajectories_from_table
 
 if TYPE_CHECKING:
@@ -62,6 +63,11 @@ RELEASE_COLUMNS = ("release", "time", "kind", "location")
 
 #: Where a simulation stands, the ``state`` column of :meth:`Project.status`.
 STATES = ("complete", "failed", "interrupted", "pending")
+
+
+def _labels(rows: pd.DataFrame) -> list[str]:
+    """Return the label columns of checked release rows: those that are not the release table's own."""
+    return [c for c in rows.columns if c not in COLUMNS and c not in ROW_COLUMNS]
 
 
 def _as_releases(
@@ -321,7 +327,30 @@ class Project:
         if not self.releases_path.exists():
             empty = pd.DataFrame(columns=["time", "longitude", "latitude", "altitude"])
             return release_rows(empty)
-        return release_rows(read_release_frame(self.releases_path))
+        rows = release_rows(read_release_frame(self.releases_path))
+        self._refuse_reserved_labels(_labels(rows))
+        return rows
+
+    @staticmethod
+    def _refuse_reserved_labels(
+        labels: Iterable[str], stages: Iterable[str] = ()
+    ) -> None:
+        """
+        Raise if a release label is named like a column of :attr:`simulations` or :meth:`status`.
+
+        Those columns are the core's (:data:`runtraj.stages.COLUMN_NAMES`) and
+        one per stage, so a label of that name would be replaced by them, or
+        break the table. The stages are named only where the config is
+        loaded, which reading the releases does not need.
+        """
+        reserved = COLUMN_NAMES | set(stages)
+        clash = sorted(set(labels) & reserved)
+        if clash:
+            raise ValueError(
+                f"A release label may not be named {clash}: runtraj uses "
+                f"{sorted(reserved)} for columns of project.simulations and "
+                "project.status(). Rename the label."
+            )
 
     @cached_property
     def _positions(self) -> dict[str, np.ndarray]:
@@ -345,7 +374,7 @@ class Project:
             If a row of ``releases.csv`` is wrong, naming the row.
         """
         rows = self._rows
-        labels = [c for c in rows.columns if c not in COLUMNS and c not in ROW_COLUMNS]
+        labels = _labels(rows)
         first = rows.drop_duplicates("release")
         frame = first.loc[:, [*RELEASE_COLUMNS, *labels]].reset_index(drop=True)
         return frame.astype({"time": "datetime64[ns]"})
@@ -435,6 +464,7 @@ class Project:
             id names a release's result files.
         """
         batch = _as_releases(releases)
+        self._refuse_reserved_labels(k for r in batch for k in r.attrs)
         known = [self.release(r.id) for r in batch if r.id in self._positions]
         check_distinct_ids([*known, *batch])
         new = list({r.id: r for r in batch if r.id not in self._positions}.values())
@@ -526,10 +556,14 @@ class Project:
                 for name, v in self.variants.items()
                 for k in v.realization_numbers
             ],
-            columns=["variant", "realization", "model"],
+            columns=list(SIMULATION_COLUMNS),
         ).astype({"realization": "Int64"})
+        self._refuse_reserved_labels(
+            _labels(self.releases),
+            {s for v in self.variants.values() for s in v.stages},
+        )
         frame = self.releases.merge(variants, how="cross")
-        first = ["release", "variant", "realization", "model"]
+        first = ["release", *SIMULATION_COLUMNS]
         return frame.loc[:, first + [c for c in frame.columns if c not in first]]
 
     @property
@@ -794,7 +828,7 @@ class Project:
             state=pd.Categorical(state, categories=STATES),
             **{
                 column: pd.array([r.get(column) for r in records], dtype="string")
-                for column in ("stage", "reason", "message")
+                for column in FAILURE_COLUMNS
             },
         )
 

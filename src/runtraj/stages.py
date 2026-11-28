@@ -34,6 +34,7 @@ from pydantic import BaseModel
 
 from runtraj._plugins import import_class, near_miss
 from runtraj.identity import canonical
+from runtraj.releases.table import ROW_COLUMNS
 from runtraj.results import RESULT_TYPES
 
 if TYPE_CHECKING:
@@ -45,25 +46,28 @@ if TYPE_CHECKING:
 #: Pattern for a stage's name, which is a folder in the output directory and a column of ``project.status()``.
 STAGE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
-#: Names a stage may not take: the output directory's own trees (the result
-#: types of :mod:`runtraj.results`), and the columns of ``project.status()``.
-RESERVED_NAMES = frozenset(
+#: The columns :attr:`~runtraj.Project.simulations` adds to the release table, after ``release``.
+SIMULATION_COLUMNS = ("variant", "realization", "model")
+
+#: The columns of :meth:`~runtraj.Project.status` that say where a failed simulation stopped.
+FAILURE_COLUMNS = ("stage", "reason", "message")
+
+#: Names a release label or a stage may not take: the columns the core adds to
+#: ``project.simulations`` and ``project.status()``, and a column for each result type.
+COLUMN_NAMES = frozenset(
     {
-        "particles",
-        "concentration",
-        "trajectories",
-        "logs",
-        "scratch",
-        "release",
-        "variant",
-        "realization",
-        "model",
+        "time",
+        *ROW_COLUMNS,
+        *SIMULATION_COLUMNS,
         "state",
-        "stage",
-        "reason",
-        "message",
+        *FAILURE_COLUMNS,
+        *RESULT_TYPES,
     }
 )
+
+#: Names a stage may not take: those of :data:`COLUMN_NAMES`, and the output
+#: directory's own folders.
+RESERVED_NAMES = COLUMN_NAMES | {"logs", "scratch"}
 
 
 #: The config class a stage takes, a pydantic model.

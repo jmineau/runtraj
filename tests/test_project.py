@@ -805,3 +805,43 @@ def test_a_failed_runs_kept_workdir_leaves_out_its_particle_file(
     kept = project.simulation(_release(12).id, "hrrr").kept_workdir
     assert (kept / "CONTROL").read_text() == "inputs"
     assert (kept / PARTICLE_FILE).exists() == keep_workdir
+
+
+# ---------------------------------------------------------------------------
+# Release labels
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("label", ["state", "model", "variant", "particles"])
+def test_a_label_named_like_a_column_the_project_adds_is_refused_when_read(
+    tmp_path, label
+):
+    project = _project(tmp_path, [_release(12)])
+    project.releases_path.write_text(
+        f"time,longitude,latitude,altitude,{label}\n2023-01-01 12:00,-111.85,40.77,5,x\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match=rf"label may not be named \['{label}'\]"):
+        _ = Project(project.directory).releases
+
+
+@pytest.mark.parametrize("label", ["state", "model"])
+def test_a_label_named_like_a_column_the_project_adds_is_refused_when_added(
+    tmp_path, label
+):
+    project = _project(tmp_path, [_release(12)])
+    before = project.releases_path.read_text(encoding="utf-8")
+    with pytest.raises(ValueError, match=rf"label may not be named \['{label}'\]"):
+        project.add_releases([_release(14, **{label: "x"})])
+    assert project.releases_path.read_text(encoding="utf-8") == before
+
+
+def test_a_label_named_like_a_stage_is_refused_in_the_simulations(tmp_path):
+    project = _project(
+        tmp_path,
+        [_release(12, count="x")],
+        stages={"count": {"class": "tests.fixtures.stages.CountStage"}},
+    )
+    assert list(project.releases["count"]) == ["x"]  # reading needs no stage
+    with pytest.raises(ValueError, match=r"label may not be named \['count'\]"):
+        _ = project.simulations
