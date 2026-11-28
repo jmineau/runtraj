@@ -255,12 +255,20 @@ def read_particles(
     pandas.DataFrame
         One row per particle per output step.
 
+    Raises
+    ------
+    FileNotFoundError
+        If there is no file at *path*.
+
     Examples
     --------
     >>> particles = runtraj.read_particles(sim.particles_path)  # doctest: +SKIP
     >>> particles.runtraj.endpoints()  # doctest: +SKIP
     """
-    with readable(path) as source:
+    where = location(path)
+    if not where.exists():
+        raise FileNotFoundError(f"No particle file at {where}.")
+    with readable(where) as source:
         pf = pq.ParquetFile(source)
         stored = pf.schema_arrow.names
         meta = pf.schema_arrow.metadata or {}

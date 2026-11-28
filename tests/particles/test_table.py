@@ -175,6 +175,11 @@ def test_particles_from_table_rejects_an_id_it_cannot_time():
         particles_from_table(_file_table("not_a_release_id", [-60]))
 
 
+def test_a_missing_particle_file_says_so(tmp_path):
+    with pytest.raises(FileNotFoundError, match="No particle file"):
+        read_particles(tmp_path / "none.parquet")
+
+
 def test_write_and_read_particles_round_trip(point_release, tmp_path):
     """A particle file holds everything needed to read it back."""
     params = _params(tmp_path)
