@@ -744,30 +744,6 @@ def _did_you_mean(key: str, blocks: dict[str, type[BackendConfig]]) -> str:
     return f" Did you mean {close[0]!r}{names[close[0]]}?" if close else ""
 
 
-def block_name(backend: str) -> str:
-    """
-    Return the name of the block under ``execution`` that holds *backend*'s settings.
-
-    A built-in backend's block has its name. A backend named by its import
-    path has the block of its class's ``name``, so the class is imported.
-
-    Examples
-    --------
-    >>> block_name("slurm")
-    'slurm'
-
-    Raises
-    ------
-    ValueError
-        If *backend* is not a built-in backend and not an import path.
-    MissingClass
-        If *backend* is an import path that cannot be imported here.
-    """
-    from runtraj.execution.backends import get_backend
-
-    return get_backend(backend).name
-
-
 class ExecutionConfig(BaseModel):
     """
     Where a project's releases run, and with what resources.
@@ -913,7 +889,9 @@ class ExecutionConfig(BaseModel):
     @property
     def block(self) -> BackendConfig:
         """The block of the backend ``backend`` names, the one a run reads."""
-        name = block_name(self.backend)
+        from runtraj.execution.backends import get_backend
+
+        name = get_backend(self.backend).name
         if name in ExecutionConfig.model_fields:
             return getattr(self, name)
         return (self.model_extra or {})[name]
@@ -987,7 +965,6 @@ __all__ = [
     "SlurmConfig",
     "TASKS_PER_WORKER",
     "Volume",
-    "block_name",
     "check_url",
     "slurm_minutes",
 ]

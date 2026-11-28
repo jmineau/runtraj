@@ -1315,4 +1315,4 @@ class Output:
         return kept
 
 
-__all__ = ["Kind", "Output", "completed"]
+__all__ = ["Output", "completed"]

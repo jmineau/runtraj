@@ -10,7 +10,7 @@ work underneath.
   ``task=(i, n)`` runs share ``i`` of ``n`` here (:func:`~runtraj.execution.task_share`),
   which is what ``runtraj run --task i/n`` does.
 - :func:`~runtraj.execution.submit` is what ``project.submit()`` calls. It
-  writes a job array script (:func:`~runtraj.execution.job_script`) whose
+  writes a job array script (:func:`~runtraj.execution.slurm.job_script`) whose
   tasks each run ``runtraj run --task``, submits it with ``sbatch``, and
   returns the job id at once. With ``backend: kubernetes`` it makes an
   indexed Job instead (:func:`~runtraj.execution.kubernetes.job_manifest`)
@@ -40,8 +40,8 @@ On Slurm each task of the job array runs one share of the releases
 run happens in this process. A program that starts the tasks itself, on
 another scheduler, writes :func:`~runtraj.execution.pending` to the
 ``releases.txt`` each task reads (``runtraj run --releases``;
-:doc:`../guides/any_scheduler`); :func:`~runtraj.execution.wait` waits
-for a Slurm job array by its id.
+:doc:`../guides/any_scheduler`);
+:func:`~runtraj.execution.slurm.wait` waits for a Slurm job array by its id.
 
 Running
 -------
@@ -53,7 +53,6 @@ Running
    runtraj.execution.run
    runtraj.execution.submit
    runtraj.execution.pending
-   runtraj.execution.wait
    runtraj.execution.task_share
 
 Workers
@@ -134,8 +133,9 @@ near its time limit or preempts; the worker only stops, and exits with 3.
    :toctree: _api
    :nosignatures:
 
-   runtraj.execution.job_script
-   runtraj.execution.fetch_script
+   runtraj.execution.slurm.job_script
+   runtraj.execution.slurm.fetch_script
+   runtraj.execution.slurm.wait
    runtraj.execution.slurm.submit_array
 
 PBS job arrays
