@@ -463,15 +463,6 @@ def _like(stored: Mapping[str, Any], readable: Mapping[str, Any]) -> dict[str, A
     return like
 
 
-def _check_realization(variant: Variant, realization: int | None) -> None:
-    """Raise unless *realization* is one *variant* runs as."""
-    if realization not in variant.realization_numbers:
-        raise ValueError(
-            f"Variant {variant.name!r} runs as realizations "
-            f"{variant.realization_numbers}, not {realization!r}."
-        )
-
-
 def _parquet_only(kind: Kind) -> None:
     """Raise for a result type whose files are not Parquet, which :meth:`Output.table` and :meth:`Output.read` cannot read."""
     if kind in RESULT_TYPES and result_type(kind).suffix != ".parquet":
@@ -865,7 +856,7 @@ class Output:
         ValueError
             If *realization* is not one the variant runs as.
         """
-        _check_realization(variant, realization)
+        variant.check_realization(realization)
         folder = self._dir(tree, name)
         return folder if realization is None else folder / f"realization={realization}"
 
@@ -873,7 +864,7 @@ class Output:
         self, kind: Kind, tree: str, variant: Variant, realization: int | None
     ) -> Path | UPath | None:
         """Return the existing folder of *variant*'s results of *kind* in *tree*, or ``None``."""
-        _check_realization(variant, realization)
+        variant.check_realization(realization)
         name = self._name(kind, variant)
         return None if name is None else self._part(tree, name, variant, realization)
 
