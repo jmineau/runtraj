@@ -85,8 +85,8 @@ class NameList:
         # field mismatch when HYSPLIT reads the namelist.
         if isinstance(value, float) and value == int(value):
             return str(int(value))
-        # Prevent scientific notation (e.g. 1e-05) - HYSPLIT's old-style
-        # DEC/VMS namelist reader cannot parse it.
+        # Ten significant digits; a value below 1e-4 is still written in
+        # scientific notation (1e-05).
         if isinstance(value, float):
             return f"{value:.10g}"
         return str(value)

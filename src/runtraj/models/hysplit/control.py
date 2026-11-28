@@ -178,7 +178,9 @@ class ControlFile(BaseModel):
         lines.append("100")  # (22) height of each level (m)
         lines.append("00 00 00 00 00")  # (23) sampling start
         lines.append("00 00 00 00 00")  # (24) sampling stop
-        lines.append("00 2 00")  # (25) sampling interval (type 2 = maximum)
+        lines.append(
+            "00 2 00"
+        )  # (25) sampling interval (type 0 = average, over 2 hours)
 
         # Concentration / Deposition Definition (all zeros = passive tracer gas, no deposition)
         lines.append("1")  # (26) number of pollutants depositing
